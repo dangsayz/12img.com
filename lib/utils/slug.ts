@@ -3,7 +3,8 @@ import { customAlphabet } from 'nanoid'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 
 // Only lowercase letters and numbers to match DB constraint: ^[a-z0-9-]+$
-const nanoid = customAlphabet('abcdefghijklmnopqrstuvwxyz0123456789', 6)
+const nanoid6 = customAlphabet('abcdefghijklmnopqrstuvwxyz0123456789', 6)
+const nanoid12 = customAlphabet('abcdefghijklmnopqrstuvwxyz0123456789', 12)
 
 export function generateSlug(title: string): string {
   const base = slugify(title, {
@@ -13,7 +14,7 @@ export function generateSlug(title: string): string {
   })
 
   const safeBase = base.length >= 3 ? base : 'gallery'
-  const suffix = nanoid()
+  const suffix = nanoid6()
 
   return `${safeBase}-${suffix}`
 }
@@ -37,5 +38,5 @@ export async function generateUniqueSlug(title: string): Promise<string> {
     attempts++
   }
 
-  return `gallery-${nanoid(12)}`
+  return `gallery-${nanoid12()}`
 }

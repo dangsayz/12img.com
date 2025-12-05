@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useState, useTransition } from 'react'
-import { ImageIcon, Lock, Trash2 } from 'lucide-react'
+import { ImageIcon, Lock, Trash2, Share2, Check } from 'lucide-react'
 import { deleteGallery } from '@/server/actions/gallery.actions'
 import { Button } from '@/components/ui/button'
 
@@ -24,6 +24,32 @@ export function GalleryCard({ gallery }: GalleryCardProps) {
   const [isPending, startTransition] = useTransition()
   const [isDeleted, setIsDeleted] = useState(false)
   const [showConfirm, setShowConfirm] = useState(false)
+  const [copied, setCopied] = useState(false)
+
+  const shareUrl = typeof window !== 'undefined' 
+    ? `${window.location.origin}/g/${gallery.slug}`
+    : `/g/${gallery.slug}`
+
+  const handleShare = async (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    
+    try {
+      await navigator.clipboard.writeText(shareUrl)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    } catch {
+      // Fallback for older browsers
+      const input = document.createElement('input')
+      input.value = shareUrl
+      document.body.appendChild(input)
+      input.select()
+      document.execCommand('copy')
+      document.body.removeChild(input)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    }
+  }
 
   const handleDelete = () => {
     setIsDeleted(true)
@@ -76,16 +102,30 @@ export function GalleryCard({ gallery }: GalleryCardProps) {
         </div>
       </Link>
 
-      <button
-        onClick={(e) => {
-          e.preventDefault()
-          setShowConfirm(true)
-        }}
-        className="absolute top-3 right-3 p-2 bg-white/90 backdrop-blur-sm rounded-full opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-200 hover:bg-white shadow-sm hover:text-red-600"
-        aria-label="Delete gallery"
-      >
-        <Trash2 className="w-4 h-4" />
-      </button>
+      {/* Action buttons */}
+      <div className="absolute top-3 right-3 flex gap-2 opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-200">
+        <button
+          onClick={handleShare}
+          className={`p-2 backdrop-blur-sm rounded-full shadow-sm transition-all duration-200 ${
+            copied 
+              ? 'bg-green-500 text-white' 
+              : 'bg-white/90 hover:bg-white text-gray-600 hover:text-indigo-600'
+          }`}
+          aria-label="Copy share link"
+        >
+          {copied ? <Check className="w-4 h-4" /> : <Share2 className="w-4 h-4" />}
+        </button>
+        <button
+          onClick={(e) => {
+            e.preventDefault()
+            setShowConfirm(true)
+          }}
+          className="p-2 bg-white/90 backdrop-blur-sm rounded-full hover:bg-white shadow-sm hover:text-red-600 transition-all duration-200"
+          aria-label="Delete gallery"
+        >
+          <Trash2 className="w-4 h-4" />
+        </button>
+      </div>
 
 
       {showConfirm && (
