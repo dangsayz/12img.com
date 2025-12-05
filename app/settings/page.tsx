@@ -1,8 +1,10 @@
 import { auth, currentUser } from '@clerk/nextjs/server'
 import { redirect } from 'next/navigation'
-import { getUserSettings } from '@/server/queries/user.queries'
+import { getUserSettings, getUserStorageUsage } from '@/server/queries/user.queries'
 import { Header } from '@/components/layout/Header'
 import { SettingsForm } from '@/components/forms/SettingsForm'
+import { AccountSection } from '@/components/settings/AccountSection'
+import { DangerZone } from '@/components/settings/DangerZone'
 
 export const dynamic = 'force-dynamic'
 
@@ -15,6 +17,7 @@ export default async function SettingsPage() {
 
   const user = await currentUser()
   const settings = await getUserSettings(userId)
+  const storageUsage = await getUserStorageUsage(userId)
 
   return (
     <>
@@ -44,19 +47,25 @@ export default async function SettingsPage() {
               </div>
             </div>
             <a
-              href="/user-profile"
+              href="/account"
               className="mt-4 inline-block text-sm text-blue-600 hover:underline"
             >
-              Manage profile in Clerk →
+              Manage account →
             </a>
           </div>
         </section>
+
+        {/* Account & Usage Section */}
+        <AccountSection storageUsage={storageUsage} />
 
         {/* Gallery Defaults Section */}
         <section>
           <h2 className="text-lg font-medium mb-4">Gallery Defaults</h2>
           <SettingsForm initialSettings={settings} />
         </section>
+
+        {/* Danger Zone */}
+        <DangerZone />
       </main>
     </>
   )

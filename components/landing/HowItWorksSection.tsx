@@ -3,7 +3,7 @@
 import { useRef } from 'react'
 import { motion, useScroll, useTransform } from 'framer-motion'
 import { cn } from '@/lib/utils/cn'
-import { Check, Copy, Share2 } from 'lucide-react'
+import { Check, Copy, Share2, Download, Mail, Shield } from 'lucide-react'
 import Image from 'next/image'
 
 export function HowItWorksSection() {
@@ -30,11 +30,16 @@ export function HowItWorksSection() {
             viewport={{ once: true }}
             transition={{ duration: 0.7 }}
           >
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-50 rounded-full text-emerald-700 text-sm font-medium mb-6">
+              <Shield className="w-4 h-4" />
+              <span>Automatic backup included</span>
+            </div>
             <h2 className="text-4xl md:text-5xl font-bold tracking-tight text-gray-900 mb-6">
-              Effortless workflow.
+              Never lose a client&apos;s photos.
             </h2>
             <p className="text-lg text-gray-500 leading-relaxed">
-              Designed to disappear, letting your work take center stage.
+              Every gallery gets an automatic ZIP backup sent straight to your client&apos;s inbox.
+              <span className="text-gray-900 font-medium"> A 12img exclusive.</span>
             </p>
           </motion.div>
         </div>
@@ -79,7 +84,7 @@ export function HowItWorksSection() {
 
             <h3 className="text-xl font-bold text-gray-900 mb-2">01. Upload</h3>
             <p className="text-gray-500 leading-relaxed text-sm">
-              Drag & drop high-res images. We handle the compression and optimization instantly.
+              Drag & drop your photos. We <span className="text-gray-900 font-medium">instantly</span> optimize and create your gallery.
             </p>
           </motion.div>
 
@@ -136,9 +141,9 @@ export function HowItWorksSection() {
               </motion.div>
             </div>
 
-            <h3 className="text-xl font-bold text-gray-900 mb-2">02. Create Link</h3>
+            <h3 className="text-xl font-bold text-gray-900 mb-2">02. Share Link</h3>
             <p className="text-gray-500 leading-relaxed text-sm">
-              Get a beautiful, shareable link instantly. No sign-up required for your clients.
+              Get a <span className="text-gray-900 font-medium">password-protected</span> link. Your clients view instantly—no account needed.
             </p>
           </motion.div>
 
@@ -179,9 +184,9 @@ export function HowItWorksSection() {
               </div>
             </div>
 
-            <h3 className="text-xl font-bold text-gray-900 mb-2">03. Share & View</h3>
+            <h3 className="text-xl font-bold text-gray-900 mb-2">03. Auto Backup</h3>
             <p className="text-gray-500 leading-relaxed text-sm">
-              Clients view their gallery in a distraction-free, premium interface designed for impact.
+              Clients receive an <span className="text-gray-900 font-medium">automatic email</span> with a ZIP download—their photos are <span className="text-gray-900 font-medium">safe forever</span>.
             </p>
           </motion.div>
         </div>

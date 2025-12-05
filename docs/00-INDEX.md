@@ -19,6 +19,7 @@
 | 13 | [13-PERFORMANCE.md](./13-PERFORMANCE.md) | Caching, streaming, lazy loading, indexing |
 | 14 | [14-DEPLOYMENT.md](./14-DEPLOYMENT.md) | Environment variables, Vercel/Supabase setup, CORS |
 | 15 | [15-POST-MVP-HOOKS.md](./15-POST-MVP-HOOKS.md) | Future feature placeholders (DO NOT BUILD) |
+| 17 | [17-ARCHIVE-SYSTEM.md](./17-ARCHIVE-SYSTEM.md) | ZIP archive creation, job queue, email backup notifications |
 
 ---
 

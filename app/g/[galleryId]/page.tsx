@@ -22,23 +22,23 @@ export default async function GalleryPage({ params }: Props) {
     notFound()
   }
 
-  // Password protection check
-  if (gallery.password_hash) {
-    const cookieStore = await cookies()
-    const unlockCookie = cookieStore.get(`gallery_unlock_${gallery.id}`)
-
-    if (!unlockCookie || !verifyUnlockToken(unlockCookie.value, gallery.id)) {
-      redirect(`/g/${galleryId}/password`)
-    }
-  }
-
-  // Check if current user is the owner
+  // Check if current user is the owner (do this first for password bypass)
   const { userId: clerkId } = await auth()
   let isOwner = false
   if (clerkId) {
     const user = await getOrCreateUserByClerkId(clerkId)
     if (user && user.id === gallery.user_id) {
       isOwner = true
+    }
+  }
+
+  // Password protection check (owners bypass)
+  if (gallery.password_hash && !isOwner) {
+    const cookieStore = await cookies()
+    const unlockCookie = cookieStore.get(`gallery_unlock_${gallery.id}`)
+
+    if (!unlockCookie || !verifyUnlockToken(unlockCookie.value, gallery.id)) {
+      redirect(`/g/${galleryId}/password`)
     }
   }
 

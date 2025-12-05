@@ -8,6 +8,8 @@ interface Gallery {
   downloadEnabled: boolean
   coverImageUrl: string | null
   imageCount: number
+  createdAt: string
+  updatedAt: string
 }
 
 interface GalleryGridProps {

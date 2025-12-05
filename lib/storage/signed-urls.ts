@@ -1,5 +1,5 @@
 import { supabaseAdmin } from '@/lib/supabase/admin'
-import { SIGNED_URL_EXPIRY } from '@/lib/utils/constants'
+import { SIGNED_URL_EXPIRY, ARCHIVE_CONFIG } from '@/lib/utils/constants'
 
 export async function getSignedDownloadUrl(
   storagePath: string,
@@ -63,4 +63,22 @@ export async function getSignedUrlsBatch(
 
   console.log('[SignedUrls] URL map size:', urlMap.size)
   return urlMap
+}
+
+/**
+ * Get a signed download URL for an archive from the archives bucket.
+ */
+export async function getSignedArchiveUrl(
+  storagePath: string,
+  expiresIn: number = SIGNED_URL_EXPIRY.ARCHIVE_EMAIL
+): Promise<string> {
+  const { data, error } = await supabaseAdmin.storage
+    .from(ARCHIVE_CONFIG.BUCKET_NAME)
+    .createSignedUrl(storagePath, expiresIn)
+
+  if (error) {
+    throw new Error(`Failed to create archive signed URL: ${error.message}`)
+  }
+
+  return data.signedUrl
 }

@@ -4,88 +4,81 @@ import Link from 'next/link'
 import { UserButton } from '@clerk/nextjs'
 import { Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { useState, useEffect, useRef } from 'react'
-import { motion, useMotionValueEvent, useScroll } from 'framer-motion'
+import { UsageBadge } from './UsageBadge'
+import type { PlanId } from '@/lib/config/pricing'
 
-export function Header() {
-  const [hidden, setHidden] = useState(false)
-  const { scrollY } = useScroll()
-  const lastScrollY = useRef(0)
+interface HeaderProps {
+  userPlan?: PlanId
+  galleryCount?: number
+  imageCount?: number
+}
 
-  useMotionValueEvent(scrollY, 'change', (latest) => {
-    const diff = latest - lastScrollY.current
-    
-    // Hide when scrolling down more than 10px, show when scrolling up
-    if (diff > 10 && latest > 100) {
-      setHidden(true)
-    } else if (diff < -10 || latest < 100) {
-      setHidden(false)
-    }
-    
-    lastScrollY.current = latest
-  })
-
+export function Header({ userPlan = 'free', galleryCount = 0, imageCount = 0 }: HeaderProps) {
   return (
-    <motion.header 
-      className="fixed top-4 left-0 right-0 z-50 flex justify-center px-4 pointer-events-none"
-      initial={{ y: 0 }}
-      animate={{ y: hidden ? -100 : 0 }}
-      transition={{ duration: 0.3, ease: 'easeInOut' }}
-    >
-      <div className="pointer-events-auto flex h-16 w-full max-w-6xl items-center justify-between rounded-full border border-white/40 bg-white/80 pl-8 pr-3 shadow-soft-xl backdrop-blur-xl transition-all hover:bg-white/90">
-        <div className="flex items-center gap-8">
-          <Link href="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full bg-soft-lime flex items-center justify-center text-soft-accent font-bold shadow-inner-light text-sm">
-              12
-            </div>
-            <span className="text-lg font-bold tracking-tight text-gray-900">12img</span>
-          </Link>
-          
-          {/* Desktop Nav */}
-          <nav className="hidden md:flex items-center gap-1">
-            <Link
-              href="/"
-              className="px-4 py-2 rounded-full text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100/50 transition-all"
-            >
-              Galleries
+    <header className="fixed top-0 left-0 right-0 z-40 px-6 py-4">
+      <div className="max-w-6xl mx-auto">
+        <div className="flex items-center justify-between bg-white/80 backdrop-blur-xl border border-[#E8E4DC] rounded-2xl px-6 py-3 shadow-sm">
+          {/* Left: Logo + Nav */}
+          <div className="flex items-center gap-8">
+            <Link href="/" className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-lg bg-[#1C1917] flex items-center justify-center text-white font-bold text-xs">
+                12
+              </div>
+              <span className="text-[17px] font-semibold text-[#1C1917]">img</span>
             </Link>
-            <Link
-              href="/settings"
-              className="px-4 py-2 rounded-full text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100/50 transition-all"
-            >
-              Settings
+            
+            {/* Desktop Nav */}
+            <nav className="hidden md:flex items-center gap-1">
+              <Link
+                href="/"
+                className="px-4 py-2 rounded-lg text-sm font-medium text-[#78716C] hover:text-[#1C1917] hover:bg-[#FAF8F3] transition-all"
+              >
+                Galleries
+              </Link>
+              <Link
+                href="/settings"
+                className="px-4 py-2 rounded-lg text-sm font-medium text-[#78716C] hover:text-[#1C1917] hover:bg-[#FAF8F3] transition-all"
+              >
+                Settings
+              </Link>
+            </nav>
+          </div>
+
+          {/* Center: Usage Badge */}
+          <UsageBadge 
+            plan={userPlan} 
+            galleryCount={galleryCount} 
+            imageCount={imageCount} 
+          />
+
+          {/* Right: Actions */}
+          <div className="flex items-center gap-3">
+            {/* Mobile Create Action */}
+            <Link href="/upload" className="md:hidden">
+               <Button size="icon" variant="ghost" className="rounded-lg">
+                 <Plus className="h-5 w-5" />
+               </Button>
             </Link>
-          </nav>
-        </div>
 
-        <div className="flex items-center gap-3">
-          {/* Mobile Create Action */}
-          <Link href="/upload" className="md:hidden">
-             <Button size="icon" variant="ghost" className="rounded-full">
-               <Plus className="h-5 w-5" />
-             </Button>
-          </Link>
+            {/* Desktop Create Action */}
+            <Link href="/upload" className="hidden md:block">
+              <Button size="sm" className="h-9 rounded-lg bg-[#1C1917] px-4 text-sm font-medium text-white hover:bg-[#292524] transition-all">
+                <Plus className="h-4 w-4 mr-1.5" />
+                New Gallery
+              </Button>
+            </Link>
 
-          {/* Desktop Create Action */}
-          <Link href="/upload" className="hidden md:block">
-            <Button size="sm" className="h-10 rounded-full bg-gray-900 px-6 text-sm font-medium text-white shadow-lg hover:bg-gray-800 hover:scale-105 transition-all">
-              <Plus className="h-4 w-4 mr-2" />
-              New Gallery
-            </Button>
-          </Link>
-
-          <div className="pl-2 border-l border-gray-200">
             <UserButton 
               afterSignOutUrl="/"
               appearance={{
                 elements: {
-                  avatarBox: "h-9 w-9 ring-2 ring-white shadow-sm"
+                  avatarBox: "h-8 w-8"
                 }
               }}
             />
           </div>
         </div>
       </div>
-    </motion.header>
+    </header>
   )
 }

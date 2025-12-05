@@ -2,7 +2,7 @@ import { auth } from '@clerk/nextjs/server'
 import { notFound, redirect } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft, Plus } from 'lucide-react'
-import { getOrCreateUserByClerkId } from '@/server/queries/user.queries'
+import { getOrCreateUserByClerkId, getUserWithUsage } from '@/server/queries/user.queries'
 import { getGalleryWithOwnershipCheck } from '@/server/queries/gallery.queries'
 import { getGalleryImages } from '@/server/queries/image.queries'
 import { getSignedUrlsBatch } from '@/lib/storage/signed-urls'
@@ -27,7 +27,11 @@ export default async function GalleryViewPage({ params }: Props) {
     redirect('/sign-in')
   }
 
-  const user = await getOrCreateUserByClerkId(clerkId)
+  const [user, userData] = await Promise.all([
+    getOrCreateUserByClerkId(clerkId),
+    getUserWithUsage(clerkId),
+  ])
+  
   if (!user) {
     redirect('/sign-in')
   }
@@ -48,6 +52,7 @@ export default async function GalleryViewPage({ params }: Props) {
     signedUrl: signedUrls.get(img.storage_path) || '',
     width: img.width,
     height: img.height,
+    originalFilename: img.original_filename,
   }))
 
   const galleryData = {
@@ -62,7 +67,11 @@ export default async function GalleryViewPage({ params }: Props) {
 
   return (
     <div className="min-h-screen bg-[#FAFAFA]">
-      <Header />
+      <Header 
+        userPlan={userData?.plan || 'free'}
+        galleryCount={userData?.usage.galleryCount || 0}
+        imageCount={userData?.usage.imageCount || 0}
+      />
       
       <main className="container mx-auto px-4 pt-28 pb-20 max-w-7xl">
         {/* Header */}
@@ -84,7 +93,12 @@ export default async function GalleryViewPage({ params }: Props) {
             </div>
           </div>
 
-          <GalleryActions galleryId={gallery.id} gallerySlug={gallery.slug} />
+          <GalleryActions 
+            galleryId={gallery.id} 
+            gallerySlug={gallery.slug}
+            images={imagesWithUrls}
+            galleryTitle={gallery.title}
+          />
         </div>
 
         {/* Main Content */}

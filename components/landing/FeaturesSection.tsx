@@ -23,7 +23,7 @@ const features = [
 
 export function FeaturesSection() {
   return (
-    <section className="py-24 lg:py-32 bg-soft-bg relative overflow-hidden">
+    <section id="features" className="py-24 lg:py-32 bg-soft-bg relative overflow-hidden scroll-mt-20">
       {/* Background Glows */}
       <div className="absolute top-1/2 left-0 w-[600px] h-[600px] bg-white/40 rounded-full blur-[100px] -translate-y-1/2 -translate-x-1/3 pointer-events-none" />
       

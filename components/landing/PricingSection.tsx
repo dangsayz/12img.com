@@ -3,52 +3,23 @@
 import { motion } from 'framer-motion'
 import Link from 'next/link'
 import { Check } from 'lucide-react'
+import { PLANS } from '@/lib/config/pricing'
 
-const plans = [
-  {
-    name: 'Free',
-    price: '$0',
-    description: 'Perfect for trying things out.',
-    features: ['3 galleries', '50 images per gallery', 'Standard quality', '7-day link expiry'],
-    cta: 'Start free',
-    href: '/sign-up',
-    popular: false,
-  },
-  {
-    name: 'Basic',
-    price: '$10',
-    period: '/month',
-    description: 'For hobbyists and side projects.',
-    features: ['10 galleries', '200 images per gallery', 'High quality', 'Password protection', '30-day link expiry'],
-    cta: 'Get Basic',
-    href: '/sign-up?plan=basic',
-    popular: false,
-  },
-  {
-    name: 'Pro',
-    price: '$15',
-    period: '/month',
-    description: 'For working photographers.',
-    features: ['50 galleries', '500 images per gallery', 'Original quality', 'Custom branding', 'No link expiry'],
-    cta: 'Get Pro',
-    href: '/sign-up?plan=pro',
-    popular: true,
-  },
-  {
-    name: 'Studio',
-    price: '$20',
-    period: '/month',
-    description: 'For high-volume professionals.',
-    features: ['Unlimited galleries', 'Unlimited images', 'Original quality', 'Priority support', 'Team access (coming soon)'],
-    cta: 'Get Studio',
-    href: '/sign-up?plan=studio',
-    popular: false,
-  },
-]
+// Transform PLANS to the format expected by the component
+const plans = PLANS.map(plan => ({
+  name: plan.name,
+  price: plan.monthlyPrice === 0 ? '$0' : `$${plan.monthlyPrice}`,
+  period: plan.monthlyPrice === 0 ? undefined : '/month',
+  description: plan.description,
+  features: plan.features,
+  cta: plan.cta,
+  href: plan.ctaHref,
+  popular: plan.popular || false,
+}))
 
 export function PricingSection() {
   return (
-    <section className="py-24 lg:py-32 bg-soft-bg relative overflow-hidden">
+    <section id="pricing" className="py-24 lg:py-32 bg-soft-bg relative overflow-hidden scroll-mt-20">
       {/* Background Blob */}
       <div className="absolute bottom-0 right-0 w-[800px] h-[800px] bg-soft-lime/5 rounded-full blur-[120px] translate-x-1/3 translate-y-1/3 pointer-events-none" />
 

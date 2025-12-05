@@ -1,6 +1,6 @@
 'use server'
 
-import { auth } from '@clerk/nextjs/server'
+import { auth, currentUser } from '@clerk/nextjs/server'
 import { revalidatePath } from 'next/cache'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 import { hashPassword } from '@/lib/utils/password'
@@ -12,6 +12,8 @@ import {
   getGalleryWithOwnershipCheck,
   verifyGalleryOwnership,
 } from '@/server/queries/gallery.queries'
+import { getPlan, type PlanId } from '@/lib/config/pricing'
+import { sendGalleryInviteEmail } from '@/server/services/email.service'
 
 export async function createGallery(formData: FormData) {
   const { userId: clerkId } = await auth()
@@ -21,6 +23,24 @@ export async function createGallery(formData: FormData) {
   const user = await getOrCreateUserByClerkId(clerkId)
   console.log('createGallery - user:', user?.id)
   if (!user) return { error: 'User not found' }
+
+  // Check gallery limit based on user's plan
+  const userPlan = (user.plan || 'free') as PlanId
+  const plan = getPlan(userPlan)
+  
+  if (plan && plan.limits.galleries !== 'unlimited') {
+    const { count: currentGalleryCount } = await supabaseAdmin
+      .from('galleries')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', user.id)
+    
+    if (currentGalleryCount !== null && currentGalleryCount >= plan.limits.galleries) {
+      return { 
+        error: `You've reached the ${plan.limits.galleries} gallery limit for the ${plan.name} plan. Upgrade to create more galleries.`,
+        limitReached: true,
+      }
+    }
+  }
 
   try {
     const validated = createGallerySchema.parse({
@@ -80,9 +100,13 @@ export async function updateGallery(galleryId: string, formData: FormData) {
   if (!gallery) return { error: 'Gallery not found' }
 
   try {
+    // Handle password specially - empty string means remove password
+    const passwordValue = formData.get('password')
+    const removePassword = formData.get('removePassword') === 'true'
+    
     const validated = updateGallerySchema.parse({
       title: formData.get('title') || undefined,
-      password: formData.get('password') || undefined,
+      password: passwordValue && passwordValue !== '' ? passwordValue : undefined,
       downloadEnabled:
         formData.get('downloadEnabled') !== null
           ? formData.get('downloadEnabled') === 'true'
@@ -98,10 +122,12 @@ export async function updateGallery(galleryId: string, formData: FormData) {
       updateData.slug = newSlug
     }
 
-    if (validated.password !== undefined) {
-      updateData.password_hash = validated.password
-        ? await hashPassword(validated.password)
-        : null
+    // Handle password update or removal
+    if (removePassword) {
+      // Explicitly remove password
+      updateData.password_hash = null
+    } else if (validated.password) {
+      updateData.password_hash = await hashPassword(validated.password)
     }
 
     if (validated.downloadEnabled !== undefined) {
@@ -209,4 +235,67 @@ export async function deleteGallery(galleryId: string) {
   revalidatePath('/')
 
   return { success: true }
+}
+
+/**
+ * Send gallery to a client via email.
+ */
+export async function sendGalleryToClient(
+  galleryId: string,
+  clientEmail: string,
+  personalMessage?: string,
+  baseUrl?: string
+) {
+  const { userId: clerkId } = await auth()
+  if (!clerkId) return { error: 'Unauthorized' }
+
+  const user = await getOrCreateUserByClerkId(clerkId)
+  if (!user) return { error: 'User not found' }
+
+  const gallery = await getGalleryWithOwnershipCheck(galleryId, user.id)
+  if (!gallery) return { error: 'Gallery not found' }
+
+  // Validate email
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+  if (!emailRegex.test(clientEmail)) {
+    return { error: 'Invalid email address' }
+  }
+
+  // Get current user info from Clerk for the email
+  const clerkUser = await currentUser()
+  const photographerName = clerkUser?.fullName || clerkUser?.firstName || undefined
+  const photographerEmail = clerkUser?.primaryEmailAddress?.emailAddress || user.email
+
+  try {
+    const result = await sendGalleryInviteEmail(
+      gallery,
+      clientEmail.toLowerCase().trim(),
+      {
+        photographerName,
+        photographerEmail,
+        personalMessage: personalMessage?.trim() || undefined,
+        baseUrl: baseUrl || process.env.NEXT_PUBLIC_APP_URL || 'https://12img.com',
+      }
+    )
+
+    if (!result.success) {
+      return { error: result.error || 'Failed to send email' }
+    }
+
+    // Optionally save the client to gallery_clients for future notifications
+    await supabaseAdmin
+      .from('gallery_clients')
+      .upsert({
+        gallery_id: galleryId,
+        email: clientEmail.toLowerCase().trim(),
+        notify_on_archive: true,
+      }, {
+        onConflict: 'gallery_id,email',
+      })
+
+    return { success: true }
+  } catch (e) {
+    console.error('[sendGalleryToClient] Error:', e)
+    return { error: 'Failed to send gallery' }
+  }
 }

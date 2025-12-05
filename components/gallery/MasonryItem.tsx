@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useCallback, useTransition } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
 import { Trash2, Star, Loader2 } from 'lucide-react'
 import { deleteImage, setCoverImage } from '@/server/actions/image.actions'
 
@@ -107,82 +106,67 @@ export function MasonryItem({
           loading={index < 4 ? 'eager' : 'lazy'}
           decoding="async"
           onLoad={handleLoad}
-          className={`w-full h-auto transition-all duration-300 ${
+          className={`w-full h-auto transition-[filter] duration-200 ${
             loaded ? 'opacity-100' : 'opacity-0'
           } ${isHovered && editable ? 'brightness-75' : ''}`}
+          style={{ opacity: loaded ? 1 : 0 }}
         />
         {!loaded && <div className="aspect-square animate-pulse bg-gray-200" />}
       </div>
 
       {/* Hover Overlay - Only in edit mode */}
-      <AnimatePresence>
-        {editable && isHovered && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.15 }}
-            className="absolute inset-0 pointer-events-none"
-          >
-            {/* Action Buttons */}
-            <div className="absolute top-2 right-2 flex gap-1.5 pointer-events-auto">
-              {/* Set as Cover */}
-              {galleryId && (
-                <motion.button
-                  initial={{ scale: 0.8, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  transition={{ delay: 0.05 }}
-                  onClick={handleSetCover}
-                  disabled={isPending}
-                  className="h-8 w-8 rounded-full bg-white/90 backdrop-blur-sm shadow-lg flex items-center justify-center hover:bg-white hover:scale-110 transition-all disabled:opacity-50"
-                  title="Set as cover"
-                >
-                  {isPending ? (
-                    <Loader2 className="w-3.5 h-3.5 text-gray-600 animate-spin" />
-                  ) : (
-                    <Star className="w-3.5 h-3.5 text-gray-600" />
-                  )}
-                </motion.button>
-              )}
-
-              {/* Delete Button */}
-              <motion.button
-                initial={{ scale: 0.8, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={{ delay: 0.1 }}
-                onClick={handleDelete}
+      {editable && isHovered && (
+        <div className="absolute inset-0 pointer-events-none">
+          {/* Action Buttons */}
+          <div className="absolute top-2 right-2 flex gap-1.5 pointer-events-auto">
+            {/* Set as Cover */}
+            {galleryId && (
+              <button
+                onClick={handleSetCover}
                 disabled={isPending}
-                className={`h-8 rounded-full backdrop-blur-sm shadow-lg flex items-center justify-center transition-all disabled:opacity-50 ${
-                  showDeleteConfirm 
-                    ? 'bg-red-500 hover:bg-red-600 px-3 w-auto' 
-                    : 'bg-white/90 hover:bg-white hover:scale-110 w-8'
-                }`}
-                title={showDeleteConfirm ? 'Click again to confirm' : 'Delete image'}
+                className="h-8 w-8 rounded-full bg-white/90 backdrop-blur-sm shadow-lg flex items-center justify-center hover:bg-white hover:scale-110 transition-all disabled:opacity-50"
+                title="Set as cover"
               >
                 {isPending ? (
                   <Loader2 className="w-3.5 h-3.5 text-gray-600 animate-spin" />
-                ) : showDeleteConfirm ? (
-                  <span className="text-xs font-medium text-white px-1">Delete?</span>
                 ) : (
-                  <Trash2 className="w-3.5 h-3.5 text-gray-600" />
+                  <Star className="w-3.5 h-3.5 text-gray-600" />
                 )}
-              </motion.button>
-            </div>
-
-            {/* Cancel hint when delete confirm is showing */}
-            {showDeleteConfirm && (
-              <motion.button
-                initial={{ opacity: 0, y: 5 }}
-                animate={{ opacity: 1, y: 0 }}
-                onClick={handleCancelDelete}
-                className="absolute bottom-2 right-2 text-xs text-white/80 bg-black/40 px-2 py-1 rounded backdrop-blur-sm pointer-events-auto hover:bg-black/60"
-              >
-                Cancel
-              </motion.button>
+              </button>
             )}
-          </motion.div>
-        )}
-      </AnimatePresence>
+
+            {/* Delete Button */}
+            <button
+              onClick={handleDelete}
+              disabled={isPending}
+              className={`h-8 rounded-full backdrop-blur-sm shadow-lg flex items-center justify-center transition-all disabled:opacity-50 ${
+                showDeleteConfirm 
+                  ? 'bg-red-500 hover:bg-red-600 px-3 w-auto' 
+                  : 'bg-white/90 hover:bg-white hover:scale-110 w-8'
+              }`}
+              title={showDeleteConfirm ? 'Click again to confirm' : 'Delete image'}
+            >
+              {isPending ? (
+                <Loader2 className="w-3.5 h-3.5 text-gray-600 animate-spin" />
+              ) : showDeleteConfirm ? (
+                <span className="text-xs font-medium text-white px-1">Delete?</span>
+              ) : (
+                <Trash2 className="w-3.5 h-3.5 text-gray-600" />
+              )}
+            </button>
+          </div>
+
+          {/* Cancel hint when delete confirm is showing */}
+          {showDeleteConfirm && (
+            <button
+              onClick={handleCancelDelete}
+              className="absolute bottom-2 right-2 text-xs text-white/80 bg-black/40 px-2 py-1 rounded backdrop-blur-sm pointer-events-auto hover:bg-black/60"
+            >
+              Cancel
+            </button>
+          )}
+        </div>
+      )}
     </div>
   )
 }

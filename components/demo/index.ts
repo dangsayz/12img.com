@@ -1,0 +1,10 @@
+// Demo page components
+export { DemoNav } from './DemoNav'
+export { DemoHero } from './DemoHero'
+export { HowItWorks } from './HowItWorks'
+export { DemoGallery } from './DemoGallery'
+export { BenefitsSection } from './BenefitsSection'
+export { PhotographerSection } from './PhotographerSection'
+export { TestimonialsSection } from './TestimonialsSection'
+export { FAQSection } from './FAQSection'
+export { StickyCTA } from './StickyCTA'

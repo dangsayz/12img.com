@@ -32,8 +32,8 @@ export default function CreateGalleryPage() {
 
       if (result.error) {
         setError(result.error)
-      } else if (result.galleryId) {
-        router.push(`/gallery/${result.galleryId}/upload`)
+      } else if (result.slug) {
+        router.push(`/gallery/${result.slug}/upload`)
       }
     })
   }

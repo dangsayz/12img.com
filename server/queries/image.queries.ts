@@ -26,22 +26,34 @@ export async function getImageWithOwnershipCheck(
   imageId: string,
   userId: string
 ) {
-  const { data, error } = await supabaseAdmin
+  // First get the image
+  const { data: image, error: imageError } = await supabaseAdmin
     .from('images')
-    .select(
-      `
-      *,
-      galleries!inner(user_id)
-    `
-    )
+    .select('*')
     .eq('id', imageId)
     .single()
 
-  if (error || !data) return null
+  if (imageError || !image) {
+    console.log('[getImageWithOwnershipCheck] Image not found:', imageId, imageError?.message)
+    return null
+  }
 
-  // Check ownership through gallery
-  const gallery = data.galleries as unknown as { user_id: string }
-  if (gallery.user_id !== userId) return null
+  // Then verify ownership through the gallery
+  const { data: gallery, error: galleryError } = await supabaseAdmin
+    .from('galleries')
+    .select('user_id')
+    .eq('id', image.gallery_id)
+    .single()
 
-  return data
+  if (galleryError || !gallery) {
+    console.log('[getImageWithOwnershipCheck] Gallery not found:', image.gallery_id)
+    return null
+  }
+
+  if (gallery.user_id !== userId) {
+    console.log('[getImageWithOwnershipCheck] Ownership mismatch:', gallery.user_id, '!==', userId)
+    return null
+  }
+
+  return image
 }

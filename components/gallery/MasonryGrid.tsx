@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { MasonryItem } from './MasonryItem'
 import { FullscreenViewer } from './FullscreenViewer'
@@ -48,11 +48,24 @@ export function MasonryGrid({ images: initialImages, editable = false, galleryId
   const [columns, setColumns] = useState(COLUMNS_BY_BREAKPOINT.default)
   const [viewerOpen, setViewerOpen] = useState(false)
   const [viewerIndex, setViewerIndex] = useState(0)
-  const [images, setImages] = useState(initialImages)
+  const [deletedIds, setDeletedIds] = useState<Set<string>>(new Set())
 
-  // Sync with prop changes (e.g., after upload)
+  // Filter out deleted images from props (avoids full state sync flicker)
+  const images = useMemo(() => 
+    initialImages.filter(img => !deletedIds.has(img.id)),
+    [initialImages, deletedIds]
+  )
+
+  // Clear deleted IDs when props change (server confirmed deletion)
   useEffect(() => {
-    setImages(initialImages)
+    const currentIds = new Set(initialImages.map(img => img.id))
+    setDeletedIds(prev => {
+      const newSet = new Set<string>()
+      prev.forEach(id => {
+        if (currentIds.has(id)) newSet.add(id) // Keep if still pending
+      })
+      return newSet.size !== prev.size ? newSet : prev
+    })
   }, [initialImages])
 
   useEffect(() => {
@@ -71,10 +84,10 @@ export function MasonryGrid({ images: initialImages, editable = false, galleryId
   }, [])
 
   const handleImageDelete = useCallback((imageId: string) => {
-    // Optimistic update - remove from local state immediately
-    setImages((prev) => prev.filter((img) => img.id !== imageId))
-    // Refresh server data in background
-    router.refresh()
+    // Optimistic update - mark as deleted immediately
+    setDeletedIds(prev => new Set(prev).add(imageId))
+    // Delay refresh to avoid layout thrash - server already deleted
+    setTimeout(() => router.refresh(), 2000)
   }, [router])
 
   const handleImageClick = useCallback((index: number) => {

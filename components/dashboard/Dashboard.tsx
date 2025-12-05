@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect, useTransition } from 'react'
 import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
 import { 
@@ -19,7 +19,6 @@ import {
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { deleteGallery } from '@/server/actions/gallery.actions'
-import { useTransition } from 'react'
 
 interface Gallery {
   id: string
@@ -77,7 +76,7 @@ export function Dashboard({ galleries }: DashboardProps) {
     <div className="min-h-[calc(100vh-120px)]">
       {/* Page Header */}
       <div className="mb-8">
-        <h1 className="font-serif text-4xl md:text-5xl text-neutral-900 font-light tracking-tight mb-2">
+        <h1 className="text-3xl md:text-4xl text-neutral-900 font-extralight tracking-[-0.02em] mb-2">
           Collections
         </h1>
         <p className="text-neutral-500">
@@ -172,13 +171,13 @@ export function Dashboard({ galleries }: DashboardProps) {
                 <div className="h-20 w-20 rounded-full bg-gradient-to-br from-neutral-50 to-neutral-100 flex items-center justify-center mb-6 border border-neutral-200">
                   <Plus className="h-8 w-8 text-neutral-400" />
                 </div>
-                <h3 className="font-serif text-2xl text-neutral-900 mb-2">Start your collection</h3>
+                <h3 className="text-xl text-neutral-900 font-extralight tracking-[-0.01em] mb-2">Start your collection</h3>
                 <p className="text-neutral-500 mb-6 text-center max-w-sm">
                   Create your first gallery to showcase your photography
                 </p>
                 <Link href="/gallery/create">
-                  <Button className="rounded-full h-11 px-8 bg-neutral-900 hover:bg-neutral-800">
-                    <Plus className="w-4 h-4 mr-2" />
+                  <Button size="sm" className="h-9 rounded-lg bg-[#1C1917] px-4 text-sm font-medium text-white hover:bg-[#292524] transition-all">
+                    <Plus className="h-4 w-4 mr-1.5" />
                     New Gallery
                   </Button>
                 </Link>
@@ -219,13 +218,18 @@ export function Dashboard({ galleries }: DashboardProps) {
 function GalleryCardGrid({ gallery, index }: { gallery: Gallery; index: number }) {
   const [isHovered, setIsHovered] = useState(false)
   const [showMenu, setShowMenu] = useState(false)
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [copied, setCopied] = useState(false)
   const [isPending, startTransition] = useTransition()
   const [isDeleted, setIsDeleted] = useState(false)
 
-  const shareUrl = typeof window !== 'undefined' 
-    ? `${window.location.origin}/g/${gallery.slug}`
-    : `/g/${gallery.slug}`
+  // Build share URL on client only to avoid hydration mismatch
+  const relativePath = `/g/${gallery.slug}`
+  const [shareUrl, setShareUrl] = useState(relativePath)
+  
+  useEffect(() => {
+    setShareUrl(`${window.location.origin}${relativePath}`)
+  }, [relativePath])
 
   const formattedDate = new Date(gallery.createdAt).toLocaleDateString('en-US', {
     month: 'short',
@@ -241,17 +245,20 @@ function GalleryCardGrid({ gallery, index }: { gallery: Gallery; index: number }
     setTimeout(() => setCopied(false), 2000)
   }
 
-  const handleDelete = (e: React.MouseEvent) => {
+  const openDeleteModal = (e: React.MouseEvent) => {
     e.preventDefault()
     e.stopPropagation()
-    if (confirm(`Delete "${gallery.title}"? This cannot be undone.`)) {
-      setIsDeleted(true)
-      startTransition(async () => {
-        const result = await deleteGallery(gallery.id)
-        if (result.error) setIsDeleted(false)
-      })
-    }
     setShowMenu(false)
+    setShowDeleteModal(true)
+  }
+
+  const handleDelete = () => {
+    setIsDeleted(true)
+    setShowDeleteModal(false)
+    startTransition(async () => {
+      const result = await deleteGallery(gallery.id)
+      if (result.error) setIsDeleted(false)
+    })
   }
 
   if (isDeleted) return null
@@ -263,7 +270,7 @@ function GalleryCardGrid({ gallery, index }: { gallery: Gallery; index: number }
       transition={{ duration: 0.4, delay: index * 0.05 }}
     >
       <Link 
-        href={`/gallery/${gallery.id}`}
+        href={`/gallery/${gallery.slug}`}
         className="group block"
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => { setIsHovered(false); setShowMenu(false) }}
@@ -332,24 +339,25 @@ function GalleryCardGrid({ gallery, index }: { gallery: Gallery; index: number }
                   {copied ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
                   {copied ? 'Copied!' : 'Copy Link'}
                 </button>
-                <a
-                  href={shareUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  onClick={(e) => e.stopPropagation()}
+                <button
+                  onClick={(e) => {
+                    e.preventDefault()
+                    e.stopPropagation()
+                    window.open(relativePath, '_blank')
+                  }}
                   className="w-full px-4 py-2.5 text-left text-sm text-neutral-700 hover:bg-neutral-50 flex items-center gap-3"
                 >
                   <ExternalLink className="w-4 h-4" />
                   View Live
-                </a>
+                </button>
                 <div className="border-t border-neutral-100 my-1.5" />
                 <button
-                  onClick={handleDelete}
+                  onClick={openDeleteModal}
                   disabled={isPending}
                   className="w-full px-4 py-2.5 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-3 disabled:opacity-50"
                 >
                   <Trash2 className="w-4 h-4" />
-                  {isPending ? 'Deleting...' : 'Delete'}
+                  Delete
                 </button>
               </motion.div>
             )}
@@ -362,16 +370,17 @@ function GalleryCardGrid({ gallery, index }: { gallery: Gallery; index: number }
             animate={{ opacity: isHovered ? 1 : 0, y: isHovered ? 0 : 10 }}
             transition={{ duration: 0.3 }}
           >
-            <a
-              href={shareUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={(e) => e.stopPropagation()}
+            <button
+              onClick={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+                window.open(relativePath, '_blank')
+              }}
               className="inline-flex items-center gap-2 px-4 py-2 bg-white/95 backdrop-blur-sm rounded-full text-sm font-medium text-neutral-900 hover:bg-white transition-colors shadow-lg"
             >
               <ExternalLink className="w-3.5 h-3.5" />
               View Gallery
-            </a>
+            </button>
           </motion.div>
         </div>
         
@@ -390,6 +399,57 @@ function GalleryCardGrid({ gallery, index }: { gallery: Gallery; index: number }
           </div>
         </div>
       </Link>
+
+      {/* Delete Confirmation Modal */}
+      <AnimatePresence>
+        {showDeleteModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4"
+            style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}
+            onClick={() => setShowDeleteModal(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0, y: 10 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0, y: 10 }}
+              transition={{ type: 'spring', duration: 0.3 }}
+              onClick={(e) => e.stopPropagation()}
+              className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-2xl border border-neutral-100"
+            >
+              {/* Icon */}
+              <div className="w-12 h-12 rounded-full bg-red-50 flex items-center justify-center mb-4 mx-auto">
+                <Trash2 className="w-5 h-5 text-red-500" />
+              </div>
+              
+              <h3 className="text-lg font-semibold text-neutral-900 text-center mb-2">
+                Delete "{gallery.title}"?
+              </h3>
+              <p className="text-sm text-neutral-500 text-center mb-6">
+                This will permanently delete the gallery and all {gallery.imageCount} {gallery.imageCount === 1 ? 'image' : 'images'}. This action cannot be undone.
+              </p>
+              
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowDeleteModal(false)}
+                  className="flex-1 px-4 py-2.5 text-sm font-medium text-neutral-700 bg-neutral-100 hover:bg-neutral-200 rounded-xl transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleDelete}
+                  disabled={isPending}
+                  className="flex-1 px-4 py-2.5 text-sm font-medium text-white bg-red-500 hover:bg-red-600 rounded-xl transition-colors disabled:opacity-50"
+                >
+                  {isPending ? 'Deleting...' : 'Delete'}
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.div>
   )
 }
@@ -398,9 +458,13 @@ function GalleryCardGrid({ gallery, index }: { gallery: Gallery; index: number }
 function GalleryCardList({ gallery, index }: { gallery: Gallery; index: number }) {
   const [copied, setCopied] = useState(false)
   
-  const shareUrl = typeof window !== 'undefined' 
-    ? `${window.location.origin}/g/${gallery.slug}`
-    : `/g/${gallery.slug}`
+  // Build share URL on client only to avoid hydration mismatch
+  const relativePath = `/g/${gallery.slug}`
+  const [shareUrl, setShareUrl] = useState(relativePath)
+  
+  useEffect(() => {
+    setShareUrl(`${window.location.origin}${relativePath}`)
+  }, [relativePath])
 
   const formattedDate = new Date(gallery.createdAt).toLocaleDateString('en-US', {
     month: 'short',
@@ -423,7 +487,7 @@ function GalleryCardList({ gallery, index }: { gallery: Gallery; index: number }
       transition={{ duration: 0.3, delay: index * 0.03 }}
     >
       <Link 
-        href={`/gallery/${gallery.id}`}
+        href={`/gallery/${gallery.slug}`}
         className="flex items-center gap-5 p-4 bg-white rounded-2xl border border-neutral-100 hover:border-neutral-200 hover:shadow-md transition-all group"
       >
         {/* Thumbnail */}

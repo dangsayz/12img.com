@@ -98,3 +98,66 @@ export async function getUserSettings(clerkId: string) {
     defaultDownloadEnabled: data.default_download_enabled,
   }
 }
+
+export async function getUserWithUsage(clerkId: string) {
+  const user = await getOrCreateUserByClerkId(clerkId)
+  if (!user) {
+    return null
+  }
+
+  const usage = await getUserStorageUsage(clerkId)
+  
+  return {
+    id: user.id,
+    email: user.email,
+    plan: (user.plan || 'free') as 'free' | 'basic' | 'pro' | 'studio',
+    usage,
+  }
+}
+
+export async function getUserStorageUsage(clerkId: string) {
+  const user = await getUserByClerkId(clerkId)
+  if (!user) {
+    return {
+      totalBytes: 0,
+      imageCount: 0,
+      galleryCount: 0,
+    }
+  }
+
+  // Get gallery count
+  const { count: galleryCount } = await supabaseAdmin
+    .from('galleries')
+    .select('*', { count: 'exact', head: true })
+    .eq('user_id', user.id)
+
+  // Get image count and total size
+  const { data: galleries } = await supabaseAdmin
+    .from('galleries')
+    .select('id')
+    .eq('user_id', user.id)
+
+  const galleryIds = galleries?.map(g => g.id) || []
+
+  if (galleryIds.length === 0) {
+    return {
+      totalBytes: 0,
+      imageCount: 0,
+      galleryCount: galleryCount || 0,
+    }
+  }
+
+  const { data: images } = await supabaseAdmin
+    .from('images')
+    .select('file_size_bytes')
+    .in('gallery_id', galleryIds)
+
+  const totalBytes = images?.reduce((sum, img) => sum + img.file_size_bytes, 0) || 0
+  const imageCount = images?.length || 0
+
+  return {
+    totalBytes,
+    imageCount,
+    galleryCount: galleryCount || 0,
+  }
+}

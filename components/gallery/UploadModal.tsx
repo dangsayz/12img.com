@@ -5,17 +5,25 @@ import { useRouter } from 'next/navigation'
 import { X, Upload, CheckCircle2 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Button } from '@/components/ui/button'
-import { generateSignedUploadUrls, confirmUploads } from '@/server/actions/upload.actions'
+import { generateSignedUploadUrls, confirmUploads, getExistingFilenames } from '@/server/actions/upload.actions'
 
 interface FileItemState {
   id: string
   file: File
   preview: string
-  status: 'pending' | 'uploading' | 'completed' | 'error'
+  status: 'pending' | 'uploading' | 'completed' | 'error' | 'duplicate'
   progress: number
   error?: string
   storagePath?: string
   token?: string
+  isDuplicate?: boolean
+  duplicateAction?: 'overwrite' | 'copy' | 'skip'
+}
+
+interface DuplicateFile {
+  id: string
+  file: File
+  preview: string
 }
 
 const MAX_FILE_SIZE = 25 * 1024 * 1024
@@ -35,6 +43,9 @@ export function UploadModal({ isOpen, onClose, galleryId }: UploadModalProps) {
   const [isDragging, setIsDragging] = useState(false)
   const [isUploading, setIsUploading] = useState(false)
   const isUploadingRef = useRef(false)
+  const [existingFilenames, setExistingFilenames] = useState<string[]>([])
+  const [duplicates, setDuplicates] = useState<DuplicateFile[]>([])
+  const [showDuplicateDialog, setShowDuplicateDialog] = useState(false)
 
   // Auto-upload when files are added
   useEffect(() => {
@@ -44,11 +55,22 @@ export function UploadModal({ isOpen, onClose, galleryId }: UploadModalProps) {
     }
   }, [uploads])
 
+  // Fetch existing filenames when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      getExistingFilenames(galleryId)
+        .then(setExistingFilenames)
+        .catch(console.error)
+    }
+  }, [isOpen, galleryId])
+
   // Reset state when modal closes
   useEffect(() => {
     if (!isOpen) {
       setUploads([])
       setIsDragging(false)
+      setDuplicates([])
+      setShowDuplicateDialog(false)
     }
   }, [isOpen])
 
@@ -56,25 +78,38 @@ export function UploadModal({ isOpen, onClose, galleryId }: UploadModalProps) {
     if (!fileList) return
 
     const newUploads: FileItemState[] = []
+    const newDuplicates: DuplicateFile[] = []
 
     for (const file of Array.from(fileList)) {
       if (!ACCEPTED_TYPES.includes(file.type)) continue
       if (file.size > MAX_FILE_SIZE) continue
 
       const id = `${file.name}-${Date.now()}-${Math.random()}`
-      newUploads.push({
-        id,
-        file,
-        preview: URL.createObjectURL(file),
-        status: 'pending',
-        progress: 0,
-      })
+      const preview = URL.createObjectURL(file)
+      
+      // Check if this file already exists in the gallery
+      if (existingFilenames.includes(file.name)) {
+        newDuplicates.push({ id, file, preview })
+      } else {
+        newUploads.push({
+          id,
+          file,
+          preview,
+          status: 'pending',
+          progress: 0,
+        })
+      }
     }
 
     if (newUploads.length > 0) {
       setUploads(prev => [...prev, ...newUploads])
     }
-  }, [])
+    
+    if (newDuplicates.length > 0) {
+      setDuplicates(newDuplicates)
+      setShowDuplicateDialog(true)
+    }
+  }, [existingFilenames])
 
   const processQueue = async () => {
     if (isUploadingRef.current) return
@@ -214,6 +249,61 @@ export function UploadModal({ isOpen, onClose, galleryId }: UploadModalProps) {
     }
   }
 
+  // Handle duplicate file actions
+  const handleDuplicateAction = useCallback((action: 'overwrite' | 'copy' | 'skip') => {
+    if (action === 'skip') {
+      // Just dismiss - don't upload duplicates
+      duplicates.forEach(d => URL.revokeObjectURL(d.preview))
+      setDuplicates([])
+      setShowDuplicateDialog(false)
+      return
+    }
+
+    // Add duplicates to upload queue with appropriate handling
+    const newUploads: FileItemState[] = duplicates.map(d => {
+      let fileName = d.file.name
+      
+      if (action === 'copy') {
+        // Add (copy) suffix before extension
+        const lastDot = fileName.lastIndexOf('.')
+        if (lastDot > 0) {
+          const name = fileName.substring(0, lastDot)
+          const ext = fileName.substring(lastDot)
+          fileName = `${name} (copy)${ext}`
+        } else {
+          fileName = `${fileName} (copy)`
+        }
+        
+        // Create new file with modified name
+        const newFile = new File([d.file], fileName, { type: d.file.type })
+        return {
+          id: d.id,
+          file: newFile,
+          preview: d.preview,
+          status: 'pending' as const,
+          progress: 0,
+          isDuplicate: true,
+          duplicateAction: action,
+        }
+      }
+      
+      // Overwrite - use same filename, existing will be replaced
+      return {
+        id: d.id,
+        file: d.file,
+        preview: d.preview,
+        status: 'pending' as const,
+        progress: 0,
+        isDuplicate: true,
+        duplicateAction: action,
+      }
+    })
+
+    setUploads(prev => [...prev, ...newUploads])
+    setDuplicates([])
+    setShowDuplicateDialog(false)
+  }, [duplicates])
+
   const completedCount = uploads.filter(u => u.status === 'completed').length
   const allComplete = uploads.length > 0 && completedCount === uploads.length
 
@@ -237,7 +327,7 @@ export function UploadModal({ isOpen, onClose, galleryId }: UploadModalProps) {
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.98, opacity: 0, y: 10 }}
             transition={{ duration: 0.2, ease: [0.32, 0.72, 0, 1] }}
-            className="bg-white rounded-2xl w-full max-w-md overflow-hidden"
+            className="relative bg-white rounded-2xl w-full max-w-md overflow-hidden"
             style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}
           >
             {/* Header - Minimal */}
@@ -365,6 +455,81 @@ export function UploadModal({ isOpen, onClose, galleryId }: UploadModalProps) {
               </div>
             )}
           </motion.div>
+
+          {/* Duplicate Files Dialog */}
+          <AnimatePresence>
+            {showDuplicateDialog && duplicates.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="absolute inset-0 flex items-center justify-center bg-black/60 rounded-2xl"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <motion.div
+                  initial={{ scale: 0.95, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  exit={{ scale: 0.95, opacity: 0 }}
+                  className="bg-white rounded-xl p-5 mx-4 max-w-sm w-full shadow-2xl"
+                >
+                  <div className="flex items-start gap-3 mb-4">
+                    <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center flex-shrink-0">
+                      <svg className="w-5 h-5 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                      </svg>
+                    </div>
+                    <div>
+                      <h3 className="font-medium text-gray-900">
+                        {duplicates.length === 1 ? 'Duplicate file found' : `${duplicates.length} duplicate files found`}
+                      </h3>
+                      <p className="text-sm text-gray-500 mt-1">
+                        {duplicates.length === 1 
+                          ? `"${duplicates[0].file.name}" already exists in this gallery.`
+                          : 'These files already exist in this gallery.'
+                        }
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Preview duplicates */}
+                  {duplicates.length <= 3 && (
+                    <div className="flex gap-2 mb-4">
+                      {duplicates.map(d => (
+                        <div key={d.id} className="relative">
+                          <img 
+                            src={d.preview} 
+                            alt={d.file.name}
+                            className="w-14 h-14 rounded-lg object-cover border border-gray-200"
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  <div className="space-y-2">
+                    <button
+                      onClick={() => handleDuplicateAction('overwrite')}
+                      className="w-full px-4 py-2.5 text-sm font-medium text-white bg-gray-900 hover:bg-gray-800 rounded-lg transition-colors"
+                    >
+                      Overwrite existing
+                    </button>
+                    <button
+                      onClick={() => handleDuplicateAction('copy')}
+                      className="w-full px-4 py-2.5 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+                    >
+                      Keep both (add copy)
+                    </button>
+                    <button
+                      onClick={() => handleDuplicateAction('skip')}
+                      className="w-full px-4 py-2.5 text-sm font-medium text-gray-500 hover:text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"
+                    >
+                      Skip
+                    </button>
+                  </div>
+                </motion.div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </motion.div>
       )}
     </AnimatePresence>

@@ -23,7 +23,7 @@ export function SoftHeader() {
     >
       {/* Brand */}
       <div className="flex items-center gap-3">
-        <div className="w-10 h-10 rounded-full bg-soft-lime flex items-center justify-center text-soft-accent font-bold shadow-inner-light">
+        <div className="w-10 h-10 rounded-full bg-[#2D2D2D] flex items-center justify-center text-white font-semibold">
           12
         </div>
         <span className="text-lg font-bold text-gray-900 tracking-tight">12img</span>

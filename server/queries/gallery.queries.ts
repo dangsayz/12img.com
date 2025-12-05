@@ -39,13 +39,16 @@ export async function verifyGalleryOwnership(
 }
 
 export async function getGalleryWithOwnershipCheck(
-  galleryId: string,
+  galleryIdOrSlug: string,
   userId: string
 ) {
+  // Try by UUID first, then by slug
+  const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(galleryIdOrSlug)
+  
   const { data, error } = await supabaseAdmin
     .from('galleries')
     .select('*')
-    .eq('id', galleryId)
+    .eq(isUUID ? 'id' : 'slug', galleryIdOrSlug)
     .eq('user_id', userId)
     .single()
 

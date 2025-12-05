@@ -23,6 +23,25 @@ interface UploadUrlResponse {
   token: string
 }
 
+export async function getExistingFilenames(galleryId: string): Promise<string[]> {
+  const { userId: clerkId } = await auth()
+  if (!clerkId) throw new Error('Unauthorized')
+
+  const user = await getOrCreateUserByClerkId(clerkId)
+  if (!user) throw new Error('User not found')
+
+  const isOwner = await verifyGalleryOwnership(galleryId, user.id)
+  if (!isOwner) throw new Error('Access denied')
+
+  const { data, error } = await supabaseAdmin
+    .from('images')
+    .select('original_filename')
+    .eq('gallery_id', galleryId)
+
+  if (error) throw error
+  return (data || []).map(img => img.original_filename)
+}
+
 export async function generateSignedUploadUrls(request: {
   galleryId: string
   files: UploadFileMetadata[]
