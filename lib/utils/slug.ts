@@ -1,6 +1,9 @@
 import slugify from 'slugify'
-import { nanoid } from 'nanoid'
+import { customAlphabet } from 'nanoid'
 import { supabaseAdmin } from '@/lib/supabase/admin'
+
+// Only lowercase letters and numbers to match DB constraint: ^[a-z0-9-]+$
+const nanoid = customAlphabet('abcdefghijklmnopqrstuvwxyz0123456789', 6)
 
 export function generateSlug(title: string): string {
   const base = slugify(title, {
@@ -10,7 +13,7 @@ export function generateSlug(title: string): string {
   })
 
   const safeBase = base.length >= 3 ? base : 'gallery'
-  const suffix = nanoid(6)
+  const suffix = nanoid()
 
   return `${safeBase}-${suffix}`
 }

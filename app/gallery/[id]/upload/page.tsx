@@ -2,7 +2,7 @@ import { auth } from '@clerk/nextjs/server'
 import { notFound, redirect } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft, ExternalLink } from 'lucide-react'
-import { getUserByClerkId } from '@/server/queries/user.queries'
+import { getOrCreateUserByClerkId } from '@/server/queries/user.queries'
 import { getGalleryWithOwnershipCheck } from '@/server/queries/gallery.queries'
 import { getGalleryImages } from '@/server/queries/image.queries'
 import { getSignedUrlsBatch } from '@/lib/storage/signed-urls'
@@ -14,22 +14,23 @@ import { Button } from '@/components/ui/button'
 export const dynamic = 'force-dynamic'
 
 interface Props {
-  params: { id: string }
+  params: Promise<{ id: string }>
 }
 
 export default async function UploadPage({ params }: Props) {
+  const { id } = await params
   const { userId: clerkId } = await auth()
 
   if (!clerkId) {
     redirect('/sign-in')
   }
 
-  const user = await getUserByClerkId(clerkId)
+  const user = await getOrCreateUserByClerkId(clerkId)
   if (!user) {
     redirect('/sign-in')
   }
 
-  const gallery = await getGalleryWithOwnershipCheck(params.id, user.id)
+  const gallery = await getGalleryWithOwnershipCheck(id, user.id)
   if (!gallery) {
     notFound()
   }
@@ -50,7 +51,7 @@ export default async function UploadPage({ params }: Props) {
   return (
     <div className="min-h-screen bg-gray-50/50">
       <Header />
-      <main className="container mx-auto px-4 py-8">
+      <main className="container mx-auto px-4 pt-28 pb-8">
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-4">
             <Link 

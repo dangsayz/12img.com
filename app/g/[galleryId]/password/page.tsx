@@ -3,18 +3,19 @@ import { getGalleryBySlug } from '@/server/queries/gallery.queries'
 import { PasswordGate } from '@/components/gallery/PasswordGate'
 
 interface Props {
-  params: { galleryId: string }
+  params: Promise<{ galleryId: string }>
 }
 
 export default async function PasswordPage({ params }: Props) {
-  const gallery = await getGalleryBySlug(params.galleryId)
+  const { galleryId } = await params
+  const gallery = await getGalleryBySlug(galleryId)
 
   if (!gallery) {
     notFound()
   }
 
   if (!gallery.password_hash) {
-    redirect(`/g/${params.galleryId}`)
+    redirect(`/g/${galleryId}`)
   }
 
   return (
@@ -35,7 +36,7 @@ export default async function PasswordPage({ params }: Props) {
             </p>
           </div>
           
-          <PasswordGate galleryId={gallery.id} gallerySlug={params.galleryId} />
+          <PasswordGate galleryId={gallery.id} gallerySlug={galleryId} />
         </div>
         
         <div className="mt-8 text-center">

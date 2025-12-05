@@ -6,7 +6,7 @@ import { v4 as uuidv4 } from 'uuid'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 import { getSignedUploadUrl } from '@/lib/storage/signed-urls'
 import { ALLOWED_MIME_TYPES, MAX_FILE_SIZE, MIME_TO_EXT } from '@/lib/utils/constants'
-import { getUserByClerkId } from '@/server/queries/user.queries'
+import { getOrCreateUserByClerkId } from '@/server/queries/user.queries'
 import { verifyGalleryOwnership, getGalleryById } from '@/server/queries/gallery.queries'
 
 interface UploadFileMetadata {
@@ -30,7 +30,7 @@ export async function generateSignedUploadUrls(request: {
   const { userId: clerkId } = await auth()
   if (!clerkId) throw new Error('Unauthorized')
 
-  const user = await getUserByClerkId(clerkId)
+  const user = await getOrCreateUserByClerkId(clerkId)
   if (!user) throw new Error('User not found')
 
   const isOwner = await verifyGalleryOwnership(request.galleryId, user.id)
@@ -81,7 +81,7 @@ export async function confirmUploads(request: {
   const { userId: clerkId } = await auth()
   if (!clerkId) throw new Error('Unauthorized')
 
-  const user = await getUserByClerkId(clerkId)
+  const user = await getOrCreateUserByClerkId(clerkId)
   if (!user) throw new Error('User not found')
 
   const isOwner = await verifyGalleryOwnership(request.galleryId, user.id)

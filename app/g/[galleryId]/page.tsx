@@ -9,11 +9,12 @@ import { MasonryGrid } from '@/components/gallery/MasonryGrid'
 export const revalidate = 60
 
 interface Props {
-  params: { galleryId: string }
+  params: Promise<{ galleryId: string }>
 }
 
 export default async function GalleryPage({ params }: Props) {
-  const gallery = await getGalleryBySlug(params.galleryId)
+  const { galleryId } = await params
+  const gallery = await getGalleryBySlug(galleryId)
 
   if (!gallery) {
     notFound()
@@ -25,7 +26,7 @@ export default async function GalleryPage({ params }: Props) {
     const unlockCookie = cookieStore.get(`gallery_unlock_${gallery.id}`)
 
     if (!unlockCookie || !verifyUnlockToken(unlockCookie.value, gallery.id)) {
-      redirect(`/g/${params.galleryId}/password`)
+      redirect(`/g/${galleryId}/password`)
     }
   }
 

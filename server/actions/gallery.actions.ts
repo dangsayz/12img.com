@@ -6,7 +6,7 @@ import { supabaseAdmin } from '@/lib/supabase/admin'
 import { hashPassword } from '@/lib/utils/password'
 import { generateUniqueSlug } from '@/lib/utils/slug'
 import { createGallerySchema, updateGallerySchema } from '@/lib/validation/gallery.schema'
-import { getUserByClerkId } from '@/server/queries/user.queries'
+import { getOrCreateUserByClerkId } from '@/server/queries/user.queries'
 import {
   getGalleryById,
   getGalleryWithOwnershipCheck,
@@ -15,9 +15,11 @@ import {
 
 export async function createGallery(formData: FormData) {
   const { userId: clerkId } = await auth()
+  console.log('createGallery - clerkId:', clerkId)
   if (!clerkId) return { error: 'Unauthorized' }
 
-  const user = await getUserByClerkId(clerkId)
+  const user = await getOrCreateUserByClerkId(clerkId)
+  console.log('createGallery - user:', user?.id)
   if (!user) return { error: 'User not found' }
 
   try {
@@ -28,23 +30,33 @@ export async function createGallery(formData: FormData) {
     })
 
     const slug = await generateUniqueSlug(validated.title)
+    console.log('createGallery - slug generated:', slug)
+    
     const passwordHash = validated.password
       ? await hashPassword(validated.password)
       : null
 
+    const insertData = {
+      user_id: user.id,
+      title: validated.title,
+      slug,
+      password_hash: passwordHash,
+      download_enabled: validated.downloadEnabled,
+    }
+    console.log('createGallery - inserting:', insertData)
+
     const { data, error } = await supabaseAdmin
       .from('galleries')
-      .insert({
-        user_id: user.id,
-        title: validated.title,
-        slug,
-        password_hash: passwordHash,
-        download_enabled: validated.downloadEnabled,
-      })
+      .insert(insertData)
       .select('id, slug')
       .single()
 
-    if (error) return { error: 'Failed to create gallery' }
+    if (error) {
+      console.error('Gallery creation error:', error)
+      return { error: `Failed to create gallery: ${error.message}` }
+    }
+    
+    console.log('createGallery - success:', data)
 
     revalidatePath('/')
 
@@ -61,7 +73,7 @@ export async function updateGallery(galleryId: string, formData: FormData) {
   const { userId: clerkId } = await auth()
   if (!clerkId) return { error: 'Unauthorized' }
 
-  const user = await getUserByClerkId(clerkId)
+  const user = await getOrCreateUserByClerkId(clerkId)
   if (!user) return { error: 'User not found' }
 
   const gallery = await getGalleryWithOwnershipCheck(galleryId, user.id)
@@ -120,7 +132,7 @@ export async function deleteGallery(galleryId: string) {
   const { userId: clerkId } = await auth()
   if (!clerkId) return { error: 'Unauthorized' }
 
-  const user = await getUserByClerkId(clerkId)
+  const user = await getOrCreateUserByClerkId(clerkId)
   if (!user) return { error: 'User not found' }
 
   const gallery = await getGalleryWithOwnershipCheck(galleryId, user.id)

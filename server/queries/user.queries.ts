@@ -1,4 +1,5 @@
 import { supabaseAdmin } from '@/lib/supabase/admin'
+import { currentUser } from '@clerk/nextjs/server'
 
 export async function getUserByClerkId(clerkId: string) {
   const { data, error } = await supabaseAdmin
@@ -7,8 +8,67 @@ export async function getUserByClerkId(clerkId: string) {
     .eq('clerk_id', clerkId)
     .single()
 
-  if (error) return null
+  if (error) {
+    console.log('getUserByClerkId - no user found for:', clerkId)
+    return null
+  }
   return data
+}
+
+/**
+ * Get user by Clerk ID, creating them if they don't exist (just-in-time provisioning).
+ * This handles cases where the Clerk webhook failed or wasn't configured.
+ */
+export async function getOrCreateUserByClerkId(clerkId: string) {
+  // First try to get existing user
+  const existingUser = await getUserByClerkId(clerkId)
+  if (existingUser) {
+    console.log('getOrCreateUserByClerkId - found existing user:', existingUser.id)
+    return existingUser
+  }
+
+  // User doesn't exist, create them
+  const clerkUser = await currentUser()
+  if (!clerkUser) {
+    console.error('getOrCreateUserByClerkId - no clerk user found')
+    return null
+  }
+
+  const email = clerkUser.emailAddresses?.find(
+    (e) => e.id === clerkUser.primaryEmailAddressId
+  )?.emailAddress || ''
+
+  console.log('getOrCreateUserByClerkId - creating user with email:', email)
+
+  // Use upsert to handle race conditions
+  const { data: user, error: userError } = await supabaseAdmin
+    .from('users')
+    .upsert({
+      clerk_id: clerkId,
+      email,
+    }, {
+      onConflict: 'clerk_id',
+    })
+    .select('*')
+    .single()
+
+  if (userError) {
+    console.error('Failed to create/upsert user:', userError)
+    return null
+  }
+
+  console.log('getOrCreateUserByClerkId - user created/found:', user.id)
+
+  // Create default settings (ignore if already exists)
+  await supabaseAdmin.from('user_settings').upsert({
+    user_id: user.id,
+    default_password_enabled: false,
+    default_download_enabled: true,
+  }, {
+    onConflict: 'user_id',
+  })
+
+  return user
 }
 
 export async function getUserSettings(clerkId: string) {

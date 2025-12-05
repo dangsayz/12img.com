@@ -3,7 +3,7 @@
 import { auth } from '@clerk/nextjs/server'
 import { revalidatePath } from 'next/cache'
 import { supabaseAdmin } from '@/lib/supabase/admin'
-import { getUserByClerkId } from '@/server/queries/user.queries'
+import { getOrCreateUserByClerkId } from '@/server/queries/user.queries'
 import { getGalleryById, verifyGalleryOwnership } from '@/server/queries/gallery.queries'
 import { getImageWithOwnershipCheck } from '@/server/queries/image.queries'
 
@@ -11,7 +11,7 @@ export async function deleteImage(imageId: string) {
   const { userId: clerkId } = await auth()
   if (!clerkId) return { error: 'Unauthorized' }
 
-  const user = await getUserByClerkId(clerkId)
+  const user = await getOrCreateUserByClerkId(clerkId)
   if (!user) return { error: 'User not found' }
 
   const image = await getImageWithOwnershipCheck(imageId, user.id)
@@ -64,7 +64,7 @@ export async function setCoverImage(galleryId: string, imageId: string) {
   const { userId: clerkId } = await auth()
   if (!clerkId) return { error: 'Unauthorized' }
 
-  const user = await getUserByClerkId(clerkId)
+  const user = await getOrCreateUserByClerkId(clerkId)
   if (!user) return { error: 'User not found' }
 
   const isOwner = await verifyGalleryOwnership(galleryId, user.id)
