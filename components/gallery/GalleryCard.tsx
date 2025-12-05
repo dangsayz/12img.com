@@ -68,7 +68,7 @@ export function GalleryCard({ gallery }: GalleryCardProps) {
 
   return (
     <div className={`group relative bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden transition-all duration-300 hover:shadow-lg hover:-translate-y-1 ${isPending ? 'opacity-50' : ''}`}>
-      <Link href={`/gallery/${gallery.id}/upload`} className="block">
+      <Link href={`/gallery/${gallery.id}`} className="block">
         <div className="aspect-[4/3] bg-gray-100 overflow-hidden relative">
           {gallery.coverImageUrl ? (
             <>

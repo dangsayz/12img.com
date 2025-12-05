@@ -36,7 +36,7 @@ export default async function HomePage() {
               <p className="mt-2 text-gray-500 mb-8 max-w-sm text-center">
                 Create your first gallery to get started. It only takes a few seconds.
               </p>
-              <Link href="/gallery/create">
+              <Link href="/upload">
                 <Button className="h-12 rounded-full px-8 shadow-lg hover:scale-105 transition-all">
                   Create Gallery
                 </Button>

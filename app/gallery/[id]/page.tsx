@@ -1,0 +1,145 @@
+import { auth } from '@clerk/nextjs/server'
+import { notFound, redirect } from 'next/navigation'
+import Link from 'next/link'
+import { ArrowLeft, Plus, ExternalLink } from 'lucide-react'
+import { getOrCreateUserByClerkId } from '@/server/queries/user.queries'
+import { getGalleryWithOwnershipCheck } from '@/server/queries/gallery.queries'
+import { getGalleryImages } from '@/server/queries/image.queries'
+import { getSignedUrlsBatch } from '@/lib/storage/signed-urls'
+import { Header } from '@/components/layout/Header'
+import { MasonryGrid } from '@/components/gallery/MasonryGrid'
+import { GalleryControlPanel } from '@/components/gallery/GalleryControlPanel'
+import { EditableTitle } from '@/components/gallery/EditableTitle'
+import { Button } from '@/components/ui/button'
+
+export const dynamic = 'force-dynamic'
+
+interface Props {
+  params: Promise<{ id: string }>
+}
+
+export default async function GalleryViewPage({ params }: Props) {
+  const { id } = await params
+  const { userId: clerkId } = await auth()
+
+  if (!clerkId) {
+    redirect('/sign-in')
+  }
+
+  const user = await getOrCreateUserByClerkId(clerkId)
+  if (!user) {
+    redirect('/sign-in')
+  }
+
+  const gallery = await getGalleryWithOwnershipCheck(id, user.id)
+  if (!gallery) {
+    notFound()
+  }
+
+  const images = await getGalleryImages(gallery.id)
+  const signedUrls =
+    images.length > 0
+      ? await getSignedUrlsBatch(images.map((img) => img.storage_path))
+      : new Map()
+
+  const imagesWithUrls = images.map((img) => ({
+    id: img.id,
+    signedUrl: signedUrls.get(img.storage_path) || '',
+    width: img.width,
+    height: img.height,
+  }))
+
+  const galleryData = {
+    id: gallery.id,
+    title: gallery.title,
+    slug: gallery.slug,
+    password_hash: gallery.password_hash,
+    download_enabled: gallery.download_enabled,
+    created_at: gallery.created_at,
+    imageCount: images.length,
+  }
+
+  return (
+    <div className="min-h-screen bg-[#FAFAFA]">
+      <Header />
+      
+      <main className="container mx-auto px-4 pt-28 pb-20 max-w-7xl">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center gap-4">
+            <Link 
+              href="/" 
+              className="flex items-center justify-center h-10 w-10 rounded-full bg-white shadow-sm border border-gray-100 hover:bg-gray-50 transition-colors"
+            >
+              <ArrowLeft className="w-5 h-5 text-gray-600" />
+            </Link>
+            <div>
+              <EditableTitle 
+                galleryId={gallery.id} 
+                initialTitle={gallery.title}
+                className="text-2xl text-gray-900"
+              />
+              <p className="text-sm text-gray-500">{images.length} images</p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <Link href={`/gallery/${gallery.id}/upload`}>
+              <Button variant="outline" className="rounded-full h-10 bg-white hover:bg-gray-50 border-gray-200 text-gray-700 font-medium px-5">
+                <Plus className="w-4 h-4 mr-2" />
+                Add Images
+              </Button>
+            </Link>
+            <a
+              href={`/g/${gallery.slug}`}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <Button className="rounded-full h-10 bg-gray-900 hover:bg-gray-800 text-white font-medium px-5">
+                <ExternalLink className="w-4 h-4 mr-2" />
+                View Live
+              </Button>
+            </a>
+          </div>
+        </div>
+
+        {/* Main Content */}
+        <div className="flex flex-col lg:flex-row gap-8">
+          {/* Gallery Grid */}
+          <div className="flex-1 min-w-0">
+            {images.length > 0 ? (
+              <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-6 md:p-8">
+                <MasonryGrid images={imagesWithUrls} editable />
+              </div>
+            ) : (
+              <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-12 md:p-16">
+                <div className="flex flex-col items-center justify-center text-center">
+                  <div className="h-16 w-16 bg-gray-50 rounded-2xl flex items-center justify-center mb-6 border border-gray-100">
+                    <Plus className="w-8 h-8 text-gray-300" />
+                  </div>
+                  <h2 className="text-xl font-semibold text-gray-900 mb-2">Your gallery is empty</h2>
+                  <p className="text-gray-500 mb-6 max-w-sm">
+                    Start by adding some images to your gallery. They'll appear here beautifully arranged.
+                  </p>
+                  <Link href={`/gallery/${gallery.id}/upload`}>
+                    <Button className="rounded-full h-11 px-6 bg-gray-900 hover:bg-gray-800">
+                      <Plus className="w-4 h-4 mr-2" />
+                      Add Your First Images
+                    </Button>
+                  </Link>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Control Panel Sidebar */}
+          <div className="lg:w-[360px] flex-shrink-0">
+            <div className="lg:sticky lg:top-28">
+              <GalleryControlPanel gallery={galleryData} />
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  )
+}

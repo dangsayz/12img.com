@@ -24,11 +24,11 @@ const BREAKPOINTS = {
 }
 
 const COLUMNS_BY_BREAKPOINT = {
-  default: 2,
-  sm: 2,
-  md: 3,
-  lg: 4,
-  xl: 5,
+  default: 3,
+  sm: 4,
+  md: 5,
+  lg: 6,
+  xl: 8,
 }
 
 function getColumnCount(width: number): number {
@@ -87,7 +87,7 @@ export function MasonryGrid({ images, editable = false }: MasonryGridProps) {
         ref={containerRef}
         style={{
           columnCount: columns,
-          columnGap: '0.5rem',
+          columnGap: '0.375rem',
         }}
       >
         {images.map((image, index) => (
