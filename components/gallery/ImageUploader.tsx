@@ -186,31 +186,41 @@ export function ImageUploader({ galleryId }: ImageUploaderProps) {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       {/* Drop zone */}
       <div
-        className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-gray-400 transition-colors cursor-pointer"
+        className="group relative border-2 border-dashed border-gray-200 rounded-2xl p-10 text-center hover:border-indigo-500 hover:bg-indigo-50/30 transition-all duration-300 cursor-pointer"
         onClick={() => fileInputRef.current?.click()}
         onDragOver={(e) => {
           e.preventDefault()
-          e.currentTarget.classList.add('border-black')
+          e.currentTarget.classList.add('border-indigo-500', 'bg-indigo-50/30')
         }}
         onDragLeave={(e) => {
-          e.currentTarget.classList.remove('border-black')
+          e.currentTarget.classList.remove('border-indigo-500', 'bg-indigo-50/30')
         }}
         onDrop={(e) => {
           e.preventDefault()
-          e.currentTarget.classList.remove('border-black')
+          e.currentTarget.classList.remove('border-indigo-500', 'bg-indigo-50/30')
           handleFileSelect(e.dataTransfer.files)
         }}
       >
-        <Upload className="w-8 h-8 mx-auto mb-2 text-gray-400" />
-        <p className="text-gray-600">
-          Drop images here or click to select
-        </p>
-        <p className="text-sm text-gray-400 mt-1">
-          JPEG, PNG, WebP, GIF up to 25MB
-        </p>
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+          <div className="w-full h-full bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-indigo-50/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+        </div>
+        
+        <div className="relative z-10">
+          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-indigo-50 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+            <Upload className="w-8 h-8 text-indigo-500" />
+          </div>
+          <h3 className="text-lg font-medium text-gray-900">Upload Images</h3>
+          <p className="text-gray-500 mt-1 mb-2">
+            Drag & drop or click to browse
+          </p>
+          <p className="text-xs text-gray-400 uppercase tracking-wide">
+            JPEG, PNG, WebP • Max 25MB
+          </p>
+        </div>
+        
         <input
           ref={fileInputRef}
           type="file"
@@ -223,65 +233,82 @@ export function ImageUploader({ galleryId }: ImageUploaderProps) {
 
       {/* Upload list */}
       {uploads.length > 0 && (
-        <div className="space-y-2">
-          {uploads.map((upload) => (
-            <div
-              key={upload.localId}
-              className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg"
-            >
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium truncate">{upload.file.name}</p>
-                <p className="text-xs text-gray-500">
-                  {(upload.file.size / 1024 / 1024).toFixed(1)} MB
-                </p>
-              </div>
-
-              {upload.status === 'uploading' && (
-                <div className="w-20">
-                  <div className="h-1.5 bg-gray-200 rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-black transition-all"
-                      style={{ width: `${upload.progress}%` }}
-                    />
-                  </div>
-                </div>
-              )}
-
-              {upload.status === 'uploaded' && (
-                <CheckCircle className="w-5 h-5 text-green-500" />
-              )}
-
-              {upload.status === 'error' && (
-                <div className="flex items-center gap-2">
-                  <AlertCircle className="w-5 h-5 text-red-500" />
-                  <span className="text-xs text-red-500">{upload.error}</span>
-                </div>
-              )}
-
-              {(upload.status === 'pending' || upload.status === 'error') && (
-                <button
-                  onClick={() => removeUpload(upload.localId)}
-                  className="p-1 hover:bg-gray-200 rounded"
-                >
-                  <X className="w-4 h-4" />
-                </button>
+        <div className="bg-white rounded-xl border border-gray-100 overflow-hidden shadow-sm">
+          <div className="p-4 bg-gray-50/50 border-b border-gray-100 flex items-center justify-between">
+            <span className="text-sm font-medium text-gray-700">
+              {uploads.length} {uploads.length === 1 ? 'file' : 'files'} selected
+            </span>
+            <div className="flex gap-2">
+              {uploads.some((u) => u.status === 'uploaded') && (
+                <Button variant="ghost" size="sm" onClick={clearCompleted} className="text-xs h-8">
+                  Clear Completed
+                </Button>
               )}
             </div>
-          ))}
+          </div>
+          
+          <div className="max-h-[300px] overflow-y-auto p-2 space-y-1">
+            {uploads.map((upload) => (
+              <div
+                key={upload.localId}
+                className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 transition-colors group"
+              >
+                <div className="h-10 w-10 rounded-lg bg-gray-100 flex items-center justify-center overflow-hidden shrink-0">
+                  {upload.status === 'uploaded' ? (
+                    <CheckCircle className="w-5 h-5 text-green-500" />
+                  ) : upload.status === 'error' ? (
+                    <AlertCircle className="w-5 h-5 text-red-500" />
+                  ) : (
+                    <div className="text-xs font-medium text-gray-500">IMG</div>
+                  )}
+                </div>
 
-          <div className="flex gap-2 pt-2">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between mb-1">
+                    <p className="text-sm font-medium text-gray-700 truncate max-w-[200px]">
+                      {upload.file.name}
+                    </p>
+                    <span className="text-xs text-gray-400 tabular-nums">
+                      {(upload.file.size / 1024 / 1024).toFixed(1)} MB
+                    </span>
+                  </div>
+                  
+                  {upload.status === 'uploading' ? (
+                    <div className="h-1.5 w-full bg-gray-100 rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-indigo-500 transition-all duration-300"
+                        style={{ width: `${upload.progress}%` }}
+                      />
+                    </div>
+                  ) : upload.status === 'error' ? (
+                    <p className="text-xs text-red-500 truncate">{upload.error}</p>
+                  ) : upload.status === 'uploaded' ? (
+                    <p className="text-xs text-green-600">Complete</p>
+                  ) : (
+                    <p className="text-xs text-gray-400">Ready to upload</p>
+                  )}
+                </div>
+
+                {(upload.status === 'pending' || upload.status === 'error') && (
+                  <button
+                    onClick={() => removeUpload(upload.localId)}
+                    className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-full opacity-0 group-hover:opacity-100 transition-all"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
+            ))}
+          </div>
+
+          <div className="p-4 border-t border-gray-100 bg-gray-50/30">
             <Button
               onClick={handleUpload}
               disabled={isUploading || uploads.filter((u) => u.status === 'pending').length === 0}
+              className="w-full rounded-xl shadow-indigo-500/20 shadow-lg"
             >
-              {isUploading ? 'Uploading...' : 'Upload Images'}
+              {isUploading ? 'Uploading...' : 'Start Upload'}
             </Button>
-
-            {uploads.some((u) => u.status === 'uploaded') && (
-              <Button variant="outline" onClick={clearCompleted}>
-                Clear Completed
-              </Button>
-            )}
           </div>
         </div>
       )}
