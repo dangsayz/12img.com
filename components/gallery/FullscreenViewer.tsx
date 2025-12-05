@@ -2,7 +2,7 @@
 
 import { useEffect, useCallback, useState, useRef } from 'react'
 import { createPortal } from 'react-dom'
-import { X, ChevronLeft, ChevronRight, Download, ZoomIn, ZoomOut } from 'lucide-react'
+import { X, ChevronLeft, ChevronRight, Download, ZoomIn, ZoomOut, Loader2 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 
 interface Image {
@@ -15,6 +15,7 @@ interface FullscreenViewerProps {
   currentIndex: number
   onClose: () => void
   onNavigate: (direction: 'prev' | 'next') => void
+  galleryTitle?: string
 }
 
 export function FullscreenViewer({
@@ -22,14 +23,58 @@ export function FullscreenViewer({
   currentIndex,
   onClose,
   onNavigate,
+  galleryTitle = 'image',
 }: FullscreenViewerProps) {
   const [mounted, setMounted] = useState(false)
   const [isZoomed, setIsZoomed] = useState(false)
   const [showControls, setShowControls] = useState(true)
   const [imageLoaded, setImageLoaded] = useState(false)
+  const [isDownloading, setIsDownloading] = useState(false)
   const touchStart = useRef<{ x: number; y: number } | null>(null)
   const controlsTimeout = useRef<NodeJS.Timeout | null>(null)
   const currentImage = images[currentIndex]
+
+  // Download image at full resolution
+  const handleDownload = useCallback(async () => {
+    if (isDownloading) return
+    
+    setIsDownloading(true)
+    
+    try {
+      // Fetch the image as a blob (full resolution)
+      const response = await fetch(currentImage.signedUrl)
+      if (!response.ok) throw new Error('Failed to fetch image')
+      
+      const blob = await response.blob()
+      
+      // Determine file extension from content type
+      const contentType = response.headers.get('content-type') || 'image/jpeg'
+      const ext = contentType.split('/')[1] || 'jpg'
+      
+      // Create filename
+      const safeTitle = galleryTitle.replace(/[^a-z0-9]/gi, '_').toLowerCase()
+      const filename = `${safeTitle}_${currentIndex + 1}.${ext}`
+      
+      // Create download link
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = filename
+      
+      // Trigger download
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      
+      // Clean up
+      URL.revokeObjectURL(url)
+    } catch (error) {
+      console.error('Download failed:', error)
+      alert('Failed to download image. Please try again.')
+    } finally {
+      setIsDownloading(false)
+    }
+  }, [currentImage.signedUrl, currentIndex, galleryTitle, isDownloading])
 
   // Reset states on image change
   useEffect(() => {
@@ -182,17 +227,21 @@ export function FullscreenViewer({
           >
             {isZoomed ? <ZoomOut className="w-5 h-5" /> : <ZoomIn className="w-5 h-5" />}
           </button>
-          <a
-            href={currentImage.signedUrl}
-            download
-            target="_blank"
-            rel="noopener noreferrer"
-            className="p-3 text-white/70 hover:text-white bg-white/10 hover:bg-white/20 backdrop-blur-xl rounded-full transition-all duration-200 border border-white/10"
+          <button
+            onClick={(e) => {
+              e.stopPropagation()
+              handleDownload()
+            }}
+            disabled={isDownloading}
+            className="p-3 text-white/70 hover:text-white bg-white/10 hover:bg-white/20 backdrop-blur-xl rounded-full transition-all duration-200 border border-white/10 disabled:opacity-50"
             aria-label="Download image"
-            onClick={(e) => e.stopPropagation()}
           >
-            <Download className="w-5 h-5" />
-          </a>
+            {isDownloading ? (
+              <Loader2 className="w-5 h-5 animate-spin" />
+            ) : (
+              <Download className="w-5 h-5" />
+            )}
+          </button>
           <button
             onClick={onClose}
             className="p-3 text-white/70 hover:text-white bg-white/10 hover:bg-white/20 backdrop-blur-xl rounded-full transition-all duration-200 border border-white/10"

@@ -44,8 +44,14 @@ function GalleryImage({
 }) {
   const ref = useRef<HTMLDivElement>(null)
   const isInView = useInView(ref, { once: true, margin: '-50px' })
+  const [hasError, setHasError] = useState(false)
   
   const aspectRatio = image.width && image.height ? image.width / image.height : 1
+  
+  // Debug: log URL
+  if (!image.signedUrl) {
+    console.log('[GalleryImage] Missing signedUrl for image:', image.id)
+  }
   
   return (
     <motion.div
@@ -60,16 +66,23 @@ function GalleryImage({
       className="group relative"
     >
       <div 
-        className="relative overflow-hidden cursor-pointer rounded-sm bg-neutral-100"
+        className="relative overflow-hidden cursor-pointer rounded-sm bg-neutral-200"
         onClick={onClick}
+        style={{ aspectRatio: aspectRatio || 1 }}
       >
-        <img
-          src={image.signedUrl}
-          alt=""
-          loading={priority ? 'eager' : 'lazy'}
-          className="w-full h-auto object-cover transition-transform duration-500 ease-out group-hover:scale-[1.02]"
-          style={{ aspectRatio: aspectRatio || 'auto' }}
-        />
+        {hasError || !image.signedUrl ? (
+          <div className="absolute inset-0 flex items-center justify-center bg-neutral-200">
+            <span className="text-neutral-400 text-sm">Failed to load</span>
+          </div>
+        ) : (
+          <img
+            src={image.signedUrl}
+            alt=""
+            loading={priority ? 'eager' : 'lazy'}
+            onError={() => setHasError(true)}
+            className="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.02]"
+          />
+        )}
         
         {/* Subtle hover vignette */}
         <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors duration-300" />
@@ -84,16 +97,30 @@ function HeroImage({ image, title }: { image: Image; title: string }) {
   const y = useTransform(scrollY, [0, 500], [0, 150])
   const opacity = useTransform(scrollY, [0, 400], [1, 0])
   const scale = useTransform(scrollY, [0, 500], [1, 1.1])
+  const [hasError, setHasError] = useState(false)
+  
+  // Debug
+  console.log('[HeroImage] URL:', image.signedUrl?.substring(0, 100) + '...')
   
   return (
     <section className="relative h-[85vh] sm:h-screen overflow-hidden bg-neutral-900">
       {/* Parallax background - Show immediately */}
       <motion.div className="absolute inset-0" style={{ y, scale }}>
-        <img
-          src={image.signedUrl}
-          alt=""
-          className="w-full h-full object-cover"
-        />
+        {image.signedUrl && !hasError ? (
+          <img
+            src={image.signedUrl}
+            alt=""
+            className="w-full h-full object-cover"
+            onError={() => {
+              console.error('[HeroImage] Failed to load image')
+              setHasError(true)
+            }}
+          />
+        ) : (
+          <div className="w-full h-full bg-neutral-800 flex items-center justify-center">
+            <span className="text-neutral-500">Image unavailable</span>
+          </div>
+        )}
         {/* Cinematic gradient overlay */}
         <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/10 to-black/70" />
       </motion.div>
@@ -381,6 +408,7 @@ export function PublicGalleryView({
           currentIndex={viewerIndex}
           onClose={handleViewerClose}
           onNavigate={handleViewerNavigate}
+          galleryTitle={title}
         />
       )}
     </div>

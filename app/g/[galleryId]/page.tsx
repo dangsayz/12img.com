@@ -48,16 +48,24 @@ export default async function GalleryPage({ params }: Props) {
     )
   }
 
-  const signedUrls = await getSignedUrlsBatch(
-    images.map((img) => img.storage_path)
-  )
+  const storagePaths = images.map((img) => img.storage_path)
+  console.log('[Gallery] Storage paths:', storagePaths)
+  
+  const signedUrls = await getSignedUrlsBatch(storagePaths)
+  console.log('[Gallery] Signed URLs map size:', signedUrls.size)
 
-  const imagesWithUrls = images.map((img) => ({
-    id: img.id,
-    signedUrl: signedUrls.get(img.storage_path) || '',
-    width: img.width,
-    height: img.height,
-  }))
+  const imagesWithUrls = images.map((img) => {
+    const url = signedUrls.get(img.storage_path)
+    if (!url) {
+      console.log('[Gallery] Missing URL for path:', img.storage_path)
+    }
+    return {
+      id: img.id,
+      signedUrl: url || '',
+      width: img.width,
+      height: img.height,
+    }
+  })
 
   return (
     <PublicGalleryView

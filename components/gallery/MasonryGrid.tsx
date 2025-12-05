@@ -16,6 +16,7 @@ interface MasonryGridProps {
   images: Image[]
   editable?: boolean
   galleryId?: string
+  galleryTitle?: string
 }
 
 const BREAKPOINTS = {
@@ -41,7 +42,7 @@ function getColumnCount(width: number): number {
   return COLUMNS_BY_BREAKPOINT.default
 }
 
-export function MasonryGrid({ images: initialImages, editable = false, galleryId }: MasonryGridProps) {
+export function MasonryGrid({ images: initialImages, editable = false, galleryId, galleryTitle }: MasonryGridProps) {
   const router = useRouter()
   const containerRef = useRef<HTMLDivElement>(null)
   const [columns, setColumns] = useState(COLUMNS_BY_BREAKPOINT.default)
@@ -125,6 +126,7 @@ export function MasonryGrid({ images: initialImages, editable = false, galleryId
           currentIndex={viewerIndex}
           onClose={handleViewerClose}
           onNavigate={handleViewerNavigate}
+          galleryTitle={galleryTitle}
         />
       )}
     </>

@@ -43,10 +43,23 @@ export function MasonryItem({
       return
     }
     
+    console.log('[MasonryItem] Starting delete for:', image.id)
+    
     startTransition(async () => {
-      const result = await deleteImage(image.id)
-      if (!result.error) {
-        onDelete?.(image.id)
+      try {
+        const result = await deleteImage(image.id)
+        console.log('[MasonryItem] Delete result:', result)
+        
+        if (result.error) {
+          console.error('[MasonryItem] Delete failed:', result.error)
+          alert(`Failed to delete: ${result.error}`)
+        } else {
+          console.log('[MasonryItem] Delete successful, calling onDelete')
+          onDelete?.(image.id)
+        }
+      } catch (err) {
+        console.error('[MasonryItem] Delete threw error:', err)
+        alert('Failed to delete image. Please try again.')
       }
       setShowDeleteConfirm(false)
     })

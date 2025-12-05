@@ -8,14 +8,27 @@ import { getGalleryById, verifyGalleryOwnership } from '@/server/queries/gallery
 import { getImageWithOwnershipCheck } from '@/server/queries/image.queries'
 
 export async function deleteImage(imageId: string) {
+  console.log('[deleteImage] Starting delete for image:', imageId)
+  
   const { userId: clerkId } = await auth()
-  if (!clerkId) return { error: 'Unauthorized' }
+  if (!clerkId) {
+    console.log('[deleteImage] No clerkId - unauthorized')
+    return { error: 'Unauthorized' }
+  }
 
   const user = await getOrCreateUserByClerkId(clerkId)
-  if (!user) return { error: 'User not found' }
+  if (!user) {
+    console.log('[deleteImage] User not found for clerkId:', clerkId)
+    return { error: 'User not found' }
+  }
 
   const image = await getImageWithOwnershipCheck(imageId, user.id)
-  if (!image) return { error: 'Image not found' }
+  if (!image) {
+    console.log('[deleteImage] Image not found or not owned:', imageId)
+    return { error: 'Image not found' }
+  }
+
+  console.log('[deleteImage] Found image with storage_path:', image.storage_path)
 
   const gallery = await getGalleryById(image.gallery_id)
 
@@ -25,7 +38,8 @@ export async function deleteImage(imageId: string) {
     .remove([image.storage_path])
 
   if (storageError) {
-    console.error('Storage delete error:', storageError)
+    console.error('[deleteImage] Storage delete error:', storageError)
+    // Continue anyway - we still want to remove the DB record
   }
 
   // Delete from database
@@ -34,7 +48,12 @@ export async function deleteImage(imageId: string) {
     .delete()
     .eq('id', imageId)
 
-  if (error) return { error: 'Failed to delete image' }
+  if (error) {
+    console.error('[deleteImage] DB delete error:', error)
+    return { error: 'Failed to delete image' }
+  }
+
+  console.log('[deleteImage] Successfully deleted image from DB')
 
   // If this was the cover image, set new cover
   if (gallery && gallery.cover_image_id === imageId) {
@@ -52,10 +71,14 @@ export async function deleteImage(imageId: string) {
       .eq('id', gallery.id)
   }
 
+  // Revalidate all relevant paths
   if (gallery) {
+    revalidatePath(`/gallery/${gallery.id}`)
     revalidatePath(`/g/${gallery.slug}`)
   }
   revalidatePath('/')
+
+  console.log('[deleteImage] Revalidation complete')
 
   return { success: true }
 }
