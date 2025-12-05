@@ -1,375 +1,172 @@
 'use client'
 
-import { useState, useCallback, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { motion, AnimatePresence } from 'framer-motion'
-import { generateSignedUploadUrls, confirmUploads } from '@/server/actions/upload.actions'
+import { motion } from 'framer-motion'
+import { X, Calendar, Loader2, Sparkles } from 'lucide-react'
+import Link from 'next/link'
 import { createGallery } from '@/server/actions/gallery.actions'
-import { ALLOWED_MIME_TYPES, MAX_FILE_SIZE, MAX_CONCURRENT_UPLOADS } from '@/lib/utils/constants'
 import { Header } from '@/components/layout/Header'
-import { DropOverlay } from '@/components/upload/DropOverlay'
-import { FileItemState } from '@/components/upload/FileItem'
 
-export default function UploadPage() {
+export default function CreateGalleryPage() {
   const router = useRouter()
-  const fileInputRef = useRef<HTMLInputElement>(null)
   const titleInputRef = useRef<HTMLInputElement>(null)
-  const [uploads, setUploads] = useState<FileItemState[]>([])
-  const [isDragging, setIsDragging] = useState(false)
-  const [isUploading, setIsUploading] = useState(false)
-  const [galleryTitle, setGalleryTitle] = useState('')
+  const [galleryName, setGalleryName] = useState('')
+  const [eventDate, setEventDate] = useState('')
+  const [isCreating, setIsCreating] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const isUploadingRef = useRef(false)
 
-  // Auto-focus title on mount
+  // Auto-focus name input on mount
   useEffect(() => {
     titleInputRef.current?.focus()
   }, [])
 
-  // Auto-upload when files are added
-  useEffect(() => {
-    const pendingCount = uploads.filter(u => u.status === 'pending').length
-    if (pendingCount > 0 && !isUploadingRef.current && galleryTitle.trim()) {
-      processQueue()
-    }
-  }, [uploads, galleryTitle])
-
-  // Global drag listeners
-  useEffect(() => {
-    const handleWindowDragEnter = (e: DragEvent) => {
-      e.preventDefault()
-      if (e.dataTransfer?.types?.includes('Files')) {
-        setIsDragging(true)
-      }
-    }
-
-    const handleWindowDragLeave = (e: DragEvent) => {
-      e.preventDefault()
-      if (e.relatedTarget === null) {
-        setIsDragging(false)
-      }
-    }
-
-    const handleWindowDrop = (e: DragEvent) => {
-      e.preventDefault()
-      setIsDragging(false)
-      if (e.dataTransfer?.files && e.dataTransfer.files.length > 0) {
-        handleFiles(e.dataTransfer.files)
-      }
-    }
-
-    window.addEventListener('dragenter', handleWindowDragEnter)
-    window.addEventListener('dragleave', handleWindowDragLeave)
-    window.addEventListener('drop', handleWindowDrop)
-    window.addEventListener('dragover', (e) => e.preventDefault())
-
-    return () => {
-      window.removeEventListener('dragenter', handleWindowDragEnter)
-      window.removeEventListener('dragleave', handleWindowDragLeave)
-      window.removeEventListener('drop', handleWindowDrop)
-      window.removeEventListener('dragover', (e) => e.preventDefault())
-    }
-  }, [])
-
-  const validateFile = (file: File): string | null => {
-    if (!ALLOWED_MIME_TYPES.includes(file.type as any)) return `Invalid file type`
-    if (file.size > MAX_FILE_SIZE) return `File too large`
-    return null
-  }
-
-  const handleFiles = useCallback((fileList: FileList | null) => {
-    if (!fileList) return
-
-    const newUploads: FileItemState[] = []
-    Array.from(fileList).forEach((file) => {
-      const error = validateFile(file)
-      newUploads.push({
-        id: `up-${Date.now()}-${Math.random().toString(36).slice(2)}`,
-        file,
-        previewUrl: URL.createObjectURL(file),
-        status: error ? 'error' : 'pending',
-        progress: 0,
-        error: error || undefined,
-      })
-    })
-
-    setUploads((prev) => [...prev, ...newUploads])
+  const handleCreate = async (e: React.FormEvent) => {
+    e.preventDefault()
     
-    if (!galleryTitle.trim() && newUploads.length > 0) {
-      const today = new Date()
-      setGalleryTitle(`Gallery ${today.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`)
-    }
-  }, [galleryTitle])
-
-  const processQueue = async () => {
-    if (isUploadingRef.current) return
-    if (!galleryTitle.trim()) {
-      setError('Enter a title first')
+    if (!galleryName.trim()) {
+      setError('Please enter a gallery name')
       return
     }
-    
-    isUploadingRef.current = true
-    setIsUploading(true)
+
+    setIsCreating(true)
     setError(null)
-
-    let pendingItems: FileItemState[] = []
-    setUploads(prev => {
-      pendingItems = prev.filter(u => u.status === 'pending')
-      return prev
-    })
-    
-    await new Promise(r => setTimeout(r, 50))
-    
-    if (pendingItems.length === 0) {
-      isUploadingRef.current = false
-      setIsUploading(false)
-      return
-    }
 
     try {
       const formData = new FormData()
-      formData.set('title', galleryTitle.trim())
+      formData.set('title', galleryName.trim())
       formData.set('downloadEnabled', 'true')
       
-      const galleryResult = await createGallery(formData)
+      const result = await createGallery(formData)
       
-      if (galleryResult.error || !galleryResult.galleryId) {
-        setError(galleryResult.error || 'Failed to create gallery')
-        isUploadingRef.current = false
-        setIsUploading(false)
+      if (result.error || !result.galleryId) {
+        setError(result.error || 'Failed to create gallery')
+        setIsCreating(false)
         return
       }
 
-      const galleryId = galleryResult.galleryId
-
-      const urlResponses = await generateSignedUploadUrls({
-        galleryId,
-        files: pendingItems.map(u => ({
-          localId: u.id,
-          mimeType: u.file.type,
-          fileSize: u.file.size,
-          originalFilename: u.file.name
-        }))
-      })
-
-      setUploads(prev => prev.map(u => {
-        const hasUrl = urlResponses.find(r => r.localId === u.id)
-        return hasUrl ? { ...u, status: 'uploading' } : u
-      }))
-
-      const tasks = urlResponses.map(urlInfo => async () => {
-        const item = pendingItems.find(u => u.id === urlInfo.localId)
-        if (!item) return { ...urlInfo, success: false }
-
-        return new Promise<{ localId: string; storagePath: string; token: string; success: boolean }>((resolve) => {
-          const xhr = new XMLHttpRequest()
-          
-          xhr.upload.addEventListener('progress', (e) => {
-            if (e.lengthComputable) {
-              setUploads(prev => prev.map(u => 
-                u.id === urlInfo.localId ? { ...u, progress: (e.loaded / e.total) * 100 } : u
-              ))
-            }
-          })
-
-          xhr.addEventListener('load', () => {
-            if (xhr.status >= 200 && xhr.status < 300) {
-              setUploads(prev => prev.map(u => 
-                u.id === urlInfo.localId ? { ...u, status: 'completed', progress: 100 } : u
-              ))
-              resolve({ ...urlInfo, success: true })
-            } else {
-              setUploads(prev => prev.map(u => 
-                u.id === urlInfo.localId ? { ...u, status: 'error', error: `HTTP ${xhr.status}` } : u
-              ))
-              resolve({ ...urlInfo, success: false })
-            }
-          })
-
-          xhr.addEventListener('error', () => {
-            setUploads(prev => prev.map(u => 
-              u.id === urlInfo.localId ? { ...u, status: 'error', error: 'Network Error' } : u
-            ))
-            resolve({ ...urlInfo, success: false })
-          })
-
-          xhr.open('PUT', urlInfo.signedUrl)
-          xhr.setRequestHeader('Content-Type', item.file.type)
-          xhr.send(item.file)
-        })
-      })
-
-      const results: any[] = []
-      const executing: Promise<any>[] = []
-
-      for (const task of tasks) {
-        const p = task().then(res => {
-          executing.splice(executing.indexOf(p), 1)
-          return res
-        })
-        results.push(p)
-        executing.push(p)
-
-        if (executing.length >= MAX_CONCURRENT_UPLOADS) {
-          await Promise.race(executing)
-        }
-      }
-
-      const allResults = await Promise.all(results)
-      const successful = allResults.filter(r => r.success)
-
-      if (successful.length > 0) {
-        await confirmUploads({
-          galleryId,
-          uploads: successful.map(r => {
-            const upload = pendingItems.find(u => u.id === r.localId)!
-            return {
-              storagePath: r.storagePath,
-              token: r.token,
-              originalFilename: upload.file.name,
-              fileSize: upload.file.size,
-              mimeType: upload.file.type
-            }
-          })
-        })
-
-        router.push(`/gallery/${galleryId}`)
-      }
-
+      // Navigate to the gallery page where they can add images
+      router.push(`/gallery/${result.galleryId}`)
     } catch (err) {
-      console.error('Upload error:', err)
-      setError('An error occurred during upload')
-    } finally {
-      isUploadingRef.current = false
-      setIsUploading(false)
+      setError('Something went wrong. Please try again.')
+      setIsCreating(false)
     }
   }
 
-  const removeUpload = (id: string) => {
-    setUploads(prev => prev.filter(u => u.id !== id))
-  }
-
-  const hasFiles = uploads.length > 0
-  const completedCount = uploads.filter(u => u.status === 'completed').length
-  const totalProgress = hasFiles 
-    ? uploads.reduce((acc, u) => acc + u.progress, 0) / uploads.length 
-    : 0
-
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-[#FAFAFA]">
       <Header />
-      <DropOverlay isVisible={isDragging} />
       
-      <main className="min-h-screen flex flex-col items-center justify-center px-4 py-20">
-        <div className="w-full max-w-xl">
-          {/* Title Input - The Hero */}
-          <input
-            ref={titleInputRef}
-            type="text"
-            value={galleryTitle}
-            onChange={(e) => setGalleryTitle(e.target.value)}
-            placeholder="Untitled"
-            className="w-full text-4xl md:text-5xl font-semibold tracking-tight text-center bg-transparent border-none outline-none placeholder:text-gray-200 text-gray-900 mb-12"
-          />
+      <main className="min-h-screen flex items-center justify-center px-4 pt-20 pb-12">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+          className="w-full max-w-md"
+        >
+          {/* Card */}
+          <div className="bg-white rounded-2xl shadow-soft-xl border border-gray-100 overflow-hidden">
+            {/* Header */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-full bg-soft-lime/50 flex items-center justify-center">
+                  <Sparkles className="w-4 h-4 text-gray-700" />
+                </div>
+                <span className="font-medium text-gray-900">New Gallery</span>
+              </div>
+              <Link 
+                href="/"
+                className="p-2 rounded-full hover:bg-gray-100 transition-colors"
+              >
+                <X className="w-5 h-5 text-gray-400" />
+              </Link>
+            </div>
 
-          {/* Drop Zone - Minimal */}
-          <div 
-            onClick={() => fileInputRef.current?.click()}
-            className={`relative cursor-pointer transition-all duration-300 ${
-              isDragging ? 'scale-[1.02]' : ''
-            }`}
-          >
-            {!hasFiles ? (
-              <div className="border border-gray-200 rounded-xl p-16 text-center hover:border-gray-300 hover:bg-gray-50/50 transition-all">
-                <p className="text-gray-400 text-sm">
-                  Drop images or <span className="text-gray-600 underline underline-offset-4 decoration-gray-300">browse</span>
+            {/* Form */}
+            <form onSubmit={handleCreate} className="p-6 space-y-6">
+              {/* Title */}
+              <div className="text-center mb-8">
+                <h1 className="text-2xl font-semibold text-gray-900 mb-2">
+                  Create New Gallery
+                </h1>
+                <p className="text-sm text-gray-500">
+                  Start a new collection for your photos
                 </p>
               </div>
-            ) : (
-              <div className="space-y-3">
-                {/* Progress Bar */}
-                {isUploading && (
-                  <div className="h-0.5 bg-gray-100 rounded-full overflow-hidden">
-                    <motion.div 
-                      className="h-full bg-gray-900"
-                      initial={{ width: 0 }}
-                      animate={{ width: `${totalProgress}%` }}
-                      transition={{ duration: 0.3 }}
-                    />
-                  </div>
-                )}
-                
-                {/* Thumbnails Grid */}
-                <div className="grid grid-cols-6 md:grid-cols-8 gap-1">
-                  {uploads.map((upload) => (
-                    <div 
-                      key={upload.id}
-                      className="relative aspect-square rounded overflow-hidden bg-gray-100"
-                    >
-                      <img 
-                        src={upload.previewUrl} 
-                        alt="" 
-                        className={`w-full h-full object-cover transition-opacity ${
-                          upload.status === 'completed' ? 'opacity-100' : 'opacity-60'
-                        }`}
-                      />
-                      {upload.status === 'uploading' && (
-                        <div className="absolute inset-0 bg-white/50" />
-                      )}
-                      {upload.status === 'error' && (
-                        <div className="absolute inset-0 bg-red-500/20" />
-                      )}
-                    </div>
-                  ))}
-                  
-                  {/* Add More Button */}
-                  <div className="aspect-square rounded border border-dashed border-gray-200 flex items-center justify-center text-gray-300 hover:text-gray-400 hover:border-gray-300 transition-colors">
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 4v16m8-8H4" />
-                    </svg>
-                  </div>
-                </div>
 
-                {/* Status */}
-                <div className="flex items-center justify-between text-xs text-gray-400 pt-2">
-                  <span>{uploads.length} images</span>
-                  {isUploading && <span>Uploading...</span>}
-                  {!isUploading && completedCount === uploads.length && completedCount > 0 && (
-                    <span className="text-gray-600">Done</span>
-                  )}
+              {/* Gallery Name Field */}
+              <div className="space-y-2">
+                <label 
+                  htmlFor="gallery-name" 
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  Gallery Name
+                </label>
+                <input
+                  ref={titleInputRef}
+                  id="gallery-name"
+                  type="text"
+                  value={galleryName}
+                  onChange={(e) => setGalleryName(e.target.value)}
+                  placeholder="e.g. Sarah & John's Wedding"
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-900/10 focus:border-gray-300 transition-all"
+                />
+              </div>
+
+              {/* Event Date Field */}
+              <div className="space-y-2">
+                <label 
+                  htmlFor="event-date" 
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  Event Date <span className="text-gray-400 font-normal">(optional)</span>
+                </label>
+                <div className="relative">
+                  <input
+                    id="event-date"
+                    type="date"
+                    value={eventDate}
+                    onChange={(e) => setEventDate(e.target.value)}
+                    className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-900/10 focus:border-gray-300 transition-all appearance-none"
+                  />
+                  <Calendar className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
                 </div>
               </div>
-            )}
-            
-            <input
-              ref={fileInputRef}
-              type="file"
-              multiple
-              accept={ALLOWED_MIME_TYPES.join(',')}
-              className="hidden"
-              onChange={(e) => handleFiles(e.target.files)}
-            />
+
+              {/* Error Message */}
+              {error && (
+                <motion.p
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="text-sm text-red-500 text-center"
+                >
+                  {error}
+                </motion.p>
+              )}
+
+              {/* Submit Button */}
+              <button
+                type="submit"
+                disabled={isCreating || !galleryName.trim()}
+                className="w-full py-3.5 px-6 rounded-xl bg-gray-900 hover:bg-gray-800 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-medium transition-all duration-200 flex items-center justify-center gap-2"
+              >
+                {isCreating ? (
+                  <>
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    <span>Creating...</span>
+                  </>
+                ) : (
+                  <span>Create Gallery</span>
+                )}
+              </button>
+            </form>
           </div>
 
-          {/* Error */}
-          <AnimatePresence>
-            {error && (
-              <motion.p
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="text-center text-red-500 text-sm mt-4"
-              >
-                {error}
-              </motion.p>
-            )}
-          </AnimatePresence>
-
-          {/* Hint */}
-          <p className="text-center text-gray-300 text-xs mt-8">
-            JPEG, PNG, WEBP • 25MB max
+          {/* Bottom hint */}
+          <p className="text-center text-xs text-gray-400 mt-6">
+            You can add photos after creating your gallery
           </p>
-        </div>
+        </motion.div>
       </main>
     </div>
   )

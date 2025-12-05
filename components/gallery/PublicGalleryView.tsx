@@ -30,19 +30,7 @@ function getOrientation(width?: number | null, height?: number | null): Orientat
   return 'square'
 }
 
-// Shimmer loading skeleton
-function ImageSkeleton({ aspectRatio }: { aspectRatio: number }) {
-  return (
-    <div 
-      className="bg-neutral-200 rounded-sm animate-pulse"
-      style={{ aspectRatio: aspectRatio || 1 }}
-    >
-      <div className="absolute inset-0 -translate-x-full animate-[shimmer_2s_infinite] bg-gradient-to-r from-transparent via-white/40 to-transparent" />
-    </div>
-  )
-}
-
-// Visual psychology-based image card
+// Visual psychology-based image card - Simplified for fast loading
 function GalleryImage({ 
   image, 
   index, 
@@ -55,51 +43,36 @@ function GalleryImage({
   priority?: boolean
 }) {
   const ref = useRef<HTMLDivElement>(null)
-  const isInView = useInView(ref, { once: true, margin: '-100px' })
-  const [isLoaded, setIsLoaded] = useState(false)
+  const isInView = useInView(ref, { once: true, margin: '-50px' })
   
   const aspectRatio = image.width && image.height ? image.width / image.height : 1
   
   return (
     <motion.div
       ref={ref}
-      initial={{ opacity: 0, y: 40, scale: 0.95 }}
-      animate={isInView ? { opacity: 1, y: 0, scale: 1 } : { opacity: 0, y: 40, scale: 0.95 }}
+      initial={{ opacity: 0, y: 20 }}
+      animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
       transition={{ 
-        duration: 0.8, 
-        delay: priority ? 0 : Math.min(index * 0.08, 0.4),
-        ease: [0.22, 1, 0.36, 1]
+        duration: 0.5, 
+        delay: priority ? 0 : Math.min(index * 0.05, 0.2),
+        ease: 'easeOut'
       }}
       className="group relative"
     >
       <div 
-        className="relative overflow-hidden cursor-pointer"
+        className="relative overflow-hidden cursor-pointer rounded-sm bg-neutral-100"
         onClick={onClick}
       >
-        {/* Image with natural aspect ratio */}
-        <div className="relative overflow-hidden rounded-sm bg-neutral-100">
-          {/* Loading skeleton */}
-          {!isLoaded && (
-            <div 
-              className="absolute inset-0 bg-neutral-200 animate-pulse"
-              style={{ aspectRatio: aspectRatio || 'auto' }}
-            />
-          )}
-          
-          <img
-            src={image.signedUrl}
-            alt=""
-            loading={priority ? 'eager' : 'lazy'}
-            onLoad={() => setIsLoaded(true)}
-            className={`w-full h-auto object-cover transition-all duration-700 ease-out group-hover:scale-[1.02] ${
-              isLoaded ? 'opacity-100' : 'opacity-0'
-            }`}
-            style={{ aspectRatio: aspectRatio || 'auto' }}
-          />
-          
-          {/* Subtle hover vignette */}
-          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors duration-500" />
-        </div>
+        <img
+          src={image.signedUrl}
+          alt=""
+          loading={priority ? 'eager' : 'lazy'}
+          className="w-full h-auto object-cover transition-transform duration-500 ease-out group-hover:scale-[1.02]"
+          style={{ aspectRatio: aspectRatio || 'auto' }}
+        />
+        
+        {/* Subtle hover vignette */}
+        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors duration-300" />
       </div>
     </motion.div>
   )
@@ -111,24 +84,15 @@ function HeroImage({ image, title }: { image: Image; title: string }) {
   const y = useTransform(scrollY, [0, 500], [0, 150])
   const opacity = useTransform(scrollY, [0, 400], [1, 0])
   const scale = useTransform(scrollY, [0, 500], [1, 1.1])
-  const [imageLoaded, setImageLoaded] = useState(false)
   
   return (
     <section className="relative h-[85vh] sm:h-screen overflow-hidden bg-neutral-900">
-      {/* Loading state */}
-      {!imageLoaded && (
-        <div className="absolute inset-0 bg-neutral-800 animate-pulse" />
-      )}
-      
-      {/* Parallax background */}
+      {/* Parallax background - Show immediately */}
       <motion.div className="absolute inset-0" style={{ y, scale }}>
         <img
           src={image.signedUrl}
           alt=""
-          className={`w-full h-full object-cover transition-opacity duration-700 ${
-            imageLoaded ? 'opacity-100' : 'opacity-0'
-          }`}
-          onLoad={() => setImageLoaded(true)}
+          className="w-full h-full object-cover"
         />
         {/* Cinematic gradient overlay */}
         <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/10 to-black/70" />

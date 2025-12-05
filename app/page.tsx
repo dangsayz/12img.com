@@ -1,9 +1,8 @@
 import { auth } from '@clerk/nextjs/server'
 import Link from 'next/link'
-import { Plus } from 'lucide-react'
 import { getUserGalleries } from '@/server/queries/gallery.queries'
 import { Header } from '@/components/layout/Header'
-import { GalleryGrid } from '@/components/gallery/GalleryGrid'
+import { Dashboard } from '@/components/dashboard/Dashboard'
 import { Button } from '@/components/ui/button'
 import { HeroSection } from '@/components/landing/HeroSection'
 import { HowItWorksSection } from '@/components/landing/HowItWorksSection'
@@ -24,27 +23,8 @@ export default async function HomePage() {
     return (
       <>
         <Header />
-        <main className="container mx-auto px-4 pt-32 pb-8">
-          <h1 className="text-2xl font-semibold tracking-tight mb-8">My Galleries</h1>
-
-          {galleries.length === 0 ? (
-            <div className="flex min-h-[400px] flex-col items-center justify-center rounded-[2.5rem] border border-dashed border-gray-200 bg-gray-50/50 shadow-soft">
-              <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-3xl bg-white shadow-soft">
-                <Plus className="h-10 w-10 text-gray-400" />
-              </div>
-              <h3 className="text-xl font-medium text-gray-900">No galleries yet</h3>
-              <p className="mt-2 text-gray-500 mb-8 max-w-sm text-center">
-                Create your first gallery to get started. It only takes a few seconds.
-              </p>
-              <Link href="/upload">
-                <Button className="h-12 rounded-full px-8 shadow-lg hover:scale-105 transition-all">
-                  Create Gallery
-                </Button>
-              </Link>
-            </div>
-          ) : (
-            <GalleryGrid galleries={galleries} />
-          )}
+        <main className="container mx-auto px-4 pt-28 pb-12 max-w-6xl">
+          <Dashboard galleries={galleries} />
         </main>
       </>
     )
