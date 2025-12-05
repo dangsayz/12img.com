@@ -56,23 +56,27 @@ export function PasswordGate({ galleryId, gallerySlug }: PasswordGateProps) {
           autoComplete="off"
           autoFocus
           disabled={isPending}
-          className={error ? 'border-red-500' : ''}
+          className={`h-12 px-4 rounded-xl border-gray-200 bg-white/50 focus:bg-white transition-all duration-200 font-medium text-center tracking-widest placeholder:tracking-normal ${error ? 'border-red-500 focus:ring-red-200' : 'focus:ring-indigo-100'}`}
         />
       </div>
 
       {error && (
-        <p className="text-sm text-red-600" role="alert">
+        <div className="p-3 rounded-lg bg-red-50 text-red-600 text-sm font-medium text-center animate-in fade-in slide-in-from-top-2">
           {error}
-        </p>
+        </div>
       )}
 
       {attempts >= 3 && (
-        <p className="text-sm text-gray-500">
+        <p className="text-xs text-gray-400 text-center">
           Hint: Contact the photographer if you&apos;ve forgotten the password.
         </p>
       )}
 
-      <Button type="submit" disabled={isPending} className="w-full">
+      <Button 
+        type="submit" 
+        disabled={isPending} 
+        className="w-full h-12 rounded-xl text-base font-medium shadow-lg shadow-indigo-500/20 bg-indigo-600 hover:bg-indigo-500 transition-all hover:-translate-y-0.5 active:translate-y-0"
+      >
         {isPending ? 'Checking...' : 'View Gallery'}
       </Button>
     </form>

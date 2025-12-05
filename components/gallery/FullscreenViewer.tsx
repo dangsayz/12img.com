@@ -107,7 +107,7 @@ export function FullscreenViewer({
       {/* Close button */}
       <button
         onClick={onClose}
-        className="absolute top-4 right-4 z-10 p-2 text-white hover:bg-white/10 rounded-full"
+        className="absolute top-4 right-4 z-50 p-3 text-white/70 hover:text-white bg-black/20 hover:bg-black/40 backdrop-blur-md rounded-full transition-all duration-200"
         aria-label="Close viewer"
       >
         <X className="w-6 h-6" />
@@ -115,34 +115,37 @@ export function FullscreenViewer({
 
       {/* Navigation arrows (desktop) */}
       <button
-        onClick={() => onNavigate('prev')}
-        className="absolute left-4 top-1/2 -translate-y-1/2 p-2 text-white hover:bg-white/10 rounded-full hidden md:block"
+        onClick={(e) => { e.stopPropagation(); onNavigate('prev'); }}
+        className="absolute left-4 top-1/2 -translate-y-1/2 z-50 p-4 text-white/70 hover:text-white bg-black/20 hover:bg-black/40 backdrop-blur-md rounded-full hidden md:flex transition-all duration-200 hover:scale-110"
         aria-label="Previous image"
       >
         <ChevronLeft className="w-8 h-8" />
       </button>
 
       <button
-        onClick={() => onNavigate('next')}
-        className="absolute right-4 top-1/2 -translate-y-1/2 p-2 text-white hover:bg-white/10 rounded-full hidden md:block"
+        onClick={(e) => { e.stopPropagation(); onNavigate('next'); }}
+        className="absolute right-4 top-1/2 -translate-y-1/2 z-50 p-4 text-white/70 hover:text-white bg-black/20 hover:bg-black/40 backdrop-blur-md rounded-full hidden md:flex transition-all duration-200 hover:scale-110"
         aria-label="Next image"
       >
         <ChevronRight className="w-8 h-8" />
       </button>
 
       {/* Image container */}
-      <div className="flex items-center justify-center w-full h-full p-4">
+      <div className="flex items-center justify-center w-full h-full p-4 md:p-8" onClick={onClose}>
         <img
           src={currentImage.signedUrl}
           alt=""
-          className="max-w-full max-h-full object-contain"
+          className="max-w-full max-h-full object-contain shadow-2xl"
           draggable={false}
+          onClick={(e) => e.stopPropagation()}
         />
       </div>
 
       {/* Image counter */}
-      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-white text-sm bg-black/50 px-3 py-1 rounded-full">
-        {currentIndex + 1} / {images.length}
+      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-50">
+        <span className="px-4 py-2 rounded-full bg-black/20 backdrop-blur-md text-white/90 text-sm font-medium border border-white/10">
+          {currentIndex + 1} / {images.length}
+        </span>
       </div>
     </div>,
     document.body

@@ -23,7 +23,7 @@ export function MasonryItem({ image, index, onClick, editable }: MasonryItemProp
 
   return (
     <div
-      className="mb-4 break-inside-avoid cursor-pointer overflow-hidden rounded bg-gray-100"
+      className="mb-2 break-inside-avoid cursor-pointer overflow-hidden rounded bg-gray-100"
       onClick={onClick}
       role="button"
       tabIndex={0}

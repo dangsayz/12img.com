@@ -87,7 +87,7 @@ export function MasonryGrid({ images, editable = false }: MasonryGridProps) {
         ref={containerRef}
         style={{
           columnCount: columns,
-          columnGap: '1rem',
+          columnGap: '0.5rem',
         }}
       >
         {images.map((image, index) => (

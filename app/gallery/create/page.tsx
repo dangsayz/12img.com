@@ -39,74 +39,89 @@ export default function CreateGalleryPage() {
   }
 
   return (
-    <>
+    <div className="min-h-screen bg-gray-50/50">
       <Header />
-      <main className="container mx-auto px-4 py-8 max-w-lg">
-        <h1 className="text-2xl font-semibold mb-8">Create Gallery</h1>
-
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div>
-            <Label htmlFor="title">Gallery Title</Label>
-            <Input
-              id="title"
-              name="title"
-              required
-              maxLength={100}
-              placeholder="Wedding Photos"
-              className="mt-1"
-            />
+      <main className="container mx-auto px-4 py-12 flex justify-center">
+        <div className="w-full max-w-lg bg-white rounded-3xl shadow-sm border border-gray-100 p-8 md:p-10">
+          <div className="mb-8">
+            <h1 className="text-2xl font-semibold tracking-tight text-gray-900">Create Gallery</h1>
+            <p className="text-sm text-gray-500 mt-2">Set up your new gallery. You can add images in the next step.</p>
           </div>
 
-          <div className="flex items-center justify-between py-4 border rounded-lg px-4">
-            <div>
-              <Label htmlFor="passwordToggle">Password Protection</Label>
-              <p className="text-sm text-gray-500">
-                Require a password to view
-              </p>
-            </div>
-            <Switch
-              id="passwordToggle"
-              checked={showPassword}
-              onCheckedChange={setShowPassword}
-            />
-          </div>
-
-          {showPassword && (
-            <div>
-              <Label htmlFor="password">Gallery Password</Label>
+          <form onSubmit={handleSubmit} className="space-y-8">
+            <div className="space-y-2">
+              <Label htmlFor="title" className="text-sm font-medium text-gray-700">Gallery Title</Label>
               <Input
-                id="password"
-                name="password"
-                type="password"
-                required={showPassword}
-                minLength={4}
-                placeholder="Enter password"
-                className="mt-1"
+                id="title"
+                name="title"
+                required
+                maxLength={100}
+                placeholder="e.g. Sarah & James Wedding"
+                className="h-12 px-4 rounded-xl border-gray-200 bg-gray-50 focus:bg-white transition-all duration-200 font-medium"
               />
             </div>
-          )}
 
-          <div className="flex items-center justify-between py-4 border rounded-lg px-4">
-            <div>
-              <Label htmlFor="downloadToggle">Allow Downloads</Label>
-              <p className="text-sm text-gray-500">
-                Let clients download images
-              </p>
+            <div className="space-y-6 pt-4 border-t border-gray-100">
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label htmlFor="passwordToggle" className="text-base font-medium text-gray-900">Password Protection</Label>
+                  <p className="text-xs text-gray-500">
+                    Require a password to view this gallery
+                  </p>
+                </div>
+                <Switch
+                  id="passwordToggle"
+                  checked={showPassword}
+                  onCheckedChange={setShowPassword}
+                />
+              </div>
+
+              {showPassword && (
+                <div className="pl-4 border-l-2 border-gray-100">
+                  <Label htmlFor="password">Gallery Password</Label>
+                  <Input
+                    id="password"
+                    name="password"
+                    type="password"
+                    required={showPassword}
+                    minLength={4}
+                    placeholder="Enter secure password"
+                    className="mt-2 h-11 rounded-xl"
+                  />
+                </div>
+              )}
+
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label htmlFor="downloadToggle" className="text-base font-medium text-gray-900">Allow Downloads</Label>
+                  <p className="text-xs text-gray-500">
+                    Visitors can download full-resolution images
+                  </p>
+                </div>
+                <Switch
+                  id="downloadToggle"
+                  checked={downloadEnabled}
+                  onCheckedChange={setDownloadEnabled}
+                />
+              </div>
             </div>
-            <Switch
-              id="downloadToggle"
-              checked={downloadEnabled}
-              onCheckedChange={setDownloadEnabled}
-            />
-          </div>
 
-          {error && <p className="text-sm text-red-600">{error}</p>}
+            {error && (
+              <div className="p-3 rounded-lg bg-red-50 text-red-600 text-sm font-medium">
+                {error}
+              </div>
+            )}
 
-          <Button type="submit" disabled={isPending} className="w-full">
-            {isPending ? 'Creating...' : 'Create Gallery'}
-          </Button>
-        </form>
+            <Button 
+              type="submit" 
+              disabled={isPending} 
+              className="w-full h-12 rounded-full text-base font-medium shadow-sm hover:shadow-md transition-all bg-black hover:bg-gray-800"
+            >
+              {isPending ? 'Creating...' : 'Create Gallery'}
+            </Button>
+          </form>
+        </div>
       </main>
-    </>
+    </div>
   )
 }
