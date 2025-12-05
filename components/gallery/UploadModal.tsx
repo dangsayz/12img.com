@@ -217,6 +217,10 @@ export function UploadModal({ isOpen, onClose, galleryId }: UploadModalProps) {
   const completedCount = uploads.filter(u => u.status === 'completed').length
   const allComplete = uploads.length > 0 && completedCount === uploads.length
 
+  const totalProgress = uploads.length > 0 
+    ? uploads.reduce((acc, u) => acc + u.progress, 0) / uploads.length 
+    : 0
+
   return (
     <AnimatePresence>
       {isOpen && (
@@ -224,37 +228,40 @@ export function UploadModal({ isOpen, onClose, galleryId }: UploadModalProps) {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          style={{ backgroundColor: 'rgba(0, 0, 0, 0.4)' }}
           onClick={(e) => e.target === e.currentTarget && !isUploading && onClose()}
         >
           <motion.div
-            initial={{ scale: 0.95, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0.95, opacity: 0 }}
-            transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-            className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden"
+            initial={{ scale: 0.98, opacity: 0, y: 10 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            exit={{ scale: 0.98, opacity: 0, y: 10 }}
+            transition={{ duration: 0.2, ease: [0.32, 0.72, 0, 1] }}
+            className="bg-white rounded-2xl w-full max-w-md overflow-hidden"
+            style={{ boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}
           >
-            {/* Header */}
-            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-              <h2 className="text-lg font-semibold text-gray-900">Add Images</h2>
+            {/* Header - Minimal */}
+            <div className="flex items-center justify-between px-5 py-4">
+              <h2 className="text-base font-medium text-gray-900">Add Images</h2>
               <button
                 onClick={onClose}
                 disabled={isUploading}
-                className="p-2 rounded-full hover:bg-gray-100 transition-colors disabled:opacity-50"
+                className="p-1.5 -mr-1.5 rounded-lg hover:bg-gray-100 transition-colors disabled:opacity-50"
               >
-                <X className="w-5 h-5 text-gray-500" />
+                <X className="w-4 h-4 text-gray-400" />
               </button>
             </div>
 
             {/* Content */}
-            <div className="p-6">
-              {/* Drop Zone */}
+            <div className="px-5 pb-5">
+              {/* Drop Zone - Clean */}
               <div
-                className={`relative border-2 border-dashed rounded-xl transition-all ${
+                className={`relative border rounded-xl transition-all cursor-pointer ${
                   isDragging
-                    ? 'border-indigo-400 bg-indigo-50'
-                    : 'border-gray-200 hover:border-gray-300 bg-gray-50/50'
+                    ? 'border-gray-400 bg-gray-50'
+                    : 'border-gray-200 hover:border-gray-300'
                 }`}
+                onClick={() => fileInputRef.current?.click()}
                 onDragOver={(e) => { e.preventDefault(); setIsDragging(true) }}
                 onDragLeave={() => setIsDragging(false)}
                 onDrop={(e) => {
@@ -272,85 +279,91 @@ export function UploadModal({ isOpen, onClose, galleryId }: UploadModalProps) {
                   onChange={(e) => handleFiles(e.target.files)}
                 />
                 
-                <div className="flex flex-col items-center justify-center py-12 px-4">
-                  <div className="h-12 w-12 rounded-full bg-gray-100 flex items-center justify-center mb-4">
-                    <Upload className="w-6 h-6 text-gray-400" />
-                  </div>
-                  <p className="text-sm font-medium text-gray-700 mb-1">
-                    Drag images here to upload
+                <div className="flex flex-col items-center justify-center py-10 px-4">
+                  <p className="text-sm text-gray-500">
+                    Drop images or <span className="text-gray-900 underline underline-offset-4 decoration-gray-300">browse</span>
                   </p>
-                  <button
-                    onClick={() => fileInputRef.current?.click()}
-                    className="text-sm text-indigo-600 hover:text-indigo-700 font-medium"
-                  >
-                    or browse files
-                  </button>
-                  <p className="text-xs text-gray-400 mt-3">
-                    JPEG, PNG, WEBP • MAX 25MB
+                  <p className="text-xs text-gray-300 mt-2">
+                    JPEG, PNG, WEBP • 25MB max
                   </p>
                 </div>
               </div>
 
-              {/* Upload Progress */}
+              {/* Upload List - Minimal */}
               {uploads.length > 0 && (
-                <div className="mt-4 space-y-2 max-h-48 overflow-y-auto">
-                  {uploads.map((upload) => (
-                    <div
-                      key={upload.id}
-                      className="flex items-center gap-3 p-2 rounded-lg bg-gray-50"
-                    >
-                      <img
-                        src={upload.preview}
-                        alt=""
-                        className="w-10 h-10 rounded object-cover"
+                <div className="mt-4 space-y-1">
+                  {/* Global Progress Bar */}
+                  {isUploading && (
+                    <div className="h-0.5 bg-gray-100 rounded-full overflow-hidden mb-3">
+                      <motion.div 
+                        className="h-full bg-gray-900"
+                        initial={{ width: 0 }}
+                        animate={{ width: `${totalProgress}%` }}
+                        transition={{ duration: 0.3 }}
                       />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm text-gray-700 truncate">{upload.file.name}</p>
-                        <div className="h-1.5 bg-gray-200 rounded-full mt-1 overflow-hidden">
-                          <div
-                            className={`h-full transition-all duration-300 ${
-                              upload.status === 'completed'
-                                ? 'bg-emerald-500'
-                                : upload.status === 'error'
-                                ? 'bg-red-500'
-                                : 'bg-indigo-500'
-                            }`}
-                            style={{ width: `${upload.progress}%` }}
-                          />
-                        </div>
-                      </div>
-                      {upload.status === 'completed' && (
-                        <CheckCircle2 className="w-5 h-5 text-emerald-500 flex-shrink-0" />
-                      )}
                     </div>
-                  ))}
+                  )}
+                  
+                  <div className="max-h-52 overflow-y-auto space-y-1">
+                    {uploads.map((upload) => (
+                      <div
+                        key={upload.id}
+                        className="flex items-center gap-3 py-2"
+                      >
+                        <img
+                          src={upload.preview}
+                          alt=""
+                          className={`w-9 h-9 rounded-lg object-cover transition-opacity ${
+                            upload.status === 'completed' ? 'opacity-100' : 'opacity-60'
+                          }`}
+                        />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm text-gray-700 truncate">{upload.file.name}</p>
+                          <p className="text-xs text-gray-400">
+                            {upload.status === 'completed' 
+                              ? 'Done' 
+                              : upload.status === 'error' 
+                              ? 'Failed' 
+                              : `${Math.round(upload.progress)}%`
+                            }
+                          </p>
+                        </div>
+                        {upload.status === 'completed' && (
+                          <div className="w-5 h-5 rounded-full bg-gray-900 flex items-center justify-center flex-shrink-0">
+                            <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                            </svg>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
             </div>
 
-            {/* Footer */}
-            <div className="px-6 py-4 border-t border-gray-100 bg-gray-50/50">
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-500">
-                  {uploads.length > 0
-                    ? `${completedCount} of ${uploads.length} uploaded`
-                    : 'No files selected'}
-                </span>
-                {allComplete ? (
-                  <Button
-                    onClick={onClose}
-                    className="rounded-full bg-emerald-600 hover:bg-emerald-700"
-                  >
-                    Done
-                  </Button>
-                ) : isUploading ? (
-                  <span className="text-sm text-gray-600 flex items-center gap-2">
-                    <span className="h-2 w-2 rounded-full bg-indigo-500 animate-pulse" />
-                    Uploading...
+            {/* Footer - Clean */}
+            {uploads.length > 0 && (
+              <div className="px-5 py-4 border-t border-gray-100">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-gray-400">
+                    {completedCount} of {uploads.length} uploaded
                   </span>
-                ) : null}
+                  {allComplete ? (
+                    <button
+                      onClick={onClose}
+                      className="px-4 py-2 text-sm font-medium text-white bg-gray-900 hover:bg-gray-800 rounded-lg transition-colors"
+                    >
+                      Done
+                    </button>
+                  ) : isUploading ? (
+                    <span className="text-xs text-gray-500">
+                      Uploading...
+                    </span>
+                  ) : null}
+                </div>
               </div>
-            </div>
+            )}
           </motion.div>
         </motion.div>
       )}
