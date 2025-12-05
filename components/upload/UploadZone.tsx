@@ -255,25 +255,24 @@ export function UploadZone({ galleryId, onUploadComplete }: UploadZoneProps) {
       <div 
         onDrop={handleDrop}
         onDragOver={(e) => e.preventDefault()}
-        className="flex-none mb-6"
+        className={`${uploads.length === 0 ? 'flex-1 flex flex-col justify-center' : 'flex-none mb-6'}`}
       >
         <motion.div
-          whileHover={{ scale: 1.01 }}
-          whileTap={{ scale: 0.99 }}
+          whileHover={{ scale: 1.005 }}
+          whileTap={{ scale: 0.995 }}
           onClick={() => fileInputRef.current?.click()}
-          className="relative overflow-hidden rounded-2xl border-2 border-dashed border-gray-200 bg-gray-50/50 p-8 text-center cursor-pointer transition-colors hover:border-indigo-400 hover:bg-indigo-50 group"
+          className={`relative overflow-hidden rounded-2xl border border-dashed border-gray-200 bg-gray-50/30 text-center cursor-pointer transition-colors hover:border-indigo-400 hover:bg-indigo-50/30 group ${uploads.length === 0 ? 'h-64 flex flex-col justify-center' : 'p-8'}`}
         >
-          <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity" />
           
           <div className="relative z-10 flex flex-col items-center gap-3">
             <div className="h-12 w-12 rounded-xl bg-white shadow-sm border border-gray-100 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-              <Plus className="w-6 h-6 text-indigo-600" />
+              <Plus className="w-5 h-5 text-gray-600 group-hover:text-indigo-600" />
             </div>
             <div>
-              <h3 className="text-lg font-semibold text-gray-900">
+              <h3 className="text-base font-medium text-gray-900">
                 Drop images or browse
               </h3>
-              <p className="text-sm text-gray-500 mt-1">
+              <p className="text-xs text-gray-500 mt-1">
                 JPEG, PNG, WEBP • MAX 25MB
               </p>
             </div>
@@ -302,7 +301,7 @@ export function UploadZone({ galleryId, onUploadComplete }: UploadZoneProps) {
       <div className="flex-none pt-4 mt-4 border-t border-gray-100">
         <Button
           size="lg"
-          className="w-full rounded-xl h-12 text-base font-medium shadow-lg shadow-indigo-500/20 bg-gray-900 hover:bg-gray-800 text-white transition-all"
+          className="w-full rounded-xl h-12 text-base font-medium bg-gray-900 hover:bg-gray-800 text-white transition-all shadow-sm"
           onClick={processQueue}
           disabled={isUploading || uploads.filter(u => u.status === 'pending').length === 0}
         >

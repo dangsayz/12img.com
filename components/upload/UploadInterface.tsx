@@ -79,13 +79,13 @@ export function UploadInterface({ gallery, images }: UploadInterfaceProps) {
                 transition={{ type: "spring", stiffness: 300, damping: 30 }}
                 className="lg:w-[400px] lg:sticky lg:top-24 flex-shrink-0 w-full"
               >
-                <div className="bg-white rounded-3xl p-6 shadow-xl shadow-indigo-100/50 border border-gray-100 overflow-hidden h-[calc(100vh-180px)] flex flex-col">
+                <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-200 overflow-hidden h-[calc(100vh-180px)] flex flex-col">
                   <div className="flex items-center justify-between mb-6 flex-none">
                     <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
-                      <span className="flex h-2 w-2 rounded-full bg-indigo-500 animate-pulse" />
+                      <span className="flex h-2 w-2 rounded-full bg-indigo-500" />
                       Upload Studio
                     </h2>
-                    <div className="px-2 py-1 rounded-full bg-indigo-50 text-xs font-medium text-indigo-600">
+                    <div className="px-2 py-1 rounded-full bg-gray-50 text-xs font-medium text-gray-600 border border-gray-100">
                       Ready
                     </div>
                   </div>
@@ -108,7 +108,7 @@ export function UploadInterface({ gallery, images }: UploadInterfaceProps) {
             layout
             className="flex-1 w-full min-w-0"
           >
-            <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 min-h-[600px]">
+            <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-200 min-h-[600px]">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-lg font-bold text-gray-900">
                   Gallery Grid
