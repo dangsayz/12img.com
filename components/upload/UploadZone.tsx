@@ -22,6 +22,15 @@ export function UploadZone({ galleryId, onUploadComplete }: UploadZoneProps) {
   const [uploads, setUploads] = useState<FileItemState[]>([])
   const [isDragging, setIsDragging] = useState(false)
   const [isUploading, setIsUploading] = useState(false)
+  const isUploadingRef = useRef(false)
+
+  // Auto-upload: Start uploading when new pending files are added
+  useEffect(() => {
+    const pendingCount = uploads.filter(u => u.status === 'pending').length
+    if (pendingCount > 0 && !isUploadingRef.current) {
+      processQueue()
+    }
+  }, [uploads])
 
   // Global drag event listeners for "Predictive Drop Zone Expansion"
   useEffect(() => {
@@ -102,31 +111,23 @@ export function UploadZone({ galleryId, onUploadComplete }: UploadZoneProps) {
 
   // Upload Logic with Concurrency Control
   const processQueue = async () => {
+    if (isUploadingRef.current) return
+    
+    isUploadingRef.current = true
     setIsUploading(true)
-    
-    // Clone queue to avoid closure staleness, but we use functional state updates
-    // We need to process chunks of MAX_CONCURRENT_UPLOADS
-    
-    // Helper to upload a single file
-    const uploadSingle = async (item: FileItemState) => {
-      try {
-        // 1. Get signed URL (we should batch this really, but for simplicity in concurrency loop doing one by one or we can batch first)
-        // Actually, let's batch-get URLs for all pending first as existing logic does
-        
-        // Wait, to properly implement throttling, we should queue the actual XHRs.
-        // Reusing logic from ImageUploader but adapting for queue.
-        
-        // Since existing ImageUploader does batch signed URL fetching, let's stick to that for efficiency,
-        // then limit concurrent XHRs.
-        return; // This is just a placeholder declaration
-      } catch (e) {
-        console.error(e)
-      }
-    }
 
-    // Current pending items
-    const pendingItems = uploads.filter(u => u.status === 'pending')
+    // Get current pending items from state
+    let pendingItems: FileItemState[] = []
+    setUploads(prev => {
+      pendingItems = prev.filter(u => u.status === 'pending')
+      return prev
+    })
+    
+    // Small delay to ensure state is captured
+    await new Promise(r => setTimeout(r, 50))
+    
     if (pendingItems.length === 0) {
+      isUploadingRef.current = false
       setIsUploading(false)
       return
     }
@@ -239,6 +240,7 @@ export function UploadZone({ galleryId, onUploadComplete }: UploadZoneProps) {
     } catch (err) {
       console.error('Batch upload error:', err)
     } finally {
+      isUploadingRef.current = false
       setIsUploading(false)
     }
   }
@@ -255,27 +257,30 @@ export function UploadZone({ galleryId, onUploadComplete }: UploadZoneProps) {
       <div 
         onDrop={handleDrop}
         onDragOver={(e) => e.preventDefault()}
-        className={`${uploads.length === 0 ? 'flex-1 flex flex-col justify-center' : 'flex-none mb-6'}`}
+        className={`flex-none mb-6 transition-all duration-300 ${uploads.length === 0 ? 'flex-1 flex flex-col' : ''}`}
       >
         <motion.div
-          whileHover={{ scale: 1.005 }}
+          whileHover={{ borderColor: 'rgba(15,23,42,0.35)', backgroundColor: '#F8FAFC' }}
           whileTap={{ scale: 0.995 }}
           onClick={() => fileInputRef.current?.click()}
-          className={`relative overflow-hidden rounded-2xl border border-dashed border-gray-200 bg-gray-50/30 text-center cursor-pointer transition-colors hover:border-indigo-400 hover:bg-indigo-50/30 group ${uploads.length === 0 ? 'h-64 flex flex-col justify-center' : 'p-8'}`}
+          className={`relative overflow-hidden rounded-2xl border border-dashed border-gray-200 bg-white text-center cursor-pointer transition-all duration-200 group flex flex-col items-center justify-center ${uploads.length === 0 ? 'flex-1 min-h-[320px]' : 'p-10 min-h-[220px]'}`}
         >
           
-          <div className="relative z-10 flex flex-col items-center gap-3">
-            <div className="h-12 w-12 rounded-xl bg-white shadow-sm border border-gray-100 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-              <Plus className="w-5 h-5 text-gray-600 group-hover:text-indigo-600" />
+          <div className="relative z-10 flex flex-col items-center gap-4">
+            <div className="h-10 w-10 rounded-full bg-gray-50 flex items-center justify-center transition-transform duration-300 group-hover:scale-110">
+              <Plus className="w-5 h-5 text-gray-400 group-hover:text-gray-600" />
             </div>
-            <div>
-              <h3 className="text-base font-medium text-gray-900">
-                Drop images or browse
+            <div className="space-y-1">
+              <h3 className="text-base font-semibold text-gray-900">
+                Drag images here to upload
               </h3>
-              <p className="text-xs text-gray-500 mt-1">
-                JPEG, PNG, WEBP • MAX 25MB
+              <p className="text-sm text-gray-500">
+                or <span className="underline decoration-gray-300 hover:text-gray-800 decoration-1 underline-offset-2 transition-colors">browse files</span>
               </p>
             </div>
+            <p className="text-[10px] text-gray-400 uppercase tracking-wider font-medium mt-2">
+              JPEG, PNG, WEBP • MAX 25MB
+            </p>
           </div>
         </motion.div>
         
@@ -297,17 +302,35 @@ export function UploadZone({ galleryId, onUploadComplete }: UploadZoneProps) {
         />
       </div>
 
-      {/* Action Bar */}
-      <div className="flex-none pt-4 mt-4 border-t border-gray-100">
-        <Button
-          size="lg"
-          className="w-full rounded-xl h-12 text-base font-medium bg-gray-900 hover:bg-gray-800 text-white transition-all shadow-sm"
-          onClick={processQueue}
-          disabled={isUploading || uploads.filter(u => u.status === 'pending').length === 0}
-        >
-          {isUploading ? 'Uploading...' : 'Start Upload'}
-        </Button>
-      </div>
+      {/* Status Bar */}
+      {uploads.length > 0 && (
+        <div className="flex-none pt-4 mt-2 border-t border-gray-100">
+          <div className="flex items-center justify-between">
+            <span className="text-sm text-gray-500 font-medium">
+              {uploads.filter(u => u.status === 'completed').length} of {uploads.length} uploaded
+            </span>
+            {isUploading ? (
+              <span className="text-sm text-gray-600 font-medium flex items-center gap-2">
+                <span className="h-2 w-2 rounded-full bg-indigo-500 animate-pulse" />
+                Uploading...
+              </span>
+            ) : uploads.filter(u => u.status === 'pending').length > 0 ? (
+              <Button
+                size="sm"
+                variant="ghost"
+                className="text-sm text-gray-600 hover:text-gray-900"
+                onClick={processQueue}
+              >
+                Retry
+              </Button>
+            ) : (
+              <span className="text-sm text-emerald-600 font-medium">
+                ✓ Complete
+              </span>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   )
 }
