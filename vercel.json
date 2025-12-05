@@ -3,7 +3,7 @@
   "crons": [
     {
       "path": "/api/cron/process-archives?secret=${CRON_SECRET}",
-      "schedule": "* * * * *"
+      "schedule": "0 6 * * *"
     }
   ]
 }
