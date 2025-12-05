@@ -1,10 +1,12 @@
 import { cookies } from 'next/headers'
 import { notFound, redirect } from 'next/navigation'
+import { auth } from '@clerk/nextjs/server'
 import { getGalleryBySlug } from '@/server/queries/gallery.queries'
 import { getGalleryImages } from '@/server/queries/image.queries'
 import { getSignedUrlsBatch } from '@/lib/storage/signed-urls'
 import { verifyUnlockToken } from '@/lib/utils/password'
 import { PublicGalleryView } from '@/components/gallery/PublicGalleryView'
+import { getOrCreateUserByClerkId } from '@/server/queries/user.queries'
 
 export const revalidate = 60
 
@@ -27,6 +29,16 @@ export default async function GalleryPage({ params }: Props) {
 
     if (!unlockCookie || !verifyUnlockToken(unlockCookie.value, gallery.id)) {
       redirect(`/g/${galleryId}/password`)
+    }
+  }
+
+  // Check if current user is the owner
+  const { userId: clerkId } = await auth()
+  let isOwner = false
+  if (clerkId) {
+    const user = await getOrCreateUserByClerkId(clerkId)
+    if (user && user.id === gallery.user_id) {
+      isOwner = true
     }
   }
 
@@ -72,6 +84,9 @@ export default async function GalleryPage({ params }: Props) {
       title={gallery.title}
       images={imagesWithUrls}
       downloadEnabled={gallery.download_enabled}
+      isOwner={isOwner}
+      galleryId={gallery.id}
+      coverImageId={gallery.cover_image_id}
     />
   )
 }

@@ -73,8 +73,13 @@ export function generateSlug(title: string): string {
     !RESERVED_SLUGS.has(base) &&
     !/^\d+$/.test(base) // Not just numbers
   
-  // Step 8: Use base or fallback
-  const finalBase = isValidBase ? base : 'photos'
+  // Step 8: Use base or fallback (use month-based name for empty titles)
+  let finalBase = base
+  if (!isValidBase) {
+    const now = new Date()
+    const monthNames = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec']
+    finalBase = `${monthNames[now.getMonth()]}-${now.getFullYear()}`
+  }
   
   // Step 9: Add random suffix for uniqueness
   const suffix = nanoid6()
@@ -107,8 +112,10 @@ export async function generateUniqueSlug(title: string): Promise<string> {
     attempts++
   }
 
-  // After max attempts, use fully random slug
-  return `photos-${nanoid8()}`
+  // After max attempts, use month-year with longer random suffix
+  const now = new Date()
+  const monthNames = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec']
+  return `${monthNames[now.getMonth()]}-${now.getFullYear()}-${nanoid8()}`
 }
 
 /**

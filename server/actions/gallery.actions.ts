@@ -138,6 +138,44 @@ export async function updateGallery(galleryId: string, formData: FormData) {
   }
 }
 
+export async function setCoverImage(galleryId: string, imageId: string | null) {
+  const { userId: clerkId } = await auth()
+  if (!clerkId) return { error: 'Unauthorized' }
+
+  const user = await getOrCreateUserByClerkId(clerkId)
+  if (!user) return { error: 'User not found' }
+
+  const gallery = await getGalleryWithOwnershipCheck(galleryId, user.id)
+  if (!gallery) return { error: 'Gallery not found' }
+
+  // If imageId is provided, verify it belongs to this gallery
+  if (imageId) {
+    const { data: image, error: imageError } = await supabaseAdmin
+      .from('images')
+      .select('id')
+      .eq('id', imageId)
+      .eq('gallery_id', galleryId)
+      .single()
+
+    if (imageError || !image) {
+      return { error: 'Image not found in this gallery' }
+    }
+  }
+
+  const { error } = await supabaseAdmin
+    .from('galleries')
+    .update({ cover_image_id: imageId })
+    .eq('id', galleryId)
+
+  if (error) return { error: 'Failed to set cover image' }
+
+  revalidatePath('/')
+  revalidatePath(`/gallery/${galleryId}`)
+  revalidatePath(`/g/${gallery.slug}`)
+
+  return { success: true }
+}
+
 export async function deleteGallery(galleryId: string) {
   const { userId: clerkId } = await auth()
   if (!clerkId) return { error: 'Unauthorized' }
