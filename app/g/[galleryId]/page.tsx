@@ -21,7 +21,7 @@ export default async function GalleryPage({ params }: Props) {
 
   // Password protection check
   if (gallery.password_hash) {
-    const cookieStore = cookies()
+    const cookieStore = await cookies()
     const unlockCookie = cookieStore.get(`gallery_unlock_${gallery.id}`)
 
     if (!unlockCookie || !verifyUnlockToken(unlockCookie.value, gallery.id)) {

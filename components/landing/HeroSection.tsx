@@ -24,14 +24,13 @@ const staggerContainer = {
 
 export function HeroSection() {
   return (
-    <section className="relative overflow-hidden pt-32 pb-20 lg:pt-48 lg:pb-32">
-      {/* Background Orb */}
-      <div className="absolute top-0 right-0 -z-10 translate-x-1/3 -translate-y-1/4">
-        <div className="h-[500px] w-[500px] rounded-full bg-gradient-to-br from-indigo-500/20 via-purple-500/20 to-blue-500/20 blur-3xl lg:h-[800px] lg:w-[800px]" />
-      </div>
+    <section className="relative overflow-hidden pt-32 pb-20 lg:pt-40 lg:pb-32 bg-soft-bg">
+      {/* Ambient Glows */}
+      <div className="absolute top-0 left-0 w-[800px] h-[800px] bg-white/60 rounded-full blur-[120px] -translate-x-1/2 -translate-y-1/2 pointer-events-none" />
+      <div className="absolute bottom-0 right-0 w-[800px] h-[800px] bg-soft-lime/10 rounded-full blur-[120px] translate-x-1/2 translate-y-1/2 pointer-events-none" />
 
-      <div className="container mx-auto px-4">
-        <div className="grid gap-12 lg:grid-cols-2 lg:gap-8 lg:items-center">
+      <div className="container mx-auto px-4 relative z-10">
+        <div className="grid gap-16 lg:grid-cols-2 lg:gap-12 lg:items-center">
           {/* Left Column: Copy */}
           <motion.div
             initial="hidden"
@@ -41,81 +40,101 @@ export function HeroSection() {
             className="flex flex-col items-start text-left"
           >
             <motion.div variants={fadeInUp}>
-              <span className="inline-block rounded-full border border-black/5 bg-white/50 px-4 py-1.5 text-sm font-medium text-muted-foreground backdrop-blur-sm">
+              <span className="inline-block rounded-full bg-white border border-white/60 shadow-sm px-4 py-1.5 text-sm font-medium text-gray-500">
                 For Photographers
               </span>
             </motion.div>
             
             <motion.h1
               variants={fadeInUp}
-              className="mt-6 text-5xl font-semibold tracking-tight text-gray-900 sm:text-7xl"
+              className="mt-8 text-5xl font-bold tracking-tight text-gray-900 sm:text-7xl"
             >
               Share your work, <br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-gray-900 to-gray-500">
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-gray-400 to-gray-300">
                 beautifully.
               </span>
             </motion.h1>
             
             <motion.p
               variants={fadeInUp}
-              className="mt-6 text-lg text-gray-600 leading-relaxed max-w-lg"
+              className="mt-8 text-lg text-gray-500 leading-relaxed max-w-lg font-medium"
             >
               Ultra-minimal client galleries. No clutter. Just your images presented in a cinematic, distraction-free environment.
             </motion.p>
             
             <motion.div variants={fadeInUp} className="mt-10 flex items-center gap-4">
-              <Link href="/sign-up" className="group relative inline-flex h-12 items-center justify-center overflow-hidden rounded-full bg-gray-950 px-8 font-medium text-white transition-transform active:scale-95">
-                <div className="absolute inset-0 flex items-center [container-type:inline-size]">
-                  <div className="absolute h-[100w] w-[100w] animate-[spin_4s_linear_infinite] bg-[conic-gradient(from_0deg_at_50%_50%,theme(colors.gray.950)_0%,theme(colors.indigo.500)_50%,theme(colors.gray.950)_100%)]" />
-                </div>
-                <span className="absolute inset-[1px] rounded-full bg-gray-950" />
-                <span className="relative flex items-center gap-2">
+              <Link href="/sign-up" className="group inline-flex h-14 items-center justify-center rounded-[20px] bg-gray-900 px-8 font-bold text-white transition-all hover:bg-gray-800 hover:scale-[1.02] shadow-neumorphic-md hover:shadow-neumorphic-lg">
+                <span className="flex items-center gap-2">
                   Get Started <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
                 </span>
               </Link>
               
-              <Link href="/view/demo" className="text-sm font-semibold leading-6 text-gray-900 hover:text-gray-600 transition-colors">
-                View Demo <span aria-hidden="true">→</span>
+              <Link href="/view/demo" className="px-6 py-4 text-sm font-bold text-gray-600 hover:text-gray-900 transition-colors bg-white rounded-[20px] shadow-neumorphic-sm border border-white/60 hover:border-white">
+                View Demo
               </Link>
+            </motion.div>
+            
+            {/* Trust Badge */}
+            <motion.div variants={fadeInUp} className="mt-12 flex items-center gap-4 text-sm font-medium text-gray-400">
+              <div className="flex -space-x-2">
+                 {[1,2,3,4].map(i => (
+                   <div key={i} className="w-8 h-8 rounded-full border-2 border-soft-bg bg-gray-200 overflow-hidden">
+                     <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${i+10}`} alt="User" />
+                   </div>
+                 ))}
+              </div>
+              <p>Trusted by 2,000+ photographers</p>
             </motion.div>
           </motion.div>
 
           {/* Right Column: Visual */}
           <motion.div
-            initial={{ opacity: 0, x: 40, rotateY: -20 }}
-            whileInView={{ opacity: 1, x: 0, rotateY: 0 }}
-            transition={{ duration: 1, ease: "easeOut" }}
+            initial={{ opacity: 0, scale: 0.9, rotateY: -20 }}
+            whileInView={{ opacity: 1, scale: 1, rotateY: -5 }}
+            transition={{ duration: 1.2, ease: "easeOut" }}
             viewport={{ once: true }}
             className="relative mx-auto w-full max-w-[500px] lg:max-w-none perspective-1000"
           >
-            {/* Glass Card */}
-            <div className="relative aspect-[4/3] overflow-hidden rounded-2xl border border-white/20 bg-white/10 p-4 shadow-2xl backdrop-blur-xl">
-              {/* Fake Gallery Grid */}
-              <div className="grid h-full grid-cols-3 gap-2">
-                {[...Array(6)].map((_, i) => (
-                  <div
-                    key={i}
-                    className={`relative overflow-hidden rounded-lg bg-gray-200 ${
-                      i === 0 ? 'col-span-2 row-span-2' : ''
-                    }`}
-                  >
-                    <div className="absolute inset-0 bg-gradient-to-br from-gray-100 to-gray-300" />
-                  </div>
-                ))}
-              </div>
-              
-              {/* Floating Badge */}
-              <div className="absolute bottom-6 left-6 right-6 flex items-center justify-between rounded-xl bg-white/80 p-4 backdrop-blur-md shadow-lg">
-                <div>
-                  <div className="h-2 w-24 rounded-full bg-gray-200 mb-2" />
-                  <div className="h-2 w-16 rounded-full bg-gray-100" />
-                </div>
-                <div className="h-8 w-8 rounded-full bg-blue-500/20" />
-              </div>
-            </div>
-            
-            {/* Decorative Blur Behind */}
-            <div className="absolute -inset-4 -z-10 bg-gradient-to-tr from-indigo-500/30 to-purple-500/30 blur-2xl rounded-[2rem] opacity-50" />
+             {/* Clean 3D Card Stack */}
+             <div className="relative h-[600px] w-full flex items-center justify-center transform-style-3d">
+               {/* Back Card */}
+               <motion.div 
+                 className="absolute w-[300px] h-[400px] bg-white rounded-[32px] shadow-soft-xl border border-white/50 z-10 opacity-60"
+                 animate={{ rotate: -6, x: -40, y: 10 }}
+               />
+               
+               {/* Middle Card */}
+               <motion.div 
+                 className="absolute w-[300px] h-[400px] bg-white rounded-[32px] shadow-soft-xl border border-white/50 z-20 opacity-80"
+                 animate={{ rotate: 6, x: 40, y: -10 }}
+               />
+
+               {/* Main Card (Front) */}
+               <motion.div 
+                 className="absolute w-[340px] h-[460px] bg-white rounded-[32px] shadow-neumorphic-float border border-white/80 z-30 overflow-hidden p-3"
+                 animate={{ y: [0, -15, 0] }}
+                 transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+               >
+                 <div className="relative w-full h-full rounded-[24px] overflow-hidden bg-gray-100">
+                   <img 
+                     src="/images/showcase/modern-wedding-gallery-07.jpg" 
+                     alt="Gallery Preview" 
+                     className="w-full h-full object-cover"
+                   />
+                   
+                   {/* Glass Overlay Badge */}
+                   <div className="absolute bottom-4 left-4 right-4 p-4 bg-white/80 backdrop-blur-md rounded-[20px] shadow-sm border border-white/50 flex items-center justify-between">
+                     <div>
+                       <p className="text-sm font-bold text-gray-900">Sarah & Tom</p>
+                       <p className="text-xs text-gray-500">24 Photos • Just now</p>
+                     </div>
+                     <div className="w-8 h-8 rounded-full bg-gray-900 flex items-center justify-center text-white text-xs font-bold">
+                       ↗
+                     </div>
+                   </div>
+                 </div>
+               </motion.div>
+             </div>
           </motion.div>
         </div>
       </div>

@@ -37,7 +37,7 @@ export async function validateGalleryPassword(
   // Generate unlock token and set cookie
   const token = generateUnlockToken(galleryId)
 
-  const cookieStore = cookies()
+  const cookieStore = await cookies()
   cookieStore.set(`gallery_unlock_${galleryId}`, token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',

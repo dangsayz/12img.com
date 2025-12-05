@@ -1,6 +1,6 @@
 'use server'
 
-import { auth } from '@clerk/nextjs'
+import { auth } from '@clerk/nextjs/server'
 import { revalidatePath } from 'next/cache'
 import { v4 as uuidv4 } from 'uuid'
 import { supabaseAdmin } from '@/lib/supabase/admin'
@@ -27,7 +27,7 @@ export async function generateSignedUploadUrls(request: {
   galleryId: string
   files: UploadFileMetadata[]
 }): Promise<UploadUrlResponse[]> {
-  const { userId: clerkId } = auth()
+  const { userId: clerkId } = await auth()
   if (!clerkId) throw new Error('Unauthorized')
 
   const user = await getUserByClerkId(clerkId)
@@ -78,7 +78,7 @@ export async function confirmUploads(request: {
   galleryId: string
   uploads: ConfirmUploadData[]
 }): Promise<{ imageIds: string[] }> {
-  const { userId: clerkId } = auth()
+  const { userId: clerkId } = await auth()
   if (!clerkId) throw new Error('Unauthorized')
 
   const user = await getUserByClerkId(clerkId)

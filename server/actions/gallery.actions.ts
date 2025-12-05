@@ -1,6 +1,6 @@
 'use server'
 
-import { auth } from '@clerk/nextjs'
+import { auth } from '@clerk/nextjs/server'
 import { revalidatePath } from 'next/cache'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 import { hashPassword } from '@/lib/utils/password'
@@ -14,7 +14,7 @@ import {
 } from '@/server/queries/gallery.queries'
 
 export async function createGallery(formData: FormData) {
-  const { userId: clerkId } = auth()
+  const { userId: clerkId } = await auth()
   if (!clerkId) return { error: 'Unauthorized' }
 
   const user = await getUserByClerkId(clerkId)
@@ -58,7 +58,7 @@ export async function createGallery(formData: FormData) {
 }
 
 export async function updateGallery(galleryId: string, formData: FormData) {
-  const { userId: clerkId } = auth()
+  const { userId: clerkId } = await auth()
   if (!clerkId) return { error: 'Unauthorized' }
 
   const user = await getUserByClerkId(clerkId)
@@ -117,7 +117,7 @@ export async function updateGallery(galleryId: string, formData: FormData) {
 }
 
 export async function deleteGallery(galleryId: string) {
-  const { userId: clerkId } = auth()
+  const { userId: clerkId } = await auth()
   if (!clerkId) return { error: 'Unauthorized' }
 
   const user = await getUserByClerkId(clerkId)

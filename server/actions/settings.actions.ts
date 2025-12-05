@@ -1,13 +1,13 @@
 'use server'
 
-import { auth } from '@clerk/nextjs'
+import { auth } from '@clerk/nextjs/server'
 import { revalidatePath } from 'next/cache'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 import { updateSettingsSchema } from '@/lib/validation/settings.schema'
 import { getUserByClerkId } from '@/server/queries/user.queries'
 
 export async function updateUserSettings(formData: FormData) {
-  const { userId: clerkId } = auth()
+  const { userId: clerkId } = await auth()
   if (!clerkId) return { error: 'Unauthorized' }
 
   const user = await getUserByClerkId(clerkId)

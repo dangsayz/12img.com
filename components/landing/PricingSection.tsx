@@ -6,45 +6,63 @@ import { Check } from 'lucide-react'
 
 const plans = [
   {
-    name: 'Starter',
-    price: 'Free',
-    description: 'Perfect for hobbyists and portfolio building.',
-    features: ['3 Galleries', '100 Images per gallery', 'Standard quality', 'Password protection'],
-    cta: 'Start for free',
+    name: 'Free',
+    price: '$0',
+    description: 'Perfect for trying things out.',
+    features: ['3 galleries', '50 images per gallery', 'Standard quality', '7-day link expiry'],
+    cta: 'Start free',
     href: '/sign-up',
     popular: false,
   },
   {
-    name: 'Pro',
-    price: '$12',
+    name: 'Basic',
+    price: '$10',
     period: '/month',
-    description: 'For professional photographers who need more.',
-    features: ['Unlimited Galleries', 'Unlimited Images', 'Original quality', 'Priority support', 'Custom branding'],
+    description: 'For hobbyists and side projects.',
+    features: ['10 galleries', '200 images per gallery', 'High quality', 'Password protection', '30-day link expiry'],
+    cta: 'Get Basic',
+    href: '/sign-up?plan=basic',
+    popular: false,
+  },
+  {
+    name: 'Pro',
+    price: '$15',
+    period: '/month',
+    description: 'For working photographers.',
+    features: ['50 galleries', '500 images per gallery', 'Original quality', 'Custom branding', 'No link expiry'],
     cta: 'Get Pro',
     href: '/sign-up?plan=pro',
     popular: true,
+  },
+  {
+    name: 'Studio',
+    price: '$20',
+    period: '/month',
+    description: 'For high-volume professionals.',
+    features: ['Unlimited galleries', 'Unlimited images', 'Original quality', 'Priority support', 'Team access (coming soon)'],
+    cta: 'Get Studio',
+    href: '/sign-up?plan=studio',
+    popular: false,
   },
 ]
 
 export function PricingSection() {
   return (
-    <section className="py-24 lg:py-32 relative overflow-hidden">
+    <section className="py-24 lg:py-32 bg-soft-bg relative overflow-hidden">
       {/* Background Blob */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 -z-10">
-        <div className="h-[400px] w-[400px] rounded-full bg-indigo-500/10 blur-3xl opacity-50" />
-      </div>
+      <div className="absolute bottom-0 right-0 w-[800px] h-[800px] bg-soft-lime/5 rounded-full blur-[120px] translate-x-1/3 translate-y-1/3 pointer-events-none" />
 
-      <div className="container mx-auto px-4">
+      <div className="container mx-auto px-4 relative z-10">
         <div className="mb-16 text-center">
-          <h2 className="text-3xl font-semibold tracking-tight text-gray-900 sm:text-4xl">
+          <h2 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
             Simple, transparent pricing
           </h2>
-          <p className="mt-4 text-lg text-gray-600">
+          <p className="mt-4 text-lg text-gray-500 font-medium">
             No hidden fees. Cancel anytime.
           </p>
         </div>
 
-        <div className="grid gap-8 md:grid-cols-2 lg:gap-12 max-w-4xl mx-auto">
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4 lg:gap-8 max-w-6xl mx-auto">
           {plans.map((plan, index) => (
             <motion.div
               key={plan.name}
@@ -52,39 +70,39 @@ export function PricingSection() {
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.1, duration: 0.5 }}
               viewport={{ once: true }}
-              className={`relative rounded-3xl p-8 xl:p-10 transition-all ${
+              className={`relative rounded-[28px] p-6 transition-all duration-300 flex flex-col ${
                 plan.popular
-                  ? 'bg-white/80 ring-1 ring-indigo-500/50 shadow-xl backdrop-blur-sm scale-105 z-10'
-                  : 'bg-white ring-1 ring-gray-200 shadow-sm hover:shadow-md'
+                  ? 'bg-white shadow-neumorphic-lg border border-white/60 scale-[1.02] z-10'
+                  : 'bg-white/60 shadow-neumorphic-sm border border-white/40 hover:bg-white hover:shadow-neumorphic-md hover:-translate-y-1'
               }`}
             >
               {plan.popular && (
                 <div className="absolute -top-4 left-1/2 -translate-x-1/2">
-                  <span className="inline-flex items-center rounded-full bg-indigo-500 px-4 py-1 text-sm font-medium text-white shadow-sm">
+                  <span className="inline-flex items-center rounded-full bg-gray-900 px-4 py-1 text-xs font-bold text-white shadow-lg">
                     Most Popular
                   </span>
                 </div>
               )}
 
               <div className="flex items-center justify-between gap-x-4">
-                <h3 className={`text-lg font-semibold leading-8 ${plan.popular ? 'text-indigo-600' : 'text-gray-900'}`}>
+                <h3 className="text-lg font-bold text-gray-900">
                   {plan.name}
                 </h3>
               </div>
 
-              <div className="mt-4 flex items-baseline gap-x-2">
-                <span className="text-4xl font-bold tracking-tight text-gray-900">{plan.price}</span>
-                {plan.period && <span className="text-sm font-semibold leading-6 text-gray-600">{plan.period}</span>}
+              <div className="mt-4 flex items-baseline gap-x-1">
+                <span className="text-3xl font-bold tracking-tight text-gray-900">{plan.price}</span>
+                {plan.period && <span className="text-sm font-semibold leading-6 text-gray-500">{plan.period}</span>}
               </div>
 
-              <p className="mt-4 text-sm leading-6 text-gray-600">
+              <p className="mt-4 text-sm leading-relaxed text-gray-500 font-medium min-h-[40px]">
                 {plan.description}
               </p>
 
-              <ul role="list" className="mt-8 space-y-3 text-sm leading-6 text-gray-600">
+              <ul role="list" className="mt-8 space-y-3 text-sm leading-6 text-gray-600 flex-1">
                 {plan.features.map((feature) => (
                   <li key={feature} className="flex gap-x-3">
-                    <Check className={`h-6 w-5 flex-none ${plan.popular ? 'text-indigo-600' : 'text-gray-400'}`} aria-hidden="true" />
+                    <Check className={`h-5 w-4 flex-none ${plan.popular ? 'text-gray-900' : 'text-gray-400'}`} aria-hidden="true" />
                     {feature}
                   </li>
                 ))}
@@ -92,10 +110,10 @@ export function PricingSection() {
 
               <Link
                 href={plan.href}
-                className={`mt-8 block rounded-full px-3 py-2.5 text-center text-sm font-semibold leading-6 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 transition-all ${
+                className={`mt-8 block rounded-[16px] px-3 py-3 text-center text-sm font-bold transition-all ${
                   plan.popular
-                    ? 'bg-indigo-600 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline-indigo-600'
-                    : 'bg-gray-50 text-gray-900 ring-1 ring-inset ring-gray-200 hover:ring-gray-300 hover:bg-gray-100'
+                    ? 'bg-gray-900 text-white shadow-lg hover:bg-gray-800 hover:scale-[1.02]'
+                    : 'bg-soft-bg text-gray-900 hover:bg-gray-200'
                 }`}
               >
                 {plan.cta}
