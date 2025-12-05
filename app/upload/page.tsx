@@ -1,28 +1,30 @@
 'use client'
 
-import { useState, useCallback, useRef, useEffect, useTransition } from 'react'
+import { useState, useCallback, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { Upload, Plus, Sparkles } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { generateSignedUploadUrls, confirmUploads } from '@/server/actions/upload.actions'
 import { createGallery } from '@/server/actions/gallery.actions'
 import { ALLOWED_MIME_TYPES, MAX_FILE_SIZE, MAX_CONCURRENT_UPLOADS } from '@/lib/utils/constants'
 import { Header } from '@/components/layout/Header'
 import { DropOverlay } from '@/components/upload/DropOverlay'
-import { FileStagingList } from '@/components/upload/FileStagingList'
 import { FileItemState } from '@/components/upload/FileItem'
-import { Input } from '@/components/ui/input'
 
 export default function UploadPage() {
   const router = useRouter()
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const titleInputRef = useRef<HTMLInputElement>(null)
   const [uploads, setUploads] = useState<FileItemState[]>([])
   const [isDragging, setIsDragging] = useState(false)
   const [isUploading, setIsUploading] = useState(false)
   const [galleryTitle, setGalleryTitle] = useState('')
   const [error, setError] = useState<string | null>(null)
   const isUploadingRef = useRef(false)
-  const [isPending, startTransition] = useTransition()
+
+  // Auto-focus title on mount
+  useEffect(() => {
+    titleInputRef.current?.focus()
+  }, [])
 
   // Auto-upload when files are added
   useEffect(() => {
@@ -70,12 +72,8 @@ export default function UploadPage() {
   }, [])
 
   const validateFile = (file: File): string | null => {
-    if (!ALLOWED_MIME_TYPES.includes(file.type as any)) {
-      return `Invalid file type`
-    }
-    if (file.size > MAX_FILE_SIZE) {
-      return `File too large`
-    }
+    if (!ALLOWED_MIME_TYPES.includes(file.type as any)) return `Invalid file type`
+    if (file.size > MAX_FILE_SIZE) return `File too large`
     return null
   }
 
@@ -97,18 +95,16 @@ export default function UploadPage() {
 
     setUploads((prev) => [...prev, ...newUploads])
     
-    // Auto-generate title if empty
     if (!galleryTitle.trim() && newUploads.length > 0) {
       const today = new Date()
-      const defaultTitle = `Gallery ${today.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`
-      setGalleryTitle(defaultTitle)
+      setGalleryTitle(`Gallery ${today.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`)
     }
   }, [galleryTitle])
 
   const processQueue = async () => {
     if (isUploadingRef.current) return
     if (!galleryTitle.trim()) {
-      setError('Please enter a gallery title')
+      setError('Enter a title first')
       return
     }
     
@@ -131,7 +127,6 @@ export default function UploadPage() {
     }
 
     try {
-      // 1. Create gallery first
       const formData = new FormData()
       formData.set('title', galleryTitle.trim())
       formData.set('downloadEnabled', 'true')
@@ -147,7 +142,6 @@ export default function UploadPage() {
 
       const galleryId = galleryResult.galleryId
 
-      // 2. Get signed URLs
       const urlResponses = await generateSignedUploadUrls({
         galleryId,
         files: pendingItems.map(u => ({
@@ -158,23 +152,16 @@ export default function UploadPage() {
         }))
       })
 
-      // 3. Mark as uploading
       setUploads(prev => prev.map(u => {
         const hasUrl = urlResponses.find(r => r.localId === u.id)
         return hasUrl ? { ...u, status: 'uploading' } : u
       }))
 
-      // 4. Upload files with XHR for progress tracking
       const tasks = urlResponses.map(urlInfo => async () => {
         const item = pendingItems.find(u => u.id === urlInfo.localId)
         if (!item) return { ...urlInfo, success: false }
 
-        return new Promise<{
-          localId: string
-          storagePath: string
-          token: string
-          success: boolean
-        }>((resolve) => {
+        return new Promise<{ localId: string; storagePath: string; token: string; success: boolean }>((resolve) => {
           const xhr = new XMLHttpRequest()
           
           xhr.upload.addEventListener('progress', (e) => {
@@ -212,7 +199,6 @@ export default function UploadPage() {
         })
       })
 
-      // 5. Execute with concurrency limit
       const results: any[] = []
       const executing: Promise<any>[] = []
 
@@ -232,7 +218,6 @@ export default function UploadPage() {
       const allResults = await Promise.all(results)
       const successful = allResults.filter(r => r.success)
 
-      // 6. Confirm uploads
       if (successful.length > 0) {
         await confirmUploads({
           galleryId,
@@ -248,7 +233,6 @@ export default function UploadPage() {
           })
         })
 
-        // 7. Redirect to the new gallery
         router.push(`/gallery/${galleryId}`)
       }
 
@@ -267,83 +251,95 @@ export default function UploadPage() {
 
   const hasFiles = uploads.length > 0
   const completedCount = uploads.filter(u => u.status === 'completed').length
-  const allComplete = hasFiles && completedCount === uploads.length
+  const totalProgress = hasFiles 
+    ? uploads.reduce((acc, u) => acc + u.progress, 0) / uploads.length 
+    : 0
 
   return (
-    <div className="min-h-screen bg-[#FAFAFA]">
+    <div className="min-h-screen bg-white">
       <Header />
       <DropOverlay isVisible={isDragging} />
       
-      <main className="container mx-auto px-4 pt-28 pb-20 max-w-2xl">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="text-center mb-12"
-        >
-          <div className="inline-flex items-center justify-center h-16 w-16 rounded-2xl bg-gradient-to-br from-gray-900 to-gray-700 shadow-lg mb-6">
-            <Sparkles className="w-8 h-8 text-white" />
-          </div>
-          <h1 className="text-3xl font-semibold tracking-tight text-gray-900 mb-3">
-            Create Your Gallery
-          </h1>
-          <p className="text-gray-500 text-lg max-w-md mx-auto">
-            Drop your images below and we'll create a beautiful, shareable gallery for you.
-          </p>
-        </motion.div>
-
-        {/* Title Input */}
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="mb-8"
-        >
-          <Input
+      <main className="min-h-screen flex flex-col items-center justify-center px-4 py-20">
+        <div className="w-full max-w-xl">
+          {/* Title Input - The Hero */}
+          <input
+            ref={titleInputRef}
+            type="text"
             value={galleryTitle}
             onChange={(e) => setGalleryTitle(e.target.value)}
-            placeholder="Gallery title (e.g., Summer Wedding 2024)"
-            className="h-14 px-6 text-lg font-medium rounded-2xl border-gray-200 bg-white focus:ring-2 focus:ring-gray-900/10 focus:border-gray-300 text-center"
+            placeholder="Untitled"
+            className="w-full text-4xl md:text-5xl font-semibold tracking-tight text-center bg-transparent border-none outline-none placeholder:text-gray-200 text-gray-900 mb-12"
           />
-        </motion.div>
 
-        {/* Upload Zone */}
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="bg-white rounded-3xl shadow-[0_10px_40px_rgba(0,0,0,0.04)] border border-gray-100 overflow-hidden"
-        >
+          {/* Drop Zone - Minimal */}
           <div 
             onClick={() => fileInputRef.current?.click()}
-            className={`relative p-12 transition-all duration-300 cursor-pointer group ${
-              hasFiles ? 'pb-6' : ''
+            className={`relative cursor-pointer transition-all duration-300 ${
+              isDragging ? 'scale-[1.02]' : ''
             }`}
           >
-            <motion.div
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              className={`border-2 border-dashed border-gray-200 rounded-2xl bg-gray-50/50 transition-all duration-200 group-hover:border-gray-300 group-hover:bg-gray-50 ${
-                hasFiles ? 'p-8' : 'p-16'
-              }`}
-            >
-              <div className="flex flex-col items-center gap-4 text-center">
-                <div className="h-14 w-14 rounded-2xl bg-white shadow-sm border border-gray-100 flex items-center justify-center transition-transform duration-300 group-hover:scale-110">
-                  <Plus className="w-7 h-7 text-gray-400 group-hover:text-gray-600" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-1">
-                    {hasFiles ? 'Add more images' : 'Drop images here'}
-                  </h3>
-                  <p className="text-sm text-gray-500">
-                    or <span className="text-gray-700 underline underline-offset-2">browse files</span>
-                  </p>
-                </div>
-                <p className="text-xs text-gray-400 uppercase tracking-wider font-medium">
-                  JPEG, PNG, WEBP • MAX 25MB
+            {!hasFiles ? (
+              <div className="border border-gray-200 rounded-xl p-16 text-center hover:border-gray-300 hover:bg-gray-50/50 transition-all">
+                <p className="text-gray-400 text-sm">
+                  Drop images or <span className="text-gray-600 underline underline-offset-4 decoration-gray-300">browse</span>
                 </p>
               </div>
-            </motion.div>
+            ) : (
+              <div className="space-y-3">
+                {/* Progress Bar */}
+                {isUploading && (
+                  <div className="h-0.5 bg-gray-100 rounded-full overflow-hidden">
+                    <motion.div 
+                      className="h-full bg-gray-900"
+                      initial={{ width: 0 }}
+                      animate={{ width: `${totalProgress}%` }}
+                      transition={{ duration: 0.3 }}
+                    />
+                  </div>
+                )}
+                
+                {/* Thumbnails Grid */}
+                <div className="grid grid-cols-6 md:grid-cols-8 gap-1">
+                  {uploads.map((upload) => (
+                    <div 
+                      key={upload.id}
+                      className="relative aspect-square rounded overflow-hidden bg-gray-100"
+                    >
+                      <img 
+                        src={upload.previewUrl} 
+                        alt="" 
+                        className={`w-full h-full object-cover transition-opacity ${
+                          upload.status === 'completed' ? 'opacity-100' : 'opacity-60'
+                        }`}
+                      />
+                      {upload.status === 'uploading' && (
+                        <div className="absolute inset-0 bg-white/50" />
+                      )}
+                      {upload.status === 'error' && (
+                        <div className="absolute inset-0 bg-red-500/20" />
+                      )}
+                    </div>
+                  ))}
+                  
+                  {/* Add More Button */}
+                  <div className="aspect-square rounded border border-dashed border-gray-200 flex items-center justify-center text-gray-300 hover:text-gray-400 hover:border-gray-300 transition-colors">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 4v16m8-8H4" />
+                    </svg>
+                  </div>
+                </div>
+
+                {/* Status */}
+                <div className="flex items-center justify-between text-xs text-gray-400 pt-2">
+                  <span>{uploads.length} images</span>
+                  {isUploading && <span>Uploading...</span>}
+                  {!isUploading && completedCount === uploads.length && completedCount > 0 && (
+                    <span className="text-gray-600">Done</span>
+                  )}
+                </div>
+              </div>
+            )}
             
             <input
               ref={fileInputRef}
@@ -355,58 +351,25 @@ export default function UploadPage() {
             />
           </div>
 
-          {/* File Staging List */}
+          {/* Error */}
           <AnimatePresence>
-            {hasFiles && (
-              <motion.div
-                initial={{ height: 0, opacity: 0 }}
-                animate={{ height: 'auto', opacity: 1 }}
-                exit={{ height: 0, opacity: 0 }}
-                className="px-8 pb-8"
+            {error && (
+              <motion.p
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="text-center text-red-500 text-sm mt-4"
               >
-                <div className="border-t border-gray-100 pt-6">
-                  <FileStagingList 
-                    files={uploads} 
-                    onRemove={removeUpload} 
-                  />
-                </div>
-
-                {/* Status / Action Bar */}
-                <div className="flex items-center justify-between mt-6 pt-6 border-t border-gray-100">
-                  <span className="text-sm text-gray-500 font-medium">
-                    {completedCount} of {uploads.length} uploaded
-                  </span>
-                  
-                  {isUploading ? (
-                    <span className="text-sm text-gray-600 font-medium flex items-center gap-2">
-                      <span className="h-2 w-2 rounded-full bg-blue-500 animate-pulse" />
-                      Uploading...
-                    </span>
-                  ) : allComplete ? (
-                    <span className="text-sm text-emerald-600 font-medium flex items-center gap-2">
-                      <span className="h-2 w-2 rounded-full bg-emerald-500" />
-                      Redirecting...
-                    </span>
-                  ) : null}
-                </div>
-              </motion.div>
+                {error}
+              </motion.p>
             )}
           </AnimatePresence>
-        </motion.div>
 
-        {/* Error Message */}
-        <AnimatePresence>
-          {error && (
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              className="mt-6 p-4 rounded-xl bg-red-50 text-red-600 text-sm font-medium text-center"
-            >
-              {error}
-            </motion.div>
-          )}
-        </AnimatePresence>
+          {/* Hint */}
+          <p className="text-center text-gray-300 text-xs mt-8">
+            JPEG, PNG, WEBP • 25MB max
+          </p>
+        </div>
       </main>
     </div>
   )

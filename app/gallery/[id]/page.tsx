@@ -1,7 +1,7 @@
 import { auth } from '@clerk/nextjs/server'
 import { notFound, redirect } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, Plus, ExternalLink } from 'lucide-react'
+import { ArrowLeft, Plus } from 'lucide-react'
 import { getOrCreateUserByClerkId } from '@/server/queries/user.queries'
 import { getGalleryWithOwnershipCheck } from '@/server/queries/gallery.queries'
 import { getGalleryImages } from '@/server/queries/image.queries'
@@ -11,6 +11,7 @@ import { MasonryGrid } from '@/components/gallery/MasonryGrid'
 import { GalleryControlPanel } from '@/components/gallery/GalleryControlPanel'
 import { EditableTitle } from '@/components/gallery/EditableTitle'
 import { Button } from '@/components/ui/button'
+import { GalleryActions, AddImagesButton } from '@/components/gallery/GalleryActions'
 
 export const dynamic = 'force-dynamic'
 
@@ -83,24 +84,7 @@ export default async function GalleryViewPage({ params }: Props) {
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
-            <Link href={`/gallery/${gallery.id}/upload`}>
-              <Button variant="outline" className="rounded-full h-10 bg-white hover:bg-gray-50 border-gray-200 text-gray-700 font-medium px-5">
-                <Plus className="w-4 h-4 mr-2" />
-                Add Images
-              </Button>
-            </Link>
-            <a
-              href={`/g/${gallery.slug}`}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <Button className="rounded-full h-10 bg-gray-900 hover:bg-gray-800 text-white font-medium px-5">
-                <ExternalLink className="w-4 h-4 mr-2" />
-                View Live
-              </Button>
-            </a>
-          </div>
+          <GalleryActions galleryId={gallery.id} gallerySlug={gallery.slug} />
         </div>
 
         {/* Main Content */}
@@ -121,12 +105,7 @@ export default async function GalleryViewPage({ params }: Props) {
                   <p className="text-gray-500 mb-6 max-w-sm">
                     Start by adding some images to your gallery. They'll appear here beautifully arranged.
                   </p>
-                  <Link href={`/gallery/${gallery.id}/upload`}>
-                    <Button className="rounded-full h-11 px-6 bg-gray-900 hover:bg-gray-800">
-                      <Plus className="w-4 h-4 mr-2" />
-                      Add Your First Images
-                    </Button>
-                  </Link>
+                  <AddImagesButton galleryId={gallery.id} />
                 </div>
               </div>
             )}
