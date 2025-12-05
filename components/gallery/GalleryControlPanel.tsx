@@ -7,13 +7,11 @@ import {
   Lock, 
   Unlock, 
   Download, 
-  X,
   Settings,
   ExternalLink,
   Calendar,
   Image as ImageIcon,
   Share2,
-  Pencil,
   Trash2,
   AlertTriangle
 } from 'lucide-react'
@@ -285,27 +283,16 @@ export function GalleryControlPanel({ gallery }: GalleryControlPanelProps) {
       </div>
 
       {/* Actions */}
-      <div className="px-6 py-4 border-t border-gray-100 flex items-center justify-between">
+      <div className="px-6 py-4 border-t border-gray-100 flex items-center justify-end">
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => router.push(`/gallery/${gallery.id}/upload`)}
-          className="text-gray-600 hover:text-gray-900 gap-2"
+          onClick={() => setShowDeleteDialog(true)}
+          className="text-red-500 hover:text-red-600 hover:bg-red-50 gap-2"
         >
-          <Pencil className="w-4 h-4" />
-          Edit Gallery
+          <Trash2 className="w-4 h-4" />
+          Delete Gallery
         </Button>
-
-<>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setShowDeleteDialog(true)}
-            className="text-red-500 hover:text-red-600 hover:bg-red-50 gap-2"
-          >
-            <Trash2 className="w-4 h-4" />
-            Delete
-          </Button>
 
           {/* Delete Confirmation Modal */}
           <AnimatePresence>
@@ -354,7 +341,6 @@ export function GalleryControlPanel({ gallery }: GalleryControlPanelProps) {
               </motion.div>
             )}
           </AnimatePresence>
-        </>
       </div>
     </div>
   )

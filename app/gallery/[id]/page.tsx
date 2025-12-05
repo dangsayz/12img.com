@@ -93,7 +93,7 @@ export default async function GalleryViewPage({ params }: Props) {
           <div className="flex-1 min-w-0">
             {images.length > 0 ? (
               <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-6 md:p-8">
-                <MasonryGrid images={imagesWithUrls} editable />
+                <MasonryGrid images={imagesWithUrls} editable galleryId={gallery.id} />
               </div>
             ) : (
               <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-12 md:p-16">

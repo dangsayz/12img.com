@@ -91,8 +91,11 @@ export async function updateGallery(galleryId: string, formData: FormData) {
 
     const updateData: Record<string, unknown> = {}
 
-    if (validated.title) {
+    if (validated.title && validated.title !== gallery.title) {
       updateData.title = validated.title
+      // Regenerate slug when title changes
+      const newSlug = await generateUniqueSlug(validated.title)
+      updateData.slug = newSlug
     }
 
     if (validated.password !== undefined) {
@@ -109,17 +112,24 @@ export async function updateGallery(galleryId: string, formData: FormData) {
       return { success: true }
     }
 
-    const { error } = await supabaseAdmin
+    const { data, error } = await supabaseAdmin
       .from('galleries')
       .update(updateData)
       .eq('id', galleryId)
+      .select('slug')
+      .single()
 
     if (error) return { error: 'Failed to update gallery' }
 
     revalidatePath('/')
+    revalidatePath(`/gallery/${galleryId}`)
+    // Revalidate both old and new slug paths
     revalidatePath(`/g/${gallery.slug}`)
+    if (data?.slug && data.slug !== gallery.slug) {
+      revalidatePath(`/g/${data.slug}`)
+    }
 
-    return { success: true }
+    return { success: true, slug: data?.slug }
   } catch (e) {
     if (e instanceof Error) {
       return { error: e.message }

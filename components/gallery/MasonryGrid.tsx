@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef, useCallback } from 'react'
+import { useRouter } from 'next/navigation'
 import { MasonryItem } from './MasonryItem'
 import { FullscreenViewer } from './FullscreenViewer'
 
@@ -14,6 +15,7 @@ interface Image {
 interface MasonryGridProps {
   images: Image[]
   editable?: boolean
+  galleryId?: string
 }
 
 const BREAKPOINTS = {
@@ -39,11 +41,18 @@ function getColumnCount(width: number): number {
   return COLUMNS_BY_BREAKPOINT.default
 }
 
-export function MasonryGrid({ images, editable = false }: MasonryGridProps) {
+export function MasonryGrid({ images: initialImages, editable = false, galleryId }: MasonryGridProps) {
+  const router = useRouter()
   const containerRef = useRef<HTMLDivElement>(null)
   const [columns, setColumns] = useState(COLUMNS_BY_BREAKPOINT.default)
   const [viewerOpen, setViewerOpen] = useState(false)
   const [viewerIndex, setViewerIndex] = useState(0)
+  const [images, setImages] = useState(initialImages)
+
+  // Sync with prop changes (e.g., after upload)
+  useEffect(() => {
+    setImages(initialImages)
+  }, [initialImages])
 
   useEffect(() => {
     const container = containerRef.current
@@ -59,6 +68,13 @@ export function MasonryGrid({ images, editable = false }: MasonryGridProps) {
 
     return () => observer.disconnect()
   }, [])
+
+  const handleImageDelete = useCallback((imageId: string) => {
+    // Optimistic update - remove from local state immediately
+    setImages((prev) => prev.filter((img) => img.id !== imageId))
+    // Refresh server data in background
+    router.refresh()
+  }, [router])
 
   const handleImageClick = useCallback((index: number) => {
     setViewerIndex(index)
@@ -97,6 +113,8 @@ export function MasonryGrid({ images, editable = false }: MasonryGridProps) {
             index={index}
             onClick={() => handleImageClick(index)}
             editable={editable}
+            galleryId={galleryId}
+            onDelete={handleImageDelete}
           />
         ))}
       </div>

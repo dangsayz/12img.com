@@ -2,7 +2,8 @@
 
 import { useState, useRef, useCallback } from 'react'
 import { motion, useScroll, useTransform, useInView } from 'framer-motion'
-import { Download, ChevronDown, Image as ImageIcon } from 'lucide-react'
+import { Download, ChevronDown, Image as ImageIcon, Home } from 'lucide-react'
+import Link from 'next/link'
 import { FullscreenViewer } from './FullscreenViewer'
 
 interface Image {
@@ -207,7 +208,20 @@ export function PublicGalleryView({
           <div className="flex items-center gap-3">
             {/* Breadcrumb navigation */}
             <nav className="flex items-center gap-2 text-sm">
-              <span className="text-gray-400">Gallery</span>
+              <Link 
+                href="/"
+                className="flex items-center gap-1.5 text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <Home className="w-3.5 h-3.5" />
+                <span>12img</span>
+              </Link>
+              <span className="text-gray-300">/</span>
+              <button 
+                onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                className="text-gray-500 hover:text-gray-700 transition-colors"
+              >
+                Gallery
+              </button>
               <span className="text-gray-300">/</span>
               <span className="text-gray-900 font-medium truncate max-w-[200px]">{title}</span>
             </nav>
