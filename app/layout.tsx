@@ -1,7 +1,9 @@
+import type { Metadata } from 'next'
 import { ClerkProvider } from '@clerk/nextjs'
 import { Inter, Cormorant_Garamond } from 'next/font/google'
 import './globals.css'
 import { Footer } from '@/components/landing/Footer'
+import { OrganizationJsonLd, SoftwareApplicationJsonLd } from '@/components/seo/JsonLd'
 
 const inter = Inter({ 
   subsets: ['latin'],
@@ -15,12 +17,82 @@ const cormorant = Cormorant_Garamond({
   variable: '--font-cormorant',
 })
 
-export const metadata = {
-  title: '12img',
-  description: 'Minimal gallery delivery for photographers',
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://12img.com'
+
+export const metadata: Metadata = {
+  metadataBase: new URL(siteUrl),
+  title: {
+    default: '12img — Minimal Photo Gallery Delivery for Photographers',
+    template: '%s | 12img',
+  },
+  description: 'Beautiful, minimal gallery delivery for professional photographers. Share photo galleries with clients in seconds. No ads, no clutter — just your work, beautifully presented.',
+  keywords: [
+    'photo gallery',
+    'photographer gallery',
+    'client gallery',
+    'photo delivery',
+    'wedding photography',
+    'portrait photography',
+    'photography portfolio',
+    'image sharing',
+    'photo sharing platform',
+    'photographer tools',
+    'client proofing',
+    'gallery delivery',
+  ],
+  authors: [{ name: '12img' }],
+  creator: '12img',
+  publisher: '12img',
+  formatDetection: {
+    email: false,
+    address: false,
+    telephone: false,
+  },
   icons: {
     icon: '/favicon.svg',
     apple: '/logo.svg',
+  },
+  openGraph: {
+    type: 'website',
+    locale: 'en_US',
+    url: siteUrl,
+    siteName: '12img',
+    title: '12img — Minimal Photo Gallery Delivery for Photographers',
+    description: 'Beautiful, minimal gallery delivery for professional photographers. Share photo galleries with clients in seconds.',
+    images: [
+      {
+        url: '/images/og-image.jpg',
+        width: 1200,
+        height: 630,
+        alt: '12img - Photo Gallery Delivery',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: '12img — Minimal Photo Gallery Delivery',
+    description: 'Beautiful, minimal gallery delivery for professional photographers. Share photo galleries with clients in seconds.',
+    images: ['/images/og-image.jpg'],
+    creator: '@12img',
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
+  verification: {
+    // Add your verification codes here when you have them
+    // google: 'your-google-verification-code',
+    // yandex: 'your-yandex-verification-code',
+  },
+  alternates: {
+    canonical: siteUrl,
   },
 }
 
@@ -90,6 +162,22 @@ export default function RootLayout({
   return (
     <ClerkProvider appearance={clerkAppearance}>
       <html lang="en">
+        <head>
+          <OrganizationJsonLd
+            name="12img"
+            url={siteUrl}
+            logo={`${siteUrl}/logo.svg`}
+            description="Minimal photo gallery delivery for professional photographers"
+          />
+          <SoftwareApplicationJsonLd
+            name="12img"
+            description="Beautiful, minimal gallery delivery for professional photographers. Share photo galleries with clients in seconds."
+            url={siteUrl}
+            applicationCategory="Photography"
+            operatingSystem="Web"
+            offers={{ price: '0', priceCurrency: 'USD' }}
+          />
+        </head>
         <body className={`${inter.variable} ${cormorant.variable} font-sans antialiased`}>
           {children}
           <Footer />

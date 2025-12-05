@@ -1,7 +1,17 @@
+import type { Metadata } from 'next'
 import { Header } from '@/components/layout/Header'
 import Link from 'next/link'
 import { PLANS } from '@/lib/config/pricing'
 import { PricingCard } from '@/components/pricing/PricingCard'
+
+export const metadata: Metadata = {
+  title: 'Pricing',
+  description: 'Simple, transparent pricing for photographers. Start free, upgrade as you grow. Plans from $0 to $29/month with unlimited galleries and storage.',
+  openGraph: {
+    title: 'Pricing — 12img Photo Gallery Platform',
+    description: 'Simple, transparent pricing for photographers. Start free, upgrade as you grow.',
+  },
+}
 
 export default function PricingPage() {
   return (

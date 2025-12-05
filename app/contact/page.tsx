@@ -1,9 +1,14 @@
+import type { Metadata } from 'next'
 import { StaticPageLayout } from '@/components/layout/StaticPageLayout'
 import { Mail, Instagram } from 'lucide-react'
 
-export const metadata = {
-  title: 'Contact Us | 12img',
-  description: 'Get in touch with the 12img team.',
+export const metadata: Metadata = {
+  title: 'Contact',
+  description: 'Get in touch with the 12img team. Email us at twelve12img@gmail.com or reach out on Instagram @12images. We respond within 24 hours.',
+  openGraph: {
+    title: 'Contact Us — 12img',
+    description: 'Get in touch with the 12img team.',
+  },
 }
 
 export default function ContactPage() {

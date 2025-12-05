@@ -1,8 +1,13 @@
+import type { Metadata } from 'next'
 import { StaticPageLayout } from '@/components/layout/StaticPageLayout'
 
-export const metadata = {
-  title: 'Gallery Features | 12img',
-  description: 'Explore all the features that make 12img the best gallery platform for wedding photographers.',
+export const metadata: Metadata = {
+  title: 'Features',
+  description: 'Fast uploads, password protection, one-click downloads, beautiful presentation, and mobile-optimized galleries. Everything photographers need to deliver stunning client galleries.',
+  openGraph: {
+    title: 'Gallery Features — 12img',
+    description: 'Everything photographers need to deliver stunning client galleries.',
+  },
 }
 
 export default function FeaturesPage() {

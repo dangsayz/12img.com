@@ -1,8 +1,13 @@
+import type { Metadata } from 'next'
 import { StaticPageLayout } from '@/components/layout/StaticPageLayout'
 
-export const metadata = {
-  title: 'About Us | 12img',
-  description: 'Learn about 12img - the simplest gallery platform for wedding photographers.',
+export const metadata: Metadata = {
+  title: 'About',
+  description: 'We built 12img so photographers can share beautiful galleries without paying $300+/year. Fast, secure, and affordable gallery delivery for wedding and portrait photographers.',
+  openGraph: {
+    title: 'About 12img — Simple Gallery Delivery',
+    description: 'We built 12img so photographers can share beautiful galleries without breaking the bank.',
+  },
 }
 
 export default function AboutPage() {

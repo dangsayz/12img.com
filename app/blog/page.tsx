@@ -1,9 +1,14 @@
+import type { Metadata } from 'next'
 import { StaticPageLayout } from '@/components/layout/StaticPageLayout'
 import Link from 'next/link'
 
-export const metadata = {
-  title: 'Photography Blog | 12img',
-  description: 'Tips, guides, and insights for wedding photographers.',
+export const metadata: Metadata = {
+  title: 'Blog',
+  description: 'Photography tips, business guides, and workflow insights for wedding and portrait photographers. Learn how to price your work, cull faster, and deliver better client galleries.',
+  openGraph: {
+    title: 'Photography Blog — 12img',
+    description: 'Tips, guides, and insights for wedding and portrait photographers.',
+  },
 }
 
 const posts = [
