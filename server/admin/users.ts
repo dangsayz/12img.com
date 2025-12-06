@@ -376,7 +376,7 @@ export async function getUserGalleries(userId: string) {
     .from('galleries')
     .select(`
       *,
-      images:images(count)
+      images!gallery_id(count)
     `)
     .eq('user_id', userId)
     .order('created_at', { ascending: false })

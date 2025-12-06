@@ -32,11 +32,13 @@ export function Header({
       <div className="flex justify-center">
         <div className="flex items-center gap-2 bg-white/90 backdrop-blur-xl border border-[#E8E4DC] rounded-full px-2 py-1.5 shadow-sm">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-1.5 pl-2">
-            <div className="w-6 h-6 rounded-md bg-[#1C1917] flex items-center justify-center text-white font-bold text-[10px]">
-              12
+          <Link href="/" className="flex items-center gap-1.5 pl-1">
+            <div className="relative">
+              <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-[#292524] to-[#1C1917] flex items-center justify-center shadow-md shadow-black/10 border border-[#3f3f46]/30">
+                <span className="text-white font-black text-[10px] tracking-tighter">12</span>
+              </div>
             </div>
-            <span className="text-sm font-semibold text-[#1C1917]">img</span>
+            <span className="text-sm font-bold text-[#1C1917]">img</span>
           </Link>
           
           {/* Divider */}
