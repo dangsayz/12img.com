@@ -167,21 +167,95 @@ export function Dashboard({ galleries }: DashboardProps) {
                 </button>
               </>
             ) : (
-              <>
-                <div className="h-20 w-20 rounded-full bg-gradient-to-br from-neutral-50 to-neutral-100 flex items-center justify-center mb-6 border border-neutral-200">
-                  <Plus className="h-8 w-8 text-neutral-400" />
+              <div className="w-full max-w-2xl mx-auto">
+                {/* Hero illustration */}
+                <div className="relative mb-8">
+                  {/* Decorative elements */}
+                  <div className="absolute -top-4 left-1/2 -translate-x-1/2 w-72 h-72 bg-gradient-to-br from-amber-100/40 via-rose-100/30 to-violet-100/40 rounded-full blur-3xl" />
+                  
+                  {/* Stacked gallery preview cards */}
+                  <div className="relative flex justify-center items-end gap-3 h-48">
+                    {/* Left card */}
+                    <motion.div 
+                      initial={{ opacity: 0, y: 20, rotate: -6 }}
+                      animate={{ opacity: 1, y: 0, rotate: -6 }}
+                      transition={{ delay: 0.1 }}
+                      className="w-32 h-40 rounded-2xl bg-gradient-to-br from-stone-200 to-stone-300 shadow-lg transform -rotate-6 border border-white/50"
+                    >
+                      <div className="w-full h-full rounded-2xl bg-gradient-to-br from-amber-100 to-orange-200 flex items-center justify-center">
+                        <ImageIcon className="w-8 h-8 text-amber-400/60" />
+                      </div>
+                    </motion.div>
+                    
+                    {/* Center card (main) */}
+                    <motion.div 
+                      initial={{ opacity: 0, y: 20, scale: 0.9 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      transition={{ delay: 0.2 }}
+                      className="w-40 h-48 rounded-2xl bg-white shadow-2xl border border-neutral-100 z-10 overflow-hidden"
+                    >
+                      <div className="w-full h-32 bg-gradient-to-br from-violet-100 via-purple-100 to-fuchsia-100" />
+                      <div className="p-3">
+                        <div className="h-2 w-20 bg-neutral-200 rounded-full mb-2" />
+                        <div className="h-2 w-12 bg-neutral-100 rounded-full" />
+                      </div>
+                    </motion.div>
+                    
+                    {/* Right card */}
+                    <motion.div 
+                      initial={{ opacity: 0, y: 20, rotate: 6 }}
+                      animate={{ opacity: 1, y: 0, rotate: 6 }}
+                      transition={{ delay: 0.3 }}
+                      className="w-32 h-40 rounded-2xl bg-gradient-to-br from-emerald-100 to-teal-200 shadow-lg transform rotate-6 border border-white/50 flex items-center justify-center"
+                    >
+                      <ImageIcon className="w-8 h-8 text-emerald-400/60" />
+                    </motion.div>
+                  </div>
                 </div>
-                <h3 className="text-xl text-neutral-900 font-extralight tracking-[-0.01em] mb-2">Start your collection</h3>
-                <p className="text-neutral-500 mb-6 text-center max-w-sm">
-                  Create your first gallery to showcase your photography
-                </p>
-                <Link href="/gallery/create">
-                  <Button size="sm" className="h-9 rounded-lg bg-[#1C1917] px-4 text-sm font-medium text-white hover:bg-[#292524] transition-all">
-                    <Plus className="h-4 w-4 mr-1.5" />
-                    New Gallery
-                  </Button>
-                </Link>
-              </>
+                
+                {/* Content */}
+                <motion.div 
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.4 }}
+                  className="text-center"
+                >
+                  <h3 className="text-2xl md:text-3xl text-neutral-900 font-light tracking-tight mb-3">
+                    Your gallery awaits
+                  </h3>
+                  <p className="text-neutral-500 mb-8 text-base max-w-md mx-auto leading-relaxed">
+                    Create beautiful, password-protected galleries to share your work with clients
+                  </p>
+                  
+                  <Link href="/upload">
+                    <Button className="h-12 rounded-full bg-[#1C1917] px-8 text-base font-medium text-white hover:bg-[#292524] hover:scale-105 transition-all shadow-lg shadow-neutral-900/10">
+                      <Plus className="h-5 w-5 mr-2" />
+                      Create Your First Gallery
+                    </Button>
+                  </Link>
+                </motion.div>
+                
+                {/* Feature hints */}
+                <motion.div 
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.6 }}
+                  className="flex flex-wrap justify-center gap-6 mt-12 text-sm text-neutral-400"
+                >
+                  <div className="flex items-center gap-2">
+                    <Lock className="w-4 h-4" />
+                    <span>Password protection</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <ImageIcon className="w-4 h-4" />
+                    <span>Unlimited uploads</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <ExternalLink className="w-4 h-4" />
+                    <span>Easy sharing</span>
+                  </div>
+                </motion.div>
+              </div>
             )}
           </motion.div>
         ) : viewMode === 'grid' ? (

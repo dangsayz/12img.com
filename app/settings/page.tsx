@@ -35,6 +35,7 @@ export default async function SettingsPage() {
         galleryCount={userData?.usage.galleryCount || 0}
         imageCount={userData?.usage.imageCount || 0}
         storageUsed={userData?.usage.totalBytes || 0}
+        userRole={userData?.role}
       />
       <main className="container mx-auto px-4 pt-28 pb-16 max-w-2xl">
         <div className="flex items-center gap-3 mb-8">

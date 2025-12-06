@@ -26,6 +26,7 @@ export default async function PricingPage() {
         imageCount={userData?.usage.imageCount || 0}
         storageUsed={userData?.usage.totalBytes || 0}
         isAuthenticated={!!userId}
+        userRole={userData?.role}
       />
       <main className="min-h-screen bg-[#FAF8F3]">
         <div className="container mx-auto px-4 pt-28 pb-16 max-w-7xl">

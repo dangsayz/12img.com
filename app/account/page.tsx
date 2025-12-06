@@ -15,6 +15,7 @@ export default async function AccountPage() {
         imageCount={userData?.usage.imageCount || 0}
         storageUsed={userData?.usage.totalBytes || 0}
         isAuthenticated={!!userId}
+        userRole={userData?.role}
       />
       <main className="container mx-auto px-4 pt-28 pb-16">
         <UserProfile 
