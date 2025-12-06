@@ -23,6 +23,7 @@ export function UploadZone({ galleryId, onUploadComplete }: UploadZoneProps) {
   const [uploads, setUploads] = useState<FileItemState[]>([])
   const [isDragging, setIsDragging] = useState(false)
   const [isUploading, setIsUploading] = useState(false)
+  const [overlayMinimized, setOverlayMinimized] = useState(false)
   const isUploadingRef = useRef(false)
   const uploadStartTime = useRef<number>(0)
   const uploadsRef = useRef<FileItemState[]>([])
@@ -36,7 +37,7 @@ export function UploadZone({ galleryId, onUploadComplete }: UploadZoneProps) {
   const totalFiles = uploads.length
   const completedFiles = uploads.filter(u => u.status === 'completed').length
   const totalProgress = totalFiles > 0 ? Math.round((completedFiles / totalFiles) * 100) : 0
-  const showLargeUploadOverlay = isUploading && totalFiles >= LARGE_UPLOAD_THRESHOLD
+  const showLargeUploadOverlay = isUploading && totalFiles >= LARGE_UPLOAD_THRESHOLD && !overlayMinimized
   
   // Estimate remaining time based on upload speed
   const estimatedMinutes = (() => {
@@ -152,6 +153,7 @@ export function UploadZone({ galleryId, onUploadComplete }: UploadZoneProps) {
     
     isUploadingRef.current = true
     setIsUploading(true)
+    setOverlayMinimized(false) // Reset overlay when starting new upload
     uploadStartTime.current = Date.now() // Track start time for estimates
 
     // Wait a bit for chunked file additions to complete (for large drops)
@@ -306,6 +308,7 @@ export function UploadZone({ galleryId, onUploadComplete }: UploadZoneProps) {
         completedFiles={completedFiles}
         totalProgress={totalProgress}
         estimatedMinutes={estimatedMinutes}
+        onMinimize={() => setOverlayMinimized(true)}
       />
       
       {/* Drop Target */}

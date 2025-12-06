@@ -1,8 +1,8 @@
 'use client'
 
 import { motion, AnimatePresence } from 'framer-motion'
-import { Coffee, Image, Sparkles, CheckCircle } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { Coffee, Image, CheckCircle, X } from 'lucide-react'
+import { useEffect, useState, useCallback } from 'react'
 import { COFFEE_BREAK_THRESHOLD } from '@/lib/utils/constants'
 
 interface LargeUploadOverlayProps {
@@ -11,6 +11,7 @@ interface LargeUploadOverlayProps {
   completedFiles: number
   totalProgress: number
   estimatedMinutes: number
+  onMinimize?: () => void
 }
 
 const ENCOURAGING_MESSAGES = [
@@ -35,9 +36,23 @@ export function LargeUploadOverlay({
   completedFiles,
   totalProgress,
   estimatedMinutes,
+  onMinimize,
 }: LargeUploadOverlayProps) {
   const [messageIndex, setMessageIndex] = useState(0)
   const isCoffeeBreak = totalFiles >= COFFEE_BREAK_THRESHOLD
+  
+  // Handle ESC key to minimize overlay
+  const handleKeyDown = useCallback((e: KeyboardEvent) => {
+    if (e.key === 'Escape' && onMinimize) {
+      onMinimize()
+    }
+  }, [onMinimize])
+  
+  useEffect(() => {
+    if (!isVisible) return
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [isVisible, handleKeyDown])
   
   // Rotate messages every 5 seconds
   useEffect(() => {
@@ -61,6 +76,20 @@ export function LargeUploadOverlay({
           exit={{ opacity: 0 }}
           className="fixed inset-0 z-50 bg-white/98 backdrop-blur-xl flex items-center justify-center"
         >
+          {/* Close button */}
+          {onMinimize && (
+            <motion.button
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.5 }}
+              onClick={onMinimize}
+              className="absolute top-6 right-6 p-2 rounded-full hover:bg-gray-100 transition-colors group"
+              title="Minimize (ESC)"
+            >
+              <X className="w-5 h-5 text-gray-400 group-hover:text-gray-600" />
+            </motion.button>
+          )}
+          
           <div className="max-w-md w-full mx-4 text-center">
             {/* Animated Icon */}
             <motion.div
@@ -94,21 +123,17 @@ export function LargeUploadOverlay({
                 </motion.div>
               )}
               
-              {/* Sparkle decorations */}
+              {/* Minimal dot decorations */}
               <motion.div
-                className="absolute -top-2 -right-2"
-                animate={{ scale: [1, 1.2, 1], opacity: [0.5, 1, 0.5] }}
+                className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-amber-400"
+                animate={{ scale: [1, 1.3, 1], opacity: [0.6, 1, 0.6] }}
                 transition={{ duration: 2, repeat: Infinity }}
-              >
-                <Sparkles className="w-5 h-5 text-amber-400" />
-              </motion.div>
+              />
               <motion.div
-                className="absolute -bottom-1 -left-3"
-                animate={{ scale: [1, 1.3, 1], opacity: [0.3, 0.8, 0.3] }}
+                className="absolute -bottom-0.5 -left-2 w-2 h-2 rounded-full bg-gray-300"
+                animate={{ scale: [1, 1.4, 1], opacity: [0.4, 0.8, 0.4] }}
                 transition={{ duration: 2.5, repeat: Infinity, delay: 0.5 }}
-              >
-                <Sparkles className="w-4 h-4 text-blue-400" />
-              </motion.div>
+              />
             </motion.div>
 
             {/* File counter */}
