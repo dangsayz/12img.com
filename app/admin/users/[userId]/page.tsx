@@ -43,16 +43,43 @@ const PLAN_COLORS: Record<string, string> = {
 export default async function UserDetailPage({ params }: Props) {
   const { userId } = await params
   
-  let user
-  let galleries
+  let user: any = null
+  let galleries: any[] = []
+  let error: string | null = null
   
   try {
     [user, galleries] = await Promise.all([
       getUser(userId),
       getUserGalleries(userId),
     ])
-  } catch (error) {
-    notFound()
+  } catch (err) {
+    console.error('User detail page error:', err)
+    error = err instanceof Error ? err.message : 'Unknown error'
+  }
+  
+  // Show error state instead of notFound
+  if (error || !user) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center gap-4">
+          <Link
+            href="/admin/users"
+            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </Link>
+          <h1 className="text-2xl font-semibold text-gray-900">User Details</h1>
+        </div>
+        <div className="bg-red-50 border border-red-200 rounded-xl p-6">
+          <h2 className="text-lg font-semibold text-red-800 mb-2">Error Loading User</h2>
+          <p className="text-sm text-red-600 mb-4">{error || 'User not found'}</p>
+          <p className="text-xs text-red-500">
+            This usually means the database migrations haven't been run yet.
+            Run migrations 007, 008, 009 in Supabase SQL Editor.
+          </p>
+        </div>
+      </div>
+    )
   }
   
   return (

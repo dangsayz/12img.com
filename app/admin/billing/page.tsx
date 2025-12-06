@@ -6,11 +6,11 @@ import {
   Users, 
   CreditCard,
   ArrowUpRight,
-  RefreshCw,
   ExternalLink,
   Zap,
 } from 'lucide-react'
 import { getRevenueMetrics, getRecentPayments, getStripeDashboardUrl } from '@/server/admin/billing'
+import { RealtimeWrapper } from './RealtimeWrapper'
 
 function formatCurrency(cents: number, currency = 'usd'): string {
   return new Intl.NumberFormat('en-US', {
@@ -118,20 +118,21 @@ export default async function BillingDashboardPage() {
     : 0
   
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold text-gray-900">Revenue & Billing</h1>
-          <p className="text-sm text-gray-500 mt-1">
-            Real-time revenue metrics and payment history
-          </p>
-        </div>
-        <a
-          href={stripeDashboardUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+    <RealtimeWrapper refreshInterval={15}>
+      <div className="space-y-6">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-semibold text-gray-900">Revenue & Billing</h1>
+            <p className="text-sm text-gray-500 mt-1">
+              Real-time revenue metrics and payment history
+            </p>
+          </div>
+          <a
+            href={stripeDashboardUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
         >
           <ExternalLink className="w-4 h-4" />
           Open Stripe Dashboard
@@ -317,5 +318,6 @@ export default async function BillingDashboardPage() {
         </div>
       </div>
     </div>
+    </RealtimeWrapper>
   )
 }

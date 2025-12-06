@@ -17,8 +17,10 @@ import {
   Sparkles,
   Crown,
   Shield,
+  ChevronRight,
   ExternalLink,
 } from 'lucide-react'
+import { RealtimeIndicator } from './RealtimeIndicator'
 
 interface AdminShellProps {
   children: React.ReactNode
@@ -133,6 +135,9 @@ export function AdminShell({ children, adminEmail, adminRole }: AdminShellProps)
           </div>
           
           <div className="flex items-center gap-4">
+            {/* Real-time indicator */}
+            <RealtimeIndicator refreshInterval={30} />
+            
             {/* Role badge */}
             <div className={cn(
               "flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-full",
