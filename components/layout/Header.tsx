@@ -38,15 +38,13 @@ export function Header({
   const isAdmin = userRole === 'admin' || userRole === 'super_admin'
   
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 px-4 py-3">
+    <header className="fixed top-0 left-0 right-0 z-50 px-3 sm:px-4 py-2 sm:py-3">
       <div className="flex justify-center">
-        <div className="flex items-center gap-2 bg-white/90 backdrop-blur-xl border border-[#E8E4DC] rounded-full px-2 py-1.5 shadow-sm">
+        <div className="flex items-center justify-between w-full max-w-md sm:w-auto sm:max-w-none gap-2 sm:gap-2 bg-white/95 backdrop-blur-xl border border-[#E8E4DC] rounded-full px-3 sm:px-2 py-2 sm:py-1.5 shadow-sm">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-1.5 pl-1">
-            <div className="relative">
-              <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-[#292524] to-[#1C1917] flex items-center justify-center shadow-md shadow-black/10 border border-[#3f3f46]/30">
-                <span className="text-white font-black text-[10px] tracking-tighter">12</span>
-              </div>
+          <Link href="/" className="flex items-center gap-1.5">
+            <div className="w-8 h-8 sm:w-7 sm:h-7 rounded-full bg-gradient-to-br from-[#292524] to-[#1C1917] flex items-center justify-center shadow-md shadow-black/10 border border-[#3f3f46]/30">
+              <span className="text-white font-black text-[11px] sm:text-[10px] tracking-tighter">12</span>
             </div>
             <span className="text-sm font-bold text-[#1C1917]">img</span>
           </Link>
@@ -87,8 +85,8 @@ export function Header({
 
               {/* New Gallery Button */}
               <Link href="/upload">
-                <Button size="sm" className="h-7 rounded-full bg-[#1C1917] px-3 text-xs font-medium text-white hover:bg-[#292524] transition-all">
-                  <Plus className="h-3.5 w-3.5 mr-1" />
+                <Button size="sm" className="h-8 sm:h-7 rounded-full bg-[#1C1917] px-4 sm:px-3 text-sm sm:text-xs font-medium text-white hover:bg-[#292524] transition-all">
+                  <Plus className="h-4 w-4 sm:h-3.5 sm:w-3.5 mr-1.5 sm:mr-1" />
                   <span className="hidden sm:inline">New Gallery</span>
                   <span className="sm:hidden">New</span>
                 </Button>
@@ -120,7 +118,7 @@ export function Header({
               {/* Mobile Menu Button */}
               <button
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className="md:hidden p-1.5 rounded-full hover:bg-[#FAF8F3] transition-colors"
+                className="md:hidden p-2 rounded-full hover:bg-[#FAF8F3] transition-colors"
                 aria-label="Toggle menu"
               >
                 {mobileMenuOpen ? (
@@ -155,7 +153,7 @@ export function Header({
               {/* Mobile Menu Button */}
               <button
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className="md:hidden p-1.5 rounded-full hover:bg-[#FAF8F3] transition-colors"
+                className="md:hidden p-2 rounded-full hover:bg-[#FAF8F3] transition-colors"
                 aria-label="Toggle menu"
               >
                 {mobileMenuOpen ? (
