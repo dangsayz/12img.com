@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useCallback, useRef, useEffect } from 'react'
-import { motion, AnimatePresence, useMotionValue, useTransform, useSpring } from 'framer-motion'
+import { motion, AnimatePresence, useSpring, useTransform } from 'framer-motion'
 import { 
   Zap, 
   X, 
@@ -10,12 +10,9 @@ import {
   Copy, 
   ExternalLink, 
   RotateCcw,
-  Loader2,
-  ImageIcon,
   Sparkles,
   Mail,
-  MessageSquare,
-  Share2
+  MessageSquare
 } from 'lucide-react'
 
 type Status = 'idle' | 'uploading' | 'success' | 'error'
@@ -38,6 +35,7 @@ export function QuickShareWidget({ className }: QuickShareWidgetProps) {
 
   // Spring-based progress for smooth animation
   const progressSpring = useSpring(0, { stiffness: 100, damping: 20 })
+  const progressStrokeDashoffset = useTransform(progressSpring, [0, 100], [75.4, 0])
   
   useEffect(() => {
     progressSpring.set(progress)
@@ -413,7 +411,7 @@ export function QuickShareWidget({ className }: QuickShareWidgetProps) {
                                 strokeWidth="3"
                                 strokeLinecap="round"
                                 strokeDasharray={75.4}
-                                style={{ strokeDashoffset: useTransform(progressSpring, [0, 100], [75.4, 0]) }}
+                                style={{ strokeDashoffset: progressStrokeDashoffset }}
                               />
                               <defs>
                                 <linearGradient id="progress-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
