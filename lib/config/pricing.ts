@@ -2,8 +2,10 @@
  * Centralized Pricing Configuration
  * 
  * SIMPLE STORAGE-ONLY PRICING
- * No video, no RAW, no branding features
- * Only photo uploads + storage
+ * No video bloat, no hidden fees
+ * Just storage for photographers who need it
+ * 
+ * Beats Pixieset by ~25% at every tier
  */
 
 export type PlanId = 'free' | 'essential' | 'pro' | 'studio' | 'elite'
@@ -75,8 +77,8 @@ export const PLAN_LIMITS: Record<PlanId, PlanLimits> = {
     expiry_days: 'unlimited',
   },
   elite: {
-    storage_gb: 'unlimited',
-    image_limit: 'unlimited',
+    storage_gb: 2000, // 2TB cap - sustainable "unlimited"
+    image_limit: 600000,
     gallery_limit: 'unlimited',
     expiry_days: 'unlimited',
   },
@@ -87,46 +89,46 @@ export const PLANS: PricingPlan[] = [
   {
     id: 'free',
     name: 'Free',
-    description: 'Try it out',
+    description: 'Test drive',
     monthlyPrice: PRICING.free.monthly,
     yearlyPrice: PRICING.free.yearly,
     limits: PLAN_LIMITS.free,
     features: [
       '2GB storage',
-      '1,300 images',
+      'Up to 1,300 images',
       '3 galleries',
-      'JPG only',
+      'JPG uploads',
       '7-day gallery expiry',
     ],
-    cta: 'Get started',
+    cta: 'Start free',
   },
   {
     id: 'essential',
     name: 'Essential',
-    description: 'For getting started',
+    description: 'For part-time photographers',
     monthlyPrice: PRICING.essential.monthly,
     yearlyPrice: PRICING.essential.yearly,
     limits: PLAN_LIMITS.essential,
     features: [
       '10GB storage',
-      '4,000 images',
+      'Up to 4,000 images',
       'Unlimited galleries',
-      'No expiry',
+      'Galleries never expire',
     ],
     cta: 'Get Essential',
   },
   {
     id: 'pro',
     name: 'Pro',
-    description: 'For professionals',
+    description: 'Most popular',
     monthlyPrice: PRICING.pro.monthly,
     yearlyPrice: PRICING.pro.yearly,
     limits: PLAN_LIMITS.pro,
     features: [
       '100GB storage',
-      '31,000 images',
+      'Up to 31,000 images',
       'Unlimited galleries',
-      'No expiry',
+      'Galleries never expire',
     ],
     cta: 'Get Pro',
     popular: true,
@@ -134,28 +136,28 @@ export const PLANS: PricingPlan[] = [
   {
     id: 'studio',
     name: 'Studio',
-    description: 'For high-volume',
+    description: 'For busy studios',
     monthlyPrice: PRICING.studio.monthly,
     yearlyPrice: PRICING.studio.yearly,
     limits: PLAN_LIMITS.studio,
     features: [
       '500GB storage',
-      '151,000 images',
+      'Up to 151,000 images',
       'Unlimited galleries',
-      'No expiry',
+      'Galleries never expire',
     ],
     cta: 'Get Studio',
   },
   {
     id: 'elite',
     name: 'Elite',
-    description: 'Unlimited everything',
+    description: 'For power users',
     monthlyPrice: PRICING.elite.monthly,
     yearlyPrice: PRICING.elite.yearly,
     limits: PLAN_LIMITS.elite,
     features: [
-      'Unlimited storage',
-      'Unlimited images',
+      '2TB storage',
+      'Up to 600,000 images',
       'Unlimited galleries',
       'Priority support',
     ],
