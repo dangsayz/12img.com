@@ -1,4 +1,6 @@
+import Link from 'next/link'
 import { getDashboardStats } from '@/server/admin/users'
+import { getRevenueMetrics } from '@/server/admin/billing'
 import { 
   Users, 
   Image, 
@@ -6,6 +8,9 @@ import {
   TrendingUp,
   UserPlus,
   AlertTriangle,
+  DollarSign,
+  Zap,
+  ArrowUpRight,
 } from 'lucide-react'
 
 function formatBytes(bytes: number): string {
@@ -13,6 +18,14 @@ function formatBytes(bytes: number): string {
   const units = ['B', 'KB', 'MB', 'GB', 'TB']
   const i = Math.floor(Math.log(bytes) / Math.log(1024))
   return `${(bytes / Math.pow(1024, i)).toFixed(1)} ${units[i]}`
+}
+
+function formatCurrency(cents: number): string {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    minimumFractionDigits: 0,
+  }).format(cents / 100)
 }
 
 function StatCard({ 

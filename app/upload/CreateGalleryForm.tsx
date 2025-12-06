@@ -3,9 +3,10 @@
 import { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { X, Calendar, Loader2, Plus, AlertCircle } from 'lucide-react'
+import { X, Loader2, Plus, AlertCircle } from 'lucide-react'
 import Link from 'next/link'
 import { createGallery } from '@/server/actions/gallery.actions'
+import { DatePicker } from '@/components/ui/DatePicker'
 
 interface CreateGalleryFormProps {
   isAtLimit: boolean
@@ -159,22 +160,16 @@ export function CreateGalleryForm({
             {/* Event Date Field */}
             <div className="space-y-2">
               <label 
-                htmlFor="event-date" 
                 className="block text-sm font-medium text-gray-700"
               >
                 Event Date <span className="text-gray-400 font-normal">(optional)</span>
               </label>
-              <div className="relative">
-                <input
-                  id="event-date"
-                  type="date"
-                  value={eventDate}
-                  onChange={(e) => setEventDate(e.target.value)}
-                  disabled={isAtLimit}
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-900/10 focus:border-gray-300 transition-all appearance-none disabled:bg-gray-50 disabled:text-gray-400 disabled:cursor-not-allowed"
-                />
-                <Calendar className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
-              </div>
+              <DatePicker
+                value={eventDate}
+                onChange={setEventDate}
+                placeholder="Select event date"
+                disabled={isAtLimit}
+              />
             </div>
 
             {/* Error Message */}
