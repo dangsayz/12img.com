@@ -89,6 +89,7 @@ export default async function GalleryViewPage({ params }: Props) {
               <EditableTitle 
                 galleryId={gallery.id} 
                 initialTitle={gallery.title}
+                currentSlug={gallery.slug}
                 className="text-2xl text-gray-900"
               />
               <p className="text-sm text-gray-500">{images.length} images</p>

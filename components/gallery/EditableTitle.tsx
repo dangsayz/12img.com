@@ -1,16 +1,19 @@
 'use client'
 
 import { useState, useRef, useEffect, useTransition } from 'react'
+import { useRouter } from 'next/navigation'
 import { Pencil, Check } from 'lucide-react'
 import { updateGallery } from '@/server/actions/gallery.actions'
 
 interface EditableTitleProps {
   galleryId: string
   initialTitle: string
+  currentSlug?: string
   className?: string
 }
 
-export function EditableTitle({ galleryId, initialTitle, className = '' }: EditableTitleProps) {
+export function EditableTitle({ galleryId, initialTitle, currentSlug, className = '' }: EditableTitleProps) {
+  const router = useRouter()
   const [isEditing, setIsEditing] = useState(false)
   const [title, setTitle] = useState(initialTitle)
   const [isPending, startTransition] = useTransition()
@@ -37,6 +40,9 @@ export function EditableTitle({ galleryId, initialTitle, className = '' }: Edita
       const result = await updateGallery(galleryId, formData)
       if (result.error) {
         setTitle(initialTitle)
+      } else if (result.slug && result.slug !== currentSlug) {
+        // Slug changed, navigate to new URL
+        router.replace(`/gallery/${result.slug}`)
       }
       setIsEditing(false)
     })

@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { UserButton } from '@clerk/nextjs'
-import { Plus, Shield, Menu, X, Share2 } from 'lucide-react'
+import { Plus, Shield, Menu, X, Zap } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Button } from '@/components/ui/button'
 import { UsageBadge } from './UsageBadge'
@@ -95,10 +95,10 @@ export function Header({
               {/* Quick Share Link - hidden on mobile */}
               <Link
                 href="/share"
-                className="hidden md:flex items-center justify-center w-7 h-7 rounded-full text-[#78716C] hover:text-[#1C1917] hover:bg-[#FAF8F3] transition-all"
+                className="hidden md:flex items-center justify-center p-1.5 rounded-full text-[#78716C] hover:text-[#1C1917] hover:bg-[#FAF8F3] transition-all"
                 title="Quick Share"
               >
-                <Share2 className="h-4 w-4" />
+                <Zap className="h-4 w-4" />
               </Link>
 
               {/* Admin Link - Only for admins, hidden on mobile */}
@@ -218,7 +218,7 @@ export function Header({
                         onClick={() => setMobileMenuOpen(false)}
                         className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium text-[#44403C] hover:bg-[#FAF8F3] transition-colors"
                       >
-                        <Share2 className="h-4 w-4" />
+                        <Zap className="h-4 w-4" />
                         Quick Share
                       </Link>
                       
