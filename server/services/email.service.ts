@@ -55,6 +55,7 @@ interface GalleryInviteEmailData {
   photographerEmail?: string
   personalMessage?: string
   hasPassword: boolean
+  password?: string  // Actual PIN to include in email if user opts in
 }
 
 // Logger
@@ -511,7 +512,7 @@ function generateGalleryInviteEmailHtml(data: GalleryInviteEmailData): string {
               
               ${data.hasPassword ? `
               <p style="margin: 24px 0 0; padding: 16px; background-color: #fef3c7; border-radius: 8px; font-size: 14px; color: #92400e; text-align: center;">
-                🔒 This gallery is password protected. The photographer will share the password with you.
+                🔒 This gallery is password protected.${data.password ? ` Your PIN: <strong style="font-family: monospace; letter-spacing: 2px;">${data.password}</strong>` : ' The photographer will share the password with you.'}
               </p>
               ` : ''}
             </td>
@@ -563,7 +564,7 @@ ${data.personalMessage ? `Message from the photographer:\n"${data.personalMessag
 View your gallery here:
 ${data.galleryUrl}
 
-${data.hasPassword ? '🔒 This gallery is password protected. The photographer will share the password with you.' : ''}
+${data.hasPassword ? `🔒 This gallery is password protected.${data.password ? ` Your PIN: ${data.password}` : ' The photographer will share the password with you.'}` : ''}
 
 ---
 Powered by 12img
@@ -582,6 +583,7 @@ export async function sendGalleryInviteEmail(
     photographerEmail?: string
     personalMessage?: string
     baseUrl: string
+    password?: string  // Include PIN in email if provided
   }
 ): Promise<EmailResult> {
   log.info('Sending gallery invite', { 
@@ -611,6 +613,7 @@ export async function sendGalleryInviteEmail(
       photographerEmail: options.photographerEmail,
       personalMessage: options.personalMessage,
       hasPassword: !!gallery.password_hash,
+      password: options.password,
     }
 
     // Send email via Resend

@@ -156,7 +156,12 @@ export function GalleryControlPanel({ gallery }: GalleryControlPanelProps) {
     
     try {
       // Don't pass baseUrl from client - let server use production URL from env
-      const result = await sendGalleryToClient(gallery.id, clientEmail, personalMessage)
+      const result = await sendGalleryToClient(
+        gallery.id, 
+        clientEmail, 
+        personalMessage,
+        includePassword && sendPassword.length === 4 ? sendPassword : undefined
+      )
       
       if (result.error) {
         setSendError(result.error)
