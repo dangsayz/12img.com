@@ -78,6 +78,14 @@ export function QuickShareWidget({ className }: QuickShareWidgetProps) {
       })
 
       clearInterval(progressInterval)
+
+      // Handle non-JSON error responses (e.g., "Request Entity Too Large" from proxy)
+      const contentType = response.headers.get('content-type')
+      if (!contentType?.includes('application/json')) {
+        const text = await response.text()
+        throw new Error(text.length > 100 ? 'File too large for server' : text || `Upload failed (${response.status})`)
+      }
+
       const data = await response.json()
 
       if (!response.ok) {
@@ -433,7 +441,7 @@ export function QuickShareWidget({ className }: QuickShareWidgetProps) {
                       </motion.div>
                     )}
 
-                    {/* Success State */}
+                    {/* Success State - Compact, no scroll */}
                     {status === 'success' && (
                       <motion.div
                         key="success"
@@ -441,79 +449,81 @@ export function QuickShareWidget({ className }: QuickShareWidgetProps) {
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -20 }}
                         transition={{ duration: 0.2 }}
+                        className="flex flex-col"
                       >
-                        {/* Success checkmark animation */}
-                        <motion.div 
-                          className="flex justify-center mb-6"
-                          initial={{ scale: 0 }}
-                          animate={{ scale: 1 }}
-                          transition={{ type: 'spring', stiffness: 300, damping: 15, delay: 0.1 }}
-                        >
-                          <div className="w-16 h-16 rounded-full bg-gradient-to-br from-emerald-400 to-green-500 flex items-center justify-center shadow-lg shadow-green-500/25">
-                            <motion.div
-                              initial={{ scale: 0, rotate: -45 }}
-                              animate={{ scale: 1, rotate: 0 }}
-                              transition={{ delay: 0.2, type: 'spring', stiffness: 300 }}
-                            >
-                              <Check className="w-8 h-8 text-white" strokeWidth={3} />
-                            </motion.div>
-                          </div>
-                        </motion.div>
-
-                        <h3 className="text-center text-lg font-semibold text-gray-900 mb-2">
-                          Ready to share!
-                        </h3>
-
-                        {/* Preview thumbnail */}
+                        {/* Preview with floating success badge */}
                         {preview && (
                           <motion.div 
-                            className="flex justify-center mb-6"
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.15 }}
+                            className="relative flex justify-center mb-4"
+                            initial={{ opacity: 0, scale: 0.9 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            transition={{ delay: 0.1 }}
                           >
-                            <div className="w-24 h-24 rounded-xl overflow-hidden shadow-lg bg-gray-100">
+                            <div className="relative max-w-[160px] max-h-[180px] rounded-2xl overflow-hidden shadow-xl bg-gray-100">
                               <img
                                 src={preview}
                                 alt="Uploaded"
-                                className="w-full h-full object-cover"
+                                className="w-full h-full object-contain"
                               />
+                              {/* Success badge overlay */}
+                              <motion.div
+                                className="absolute -top-1 -right-1 w-8 h-8 rounded-full bg-emerald-500 flex items-center justify-center shadow-lg"
+                                initial={{ scale: 0 }}
+                                animate={{ scale: 1 }}
+                                transition={{ delay: 0.2, type: 'spring', stiffness: 400 }}
+                              >
+                                <Check className="w-4 h-4 text-white" strokeWidth={3} />
+                              </motion.div>
                             </div>
                           </motion.div>
                         )}
 
-                        {/* Share buttons grid - Large touch targets */}
-                        <div className="grid grid-cols-4 gap-3 mb-6">
-                          {shareOptions.map((option, index) => {
+                        {/* Compact URL bar with integrated copy */}
+                        <motion.div
+                          className="flex items-center gap-2 bg-gray-100 rounded-full px-4 py-2 mb-4"
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: 0.15 }}
+                        >
+                          <div className="flex-1 truncate text-sm text-gray-600 font-mono">
+                            {shareUrl.replace('https://', '')}
+                          </div>
+                          <motion.button
+                            onClick={copyToClipboard}
+                            className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+                              copied 
+                                ? 'bg-emerald-500 text-white' 
+                                : 'bg-gray-900 text-white hover:bg-gray-800'
+                            }`}
+                            whileTap={{ scale: 0.95 }}
+                          >
+                            {copied ? 'Copied!' : 'Copy'}
+                          </motion.button>
+                        </motion.div>
+
+                        {/* Share buttons - Compact horizontal row */}
+                        <motion.div 
+                          className="flex items-center justify-center gap-3 mb-4"
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: 0.2 }}
+                        >
+                          {shareOptions.filter(o => o.name !== 'Copy').map((option, index) => {
                             const Icon = option.icon
-                            const content = (
-                              <motion.div
-                                className="flex flex-col items-center gap-2"
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: 0.1 + index * 0.05 }}
+                            const button = (
+                              <motion.div 
+                                className={`w-12 h-12 rounded-full ${option.color} flex items-center justify-center shadow-md`}
+                                whileHover={{ scale: 1.1, y: -2 }}
+                                whileTap={{ scale: 0.9 }}
                               >
-                                <motion.div 
-                                  className={`w-14 h-14 rounded-2xl ${option.color} flex items-center justify-center shadow-lg`}
-                                  whileHover={{ scale: 1.05, y: -2 }}
-                                  whileTap={{ scale: 0.95 }}
-                                >
-                                  <Icon className="w-6 h-6 text-white" />
-                                </motion.div>
-                                <span className="text-xs text-gray-500 font-medium">
-                                  {option.name === 'Copy' && copied ? 'Copied!' : option.name}
-                                </span>
+                                <Icon className="w-5 h-5 text-white" />
                               </motion.div>
                             )
 
                             if (option.onClick) {
                               return (
-                                <button
-                                  key={option.name}
-                                  onClick={option.onClick}
-                                  className="focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 rounded-2xl"
-                                >
-                                  {content}
+                                <button key={option.name} onClick={option.onClick} className="focus:outline-none">
+                                  {button}
                                 </button>
                               )
                             }
@@ -524,49 +534,24 @@ export function QuickShareWidget({ className }: QuickShareWidgetProps) {
                                 href={option.href}
                                 target={option.external ? '_blank' : undefined}
                                 rel={option.external ? 'noopener noreferrer' : undefined}
-                                className="focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 rounded-2xl"
+                                className="focus:outline-none"
                               >
-                                {content}
+                                {button}
                               </a>
                             )
                           })}
-                        </div>
-
-                        {/* URL display with copy */}
-                        <motion.div
-                          className="bg-gray-50 rounded-xl p-3 mb-4"
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          transition={{ delay: 0.3 }}
-                        >
-                          <div className="flex items-center gap-2">
-                            <div className="flex-1 truncate text-sm text-gray-600 font-mono">
-                              {shareUrl}
-                            </div>
-                            <motion.button
-                              onClick={copyToClipboard}
-                              className="shrink-0 w-10 h-10 rounded-lg bg-white border border-gray-200 flex items-center justify-center text-gray-500 hover:text-gray-700 hover:border-gray-300 transition-colors"
-                              whileTap={{ scale: 0.9 }}
-                            >
-                              {copied ? (
-                                <Check className="w-4 h-4 text-emerald-500" />
-                              ) : (
-                                <Copy className="w-4 h-4" />
-                              )}
-                            </motion.button>
-                          </div>
                         </motion.div>
 
-                        {/* Upload another */}
+                        {/* Upload another - Subtle link style */}
                         <motion.button
                           onClick={reset}
-                          className="w-full py-3.5 rounded-xl border border-gray-200 text-gray-600 font-medium hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
+                          className="text-sm text-gray-400 hover:text-gray-600 transition-colors flex items-center justify-center gap-1.5"
                           initial={{ opacity: 0 }}
                           animate={{ opacity: 1 }}
-                          transition={{ delay: 0.35 }}
+                          transition={{ delay: 0.25 }}
                           whileTap={{ scale: 0.98 }}
                         >
-                          <RotateCcw className="w-4 h-4" />
+                          <RotateCcw className="w-3.5 h-3.5" />
                           Upload another
                         </motion.button>
                       </motion.div>

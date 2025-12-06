@@ -629,6 +629,10 @@ export async function sendGalleryInviteEmail(
 
     if (error) {
       log.error('Failed to send gallery invite via Resend', error)
+      // Provide user-friendly error messages
+      if (error.message.includes('only send testing emails')) {
+        return { success: false, error: 'Email domain not verified. Please verify your domain at resend.com/domains to send to clients.' }
+      }
       return { success: false, error: error.message }
     }
 

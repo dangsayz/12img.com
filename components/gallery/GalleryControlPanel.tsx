@@ -171,8 +171,15 @@ export function GalleryControlPanel({ gallery }: GalleryControlPanelProps) {
           setSendSuccess(false)
         }, 2000)
       }
-    } catch (e) {
-      setSendError('Something went wrong. Please try again.')
+    } catch (e: any) {
+      // Handle various error types including server action failures
+      const errorMessage = e?.message || String(e)
+      if (errorMessage.includes('Request Entity') || errorMessage.includes('not valid JSON')) {
+        setSendError('Request failed. Please try again in a moment.')
+      } else {
+        setSendError('Something went wrong. Please try again.')
+      }
+      console.error('[Send to Client Error]', e)
     } finally {
       setIsSending(false)
     }

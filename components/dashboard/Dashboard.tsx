@@ -349,8 +349,8 @@ function GalleryCardGrid({ gallery, index }: { gallery: Gallery; index: number }
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => { setIsHovered(false); setShowMenu(false) }}
       >
-        {/* Image Container */}
-        <div className="relative aspect-[4/3] rounded-2xl overflow-hidden bg-neutral-100 mb-4">
+        {/* Image Container with Title Overlay */}
+        <div className="relative aspect-[3/4] rounded-2xl overflow-hidden bg-neutral-100">
           {gallery.coverImageUrl ? (
             <motion.img
               src={gallery.coverImageUrl}
@@ -360,18 +360,29 @@ function GalleryCardGrid({ gallery, index }: { gallery: Gallery; index: number }
               transition={{ duration: 0.6, ease: [0.32, 0.72, 0, 1] }}
             />
           ) : (
-            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-neutral-100 to-neutral-200">
-              <ImageIcon className="w-10 h-10 text-neutral-300" />
+            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-neutral-800 to-neutral-900">
+              <ImageIcon className="w-10 h-10 text-neutral-600" />
             </div>
           )}
           
-          {/* Gradient Overlay */}
-          <motion.div 
-            className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/0 to-black/0"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: isHovered ? 1 : 0 }}
-            transition={{ duration: 0.3 }}
-          />
+          {/* Permanent Gradient Overlay for text legibility */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+
+          {/* Title & Info Overlay - Always visible on image */}
+          <div className="absolute bottom-0 left-0 right-0 p-5">
+            <h3 
+              className="font-bold text-white text-xl leading-tight mb-2 drop-shadow-lg"
+              style={{ textShadow: '0 2px 8px rgba(0,0,0,0.5)' }}
+            >
+              {gallery.title}
+            </h3>
+            <div className="flex items-center gap-2 text-sm text-white/70">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+              <span>{gallery.imageCount} {gallery.imageCount === 1 ? 'item' : 'items'}</span>
+              <span className="text-white/40">·</span>
+              <span>{formattedDate}</span>
+            </div>
+          </div>
 
           {/* Top Actions */}
           <div className="absolute top-3 right-3 flex gap-2">
@@ -437,9 +448,9 @@ function GalleryCardGrid({ gallery, index }: { gallery: Gallery; index: number }
             )}
           </AnimatePresence>
 
-          {/* Bottom Info Overlay (on hover) */}
+          {/* Hover Action Button */}
           <motion.div
-            className="absolute bottom-0 left-0 right-0 p-4"
+            className="absolute bottom-20 left-0 right-0 flex justify-center"
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: isHovered ? 1 : 0, y: isHovered ? 0 : 10 }}
             transition={{ duration: 0.3 }}
@@ -456,21 +467,6 @@ function GalleryCardGrid({ gallery, index }: { gallery: Gallery; index: number }
               View Gallery
             </button>
           </motion.div>
-        </div>
-        
-        {/* Card Info */}
-        <div className="space-y-1.5">
-          <h3 className="font-medium text-neutral-900 text-lg truncate group-hover:text-neutral-700 transition-colors">
-            {gallery.title}
-          </h3>
-          <div className="flex items-center gap-3 text-sm">
-            <span className="flex items-center gap-1.5 text-neutral-500">
-              <span className="w-2 h-2 rounded-full bg-emerald-400" />
-              {gallery.imageCount} {gallery.imageCount === 1 ? 'item' : 'items'}
-            </span>
-            <span className="text-neutral-300">·</span>
-            <span className="text-neutral-400">{formattedDate}</span>
-          </div>
         </div>
       </Link>
 

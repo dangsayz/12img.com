@@ -44,6 +44,13 @@ export default function SharePage() {
 
       clearInterval(progressInterval)
 
+      // Handle non-JSON error responses (e.g., proxy errors like "Request Entity Too Large")
+      const contentType = response.headers.get('content-type')
+      if (!contentType?.includes('application/json')) {
+        const text = await response.text()
+        throw new Error(text || `Upload failed (${response.status})`)
+      }
+
       const data = await response.json()
 
       if (!response.ok) {

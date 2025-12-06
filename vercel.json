@@ -5,5 +5,13 @@
       "path": "/api/cron/process-archives?secret=${CRON_SECRET}",
       "schedule": "0 6 * * *"
     }
-  ]
+  ],
+  "functions": {
+    "app/api/share/upload/route.ts": {
+      "maxDuration": 60
+    },
+    "app/gallery/*/page.tsx": {
+      "maxDuration": 30
+    }
+  }
 }

@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 import { nanoid } from 'nanoid'
 
+// Route segment config for App Router
+export const maxDuration = 60 // 60 seconds timeout
+export const dynamic = 'force-dynamic'
+
 const MAX_SIZE = 10 * 1024 * 1024 // 10MB
 const BUCKET = 'quick-share'
 

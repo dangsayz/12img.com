@@ -77,7 +77,7 @@ export function GalleryCard({ gallery }: GalleryCardProps) {
         href={`/gallery/${gallery.id}`} 
         className={`group block ${isPending ? 'opacity-50 pointer-events-none' : ''}`}
       >
-        <div className="relative aspect-[4/3] rounded-xl overflow-hidden bg-gray-100 mb-3">
+        <div className="relative aspect-[4/5] rounded-2xl overflow-hidden bg-gray-100">
           {gallery.coverImageUrl ? (
             <img
               src={gallery.coverImageUrl}
@@ -85,41 +85,55 @@ export function GalleryCard({ gallery }: GalleryCardProps) {
               className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
             />
           ) : (
-            <div className="w-full h-full flex items-center justify-center">
-              <Image className="w-8 h-8 text-gray-300" />
+            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-800 to-gray-900">
+              <Image className="w-8 h-8 text-gray-600" />
             </div>
           )}
           
+          {/* Permanent gradient overlay for text legibility */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+          
+          {/* Title overlay on image */}
+          <div className="absolute bottom-0 left-0 right-0 p-4">
+            <h3 className="font-bold text-white text-xl leading-tight mb-1.5 drop-shadow-lg" style={{ textShadow: '0 2px 8px rgba(0,0,0,0.4)' }}>
+              {gallery.title}
+            </h3>
+            <p className="text-xs text-white/70 flex items-center gap-1.5">
+              <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-400" />
+              {gallery.imageCount} {gallery.imageCount === 1 ? 'item' : 'items'}
+              <span className="text-white/40">·</span>
+              {formattedDate}
+            </p>
+          </div>
+
           {/* Hover overlay with actions */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-            <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between">
-              <div className="flex gap-1.5">
-                <button
-                  onClick={handleCopyLink}
-                  className={`h-8 px-3 text-xs font-medium rounded-lg backdrop-blur-sm transition-all ${
-                    copied 
-                      ? 'bg-white text-gray-900' 
-                      : 'bg-white/20 text-white hover:bg-white/30'
-                  }`}
-                >
-                  {copied ? (
-                    <span className="flex items-center gap-1">
-                      <Check className="w-3 h-3" /> Copied
-                    </span>
-                  ) : (
-                    'Copy Link'
-                  )}
-                </button>
-                <a
-                  href={shareUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  onClick={(e) => e.stopPropagation()}
-                  className="h-8 w-8 flex items-center justify-center rounded-lg bg-white/20 text-white hover:bg-white/30 backdrop-blur-sm transition-all"
-                >
-                  <ExternalLink className="w-3.5 h-3.5" />
-                </a>
-              </div>
+          <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+            <div className="absolute top-3 right-3 flex gap-1.5">
+              <button
+                onClick={handleCopyLink}
+                className={`h-8 px-3 text-xs font-medium rounded-lg backdrop-blur-sm transition-all ${
+                  copied 
+                    ? 'bg-white text-gray-900' 
+                    : 'bg-white/20 text-white hover:bg-white/30'
+                }`}
+              >
+                {copied ? (
+                  <span className="flex items-center gap-1">
+                    <Check className="w-3 h-3" /> Copied
+                  </span>
+                ) : (
+                  'Copy Link'
+                )}
+              </button>
+              <a
+                href={shareUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(e) => e.stopPropagation()}
+                className="h-8 w-8 flex items-center justify-center rounded-lg bg-white/20 text-white hover:bg-white/30 backdrop-blur-sm transition-all"
+              >
+                <ExternalLink className="w-3.5 h-3.5" />
+              </a>
               <button
                 onClick={(e) => {
                   e.preventDefault()
@@ -143,14 +157,6 @@ export function GalleryCard({ gallery }: GalleryCardProps) {
               </div>
             </div>
           )}
-        </div>
-
-        {/* Info */}
-        <div className="space-y-0.5">
-          <h3 className="font-medium text-gray-900 truncate">{gallery.title}</h3>
-          <p className="text-xs text-gray-400">
-            {gallery.imageCount} {gallery.imageCount === 1 ? 'image' : 'images'} • {formattedDate}
-          </p>
         </div>
       </Link>
 
