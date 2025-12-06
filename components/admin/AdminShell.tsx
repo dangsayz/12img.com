@@ -105,13 +105,18 @@ export function AdminShell({ children, adminEmail, adminRole }: AdminShellProps)
         <div className="flex items-center justify-between h-14 px-5">
           <div className="flex items-center gap-6">
             {/* Logo */}
-            <Link href="/admin" className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center">
-                <span className="text-[#18181B] font-bold text-sm">12</span>
+            <Link href="/admin" className="flex items-center gap-3">
+              {/* Custom Admin Icon */}
+              <div className="relative">
+                <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-zinc-700 to-zinc-900 flex items-center justify-center shadow-lg shadow-black/20 border border-zinc-600/50">
+                  <span className="text-white font-black text-sm tracking-tighter">12</span>
+                </div>
+                {/* Admin indicator dot */}
+                <div className="absolute -top-0.5 -right-0.5 w-3 h-3 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 border-2 border-[#18181B] shadow-sm" />
               </div>
-              <div className="flex items-center gap-2">
-                <span className="font-semibold text-white">Admin</span>
-                <span className="text-zinc-500 text-sm font-normal">Console</span>
+              <div className="flex flex-col">
+                <span className="font-semibold text-white text-sm leading-tight">Admin</span>
+                <span className="text-zinc-500 text-[10px] font-medium tracking-wide uppercase">Console</span>
               </div>
             </Link>
             
