@@ -48,6 +48,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       description: `View this photo from ${gallery.title}`,
       images: [signedUrl],
     },
+    // Don't index individual images - privacy for client galleries
+    // Social previews still work fine with noindex
+    robots: {
+      index: false,
+      follow: true,
+    },
   }
 }
 
