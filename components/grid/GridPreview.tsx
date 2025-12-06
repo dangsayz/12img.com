@@ -142,41 +142,36 @@ export function GridPreview({
         </div>
       </header>
 
-      {/* Masonry Grid */}
-      <main className="max-w-[1800px] mx-auto px-2 py-4">
-        <div className="flex gap-2">
-          {columns.map((column, colIndex) => (
-            <div key={colIndex} className="flex-1 flex flex-col gap-2">
-              {column.map((img) => (
-                <div
-                  key={img.id}
-                  onClick={() => handleImageClick(img.id)}
-                  className="relative overflow-hidden rounded-2xl bg-gray-100 cursor-pointer group"
-                  style={{
-                    aspectRatio: `${img.width} / ${img.height}`,
-                  }}
-                >
-                  <Image
-                    src={img.thumbnailUrl || img.url}
-                    alt=""
-                    fill
-                    className="object-cover transition-transform duration-300 group-hover:scale-105"
-                    sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-                  />
-                  {/* Hover overlay with download */}
-                  {downloadEnabled && (
-                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-end justify-end p-2 opacity-0 group-hover:opacity-100">
-                      <button
-                        onClick={(e) => handleDownloadSingle(img.originalUrl, e)}
-                        className="p-2 bg-white/90 rounded-full hover:bg-white shadow-lg"
-                        title="Download"
-                      >
-                        <Download className="w-4 h-4 text-gray-700" />
-                      </button>
-                    </div>
-                  )}
+      {/* Clean Grid with Square Cards */}
+      <main className="max-w-[1800px] mx-auto px-4 py-6">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-5">
+          {images.map((img) => (
+            <div
+              key={img.id}
+              onClick={() => handleImageClick(img.id)}
+              className="relative overflow-hidden bg-zinc-50 cursor-pointer group aspect-square shadow-sm hover:shadow-lg transition-shadow duration-300"
+            >
+              <div className="w-full h-full p-3 flex items-center justify-center">
+                <Image
+                  src={img.thumbnailUrl || img.url}
+                  alt=""
+                  fill
+                  className="object-contain p-3 transition-transform duration-300 group-hover:scale-[1.03]"
+                  sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                />
+              </div>
+              {/* Hover overlay with download */}
+              {downloadEnabled && (
+                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-end justify-end p-3 opacity-0 group-hover:opacity-100">
+                  <button
+                    onClick={(e) => handleDownloadSingle(img.originalUrl, e)}
+                    className="p-2 bg-white/90 hover:bg-white shadow-lg"
+                    title="Download"
+                  >
+                    <Download className="w-4 h-4 text-gray-700" />
+                  </button>
                 </div>
-              ))}
+              )}
             </div>
           ))}
         </div>
