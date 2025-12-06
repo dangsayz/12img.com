@@ -201,9 +201,24 @@ export function LargeUploadOverlay({
                 transition={{ delay: 1 }}
                 className="mt-8 p-4 bg-gray-50 rounded-xl"
               >
-                <p className="text-xs text-gray-500">
-                  💡 <span className="font-medium">Pro tip:</span> You can close this tab and come back later. 
-                  Uploads continue in the background.
+                <p className="text-xs text-gray-500 flex items-start gap-2">
+                  <svg 
+                    className="w-4 h-4 text-amber-500 flex-shrink-0 mt-px" 
+                    viewBox="0 0 24 24" 
+                    fill="none" 
+                    stroke="currentColor" 
+                    strokeWidth="2" 
+                    strokeLinecap="round" 
+                    strokeLinejoin="round"
+                  >
+                    <path d="M9 18h6" />
+                    <path d="M10 22h4" />
+                    <path d="M12 2a7 7 0 0 0-4 12.7V17a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-2.3A7 7 0 0 0 12 2Z" />
+                  </svg>
+                  <span>
+                    <span className="font-medium text-gray-600">Pro tip:</span> You can close this tab and come back later. 
+                    Uploads continue in the background.
+                  </span>
                 </p>
               </motion.div>
             )}
