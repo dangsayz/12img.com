@@ -2,7 +2,7 @@
 
 import { useEffect, useCallback, useState, useRef } from 'react'
 import { createPortal } from 'react-dom'
-import { X, ChevronLeft, ChevronRight, Download, ZoomIn, ZoomOut, Loader2 } from 'lucide-react'
+import { X, ChevronLeft, ChevronRight, Download, ZoomIn, ZoomOut, Loader2, Share2, Check } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 
 interface Image {
@@ -16,6 +16,7 @@ interface FullscreenViewerProps {
   onClose: () => void
   onNavigate: (direction: 'prev' | 'next') => void
   galleryTitle?: string
+  gallerySlug?: string
 }
 
 export function FullscreenViewer({
@@ -24,15 +25,40 @@ export function FullscreenViewer({
   onClose,
   onNavigate,
   galleryTitle = 'image',
+  gallerySlug,
 }: FullscreenViewerProps) {
   const [mounted, setMounted] = useState(false)
   const [isZoomed, setIsZoomed] = useState(false)
   const [showControls, setShowControls] = useState(true)
   const [imageLoaded, setImageLoaded] = useState(false)
   const [isDownloading, setIsDownloading] = useState(false)
+  const [showCopied, setShowCopied] = useState(false)
   const touchStart = useRef<{ x: number; y: number } | null>(null)
   const controlsTimeout = useRef<NodeJS.Timeout | null>(null)
   const currentImage = images[currentIndex]
+
+  // Share individual image
+  const handleShare = useCallback(async () => {
+    if (!gallerySlug) return
+    
+    const imageUrl = `${window.location.origin}/g/${gallerySlug}/i/${currentImage.id}`
+    
+    try {
+      await navigator.clipboard.writeText(imageUrl)
+      setShowCopied(true)
+      setTimeout(() => setShowCopied(false), 2000)
+    } catch {
+      // Fallback
+      const input = document.createElement('input')
+      input.value = imageUrl
+      document.body.appendChild(input)
+      input.select()
+      document.execCommand('copy')
+      document.body.removeChild(input)
+      setShowCopied(true)
+      setTimeout(() => setShowCopied(false), 2000)
+    }
+  }, [gallerySlug, currentImage.id])
 
   // Download image at full resolution
   const handleDownload = useCallback(async () => {
@@ -220,6 +246,39 @@ export function FullscreenViewer({
 
         {/* Actions */}
         <div className="flex items-center gap-2">
+          {/* Share button */}
+          {gallerySlug && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation()
+                handleShare()
+              }}
+              className="p-3 text-white/70 hover:text-white bg-white/10 hover:bg-white/20 backdrop-blur-xl rounded-full transition-all duration-200 border border-white/10"
+              aria-label="Share this image"
+            >
+              <AnimatePresence mode="wait">
+                {showCopied ? (
+                  <motion.div
+                    key="check"
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    exit={{ scale: 0 }}
+                  >
+                    <Check className="w-5 h-5 text-green-400" />
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    key="share"
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    exit={{ scale: 0 }}
+                  >
+                    <Share2 className="w-5 h-5" />
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </button>
+          )}
           <button
             onClick={() => setIsZoomed(z => !z)}
             className="p-3 text-white/70 hover:text-white bg-white/10 hover:bg-white/20 backdrop-blur-xl rounded-full transition-all duration-200 border border-white/10"

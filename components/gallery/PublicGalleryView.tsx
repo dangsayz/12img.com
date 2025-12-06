@@ -21,6 +21,7 @@ interface PublicGalleryViewProps {
   photographerName?: string
   isOwner?: boolean
   galleryId?: string
+  gallerySlug?: string
   coverImageId?: string | null
 }
 
@@ -141,6 +142,15 @@ function HeroImage({
             <span className="text-neutral-500">Image unavailable</span>
           </div>
         )}
+        {/* Film grain overlay - masks pixelation on upscaled images */}
+        <div 
+          className="absolute inset-0 opacity-[0.15] pointer-events-none mix-blend-overlay"
+          style={{
+            backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
+            backgroundRepeat: 'repeat',
+            backgroundSize: '150px 150px',
+          }}
+        />
         {/* Cinematic gradient overlay */}
         <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/10 to-black/70" />
       </motion.div>
@@ -293,6 +303,7 @@ export function PublicGalleryView({
   photographerName,
   isOwner = false,
   galleryId,
+  gallerySlug,
   coverImageId
 }: PublicGalleryViewProps) {
   const [viewerOpen, setViewerOpen] = useState(false)
@@ -591,6 +602,7 @@ export function PublicGalleryView({
           onClose={handleViewerClose}
           onNavigate={handleViewerNavigate}
           galleryTitle={title}
+          gallerySlug={gallerySlug}
         />
       )}
 

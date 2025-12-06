@@ -22,6 +22,27 @@ export async function getImageById(imageId: string) {
   return data
 }
 
+// Get image with gallery info for public sharing
+export async function getImageWithGallery(imageId: string) {
+  const { data: image, error: imageError } = await supabaseAdmin
+    .from('images')
+    .select('*')
+    .eq('id', imageId)
+    .single()
+
+  if (imageError || !image) return null
+
+  const { data: gallery, error: galleryError } = await supabaseAdmin
+    .from('galleries')
+    .select('id, title, slug, password_hash, download_enabled')
+    .eq('id', image.gallery_id)
+    .single()
+
+  if (galleryError || !gallery) return null
+
+  return { image, gallery }
+}
+
 export async function getImageWithOwnershipCheck(
   imageId: string,
   userId: string

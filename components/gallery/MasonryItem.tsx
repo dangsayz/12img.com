@@ -27,6 +27,7 @@ export function MasonryItem({
   onDelete 
 }: MasonryItemProps) {
   const [loaded, setLoaded] = useState(false)
+  const [hasError, setHasError] = useState(false)
   const [isHovered, setIsHovered] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [isPending, startTransition] = useTransition()
@@ -100,18 +101,27 @@ export function MasonryItem({
         }}
         className="cursor-pointer"
       >
-        <img
-          src={image.signedUrl}
-          alt=""
-          loading={index < 4 ? 'eager' : 'lazy'}
-          decoding="async"
-          onLoad={handleLoad}
-          className={`w-full h-auto transition-[filter] duration-200 ${
-            loaded ? 'opacity-100' : 'opacity-0'
-          } ${isHovered && editable ? 'brightness-75' : ''}`}
-          style={{ opacity: loaded ? 1 : 0 }}
-        />
-        {!loaded && <div className="aspect-square animate-pulse bg-gray-200" />}
+        {hasError || !image.signedUrl ? (
+          <div className="aspect-square bg-gray-200 flex items-center justify-center">
+            <span className="text-gray-400 text-xs">Failed to load</span>
+          </div>
+        ) : (
+          <>
+            <img
+              src={image.signedUrl}
+              alt=""
+              loading={index < 4 ? 'eager' : 'lazy'}
+              decoding="async"
+              onLoad={handleLoad}
+              onError={() => setHasError(true)}
+              className={`w-full h-auto transition-[filter] duration-200 ${
+                loaded ? 'opacity-100' : 'opacity-0'
+              } ${isHovered && editable ? 'brightness-75' : ''}`}
+              style={{ opacity: loaded ? 1 : 0 }}
+            />
+            {!loaded && <div className="aspect-square animate-pulse bg-gray-200" />}
+          </>
+        )}
       </div>
 
       {/* Hover Overlay - Only in edit mode */}

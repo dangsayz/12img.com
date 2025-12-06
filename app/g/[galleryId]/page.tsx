@@ -86,6 +86,7 @@ export default async function GalleryPage({ params }: Props) {
       downloadEnabled={gallery.download_enabled}
       isOwner={isOwner}
       galleryId={gallery.id}
+      gallerySlug={gallery.slug}
       coverImageId={gallery.cover_image_id}
     />
   )
