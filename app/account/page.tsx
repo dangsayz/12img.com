@@ -16,7 +16,7 @@ export default async function AccountPage() {
         storageUsed={userData?.usage.totalBytes || 0}
         isAuthenticated={!!userId}
       />
-      <main className="container mx-auto px-4 py-8">
+      <main className="container mx-auto px-4 pt-28 pb-16">
         <UserProfile 
           appearance={{
             elements: {

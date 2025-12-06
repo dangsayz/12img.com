@@ -2,10 +2,12 @@
 
 import Link from 'next/link'
 import { UserButton } from '@clerk/nextjs'
-import { Plus } from 'lucide-react'
+import { Plus, Shield } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { UsageBadge } from './UsageBadge'
 import type { LegacyPlanId } from '@/lib/config/pricing'
+
+export type UserRole = 'user' | 'support' | 'admin' | 'super_admin'
 
 interface HeaderProps {
   userPlan?: LegacyPlanId | string
@@ -13,6 +15,7 @@ interface HeaderProps {
   imageCount?: number
   storageUsed?: number // bytes
   isAuthenticated?: boolean
+  userRole?: UserRole
 }
 
 export function Header({ 
@@ -20,8 +23,10 @@ export function Header({
   galleryCount = 0, 
   imageCount = 0,
   storageUsed = 0,
-  isAuthenticated = true 
+  isAuthenticated = true,
+  userRole = 'user'
 }: HeaderProps) {
+  const isAdmin = userRole === 'admin' || userRole === 'super_admin'
   return (
     <header className="fixed top-0 left-0 right-0 z-50 px-4 py-3">
       <div className="flex justify-center">
@@ -83,6 +88,17 @@ export function Header({
                   <span className="sm:hidden">New</span>
                 </Button>
               </Link>
+
+              {/* Admin Link - Only for admins */}
+              {isAdmin && (
+                <Link
+                  href="/admin"
+                  className="p-1.5 rounded-full text-amber-600 hover:bg-amber-50 transition-all"
+                  title="Admin Panel"
+                >
+                  <Shield className="h-4 w-4" />
+                </Link>
+              )}
 
               {/* User Button */}
               <UserButton 

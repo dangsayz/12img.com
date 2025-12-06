@@ -24,6 +24,7 @@ export default async function HomePage() {
           galleryCount={userData?.usage.galleryCount || 0}
           imageCount={userData?.usage.imageCount || 0}
           storageUsed={userData?.usage.totalBytes || 0}
+          userRole={userData?.role}
         />
         <main className="container mx-auto px-4 pt-28 pb-12 max-w-6xl">
           <Dashboard galleries={galleries} />

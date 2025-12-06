@@ -72,7 +72,7 @@ export function CreateGalleryForm({
   }
 
   return (
-    <main className="min-h-screen flex items-center justify-center px-4 pt-20 pb-12">
+    <main className="min-h-screen flex items-center justify-center px-4 pt-28 pb-12">
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}

@@ -139,6 +139,8 @@ export async function getUserSettings(clerkId: string): Promise<UserSettings> {
   }
 }
 
+export type UserRole = 'user' | 'support' | 'admin' | 'super_admin'
+
 export async function getUserWithUsage(clerkId: string) {
   const user = await getOrCreateUserByClerkId(clerkId)
   if (!user) {
@@ -151,6 +153,7 @@ export async function getUserWithUsage(clerkId: string) {
     id: user.id,
     email: user.email,
     plan: (user.plan || 'free') as 'free' | 'basic' | 'essential' | 'pro' | 'studio' | 'elite',
+    role: (user.role || 'user') as UserRole,
     stripeCustomerId: user.stripe_customer_id,
     stripeSubscriptionId: user.stripe_subscription_id,
     usage,

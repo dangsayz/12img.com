@@ -16,6 +16,21 @@ interface BrandingSectionProps {
   }
 }
 
+// Normalize URL - auto-add https:// if missing
+function normalizeUrl(input: string): string {
+  if (!input.trim()) return ''
+  let url = input.trim()
+  // Remove any leading/trailing whitespace
+  url = url.replace(/\s+/g, '')
+  // If it doesn't start with a protocol, add https://
+  if (url && !url.match(/^https?:\/\//i)) {
+    // Remove www. prefix for cleaner URLs, then add https://
+    url = url.replace(/^www\./i, '')
+    url = `https://${url}`
+  }
+  return url
+}
+
 export function BrandingSection({ initialSettings }: BrandingSectionProps) {
   const [isPending, startTransition] = useTransition()
   const [saved, setSaved] = useState(false)
@@ -26,6 +41,14 @@ export function BrandingSection({ initialSettings }: BrandingSectionProps) {
     websiteUrl: initialSettings.websiteUrl || '',
     brandColor: initialSettings.brandColor || '#000000',
   })
+  
+  // Auto-normalize URL on blur
+  const handleWebsiteBlur = () => {
+    const normalized = normalizeUrl(settings.websiteUrl)
+    if (normalized !== settings.websiteUrl) {
+      setSettings(prev => ({ ...prev, websiteUrl: normalized }))
+    }
+  }
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -103,12 +126,16 @@ export function BrandingSection({ initialSettings }: BrandingSectionProps) {
             </Label>
             <Input
               id="websiteUrl"
-              type="url"
+              type="text"
               value={settings.websiteUrl}
               onChange={(e) => setSettings(prev => ({ ...prev, websiteUrl: e.target.value }))}
-              placeholder="https://yourstudio.com"
+              onBlur={handleWebsiteBlur}
+              placeholder="yourstudio.com"
               className="bg-white"
             />
+            <p className="text-xs text-gray-500">
+              Enter your website (https:// will be added automatically)
+            </p>
           </div>
 
           {/* Brand Color */}
