@@ -179,19 +179,19 @@ export function Header({
           >
             <div className="bg-white/95 backdrop-blur-xl rounded-2xl border border-[#E8E4DC] shadow-lg overflow-hidden">
               <div className="p-3 space-y-1">
-                {navLinks.map((link) => (
-                  <Link
-                    key={link.href}
-                    href={link.href}
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="block px-4 py-2.5 rounded-xl text-sm font-medium text-[#44403C] hover:bg-[#FAF8F3] transition-colors"
-                  >
-                    {link.label}
-                  </Link>
-                ))}
-                
                 {isAuthenticated ? (
                   <>
+                    {navLinks.map((link) => (
+                      <Link
+                        key={link.href}
+                        href={link.href}
+                        onClick={() => setMobileMenuOpen(false)}
+                        className="block px-4 py-2.5 rounded-xl text-sm font-medium text-[#44403C] hover:bg-[#FAF8F3] transition-colors"
+                      >
+                        {link.label}
+                      </Link>
+                    ))}
+                    
                     <div className="pt-2 mt-2 border-t border-[#E8E4DC]">
                       {/* Usage Badge on mobile */}
                       <div className="px-4 py-2">
@@ -228,7 +228,7 @@ export function Header({
                     </div>
                   </>
                 ) : (
-                  <div className="pt-2 mt-2 border-t border-[#E8E4DC] space-y-2">
+                  <div className="space-y-2">
                     <Link href="/sign-in" onClick={() => setMobileMenuOpen(false)} className="block">
                       <Button variant="outline" className="w-full rounded-xl">
                         Sign In
