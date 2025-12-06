@@ -67,7 +67,10 @@ function StatCard({
 }
 
 export default async function AdminDashboardPage() {
-  const stats = await getDashboardStats()
+  const [stats, revenue] = await Promise.all([
+    getDashboardStats(),
+    getRevenueMetrics().catch(() => null), // Don't fail if Stripe is not configured
+  ])
   
   return (
     <div className="space-y-6">
@@ -78,6 +81,68 @@ export default async function AdminDashboardPage() {
           Platform overview and key metrics
         </p>
       </div>
+      
+      {/* Revenue Hero Cards */}
+      {revenue && (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          <div className="lg:col-span-2 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-2xl p-6 text-white">
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-emerald-100 text-sm font-medium">Monthly Recurring Revenue</p>
+                <p className="mt-2 text-4xl font-bold">{formatCurrency(revenue.mrr)}</p>
+                <p className="mt-1 text-emerald-200 text-sm">
+                  {formatCurrency(revenue.arr)} ARR
+                </p>
+              </div>
+              <div className="p-3 bg-white/20 rounded-xl">
+                <Zap className="w-6 h-6" />
+              </div>
+            </div>
+            <div className="mt-6 pt-4 border-t border-emerald-400/30 flex items-center justify-between">
+              <div className="flex gap-6">
+                <div>
+                  <p className="text-emerald-200 text-xs">This Month</p>
+                  <p className="text-xl font-semibold">{formatCurrency(revenue.revenueThisMonth)}</p>
+                </div>
+                <div>
+                  <p className="text-emerald-200 text-xs">Active Subs</p>
+                  <p className="text-xl font-semibold">{revenue.activeSubscriptions}</p>
+                </div>
+              </div>
+              <Link 
+                href="/admin/billing"
+                className="inline-flex items-center gap-1 px-3 py-1.5 bg-white/20 hover:bg-white/30 rounded-lg text-sm font-medium transition-colors"
+              >
+                View Details
+                <ArrowUpRight className="w-4 h-4" />
+              </Link>
+            </div>
+          </div>
+          
+          <div className="bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl p-6 text-white">
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-blue-100 text-sm font-medium">Conversion</p>
+                <p className="mt-2 text-4xl font-bold">{revenue.conversionRate}%</p>
+                <p className="mt-1 text-blue-200 text-sm">Free → Paid</p>
+              </div>
+              <div className="p-3 bg-white/20 rounded-xl">
+                <ArrowUpRight className="w-6 h-6" />
+              </div>
+            </div>
+            <div className="mt-6 pt-4 border-t border-blue-400/30 grid grid-cols-2 gap-4">
+              <div>
+                <p className="text-blue-200 text-xs">Paid</p>
+                <p className="text-xl font-semibold">{revenue.paidUsers}</p>
+              </div>
+              <div>
+                <p className="text-blue-200 text-xs">Free</p>
+                <p className="text-xl font-semibold">{revenue.freeUsers}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
       
       {/* Stats Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">

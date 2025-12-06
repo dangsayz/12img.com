@@ -14,8 +14,10 @@ import {
   ScrollText,
   Settings,
   Flag,
+  Sparkles,
+  Crown,
   Shield,
-  ChevronRight,
+  ExternalLink,
 } from 'lucide-react'
 
 interface AdminShellProps {
@@ -72,72 +74,92 @@ const NAV_ITEMS = [
   },
 ]
 
+const ROLE_CONFIG = {
+  super_admin: {
+    label: 'Super Admin',
+    icon: Crown,
+    className: 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg shadow-amber-500/25',
+  },
+  admin: {
+    label: 'Admin',
+    icon: Shield,
+    className: 'bg-gradient-to-r from-violet-500 to-purple-500 text-white shadow-lg shadow-violet-500/25',
+  },
+  support: {
+    label: 'Support',
+    icon: Sparkles,
+    className: 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white shadow-lg shadow-blue-500/25',
+  },
+}
+
 export function AdminShell({ children, adminEmail, adminRole }: AdminShellProps) {
   const pathname = usePathname()
-  
-  // Generate breadcrumbs from path
-  const pathSegments = pathname.split('/').filter(Boolean)
-  const breadcrumbs = pathSegments.map((segment, index) => ({
-    label: segment.charAt(0).toUpperCase() + segment.slice(1),
-    href: '/' + pathSegments.slice(0, index + 1).join('/'),
-    isLast: index === pathSegments.length - 1,
-  }))
+  const roleConfig = ROLE_CONFIG[adminRole as keyof typeof ROLE_CONFIG] || ROLE_CONFIG.support
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-[#FAFAFA]">
       {/* Header */}
-      <header className="sticky top-0 z-50 bg-white border-b border-gray-200">
-        <div className="flex items-center justify-between h-14 px-4">
-          <div className="flex items-center gap-4">
+      <header className="sticky top-0 z-50 bg-[#18181B] text-white">
+        <div className="flex items-center justify-between h-14 px-5">
+          <div className="flex items-center gap-6">
             {/* Logo */}
-            <Link href="/admin" className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-red-600 flex items-center justify-center">
-                <Shield className="w-5 h-5 text-white" />
+            <Link href="/admin" className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center">
+                <span className="text-[#18181B] font-bold text-sm">12</span>
               </div>
-              <span className="font-semibold text-gray-900">12img Admin</span>
+              <div className="flex items-center gap-2">
+                <span className="font-semibold text-white">Admin</span>
+                <span className="text-zinc-500 text-sm font-normal">Console</span>
+              </div>
             </Link>
             
-            {/* Breadcrumbs */}
-            <nav className="hidden md:flex items-center gap-1 text-sm">
-              {breadcrumbs.map((crumb, i) => (
-                <div key={crumb.href} className="flex items-center gap-1">
-                  {i > 0 && <ChevronRight className="w-4 h-4 text-gray-400" />}
-                  {crumb.isLast ? (
-                    <span className="text-gray-900 font-medium">{crumb.label}</span>
-                  ) : (
-                    <Link 
-                      href={crumb.href}
-                      className="text-gray-500 hover:text-gray-700"
-                    >
-                      {crumb.label}
-                    </Link>
-                  )}
-                </div>
-              ))}
-            </nav>
+            {/* Divider */}
+            <div className="hidden md:block w-px h-5 bg-zinc-700" />
+            
+            {/* Current section indicator */}
+            <div className="hidden md:flex items-center gap-2">
+              {NAV_ITEMS.map((item) => {
+                const isActive = pathname === item.href || 
+                  (item.href !== '/admin' && pathname.startsWith(item.href))
+                if (!isActive) return null
+                return (
+                  <div key={item.href} className="flex items-center gap-2 text-sm">
+                    <item.icon className="w-4 h-4 text-zinc-400" />
+                    <span className="text-zinc-300">{item.title}</span>
+                  </div>
+                )
+              })}
+            </div>
           </div>
           
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-4">
             {/* Role badge */}
-            <span className={cn(
-              "px-2 py-1 text-xs font-medium rounded-full",
-              adminRole === 'super_admin' && "bg-red-100 text-red-700",
-              adminRole === 'admin' && "bg-amber-100 text-amber-700",
-              adminRole === 'support' && "bg-blue-100 text-blue-700",
+            <div className={cn(
+              "flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-full",
+              roleConfig.className
             )}>
-              {adminRole.replace('_', ' ')}
-            </span>
+              <roleConfig.icon className="w-3.5 h-3.5" />
+              {roleConfig.label}
+            </div>
             
             {/* Back to app */}
             <Link 
               href="/"
-              className="text-sm text-gray-500 hover:text-gray-700"
+              className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-zinc-400 hover:text-white bg-zinc-800 hover:bg-zinc-700 rounded-lg transition-all"
             >
-              Back to App →
+              <ExternalLink className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Exit Admin</span>
             </Link>
             
             {/* User button */}
-            <UserButton afterSignOutUrl="/" />
+            <UserButton 
+              afterSignOutUrl="/"
+              appearance={{
+                elements: {
+                  avatarBox: "w-8 h-8 ring-2 ring-zinc-700"
+                }
+              }}
+            />
           </div>
         </div>
       </header>
