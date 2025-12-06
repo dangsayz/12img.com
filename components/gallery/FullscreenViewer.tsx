@@ -2,12 +2,14 @@
 
 import { useEffect, useCallback, useState, useRef } from 'react'
 import { createPortal } from 'react-dom'
-import { X, ChevronLeft, ChevronRight, Download, ZoomIn, ZoomOut, Loader2, Share2, Check } from 'lucide-react'
+import { X, ChevronLeft, ChevronRight, Download, Loader2, Share2, Check } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 
 interface Image {
   id: string
-  signedUrl: string
+  thumbnailUrl: string  // 400px for grid thumbnails
+  previewUrl: string    // 1920px for fullscreen viewing (crisp, optimized)
+  originalUrl: string   // Full resolution for downloads only
 }
 
 interface FullscreenViewerProps {
@@ -28,7 +30,7 @@ export function FullscreenViewer({
   gallerySlug,
 }: FullscreenViewerProps) {
   const [mounted, setMounted] = useState(false)
-  const [isZoomed, setIsZoomed] = useState(false)
+  // Zoom removed - users view at optimal 1920px, download for full res
   const [showControls, setShowControls] = useState(true)
   const [imageLoaded, setImageLoaded] = useState(false)
   const [isDownloading, setIsDownloading] = useState(false)
@@ -41,7 +43,7 @@ export function FullscreenViewer({
   const handleShare = useCallback(async () => {
     if (!gallerySlug) return
     
-    const imageUrl = `${window.location.origin}/g/${gallerySlug}/i/${currentImage.id}`
+    const imageUrl = `${window.location.origin}/view-reel/${gallerySlug}`
     
     try {
       await navigator.clipboard.writeText(imageUrl)
@@ -68,7 +70,7 @@ export function FullscreenViewer({
     
     try {
       // Fetch the image as a blob (full resolution)
-      const response = await fetch(currentImage.signedUrl)
+      const response = await fetch(currentImage.originalUrl)
       if (!response.ok) throw new Error('Failed to fetch image')
       
       const blob = await response.blob()
@@ -100,11 +102,10 @@ export function FullscreenViewer({
     } finally {
       setIsDownloading(false)
     }
-  }, [currentImage.signedUrl, currentIndex, galleryTitle, isDownloading])
+  }, [currentImage.originalUrl, currentIndex, galleryTitle, isDownloading])
 
   // Reset states on image change
   useEffect(() => {
-    setIsZoomed(false)
     setImageLoaded(false)
   }, [currentIndex])
 
@@ -155,7 +156,8 @@ export function FullscreenViewer({
           break
         case ' ':
           e.preventDefault()
-          setIsZoomed(z => !z)
+          // Space navigates to next (no zoom)
+          onNavigate('next')
           break
       }
     }
@@ -169,7 +171,7 @@ export function FullscreenViewer({
     setMounted(true)
   }, [])
 
-  // Preload adjacent images
+  // Preload adjacent preview images (not full res - saves bandwidth)
   useEffect(() => {
     const preloadIndexes = [
       (currentIndex - 1 + images.length) % images.length,
@@ -177,7 +179,7 @@ export function FullscreenViewer({
     ]
     preloadIndexes.forEach(i => {
       const img = new window.Image()
-      img.src = images[i].signedUrl
+      img.src = images[i].previewUrl
     })
   }, [currentIndex, images])
 
@@ -191,7 +193,7 @@ export function FullscreenViewer({
 
   const handleTouchEnd = useCallback(
     (e: React.TouchEvent) => {
-      if (!touchStart.current || isZoomed) return
+      if (!touchStart.current) return
 
       const deltaX = e.changedTouches[0].clientX - touchStart.current.x
       const threshold = 50
@@ -206,7 +208,7 @@ export function FullscreenViewer({
 
       touchStart.current = null
     },
-    [onNavigate, isZoomed]
+    [onNavigate]
   )
 
   const handleMouseMove = useCallback(() => {
@@ -280,13 +282,6 @@ export function FullscreenViewer({
             </button>
           )}
           <button
-            onClick={() => setIsZoomed(z => !z)}
-            className="p-3 text-white/70 hover:text-white bg-white/10 hover:bg-white/20 backdrop-blur-xl rounded-full transition-all duration-200 border border-white/10"
-            aria-label={isZoomed ? "Zoom out" : "Zoom in"}
-          >
-            {isZoomed ? <ZoomOut className="w-5 h-5" /> : <ZoomIn className="w-5 h-5" />}
-          </button>
-          <button
             onClick={(e) => {
               e.stopPropagation()
               handleDownload()
@@ -343,17 +338,11 @@ export function FullscreenViewer({
           <motion.div
             key={currentImage.id}
             initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ 
-              opacity: imageLoaded ? 1 : 0, 
-              scale: isZoomed ? 1.5 : 1 
-            }}
+            animate={{ opacity: imageLoaded ? 1 : 0, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
             transition={{ duration: 0.3, ease: [0.32, 0.72, 0, 1] }}
-            className={`relative max-w-full max-h-full ${isZoomed ? 'cursor-zoom-out overflow-auto' : 'cursor-zoom-in'}`}
-            onClick={(e) => {
-              e.stopPropagation()
-              setIsZoomed(z => !z)
-            }}
+            className="relative max-w-full max-h-full"
+            onClick={(e) => e.stopPropagation()}
           >
             {/* Loading skeleton */}
             {!imageLoaded && (
@@ -362,13 +351,13 @@ export function FullscreenViewer({
               </div>
             )}
             <img
-              src={currentImage.signedUrl}
+              src={currentImage.previewUrl}
               alt=""
               className={`max-w-full max-h-full object-contain rounded-lg shadow-2xl transition-all duration-300 ${
                 imageLoaded ? 'opacity-100' : 'opacity-0'
               }`}
               style={{ 
-                maxHeight: isZoomed ? 'none' : 'calc(100vh - 12rem)',
+                maxHeight: 'calc(100vh - 12rem)',
                 boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)'
               }}
               draggable={false}
@@ -404,7 +393,7 @@ export function FullscreenViewer({
               }`}
             >
               <img
-                src={img.signedUrl}
+                src={img.thumbnailUrl}
                 alt=""
                 className="w-full h-full object-cover"
               />

@@ -69,7 +69,7 @@ export function GalleryControlPanel({ gallery }: GalleryControlPanelProps) {
   const [includePassword, setIncludePassword] = useState(false)
 
   // Build share URL on client only to avoid hydration mismatch
-  const relativePath = `/g/${gallery.slug}`
+  const relativePath = `/view-reel/${gallery.id}`
   const [shareUrl, setShareUrl] = useState(relativePath)
   
   useEffect(() => {
@@ -217,7 +217,7 @@ export function GalleryControlPanel({ gallery }: GalleryControlPanelProps) {
           <Button
             onClick={copyToClipboard}
             variant="outline"
-            className={`h-11 px-4 rounded-xl transition-all duration-200 ${
+            className={`h-11 px-4 rounded-xl ${
               copied 
                 ? 'bg-emerald-50 border-emerald-200 text-emerald-600' 
                 : 'hover:bg-gray-50'
@@ -242,14 +242,14 @@ export function GalleryControlPanel({ gallery }: GalleryControlPanelProps) {
             href={relativePath}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 h-9 px-4 text-sm font-medium text-gray-700 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-lg transition-all duration-200"
+            className="inline-flex items-center gap-2 h-9 px-4 text-sm font-medium text-gray-700 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-lg"
           >
             <ExternalLink className="w-4 h-4" />
             Preview
           </a>
           <button
             onClick={openSendModal}
-            className="inline-flex items-center gap-2 h-9 px-4 text-sm font-medium text-white bg-neutral-900 hover:bg-neutral-800 rounded-lg transition-all duration-200 shadow-sm"
+            className="inline-flex items-center gap-2 h-9 px-4 text-sm font-medium text-white bg-neutral-900 hover:bg-neutral-800 rounded-lg shadow-sm"
           >
             <Send className="w-4 h-4" />
             Send to Client
@@ -268,7 +268,7 @@ export function GalleryControlPanel({ gallery }: GalleryControlPanelProps) {
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className={`h-9 w-9 rounded-lg flex items-center justify-center transition-colors ${
+              <div className={`h-9 w-9 rounded-lg flex items-center justify-center ${
                 isPasswordEnabled 
                   ? 'bg-slate-900' 
                   : 'bg-slate-100'
@@ -311,7 +311,7 @@ export function GalleryControlPanel({ gallery }: GalleryControlPanelProps) {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-600 transition-colors"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-600"
                 >
                   {showPassword ? (
                     <EyeOff className="w-4 h-4" />
@@ -335,7 +335,7 @@ export function GalleryControlPanel({ gallery }: GalleryControlPanelProps) {
         {/* Download Permission */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className={`h-9 w-9 rounded-lg flex items-center justify-center transition-colors ${
+            <div className={`h-9 w-9 rounded-lg flex items-center justify-center ${
               isDownloadEnabled 
                 ? 'bg-slate-900' 
                 : 'bg-slate-100'
@@ -378,7 +378,7 @@ export function GalleryControlPanel({ gallery }: GalleryControlPanelProps) {
       <div className="px-6 py-4 border-t border-gray-100 flex items-center justify-end">
         <button
           onClick={() => setShowDeleteDialog(true)}
-          className="text-xs text-gray-400 hover:text-slate-900 transition-colors duration-200"
+          className="text-xs text-gray-400 hover:text-slate-900"
         >
           Delete gallery
         </button>
@@ -445,7 +445,7 @@ export function GalleryControlPanel({ gallery }: GalleryControlPanelProps) {
                           navigator.clipboard.writeText(confirmationPhrase)
                           setDeleteConfirmation(confirmationPhrase)
                         }}
-                        className="font-mono bg-slate-100 px-1.5 py-0.5 rounded text-slate-900 hover:bg-slate-200 transition-colors cursor-pointer"
+                        className="font-mono bg-slate-100 px-1.5 py-0.5 rounded text-slate-900 hover:bg-slate-200 cursor-pointer"
                         title="Click to copy"
                       >
                         {confirmationPhrase}
@@ -471,14 +471,14 @@ export function GalleryControlPanel({ gallery }: GalleryControlPanelProps) {
                         setDeleteConfirmation('')
                       }}
                       disabled={isDeleting}
-                      className="flex-1 h-10 px-4 text-sm font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors disabled:opacity-50"
+                      className="flex-1 h-10 px-4 text-sm font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-lg disabled:opacity-50"
                     >
                       Cancel
                     </button>
                     <button
                       onClick={handleDelete}
                       disabled={isDeleting || deleteConfirmation !== confirmationPhrase}
-                      className="flex-1 h-10 px-4 text-sm font-medium text-white bg-slate-900 hover:bg-slate-800 rounded-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                      className="flex-1 h-10 px-4 text-sm font-medium text-white bg-slate-900 hover:bg-slate-800 rounded-lg disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                     >
                       {isDeleting ? (
                         <>
@@ -529,7 +529,7 @@ export function GalleryControlPanel({ gallery }: GalleryControlPanelProps) {
                         </div>
                         <button
                           onClick={() => setShowSendModal(false)}
-                          className="text-slate-400 hover:text-white transition-colors p-1"
+                          className="text-slate-400 hover:text-white p-1"
                           disabled={isSending}
                         >
                           <X className="w-5 h-5" />
@@ -557,7 +557,6 @@ export function GalleryControlPanel({ gallery }: GalleryControlPanelProps) {
                             placeholder:text-slate-400
                             focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-300
                             disabled:opacity-50 disabled:bg-slate-50
-                            transition-all duration-200
                             touch-manipulation
                           "
                           style={{
@@ -615,7 +614,6 @@ export function GalleryControlPanel({ gallery }: GalleryControlPanelProps) {
                                   placeholder:text-slate-300 placeholder:tracking-[0.3em]
                                   focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-300
                                   disabled:opacity-50 disabled:bg-slate-50
-                                  transition-all duration-200
                                   touch-manipulation
                                 "
                                 style={{
@@ -677,7 +675,6 @@ export function GalleryControlPanel({ gallery }: GalleryControlPanelProps) {
                             placeholder:text-slate-400
                             focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-300
                             disabled:opacity-50 disabled:bg-slate-50
-                            transition-all duration-200
                             resize-none
                             touch-manipulation
                           "
@@ -708,14 +705,14 @@ export function GalleryControlPanel({ gallery }: GalleryControlPanelProps) {
                       <button
                         onClick={() => setShowSendModal(false)}
                         disabled={isSending}
-                        className="flex-1 h-10 px-4 text-sm font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors disabled:opacity-50"
+                        className="flex-1 h-10 px-4 text-sm font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-lg disabled:opacity-50"
                       >
                         Cancel
                       </button>
                       <button
                         onClick={handleSendToClient}
                         disabled={isSending || !clientEmail.trim()}
-                        className="flex-1 h-10 px-4 text-sm font-medium text-white bg-slate-900 hover:bg-slate-800 rounded-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                        className="flex-1 h-10 px-4 text-sm font-medium text-white bg-slate-900 hover:bg-slate-800 rounded-lg disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                       >
                         {isSending ? (
                           <>

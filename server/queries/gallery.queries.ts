@@ -109,7 +109,7 @@ export async function getUserGalleries(clerkId: string) {
   // Generate signed URLs for covers
   const coverPaths = coverImages.map((c) => c.storage_path)
   const signedUrls =
-    coverPaths.length > 0 ? await getSignedUrlsBatch(coverPaths) : new Map()
+    coverPaths.length > 0 ? await getSignedUrlsBatch(coverPaths, undefined, 'COVER') : new Map()
 
   const coverUrlMap = new Map<string, string>()
   coverImages.forEach((c) => {

@@ -59,7 +59,7 @@ export function PasswordGate({ galleryId, gallerySlug }: PasswordGateProps) {
       const result = await validateGalleryPassword(galleryId, password)
 
       if (result.success) {
-        router.push(`/g/${gallerySlug}`)
+        router.push(`/view-reel/${galleryId}`)
         router.refresh()
       } else {
         const newAttempts = attempts + 1

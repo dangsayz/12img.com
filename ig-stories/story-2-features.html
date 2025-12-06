@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=1080, height=1920">
+  <title>Story 2 — Features</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    body {
+      width: 1080px;
+      height: 1920px;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #0c0c0c;
+      color: #fff;
+      overflow: hidden;
+      position: relative;
+    }
+    
+    /* Gradient mesh background */
+    .bg-gradient {
+      position: absolute;
+      inset: 0;
+      background: 
+        radial-gradient(ellipse 80% 50% at 20% 40%, rgba(251,146,60,0.12) 0%, transparent 50%),
+        radial-gradient(ellipse 60% 40% at 80% 60%, rgba(168,85,247,0.08) 0%, transparent 50%);
+    }
+    
+    .container {
+      width: 100%;
+      height: 100%;
+      padding: 80px 64px;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      z-index: 1;
+    }
+    
+    /* Header */
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 80px;
+    }
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 28px;
+      font-weight: 600;
+    }
+    .logo-dot {
+      width: 12px;
+      height: 12px;
+      background: #fb923c;
+      border-radius: 50%;
+    }
+    .badge {
+      padding: 12px 24px;
+      background: rgba(251,146,60,0.15);
+      border: 1px solid rgba(251,146,60,0.3);
+      border-radius: 100px;
+      font-size: 22px;
+      font-weight: 500;
+      color: #fb923c;
+    }
+    
+    /* Main headline */
+    .headline {
+      font-size: 72px;
+      font-weight: 700;
+      line-height: 1.05;
+      letter-spacing: -0.03em;
+      text-align: center;
+      margin-bottom: 100px;
+    }
+    .headline-accent {
+      display: block;
+      background: linear-gradient(90deg, #fb923c, #f97316, #ea580c);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    
+    /* Feature cards */
+    .features {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 32px;
+    }
+    
+    .feature-card {
+      background: linear-gradient(145deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.02) 100%);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 28px;
+      padding: 48px;
+      display: flex;
+      align-items: center;
+      gap: 40px;
+      backdrop-filter: blur(20px);
+    }
+    
+    .feature-icon {
+      width: 100px;
+      height: 100px;
+      background: linear-gradient(135deg, #1f1f1f 0%, #2a2a2a 100%);
+      border-radius: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 48px;
+      flex-shrink: 0;
+    }
+    
+    .feature-content h3 {
+      font-size: 36px;
+      font-weight: 600;
+      margin-bottom: 12px;
+      letter-spacing: -0.01em;
+    }
+    .feature-content p {
+      font-size: 26px;
+      color: rgba(255,255,255,0.5);
+      line-height: 1.4;
+    }
+    
+    /* Workflow visual */
+    .workflow {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 24px;
+      padding: 60px 0;
+    }
+    .workflow-step {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+    }
+    .workflow-circle {
+      width: 120px;
+      height: 120px;
+      background: linear-gradient(135deg, #fb923c 0%, #ea580c 100%);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 48px;
+    }
+    .workflow-label {
+      font-size: 28px;
+      font-weight: 600;
+    }
+    .workflow-arrow {
+      font-size: 48px;
+      color: rgba(255,255,255,0.3);
+    }
+    
+    /* CTA */
+    .cta {
+      width: 100%;
+      height: 120px;
+      background: #fff;
+      border-radius: 22px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 36px;
+      font-weight: 600;
+      color: #0c0c0c;
+      margin-top: auto;
+    }
+  </style>
+</head>
+<body>
+  <div class="bg-gradient"></div>
+  
+  <div class="container">
+    <div class="header">
+      <div class="logo">
+        <div class="logo-dot"></div>
+        12img
+      </div>
+      <div class="badge">For Photographers</div>
+    </div>
+    
+    <h1 class="headline">
+      The Workflow<br>
+      <span class="headline-accent">You Deserve</span>
+    </h1>
+    
+    <div class="workflow">
+      <div class="workflow-step">
+        <div class="workflow-circle">📤</div>
+        <span class="workflow-label">Upload</span>
+      </div>
+      <span class="workflow-arrow">→</span>
+      <div class="workflow-step">
+        <div class="workflow-circle">🔗</div>
+        <span class="workflow-label">Deliver</span>
+      </div>
+      <span class="workflow-arrow">→</span>
+      <div class="workflow-step">
+        <div class="workflow-circle">💰</div>
+        <span class="workflow-label">Get Paid</span>
+      </div>
+    </div>
+    
+    <div class="features">
+      <div class="feature-card">
+        <div class="feature-icon">⚡</div>
+        <div class="feature-content">
+          <h3>Instant Delivery</h3>
+          <p>No more zip files or download links that expire</p>
+        </div>
+      </div>
+      
+      <div class="feature-card">
+        <div class="feature-icon">☁️</div>
+        <div class="feature-content">
+          <h3>Automatic Backup</h3>
+          <p>Your galleries are always safe & accessible</p>
+        </div>
+      </div>
+      
+      <div class="feature-card">
+        <div class="feature-icon">🔒</div>
+        <div class="feature-content">
+          <h3>Password Protection</h3>
+          <p>Keep your client's images private</p>
+        </div>
+      </div>
+    </div>
+    
+    <div class="cta">
+      Start Your Free Trial →
+    </div>
+  </div>
+</body>
+</html>

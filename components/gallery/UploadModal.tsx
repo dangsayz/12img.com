@@ -2,10 +2,12 @@
 
 import { useCallback, useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { X, Upload, CheckCircle2 } from 'lucide-react'
+import { X, Upload, CheckCircle2, ToggleLeft, ToggleRight } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Button } from '@/components/ui/button'
 import { generateSignedUploadUrls, confirmUploads, getExistingFilenames } from '@/server/actions/upload.actions'
+import { LargeUploadOverlay } from '@/components/upload/LargeUploadOverlay'
+import { LARGE_UPLOAD_THRESHOLD } from '@/lib/utils/constants'
 
 interface FileItemState {
   id: string
@@ -46,6 +48,8 @@ export function UploadModal({ isOpen, onClose, galleryId }: UploadModalProps) {
   const [existingFilenames, setExistingFilenames] = useState<string[]>([])
   const [duplicates, setDuplicates] = useState<DuplicateFile[]>([])
   const [showDuplicateDialog, setShowDuplicateDialog] = useState(false)
+  const [autoRedirect, setAutoRedirect] = useState(true)
+  const [uploadStartTime, setUploadStartTime] = useState<number | null>(null)
 
   // Auto-upload when files are added
   useEffect(() => {
@@ -116,6 +120,7 @@ export function UploadModal({ isOpen, onClose, galleryId }: UploadModalProps) {
     
     isUploadingRef.current = true
     setIsUploading(true)
+    setUploadStartTime(Date.now())
 
     let pendingItems: FileItemState[] = []
     setUploads(prev => {
@@ -306,6 +311,26 @@ export function UploadModal({ isOpen, onClose, galleryId }: UploadModalProps) {
 
   const completedCount = uploads.filter(u => u.status === 'completed').length
   const allComplete = uploads.length > 0 && completedCount === uploads.length
+  const showLargeUploadOverlay = uploads.length >= LARGE_UPLOAD_THRESHOLD && isUploading
+  
+  // Calculate estimated time remaining
+  const estimatedMinutes = (() => {
+    if (!uploadStartTime || completedCount === 0) return 0
+    const elapsed = (Date.now() - uploadStartTime) / 1000 / 60 // minutes
+    const rate = completedCount / elapsed // files per minute
+    const remaining = uploads.length - completedCount
+    return Math.ceil(remaining / rate)
+  })()
+  
+  // Auto-redirect when complete
+  useEffect(() => {
+    if (allComplete && autoRedirect) {
+      const timer = setTimeout(() => {
+        onClose()
+      }, 1000) // Brief delay to show completion
+      return () => clearTimeout(timer)
+    }
+  }, [allComplete, autoRedirect, onClose])
 
   const totalProgress = uploads.length > 0 
     ? uploads.reduce((acc, u) => acc + u.progress, 0) / uploads.length 
@@ -373,8 +398,8 @@ export function UploadModal({ isOpen, onClose, galleryId }: UploadModalProps) {
                   <p className="text-sm text-gray-500">
                     Drop images or <span className="text-gray-900 underline underline-offset-4 decoration-gray-300">browse</span>
                   </p>
-                  <p className="text-xs text-gray-300 mt-2">
-                    JPEG, PNG, WEBP • 25MB max
+                  <p className="text-xs text-gray-400 mt-2">
+                    JPEG, PNG, WEBP
                   </p>
                 </div>
               </div>
@@ -434,18 +459,37 @@ export function UploadModal({ isOpen, onClose, galleryId }: UploadModalProps) {
 
             {/* Footer - Clean */}
             {uploads.length > 0 && (
-              <div className="px-5 py-4 border-t border-gray-100">
+              <div className="px-5 py-4 border-t border-gray-100 space-y-3">
+                {/* Auto-redirect toggle */}
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-gray-500">Auto-close when done</span>
+                  <button
+                    onClick={() => setAutoRedirect(!autoRedirect)}
+                    className="flex items-center gap-1.5 text-xs text-gray-600 hover:text-gray-900 transition-colors"
+                  >
+                    {autoRedirect ? (
+                      <ToggleRight className="w-6 h-6 text-gray-900" />
+                    ) : (
+                      <ToggleLeft className="w-6 h-6 text-gray-400" />
+                    )}
+                  </button>
+                </div>
+                
                 <div className="flex items-center justify-between">
                   <span className="text-xs text-gray-400">
                     {completedCount} of {uploads.length} uploaded
                   </span>
                   {allComplete ? (
-                    <button
-                      onClick={onClose}
-                      className="px-4 py-2 text-sm font-medium text-white bg-gray-900 hover:bg-gray-800 rounded-lg transition-colors"
-                    >
-                      Done
-                    </button>
+                    autoRedirect ? (
+                      <span className="text-xs text-green-600 font-medium">Redirecting...</span>
+                    ) : (
+                      <button
+                        onClick={onClose}
+                        className="px-4 py-2 text-sm font-medium text-white bg-gray-900 hover:bg-gray-800 rounded-lg transition-colors"
+                      >
+                        Done
+                      </button>
+                    )
                   ) : isUploading ? (
                     <span className="text-xs text-gray-500">
                       Uploading...
@@ -532,6 +576,15 @@ export function UploadModal({ isOpen, onClose, galleryId }: UploadModalProps) {
           </AnimatePresence>
         </motion.div>
       )}
+      
+      {/* Large Upload Overlay */}
+      <LargeUploadOverlay
+        isVisible={showLargeUploadOverlay}
+        totalFiles={uploads.length}
+        completedFiles={completedCount}
+        totalProgress={totalProgress}
+        estimatedMinutes={estimatedMinutes}
+      />
     </AnimatePresence>
   )
 }

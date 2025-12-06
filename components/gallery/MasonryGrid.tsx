@@ -7,7 +7,9 @@ import { FullscreenViewer } from './FullscreenViewer'
 
 interface Image {
   id: string
-  signedUrl: string
+  thumbnailUrl: string  // 400px for grid display
+  previewUrl: string    // 1920px for fullscreen viewing
+  originalUrl: string   // Full resolution for downloads only
   width?: number | null
   height?: number | null
 }
@@ -27,11 +29,11 @@ const BREAKPOINTS = {
 }
 
 const COLUMNS_BY_BREAKPOINT = {
-  default: 3,
-  sm: 4,
-  md: 5,
-  lg: 6,
-  xl: 8,
+  default: 2,
+  sm: 3,
+  md: 4,
+  lg: 4,
+  xl: 5,
 }
 
 function getColumnCount(width: number): number {
@@ -115,9 +117,10 @@ export function MasonryGrid({ images: initialImages, editable = false, galleryId
     <>
       <div
         ref={containerRef}
+        className="w-full"
         style={{
           columnCount: columns,
-          columnGap: '0.375rem',
+          columnGap: '0.5rem',
         }}
       >
         {images.map((image, index) => (

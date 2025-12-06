@@ -29,8 +29,8 @@ export function GalleryCard({ gallery }: GalleryCardProps) {
   const [copied, setCopied] = useState(false)
 
   const shareUrl = typeof window !== 'undefined' 
-    ? `${window.location.origin}/g/${gallery.slug}`
-    : `/g/${gallery.slug}`
+    ? `${window.location.origin}/view-reel/${gallery.id}`
+    : `/view-reel/${gallery.id}`
 
   const formattedDate = new Date(gallery.createdAt).toLocaleDateString('en-US', {
     month: 'short',

@@ -163,7 +163,7 @@ export async function confirmUploads(request: {
 
   // Revalidate paths
   if (gallery) {
-    revalidatePath(`/g/${gallery.slug}`)
+    revalidatePath(`/view-reel/${gallery.id}`)
   }
   revalidatePath(`/gallery/${request.galleryId}/upload`)
   revalidatePath('/')

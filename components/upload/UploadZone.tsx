@@ -5,10 +5,11 @@ import { useRouter } from 'next/navigation'
 import { Upload, Plus } from 'lucide-react'
 import { generateSignedUploadUrls, confirmUploads } from '@/server/actions/upload.actions'
 import { Button } from '@/components/ui/button'
-import { ALLOWED_MIME_TYPES, MAX_FILE_SIZE, MAX_CONCURRENT_UPLOADS, SIGNED_URL_BATCH_SIZE } from '@/lib/utils/constants'
+import { ALLOWED_MIME_TYPES, MAX_FILE_SIZE, MAX_CONCURRENT_UPLOADS, SIGNED_URL_BATCH_SIZE, LARGE_UPLOAD_THRESHOLD } from '@/lib/utils/constants'
 import { DropOverlay } from './DropOverlay'
 import { FileStagingList } from './FileStagingList'
 import { FileItemState } from './FileItem'
+import { LargeUploadOverlay } from './LargeUploadOverlay'
 import { motion } from 'framer-motion'
 
 interface UploadZoneProps {
@@ -23,6 +24,22 @@ export function UploadZone({ galleryId, onUploadComplete }: UploadZoneProps) {
   const [isDragging, setIsDragging] = useState(false)
   const [isUploading, setIsUploading] = useState(false)
   const isUploadingRef = useRef(false)
+  const uploadStartTime = useRef<number>(0)
+
+  // Calculate progress for large upload overlay
+  const totalFiles = uploads.length
+  const completedFiles = uploads.filter(u => u.status === 'completed').length
+  const totalProgress = totalFiles > 0 ? Math.round((completedFiles / totalFiles) * 100) : 0
+  const showLargeUploadOverlay = isUploading && totalFiles >= LARGE_UPLOAD_THRESHOLD
+  
+  // Estimate remaining time based on upload speed
+  const estimatedMinutes = (() => {
+    if (!isUploading || completedFiles === 0) return 0
+    const elapsed = (Date.now() - uploadStartTime.current) / 1000 / 60 // minutes
+    const rate = completedFiles / elapsed // files per minute
+    const remaining = totalFiles - completedFiles
+    return Math.ceil(remaining / rate)
+  })()
 
   // Auto-upload: Start uploading when new pending files are added
   useEffect(() => {
@@ -129,6 +146,7 @@ export function UploadZone({ galleryId, onUploadComplete }: UploadZoneProps) {
     
     isUploadingRef.current = true
     setIsUploading(true)
+    uploadStartTime.current = Date.now() // Track start time for estimates
 
     // Get current pending items from state
     let pendingItems: FileItemState[] = []
@@ -279,6 +297,15 @@ export function UploadZone({ galleryId, onUploadComplete }: UploadZoneProps) {
     <div className="h-full flex flex-col">
       <DropOverlay isVisible={isDragging} />
       
+      {/* Large Upload Experience - Coffee Break Overlay */}
+      <LargeUploadOverlay
+        isVisible={showLargeUploadOverlay}
+        totalFiles={totalFiles}
+        completedFiles={completedFiles}
+        totalProgress={totalProgress}
+        estimatedMinutes={estimatedMinutes}
+      />
+      
       {/* Drop Target */}
       <div 
         onDrop={handleDrop}
@@ -305,7 +332,7 @@ export function UploadZone({ galleryId, onUploadComplete }: UploadZoneProps) {
               </p>
             </div>
             <p className="text-[10px] text-gray-400 uppercase tracking-wider font-medium mt-2">
-              JPEG, PNG, WEBP • MAX 25MB
+              JPEG, PNG, WEBP
             </p>
           </div>
         </motion.div>

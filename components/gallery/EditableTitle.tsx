@@ -78,7 +78,7 @@ export function EditableTitle({ galleryId, initialTitle, currentSlug, className 
         <button
           onClick={handleSave}
           disabled={isPending}
-          className="p-1 text-gray-400 hover:text-gray-900 transition-colors"
+          className="p-1 text-gray-400 hover:text-gray-900"
         >
           <Check className="w-4 h-4" />
         </button>
@@ -91,10 +91,10 @@ export function EditableTitle({ galleryId, initialTitle, currentSlug, className 
       onClick={() => setIsEditing(true)}
       className={`group relative text-left font-semibold tracking-tight ${className}`}
     >
-      <span className="border-b-2 border-transparent group-hover:border-gray-300 transition-colors">
+      <span className="border-b-2 border-transparent group-hover:border-gray-300">
         {title}
       </span>
-      <Pencil className="inline-block ml-2 w-4 h-4 text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity -translate-y-0.5" />
+      <Pencil className="inline-block ml-2 w-4 h-4 text-gray-300 opacity-0 group-hover:opacity-100 -translate-y-0.5" />
     </button>
   )
 }

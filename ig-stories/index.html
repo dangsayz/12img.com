@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>12img Instagram Stories</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif;
+      background: #0a0a0a;
+      color: #fff;
+      min-height: 100vh;
+      padding: 40px;
+    }
+    h1 {
+      font-size: 24px;
+      font-weight: 300;
+      margin-bottom: 8px;
+      letter-spacing: -0.02em;
+    }
+    p { color: #888; margin-bottom: 40px; }
+    .grid {
+      display: flex;
+      gap: 24px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .story-frame {
+      width: 270px;
+      height: 480px;
+      border-radius: 24px;
+      overflow: hidden;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+      cursor: pointer;
+      transition: transform 0.3s ease;
+    }
+    .story-frame:hover { transform: scale(1.02); }
+    .story-frame iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+      pointer-events: none;
+    }
+    .label {
+      text-align: center;
+      margin-top: 16px;
+      font-size: 14px;
+      color: #666;
+    }
+    a { color: inherit; text-decoration: none; }
+  </style>
+</head>
+<body>
+  <h1>12img — Instagram Story Mockups</h1>
+  <p>Click any story to open full-size (1080×1920). Right-click → Save As to export.</p>
+  
+  <div class="grid">
+    <div>
+      <a href="story-1-hero.html" target="_blank">
+        <div class="story-frame">
+          <iframe src="story-1-hero.html"></iframe>
+        </div>
+      </a>
+      <p class="label">Hero — Create Your Gallery</p>
+    </div>
+    
+    <div>
+      <a href="story-2-features.html" target="_blank">
+        <div class="story-frame">
+          <iframe src="story-2-features.html"></iframe>
+        </div>
+      </a>
+      <p class="label">Features — Upload • Deliver • Get Paid</p>
+    </div>
+    
+    <div>
+      <a href="story-3-social-proof.html" target="_blank">
+        <div class="story-frame">
+          <iframe src="story-3-social-proof.html"></iframe>
+        </div>
+      </a>
+      <p class="label">Social Proof — Trusted Worldwide</p>
+    </div>
+    
+    <div>
+      <a href="story-4-urgency.html" target="_blank">
+        <div class="story-frame">
+          <iframe src="story-4-urgency.html"></iframe>
+        </div>
+      </a>
+      <p class="label">Urgency — Limited Beta Access</p>
+    </div>
+    
+    <div>
+      <a href="story-5-testimonial.html" target="_blank">
+        <div class="story-frame">
+          <iframe src="story-5-testimonial.html"></iframe>
+        </div>
+      </a>
+      <p class="label">Testimonial — Speed & Efficiency</p>
+    </div>
+  </div>
+</body>
+</html>

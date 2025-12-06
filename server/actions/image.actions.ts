@@ -74,7 +74,7 @@ export async function deleteImage(imageId: string) {
   // Revalidate all relevant paths
   if (gallery) {
     revalidatePath(`/gallery/${gallery.id}`)
-    revalidatePath(`/g/${gallery.slug}`)
+    revalidatePath(`/view-reel/${gallery.id}`)
   }
   revalidatePath('/')
 

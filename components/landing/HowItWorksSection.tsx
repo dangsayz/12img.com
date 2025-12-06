@@ -120,7 +120,7 @@ export function HowItWorksSection() {
                     />
                   </div>
                   <div className="flex flex-col min-w-0">
-                    <span className="text-xs text-gray-400 font-medium truncate">12img.com/g/</span>
+                    <span className="text-xs text-gray-400 font-medium truncate">12img.com/</span>
                     <span className="text-sm font-semibold text-gray-900 truncate">wedding-2024</span>
                   </div>
                 </div>

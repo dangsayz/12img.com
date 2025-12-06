@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=1080, height=1920">
+  <title>Story 3 — Social Proof</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    body {
+      width: 1080px;
+      height: 1920px;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: linear-gradient(180deg, #0a0a0a 0%, #141414 100%);
+      color: #fff;
+      overflow: hidden;
+      position: relative;
+    }
+    
+    .container {
+      width: 100%;
+      height: 100%;
+      padding: 80px 64px;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+    
+    /* Header */
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 60px;
+    }
+    .logo-icon {
+      width: 48px;
+      height: 48px;
+      background: linear-gradient(135deg, #fb923c, #ea580c);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 18px;
+    }
+    .logo-text {
+      font-size: 28px;
+      font-weight: 600;
+    }
+    
+    /* Stats section */
+    .stats {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 80px;
+      padding: 48px;
+      background: rgba(255,255,255,0.03);
+      border-radius: 24px;
+      border: 1px solid rgba(255,255,255,0.06);
+    }
+    .stat {
+      text-align: center;
+    }
+    .stat-number {
+      font-size: 64px;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      background: linear-gradient(135deg, #fff 0%, rgba(255,255,255,0.7) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .stat-label {
+      font-size: 24px;
+      color: rgba(255,255,255,0.5);
+      margin-top: 8px;
+    }
+    
+    /* Main headline */
+    .headline {
+      font-size: 80px;
+      font-weight: 700;
+      line-height: 1;
+      letter-spacing: -0.04em;
+      text-align: center;
+      margin-bottom: 80px;
+    }
+    .headline-accent {
+      color: #fb923c;
+    }
+    
+    /* Testimonials */
+    .testimonials {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 32px;
+    }
+    
+    .testimonial {
+      background: linear-gradient(145deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 28px;
+      padding: 40px;
+    }
+    
+    .testimonial-text {
+      font-size: 30px;
+      line-height: 1.5;
+      color: rgba(255,255,255,0.9);
+      margin-bottom: 32px;
+      font-style: italic;
+    }
+    
+    .testimonial-author {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+    .author-avatar {
+      width: 64px;
+      height: 64px;
+      background: linear-gradient(135deg, #374151, #1f2937);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+    }
+    .author-info h4 {
+      font-size: 26px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+    .author-info p {
+      font-size: 22px;
+      color: rgba(255,255,255,0.5);
+    }
+    .stars {
+      margin-left: auto;
+      font-size: 28px;
+      color: #fbbf24;
+    }
+    
+    /* Trust badges */
+    .trust-badges {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 48px;
+      padding: 48px 0;
+      border-top: 1px solid rgba(255,255,255,0.08);
+      margin-top: 48px;
+    }
+    .trust-badge {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      color: rgba(255,255,255,0.4);
+    }
+    .trust-badge-icon {
+      font-size: 40px;
+    }
+    .trust-badge-text {
+      font-size: 20px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+    
+    /* CTA */
+    .cta {
+      width: 100%;
+      height: 120px;
+      background: linear-gradient(135deg, #fb923c 0%, #ea580c 100%);
+      border-radius: 22px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 36px;
+      font-weight: 600;
+      color: #fff;
+      box-shadow: 0 8px 32px rgba(251,146,60,0.3);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="logo-icon">12</div>
+      <div class="logo-text">12img</div>
+    </div>
+    
+    <div class="stats">
+      <div class="stat">
+        <div class="stat-number">10K+</div>
+        <div class="stat-label">Photographers</div>
+      </div>
+      <div class="stat">
+        <div class="stat-number">2M+</div>
+        <div class="stat-label">Images Delivered</div>
+      </div>
+      <div class="stat">
+        <div class="stat-number">99%</div>
+        <div class="stat-label">Satisfaction</div>
+      </div>
+    </div>
+    
+    <h1 class="headline">
+      Trusted by<br>
+      Photographers<br>
+      <span class="headline-accent">Worldwide</span>
+    </h1>
+    
+    <div class="testimonials">
+      <div class="testimonial">
+        <p class="testimonial-text">
+          "Finally, a gallery solution that matches the quality of my work. My clients love it."
+        </p>
+        <div class="testimonial-author">
+          <div class="author-avatar">👩‍🎨</div>
+          <div class="author-info">
+            <h4>Sarah Mitchell</h4>
+            <p>Wedding Photographer</p>
+          </div>
+          <div class="stars">★★★★★</div>
+        </div>
+      </div>
+      
+      <div class="testimonial">
+        <p class="testimonial-text">
+          "Saves me 5+ hours every week. The auto-backup alone is worth it."
+        </p>
+        <div class="testimonial-author">
+          <div class="author-avatar">📸</div>
+          <div class="author-info">
+            <h4>Marcus Chen</h4>
+            <p>Portrait Studio</p>
+          </div>
+          <div class="stars">★★★★★</div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="trust-badges">
+      <div class="trust-badge">
+        <span class="trust-badge-icon">🔒</span>
+        <span class="trust-badge-text">Secure</span>
+      </div>
+      <div class="trust-badge">
+        <span class="trust-badge-icon">⚡</span>
+        <span class="trust-badge-text">Fast</span>
+      </div>
+      <div class="trust-badge">
+        <span class="trust-badge-icon">💯</span>
+        <span class="trust-badge-text">Reliable</span>
+      </div>
+    </div>
+    
+    <div class="cta">
+      Join 10,000+ Photographers →
+    </div>
+  </div>
+</body>
+</html>

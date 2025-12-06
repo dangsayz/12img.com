@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=1080, height=1920">
+  <title>Story 1 — Hero</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    body {
+      width: 1080px;
+      height: 1920px;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: linear-gradient(180deg, #0c0c0c 0%, #1a1a1a 50%, #0c0c0c 100%);
+      color: #fff;
+      overflow: hidden;
+      position: relative;
+    }
+    
+    /* Ambient glow */
+    .glow {
+      position: absolute;
+      width: 800px;
+      height: 800px;
+      background: radial-gradient(circle, rgba(251,146,60,0.15) 0%, transparent 70%);
+      top: 200px;
+      left: 50%;
+      transform: translateX(-50%);
+      pointer-events: none;
+    }
+    
+    /* Content container */
+    .container {
+      width: 100%;
+      height: 100%;
+      padding: 80px 64px;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      z-index: 1;
+    }
+    
+    /* Logo */
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 120px;
+    }
+    .logo-icon {
+      width: 56px;
+      height: 56px;
+      background: linear-gradient(135deg, #fb923c 0%, #f97316 100%);
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 24px;
+    }
+    .logo-text {
+      font-size: 32px;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+    }
+    
+    /* Hero text */
+    .hero {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+    
+    .headline {
+      font-size: 88px;
+      font-weight: 700;
+      line-height: 0.95;
+      letter-spacing: -0.04em;
+      margin-bottom: 40px;
+    }
+    .headline span {
+      background: linear-gradient(135deg, #fb923c 0%, #f97316 50%, #ea580c 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    
+    .subheadline {
+      font-size: 36px;
+      font-weight: 400;
+      color: rgba(255,255,255,0.6);
+      line-height: 1.4;
+      max-width: 800px;
+    }
+    
+    /* Mock UI preview */
+    .ui-preview {
+      width: 100%;
+      height: 480px;
+      margin: 80px 0;
+      background: linear-gradient(145deg, #1f1f1f 0%, #141414 100%);
+      border-radius: 32px;
+      border: 1px solid rgba(255,255,255,0.08);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .ui-preview::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+    }
+    .ui-preview-text {
+      font-size: 28px;
+      color: rgba(255,255,255,0.3);
+      font-weight: 500;
+    }
+    
+    /* CTA Button */
+    .cta {
+      width: 100%;
+      height: 120px;
+      background: linear-gradient(135deg, #fff 0%, #f5f5f5 100%);
+      border-radius: 22px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+      font-size: 36px;
+      font-weight: 600;
+      color: #0c0c0c;
+      letter-spacing: -0.01em;
+      box-shadow: 
+        0 4px 24px rgba(0,0,0,0.3),
+        inset 0 1px 0 rgba(255,255,255,0.8);
+      position: relative;
+      overflow: hidden;
+    }
+    .cta::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 50%;
+      background: linear-gradient(180deg, rgba(255,255,255,0.4) 0%, transparent 100%);
+    }
+    .cta-arrow {
+      font-size: 32px;
+    }
+    
+    /* Bottom safe zone */
+    .swipe-hint {
+      text-align: center;
+      padding-top: 48px;
+      font-size: 24px;
+      color: rgba(255,255,255,0.4);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
+    .swipe-icon {
+      width: 40px;
+      height: 40px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 0.4; transform: translateY(0); }
+      50% { opacity: 1; transform: translateY(-4px); }
+    }
+  </style>
+</head>
+<body>
+  <div class="glow"></div>
+  
+  <div class="container">
+    <div class="logo">
+      <div class="logo-icon">12</div>
+      <div class="logo-text">12img</div>
+    </div>
+    
+    <div class="hero">
+      <h1 class="headline">
+        Create Your<br>
+        Gallery in<br>
+        <span>Seconds</span>
+      </h1>
+      <p class="subheadline">
+        The fastest way to deliver photos to your clients. Beautiful. Simple. Professional.
+      </p>
+    </div>
+    
+    <div class="ui-preview">
+      <span class="ui-preview-text">[ Platform Screenshot ]</span>
+    </div>
+    
+    <div class="cta">
+      Get Started Free <span class="cta-arrow">→</span>
+    </div>
+    
+    <div class="swipe-hint">
+      <div class="swipe-icon">↑</div>
+      Swipe up
+    </div>
+  </div>
+</body>
+</html>

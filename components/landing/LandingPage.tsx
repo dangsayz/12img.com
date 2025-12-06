@@ -91,7 +91,7 @@ export function LandingPage() {
                   Get Started <IconArrowRight className="w-4 h-4" />
                 </Link>
                 <Link 
-                  href="/g/demo"
+                  href="/view-reel/demo"
                   className="inline-flex items-center gap-2 px-6 py-3.5 bg-white text-[#1C1917] font-semibold rounded-xl border border-[#E8E4DC] hover:border-[#1C1917] transition-colors"
                 >
                   View Demo
@@ -131,7 +131,7 @@ export function LandingPage() {
                   <div className="flex-1 flex justify-center">
                     <div className="flex items-center gap-1.5 px-3 py-1 bg-white rounded-md border border-[#E8E4DC] text-xs text-[#78716C]">
                       <IconLock className="w-3 h-3" />
-                      12img.com/g/wedding
+                      12img.com/wedding
                     </div>
                   </div>
                 </div>

@@ -149,11 +149,7 @@ export async function updateGallery(galleryId: string, formData: FormData) {
 
     revalidatePath('/')
     revalidatePath(`/gallery/${galleryId}`)
-    // Revalidate both old and new slug paths
-    revalidatePath(`/g/${gallery.slug}`)
-    if (data?.slug && data.slug !== gallery.slug) {
-      revalidatePath(`/g/${data.slug}`)
-    }
+    revalidatePath(`/view-reel/${galleryId}`)
 
     return { success: true, slug: data?.slug }
   } catch (e) {
@@ -197,7 +193,7 @@ export async function setCoverImage(galleryId: string, imageId: string | null) {
 
   revalidatePath('/')
   revalidatePath(`/gallery/${galleryId}`)
-  revalidatePath(`/g/${gallery.slug}`)
+  revalidatePath(`/view-reel/${galleryId}`)
 
   return { success: true }
 }

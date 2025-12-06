@@ -1,15 +1,17 @@
 'use client'
 
 import { useState, useRef, useCallback, useMemo } from 'react'
+import Link from 'next/link'
 import { motion, useScroll, useTransform, useInView, AnimatePresence } from 'framer-motion'
-import { Download, ChevronDown, Share2, Check, Loader2, Camera, X, ArrowLeft } from 'lucide-react'
-import { FullscreenViewer } from './FullscreenViewer'
+import { Download, ChevronDown, Share2, Check, Loader2, Camera, X, ArrowLeft, PlayCircle } from 'lucide-react'
 import { setCoverImage } from '@/server/actions/gallery.actions'
 import JSZip from 'jszip'
 
 interface Image {
   id: string
-  signedUrl: string
+  thumbnailUrl: string  // 400px for grid display
+  previewUrl: string    // 1920px for fullscreen viewing
+  originalUrl: string   // Full resolution for downloads only
   width?: number | null
   height?: number | null
 }
@@ -36,105 +38,215 @@ function getOrientation(width?: number | null, height?: number | null): Orientat
   return 'square'
 }
 
-// Visual psychology-based image card - 3:4 portrait ratio with share
-function GalleryImage({ 
+// Editorial image component - artsy display only, no click to enlarge
+function EditorialImage({ 
   image, 
   index, 
-  onClick,
-  gallerySlug,
-  priority = false
+  aspectRatio = '3/4',
+  priority = false,
+  className = ''
 }: { 
   image: Image
   index: number
-  onClick: () => void
-  gallerySlug?: string
+  aspectRatio?: string
   priority?: boolean
+  className?: string
 }) {
   const ref = useRef<HTMLDivElement>(null)
-  const isInView = useInView(ref, { once: true, margin: '-50px' })
+  const isInView = useInView(ref, { once: true, margin: '-100px' })
   const [hasError, setHasError] = useState(false)
-  const [showCopied, setShowCopied] = useState(false)
-  
-  // Share this specific image
-  const handleShare = async (e: React.MouseEvent) => {
-    e.stopPropagation()
-    if (!gallerySlug) return
-    
-    const imageUrl = `${window.location.origin}/g/${gallerySlug}/i/${image.id}`
-    
-    try {
-      await navigator.clipboard.writeText(imageUrl)
-      setShowCopied(true)
-      setTimeout(() => setShowCopied(false), 2000)
-    } catch {
-      const input = document.createElement('input')
-      input.value = imageUrl
-      document.body.appendChild(input)
-      input.select()
-      document.execCommand('copy')
-      document.body.removeChild(input)
-      setShowCopied(true)
-      setTimeout(() => setShowCopied(false), 2000)
-    }
-  }
   
   return (
     <motion.div
       ref={ref}
-      initial={{ opacity: 0, y: 20 }}
-      animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
+      initial={{ opacity: 0, y: 40 }}
+      animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 40 }}
       transition={{ 
-        duration: 0.5, 
-        delay: priority ? 0 : Math.min(index * 0.05, 0.2),
-        ease: 'easeOut'
+        duration: 0.8, 
+        delay: priority ? 0 : Math.min(index * 0.08, 0.3),
+        ease: [0.22, 1, 0.36, 1]
       }}
-      className="group relative"
+      className={`relative overflow-hidden ${className}`}
     >
-      {/* 3:4 Portrait aspect ratio - elegant and tall */}
       <div 
-        className="relative overflow-hidden cursor-pointer rounded-lg bg-neutral-200"
-        onClick={onClick}
-        style={{ aspectRatio: '3/4' }}
+        className="relative overflow-hidden bg-neutral-100"
+        style={{ aspectRatio }}
       >
-        {hasError || !image.signedUrl ? (
-          <div className="absolute inset-0 flex items-center justify-center bg-neutral-200">
-            <span className="text-neutral-400 text-sm">Failed to load</span>
+        {hasError || !image.thumbnailUrl ? (
+          <div className="absolute inset-0 flex items-center justify-center bg-neutral-100">
+            <span className="text-neutral-300 text-sm">Image unavailable</span>
           </div>
         ) : (
-          <img
-            src={image.signedUrl}
-            alt=""
-            loading={priority ? 'eager' : 'lazy'}
-            onError={() => setHasError(true)}
-            className="w-full h-full object-cover object-center transition-transform duration-500 ease-out group-hover:scale-[1.02]"
-          />
+          <>
+            <img
+              src={image.previewUrl || image.thumbnailUrl}
+              alt=""
+              loading={priority ? 'eager' : 'lazy'}
+              onError={() => setHasError(true)}
+              className="w-full h-full object-cover object-center"
+              draggable={false}
+              onContextMenu={(e) => e.preventDefault()}
+            />
+            {/* Subtle film grain overlay for artsy feel */}
+            <div 
+              className="absolute inset-0 opacity-[0.08] pointer-events-none mix-blend-overlay"
+              style={{
+                backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
+                backgroundRepeat: 'repeat',
+                backgroundSize: '100px 100px',
+              }}
+            />
+          </>
         )}
-        
-        {/* Hover overlay with share button */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-          {/* Share button */}
-          {gallerySlug && (
-            <button
-              onClick={handleShare}
-              className="absolute bottom-3 right-3 flex items-center gap-1.5 px-3 py-2 bg-white/95 hover:bg-white rounded-full text-neutral-800 text-xs font-medium shadow-lg transition-all hover:scale-105"
-            >
-              {showCopied ? (
-                <>
-                  <Check className="w-3.5 h-3.5 text-green-600" />
-                  <span>Copied!</span>
-                </>
-              ) : (
-                <>
-                  <Share2 className="w-3.5 h-3.5" />
-                  <span>Share</span>
-                </>
-              )}
-            </button>
-          )}
-        </div>
       </div>
     </motion.div>
   )
+}
+
+// Editorial row layouts for magazine-style presentation
+function EditorialRow({ 
+  images, 
+  startIndex,
+  layout 
+}: { 
+  images: Image[]
+  startIndex: number
+  layout: 'full' | 'split' | 'trio' | 'asymmetric' | 'stagger'
+}) {
+  const ref = useRef<HTMLDivElement>(null)
+  const isInView = useInView(ref, { once: true, margin: '-50px' })
+  
+  if (layout === 'full' && images[0]) {
+    // Full-width cinematic image
+    return (
+      <motion.div 
+        ref={ref}
+        className="mb-4 sm:mb-6 md:mb-8"
+        initial={{ opacity: 0 }}
+        animate={isInView ? { opacity: 1 } : { opacity: 0 }}
+        transition={{ duration: 1, ease: 'easeOut' }}
+      >
+        <EditorialImage 
+          image={images[0]} 
+          index={startIndex} 
+          aspectRatio="16/9"
+          priority={startIndex < 3}
+          className="rounded-sm sm:rounded-md"
+        />
+      </motion.div>
+    )
+  }
+  
+  if (layout === 'split' && images.length >= 2) {
+    // Two images side by side
+    return (
+      <div ref={ref} className="grid grid-cols-2 gap-3 sm:gap-4 md:gap-6 mb-4 sm:mb-6 md:mb-8">
+        <EditorialImage 
+          image={images[0]} 
+          index={startIndex} 
+          aspectRatio="3/4"
+          priority={startIndex < 4}
+          className="rounded-sm sm:rounded-md"
+        />
+        <EditorialImage 
+          image={images[1]} 
+          index={startIndex + 1} 
+          aspectRatio="3/4"
+          priority={startIndex < 4}
+          className="rounded-sm sm:rounded-md"
+        />
+      </div>
+    )
+  }
+  
+  if (layout === 'trio' && images.length >= 3) {
+    // Three images in a row
+    return (
+      <div ref={ref} className="grid grid-cols-3 gap-2 sm:gap-3 md:gap-4 mb-4 sm:mb-6 md:mb-8">
+        {images.slice(0, 3).map((img, i) => (
+          <EditorialImage 
+            key={img.id}
+            image={img} 
+            index={startIndex + i} 
+            aspectRatio="4/5"
+            className="rounded-sm sm:rounded-md"
+          />
+        ))}
+      </div>
+    )
+  }
+  
+  if (layout === 'asymmetric' && images.length >= 2) {
+    // One large, one small stacked vertically
+    return (
+      <div ref={ref} className="grid grid-cols-5 gap-3 sm:gap-4 md:gap-6 mb-4 sm:mb-6 md:mb-8">
+        <div className="col-span-3">
+          <EditorialImage 
+            image={images[0]} 
+            index={startIndex} 
+            aspectRatio="4/5"
+            className="rounded-sm sm:rounded-md"
+          />
+        </div>
+        <div className="col-span-2 flex flex-col gap-3 sm:gap-4 md:gap-6">
+          <EditorialImage 
+            image={images[1]} 
+            index={startIndex + 1} 
+            aspectRatio="1/1"
+            className="rounded-sm sm:rounded-md"
+          />
+          {images[2] && (
+            <EditorialImage 
+              image={images[2]} 
+              index={startIndex + 2} 
+              aspectRatio="1/1"
+              className="rounded-sm sm:rounded-md"
+            />
+          )}
+        </div>
+      </div>
+    )
+  }
+  
+  if (layout === 'stagger' && images.length >= 2) {
+    // Staggered two-column with offset
+    return (
+      <div ref={ref} className="grid grid-cols-2 gap-3 sm:gap-4 md:gap-6 mb-4 sm:mb-6 md:mb-8">
+        <div className="pt-0 sm:pt-8 md:pt-12">
+          <EditorialImage 
+            image={images[0]} 
+            index={startIndex} 
+            aspectRatio="3/4"
+            className="rounded-sm sm:rounded-md"
+          />
+        </div>
+        <div>
+          <EditorialImage 
+            image={images[1]} 
+            index={startIndex + 1} 
+            aspectRatio="3/4"
+            className="rounded-sm sm:rounded-md"
+          />
+        </div>
+      </div>
+    )
+  }
+  
+  // Fallback: single image
+  if (images[0]) {
+    return (
+      <div ref={ref} className="mb-4 sm:mb-6 md:mb-8 max-w-2xl mx-auto">
+        <EditorialImage 
+          image={images[0]} 
+          index={startIndex} 
+          aspectRatio="3/4"
+          className="rounded-sm sm:rounded-md"
+        />
+      </div>
+    )
+  }
+  
+  return null
 }
 
 // Hero section image with parallax
@@ -143,12 +255,14 @@ function HeroImage({
   title,
   isOwner,
   gallerySlug,
+  galleryId,
   onChangeCover
 }: { 
   image: Image
   title: string
   isOwner?: boolean
   gallerySlug?: string
+  galleryId?: string
   onChangeCover?: () => void
 }) {
   const { scrollY } = useScroll()
@@ -179,7 +293,7 @@ function HeroImage({
   }
   
   // Debug
-  console.log('[HeroImage] URL:', image.signedUrl?.substring(0, 100) + '...')
+  console.log('[HeroImage] URL:', image.thumbnailUrl?.substring(0, 100) + '...')
   
   return (
     <section 
@@ -189,9 +303,9 @@ function HeroImage({
     >
       {/* Parallax background - Show immediately */}
       <motion.div className="absolute inset-0" style={{ y, scale }}>
-        {image.signedUrl && !hasError ? (
+        {image.thumbnailUrl && !hasError ? (
           <img
-            src={image.signedUrl}
+            src={image.thumbnailUrl}
             alt=""
             className="w-full h-full object-cover object-center"
             onError={() => {
@@ -274,7 +388,7 @@ function HeroImage({
           </h1>
           
           {/* Elegant divider */}
-          <div className="w-12 sm:w-16 h-px bg-white/40 mx-auto mb-4 sm:mb-6" />
+          <div className="w-12 sm:w-16 h-px bg-white/40 mx-auto mb-6" />
           
           {/* Scroll prompt */}
           <motion.div
@@ -351,7 +465,7 @@ function CoverPickerModal({
                   } ${isUpdating ? 'opacity-50 cursor-not-allowed' : ''}`}
                 >
                   <img
-                    src={image.signedUrl}
+                    src={image.thumbnailUrl}
                     alt=""
                     className="w-full h-full object-cover"
                   />
@@ -389,34 +503,11 @@ export function PublicGalleryView({
   gallerySlug,
   coverImageId
 }: PublicGalleryViewProps) {
-  const [viewerOpen, setViewerOpen] = useState(false)
-  const [viewerIndex, setViewerIndex] = useState(0)
   const [isDownloading, setIsDownloading] = useState(false)
   const [showCopied, setShowCopied] = useState(false)
   const [coverPickerOpen, setCoverPickerOpen] = useState(false)
   const [isUpdatingCover, setIsUpdatingCover] = useState(false)
   const [currentCoverId, setCurrentCoverId] = useState(coverImageId)
-
-  const handleImageClick = useCallback((index: number) => {
-    setViewerIndex(index)
-    setViewerOpen(true)
-  }, [])
-
-  const handleViewerClose = useCallback(() => {
-    setViewerOpen(false)
-  }, [])
-
-  const handleViewerNavigate = useCallback(
-    (direction: 'prev' | 'next') => {
-      setViewerIndex((current) => {
-        if (direction === 'prev') {
-          return current > 0 ? current - 1 : images.length - 1
-        }
-        return current < images.length - 1 ? current + 1 : 0
-      })
-    },
-    [images.length]
-  )
 
   // Download all images as ZIP (client-side)
   const handleDownloadAll = useCallback(async () => {
@@ -428,10 +519,11 @@ export function PublicGalleryView({
       const zip = new JSZip()
       
       // Download each image and add to ZIP
+      // Use originalUrl for full-resolution downloads
       for (let i = 0; i < images.length; i++) {
         const image = images[i]
         try {
-          const response = await fetch(image.signedUrl)
+          const response = await fetch(image.originalUrl)
           if (!response.ok) continue
           
           const blob = await response.blob()
@@ -518,9 +610,62 @@ export function PublicGalleryView({
     return images[0]
   }, [images, currentCoverId])
   
-  // Gallery images - show ALL images including cover
-  // Cover appears in hero AND in grid for complete viewing
-  const galleryImages = images
+  // Gallery images - all except cover (shown in hero)
+  const galleryImages = images.filter(img => img.id !== currentCoverId)
+  
+  // Generate editorial layout pattern based on image count
+  const editorialLayout = useMemo(() => {
+    const layouts: { layout: 'full' | 'split' | 'trio' | 'asymmetric' | 'stagger', count: number }[] = []
+    const imgs = galleryImages
+    let remaining = imgs.length
+    let index = 0
+    
+    // Start with a statement piece if we have enough images
+    if (remaining >= 5) {
+      layouts.push({ layout: 'full', count: 1 })
+      remaining -= 1
+      index += 1
+    }
+    
+    // Alternate through patterns for visual variety
+    const patterns: ('split' | 'trio' | 'asymmetric' | 'stagger' | 'full')[] = [
+      'split', 'trio', 'asymmetric', 'stagger', 'full', 'split', 'trio'
+    ]
+    let patternIndex = 0
+    
+    while (remaining > 0) {
+      const pattern = patterns[patternIndex % patterns.length]
+      
+      if (pattern === 'full' && remaining >= 1) {
+        layouts.push({ layout: 'full', count: 1 })
+        remaining -= 1
+      } else if (pattern === 'split' && remaining >= 2) {
+        layouts.push({ layout: 'split', count: 2 })
+        remaining -= 2
+      } else if (pattern === 'trio' && remaining >= 3) {
+        layouts.push({ layout: 'trio', count: 3 })
+        remaining -= 3
+      } else if (pattern === 'asymmetric' && remaining >= 2) {
+        const count = remaining >= 3 ? 3 : 2
+        layouts.push({ layout: 'asymmetric', count })
+        remaining -= count
+      } else if (pattern === 'stagger' && remaining >= 2) {
+        layouts.push({ layout: 'stagger', count: 2 })
+        remaining -= 2
+      } else if (remaining === 1) {
+        layouts.push({ layout: 'full', count: 1 })
+        remaining -= 1
+      } else {
+        // Fallback to split for 2 remaining
+        layouts.push({ layout: 'split', count: Math.min(2, remaining) })
+        remaining -= Math.min(2, remaining)
+      }
+      
+      patternIndex++
+    }
+    
+    return layouts
+  }, [galleryImages])
 
   return (
     <div className="min-h-screen bg-[#FAFAFA]">
@@ -531,6 +676,7 @@ export function PublicGalleryView({
           title={title} 
           isOwner={isOwner}
           gallerySlug={gallerySlug}
+          galleryId={galleryId}
           onChangeCover={() => setCoverPickerOpen(true)}
         />
       )}
@@ -552,6 +698,15 @@ export function PublicGalleryView({
           </div>
 
           <div className="flex items-center gap-2">
+            {/* Watch Reel Button */}
+            <Link 
+              href={`/view-reel/${galleryId}`}
+              className="flex items-center gap-2 px-3 sm:px-4 py-2 sm:py-2.5 text-sm font-medium text-white bg-neutral-900 hover:bg-neutral-800 rounded-full transition-colors"
+            >
+              <PlayCircle className="w-4 h-4" />
+              <span className="hidden sm:inline">Watch</span>
+            </Link>
+
             {/* Share button */}
             <button 
               onClick={handleShare}
@@ -607,40 +762,45 @@ export function PublicGalleryView({
 
       {/* Gallery Section - Psychology-based layout */}
       <section className="max-w-[1800px] mx-auto px-4 sm:px-6 md:px-12 py-10 sm:py-16 md:py-24">
-        {/* Section title - Clean and minimal */}
+        {/* Section intro - Editorial style */}
         <motion.div 
-          className="text-center mb-10 sm:mb-14 md:mb-20"
+          className="text-center mb-12 sm:mb-16 md:mb-24"
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.8 }}
         >
-          <h2 className="text-xl sm:text-2xl md:text-3xl text-neutral-800 font-medium tracking-tight mb-2">
-            {title}
-          </h2>
-          <p className="text-neutral-400 text-xs sm:text-sm">
-            Tap any image to view in full screen
+          <p className="text-neutral-400 text-xs sm:text-sm uppercase tracking-[0.2em] mb-3">
+            The Collection
           </p>
+          <h2 className="font-serif text-2xl sm:text-3xl md:text-4xl text-neutral-800 font-light tracking-tight">
+            {galleryImages.length} Moments Captured
+          </h2>
+          {downloadEnabled && (
+            <p className="text-neutral-400 text-xs sm:text-sm mt-4">
+              Download all images using the button above
+            </p>
+          )}
         </motion.div>
 
-        {/* 
-          Elegant 3:4 Portrait Grid
-          - Mobile: 2 columns
-          - Tablet: 3 columns  
-          - Desktop: 4 columns
-          - All images 3:4 aspect ratio for visual harmony
-        */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-5">
-          {galleryImages.map((image, index) => (
-            <GalleryImage
-              key={image.id}
-              image={image}
-              index={index}
-              onClick={() => handleImageClick(images.findIndex(img => img.id === image.id))}
-              gallerySlug={gallerySlug}
-              priority={index < 8}
-            />
-          ))}
+        {/* Editorial Layout - Magazine-style varied compositions */}
+        <div className="max-w-6xl mx-auto">
+          {(() => {
+            let imageIndex = 0
+            return editorialLayout.map((row, rowIndex) => {
+              const rowImages = galleryImages.slice(imageIndex, imageIndex + row.count)
+              const startIdx = imageIndex
+              imageIndex += row.count
+              return (
+                <EditorialRow
+                  key={rowIndex}
+                  images={rowImages}
+                  startIndex={startIdx}
+                  layout={row.layout}
+                />
+              )
+            })
+          })()}
         </div>
       </section>
 
@@ -672,18 +832,6 @@ export function PublicGalleryView({
           </div>
         </div>
       </footer>
-
-      {/* Fullscreen Viewer */}
-      {viewerOpen && (
-        <FullscreenViewer
-          images={images}
-          currentIndex={viewerIndex}
-          onClose={handleViewerClose}
-          onNavigate={handleViewerNavigate}
-          galleryTitle={title}
-          gallerySlug={gallerySlug}
-        />
-      )}
 
       {/* Cover Picker Modal */}
       <AnimatePresence>

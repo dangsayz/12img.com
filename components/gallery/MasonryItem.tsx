@@ -6,7 +6,9 @@ import { deleteImage, setCoverImage } from '@/server/actions/image.actions'
 
 interface Image {
   id: string
-  signedUrl: string
+  thumbnailUrl: string  // 400px for grid display
+  previewUrl: string    // 1920px for fullscreen viewing
+  originalUrl: string   // Full resolution for downloads only
 }
 
 interface MasonryItemProps {
@@ -101,25 +103,25 @@ export function MasonryItem({
         }}
         className="cursor-pointer"
       >
-        {hasError || !image.signedUrl ? (
+        {hasError || !image.thumbnailUrl ? (
           <div className="aspect-square bg-gray-200 flex items-center justify-center">
             <span className="text-gray-400 text-xs">Failed to load</span>
           </div>
         ) : (
           <>
             <img
-              src={image.signedUrl}
+              src={image.thumbnailUrl}
               alt=""
               loading={index < 4 ? 'eager' : 'lazy'}
               decoding="async"
               onLoad={handleLoad}
               onError={() => setHasError(true)}
-              className={`w-full h-auto transition-[filter] duration-200 ${
+              className={`w-full h-auto ${
                 loaded ? 'opacity-100' : 'opacity-0'
               } ${isHovered && editable ? 'brightness-75' : ''}`}
               style={{ opacity: loaded ? 1 : 0 }}
             />
-            {!loaded && <div className="aspect-square animate-pulse bg-gray-200" />}
+            {!loaded && <div className="aspect-square bg-gray-200" />}
           </>
         )}
       </div>
@@ -134,7 +136,7 @@ export function MasonryItem({
               <button
                 onClick={handleSetCover}
                 disabled={isPending}
-                className="h-8 w-8 rounded-full bg-white/90 backdrop-blur-sm shadow-lg flex items-center justify-center hover:bg-white hover:scale-110 transition-all disabled:opacity-50"
+                className="h-8 w-8 rounded-full bg-white/90 backdrop-blur-sm shadow-lg flex items-center justify-center hover:bg-white disabled:opacity-50"
                 title="Set as cover"
               >
                 {isPending ? (
@@ -149,7 +151,7 @@ export function MasonryItem({
             <button
               onClick={handleDelete}
               disabled={isPending}
-              className={`h-8 rounded-full backdrop-blur-sm shadow-lg flex items-center justify-center transition-all disabled:opacity-50 ${
+              className={`h-8 rounded-full backdrop-blur-sm shadow-lg flex items-center justify-center disabled:opacity-50 ${
                 showDeleteConfirm 
                   ? 'bg-red-500 hover:bg-red-600 px-3 w-auto' 
                   : 'bg-white/90 hover:bg-white hover:scale-110 w-8'

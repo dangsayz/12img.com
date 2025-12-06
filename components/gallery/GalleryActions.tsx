@@ -9,7 +9,7 @@ import JSZip from 'jszip'
 interface GalleryActionsProps {
   galleryId: string
   gallerySlug: string
-  images?: { signedUrl: string; originalFilename?: string }[]
+  images?: { originalUrl: string; originalFilename?: string }[]  // Uses originalUrl for full-res downloads
   galleryTitle?: string
 }
 
@@ -28,7 +28,7 @@ export function GalleryActions({ galleryId, gallerySlug, images = [], galleryTit
       for (let i = 0; i < images.length; i++) {
         const image = images[i]
         try {
-          const response = await fetch(image.signedUrl)
+          const response = await fetch(image.originalUrl)
           if (!response.ok) continue
           
           const blob = await response.blob()
@@ -62,7 +62,7 @@ export function GalleryActions({ galleryId, gallerySlug, images = [], galleryTit
       <div className="flex items-center gap-2">
         <button 
           onClick={() => setIsUploadModalOpen(true)}
-          className="h-9 w-9 rounded-lg bg-white hover:bg-gray-50 border border-gray-200 flex items-center justify-center text-gray-600 hover:text-gray-900 transition-colors"
+          className="h-9 w-9 rounded-lg bg-white hover:bg-gray-50 border border-gray-200 flex items-center justify-center text-gray-600 hover:text-gray-900"
           title="Add Images"
         >
           <Plus className="w-4 h-4" />
@@ -70,7 +70,7 @@ export function GalleryActions({ galleryId, gallerySlug, images = [], galleryTit
         <button 
           onClick={handleDownloadZip}
           disabled={isDownloading || images.length === 0}
-          className="h-9 w-9 rounded-lg bg-white hover:bg-gray-50 border border-gray-200 flex items-center justify-center text-gray-600 hover:text-gray-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          className="h-9 w-9 rounded-lg bg-white hover:bg-gray-50 border border-gray-200 flex items-center justify-center text-gray-600 hover:text-gray-900 disabled:opacity-50 disabled:cursor-not-allowed"
           title={images.length === 0 ? "No images to download" : "Download ZIP"}
         >
           {isDownloading ? (
@@ -80,7 +80,7 @@ export function GalleryActions({ galleryId, gallerySlug, images = [], galleryTit
           )}
         </button>
         <a
-          href={`/g/${gallerySlug}`}
+          href={`/view-reel/${galleryId}`}
           target="_blank"
           rel="noopener noreferrer"
         >

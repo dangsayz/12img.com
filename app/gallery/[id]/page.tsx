@@ -5,7 +5,7 @@ import { ArrowLeft, Plus } from 'lucide-react'
 import { getOrCreateUserByClerkId, getUserWithUsage } from '@/server/queries/user.queries'
 import { getGalleryWithOwnershipCheck } from '@/server/queries/gallery.queries'
 import { getGalleryImages } from '@/server/queries/image.queries'
-import { getSignedUrlsBatch } from '@/lib/storage/signed-urls'
+import { getSignedUrlsWithSizes } from '@/lib/storage/signed-urls'
 import { Header } from '@/components/layout/Header'
 import { MasonryGrid } from '@/components/gallery/MasonryGrid'
 import { GalleryControlPanel } from '@/components/gallery/GalleryControlPanel'
@@ -44,16 +44,21 @@ export default async function GalleryViewPage({ params }: Props) {
   const images = await getGalleryImages(gallery.id)
   const signedUrls =
     images.length > 0
-      ? await getSignedUrlsBatch(images.map((img) => img.storage_path))
+      ? await getSignedUrlsWithSizes(images.map((img) => img.storage_path))
       : new Map()
 
-  const imagesWithUrls = images.map((img) => ({
-    id: img.id,
-    signedUrl: signedUrls.get(img.storage_path) || '',
-    width: img.width,
-    height: img.height,
-    originalFilename: img.original_filename,
-  }))
+  const imagesWithUrls = images.map((img) => {
+    const urls = signedUrls.get(img.storage_path)
+    return {
+      id: img.id,
+      thumbnailUrl: urls?.thumbnail || '',
+      previewUrl: urls?.preview || '',
+      originalUrl: urls?.original || '',
+      width: img.width,
+      height: img.height,
+      originalFilename: img.original_filename,
+    }
+  })
 
   const galleryData = {
     id: gallery.id,
@@ -81,7 +86,7 @@ export default async function GalleryViewPage({ params }: Props) {
           <div className="flex items-center gap-4">
             <Link 
               href="/" 
-              className="flex items-center justify-center h-10 w-10 rounded-full bg-white shadow-sm border border-gray-100 hover:bg-gray-50 transition-colors"
+              className="flex items-center justify-center h-10 w-10 rounded-full bg-white shadow-sm border border-gray-100 hover:bg-gray-50"
             >
               <ArrowLeft className="w-5 h-5 text-gray-600" />
             </Link>
@@ -109,7 +114,7 @@ export default async function GalleryViewPage({ params }: Props) {
           {/* Gallery Grid */}
           <div className="flex-1 min-w-0">
             {images.length > 0 ? (
-              <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-6 md:p-8">
+              <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-4 md:p-6">
                 <MasonryGrid images={imagesWithUrls} editable galleryId={gallery.id} galleryTitle={gallery.title} />
               </div>
             ) : (

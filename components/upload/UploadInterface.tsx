@@ -42,7 +42,7 @@ export function UploadInterface({ gallery, images }: UploadInterfaceProps) {
 
           <div className="flex items-center gap-3">
             <a
-              href={`/g/${gallery.slug}`}
+              href={`/view-reel/${gallery.id}`}
               target="_blank"
               rel="noopener noreferrer"
             >
