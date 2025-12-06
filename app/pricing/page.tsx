@@ -1,6 +1,5 @@
 import type { Metadata } from 'next'
 import { Header } from '@/components/layout/Header'
-import Link from 'next/link'
 import { PLANS } from '@/lib/config/pricing'
 import { PricingCard } from '@/components/pricing/PricingCard'
 
@@ -30,12 +29,12 @@ export default function PricingPage() {
             {PLANS.map((plan, index) => (
               <PricingCard
                 key={plan.id}
+                planId={plan.id}
                 name={plan.name}
                 description={plan.description}
                 price={plan.monthlyPrice}
                 features={plan.features}
                 cta={plan.cta}
-                href={`/sign-up?plan=${plan.id}`}
                 popular={plan.popular}
                 delay={index * 0.05}
               />

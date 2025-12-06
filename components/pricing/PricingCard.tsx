@@ -1,17 +1,18 @@
 'use client'
 
-import Link from 'next/link'
 import { Check } from 'lucide-react'
 import { motion } from 'framer-motion'
+import { PricingButton } from '@/components/billing/PricingButton'
 
 interface PricingCardProps {
   name: string
+  planId: string
   description: string
   price: number
   period?: string
   features: string[]
   cta: string
-  href: string
+  href?: string // deprecated, use planId
   popular?: boolean
   current?: boolean
   delay?: number
@@ -19,6 +20,7 @@ interface PricingCardProps {
 
 export function PricingCard({
   name,
+  planId,
   description,
   price,
   period = '/month',
@@ -71,9 +73,9 @@ export function PricingCard({
         </span>
       </div>
 
-      <Link
-        href={current ? '#' : href}
-        className={`block w-full text-center py-3 rounded-xl font-semibold text-sm transition-all mb-6 ${
+      <PricingButton
+        planId={planId}
+        className={`block w-full text-center py-3 rounded-xl font-semibold text-sm transition-all mb-6 cursor-pointer ${
           current
             ? 'bg-[#E8E4DC] text-[#78716C] cursor-default'
             : popular
@@ -82,7 +84,7 @@ export function PricingCard({
         }`}
       >
         {cta}
-      </Link>
+      </PricingButton>
 
       <ul className="space-y-3">
         {features.map((feature) => (

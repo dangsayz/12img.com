@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import Image from 'next/image'
+import { PricingButton } from '@/components/billing/PricingButton'
 // Custom lightweight icons
 const IconZap = ({ className = '' }: { className?: string }) => (
   <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -325,16 +326,16 @@ export function LandingPage() {
                   )}
                 </div>
 
-                <Link 
-                  href={`/sign-up?plan=${plan.id}`}
-                  className={`block w-full text-center py-2.5 rounded-xl font-semibold text-[13px] transition-all duration-200 mb-5 ${
+                <PricingButton 
+                  planId={plan.id}
+                  className={`block w-full text-center py-2.5 rounded-xl font-semibold text-[13px] transition-all duration-200 mb-5 cursor-pointer ${
                     plan.popular
                       ? 'bg-white text-[#1C1917] hover:bg-stone-100 shadow-lg'
                       : 'bg-[#1C1917] text-white hover:bg-[#292524]'
                   }`}
                 >
                   {plan.cta}
-                </Link>
+                </PricingButton>
 
                 <ul className="space-y-2.5">
                   {plan.features.map((feature, i) => (
