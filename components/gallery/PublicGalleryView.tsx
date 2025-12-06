@@ -36,27 +36,46 @@ function getOrientation(width?: number | null, height?: number | null): Orientat
   return 'square'
 }
 
-// Visual psychology-based image card - Simplified for fast loading
+// Visual psychology-based image card - 3:4 portrait ratio with share
 function GalleryImage({ 
   image, 
   index, 
   onClick,
+  gallerySlug,
   priority = false
 }: { 
   image: Image
   index: number
   onClick: () => void
+  gallerySlug?: string
   priority?: boolean
 }) {
   const ref = useRef<HTMLDivElement>(null)
   const isInView = useInView(ref, { once: true, margin: '-50px' })
   const [hasError, setHasError] = useState(false)
+  const [showCopied, setShowCopied] = useState(false)
   
-  const aspectRatio = image.width && image.height ? image.width / image.height : 1
-  
-  // Debug: log URL
-  if (!image.signedUrl) {
-    console.log('[GalleryImage] Missing signedUrl for image:', image.id)
+  // Share this specific image
+  const handleShare = async (e: React.MouseEvent) => {
+    e.stopPropagation()
+    if (!gallerySlug) return
+    
+    const imageUrl = `${window.location.origin}/g/${gallerySlug}/i/${image.id}`
+    
+    try {
+      await navigator.clipboard.writeText(imageUrl)
+      setShowCopied(true)
+      setTimeout(() => setShowCopied(false), 2000)
+    } catch {
+      const input = document.createElement('input')
+      input.value = imageUrl
+      document.body.appendChild(input)
+      input.select()
+      document.execCommand('copy')
+      document.body.removeChild(input)
+      setShowCopied(true)
+      setTimeout(() => setShowCopied(false), 2000)
+    }
   }
   
   return (
@@ -71,10 +90,11 @@ function GalleryImage({
       }}
       className="group relative"
     >
+      {/* 3:4 Portrait aspect ratio - elegant and tall */}
       <div 
-        className="relative overflow-hidden cursor-pointer rounded-sm bg-neutral-200"
+        className="relative overflow-hidden cursor-pointer rounded-lg bg-neutral-200"
         onClick={onClick}
-        style={{ aspectRatio: aspectRatio || 1 }}
+        style={{ aspectRatio: '3/4' }}
       >
         {hasError || !image.signedUrl ? (
           <div className="absolute inset-0 flex items-center justify-center bg-neutral-200">
@@ -86,12 +106,32 @@ function GalleryImage({
             alt=""
             loading={priority ? 'eager' : 'lazy'}
             onError={() => setHasError(true)}
-            className="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.02]"
+            className="w-full h-full object-cover object-center transition-transform duration-500 ease-out group-hover:scale-[1.02]"
           />
         )}
         
-        {/* Subtle hover vignette */}
-        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors duration-300" />
+        {/* Hover overlay with share button */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+          {/* Share button */}
+          {gallerySlug && (
+            <button
+              onClick={handleShare}
+              className="absolute bottom-3 right-3 flex items-center gap-1.5 px-3 py-2 bg-white/95 hover:bg-white rounded-full text-neutral-800 text-xs font-medium shadow-lg transition-all hover:scale-105"
+            >
+              {showCopied ? (
+                <>
+                  <Check className="w-3.5 h-3.5 text-green-600" />
+                  <span>Copied!</span>
+                </>
+              ) : (
+                <>
+                  <Share2 className="w-3.5 h-3.5" />
+                  <span>Share</span>
+                </>
+              )}
+            </button>
+          )}
+        </div>
       </div>
     </motion.div>
   )
@@ -478,11 +518,9 @@ export function PublicGalleryView({
     return images[0]
   }, [images, currentCoverId])
   
-  // Gallery images exclude the cover
-  const galleryImages = useMemo(() => {
-    const coverId = coverImage?.id
-    return images.filter(img => img.id !== coverId)
-  }, [images, coverImage])
+  // Gallery images - show ALL images including cover
+  // Cover appears in hero AND in grid for complete viewing
+  const galleryImages = images
 
   return (
     <div className="min-h-screen bg-[#FAFAFA]">
@@ -586,25 +624,22 @@ export function PublicGalleryView({
         </motion.div>
 
         {/* 
-          Psychology-based Masonry Grid
-          - Mobile: 1 column for immersive viewing
-          - Tablet: 2 columns
-          - Desktop: 3-4 columns
-          - Respects natural image orientations
+          Elegant 3:4 Portrait Grid
+          - Mobile: 2 columns
+          - Tablet: 3 columns  
+          - Desktop: 4 columns
+          - All images 3:4 aspect ratio for visual harmony
         */}
-        <div className="columns-1 sm:columns-2 lg:columns-3 2xl:columns-4 gap-3 sm:gap-4 md:gap-6">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-5">
           {galleryImages.map((image, index) => (
-            <div 
-              key={image.id} 
-              className="mb-3 sm:mb-4 md:mb-6 break-inside-avoid"
-            >
-              <GalleryImage
-                image={image}
-                index={index}
-                onClick={() => handleImageClick(images.findIndex(img => img.id === image.id))}
-                priority={index < 6}
-              />
-            </div>
+            <GalleryImage
+              key={image.id}
+              image={image}
+              index={index}
+              onClick={() => handleImageClick(images.findIndex(img => img.id === image.id))}
+              gallerySlug={gallerySlug}
+              priority={index < 8}
+            />
           ))}
         </div>
       </section>
