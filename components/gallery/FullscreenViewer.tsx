@@ -43,10 +43,11 @@ export function FullscreenViewer({
   const controlsTimeout = useRef<NodeJS.Timeout | null>(null)
   const currentImage = images[currentIndex]
   
-  // Get preview URL (from prop or cache)
-  const currentPreviewUrl = currentImage.previewUrl || 
-    (currentImage.storagePath ? previewUrlCache[currentImage.storagePath] : '') ||
-    currentImage.thumbnailUrl // Fallback to thumbnail while loading
+  // Get preview URL (from prop or cache), always fallback to thumbnail
+  const currentPreviewUrl = 
+    currentImage.previewUrl || 
+    (currentImage.storagePath && previewUrlCache[currentImage.storagePath]) ||
+    currentImage.thumbnailUrl
 
   // Share individual image
   const handleShare = useCallback(async () => {
@@ -411,19 +412,21 @@ export function FullscreenViewer({
                 <div className="w-12 h-12 border-2 border-white/20 border-t-white/80 rounded-full animate-spin" />
               </div>
             )}
-            <img
-              src={currentPreviewUrl}
-              alt=""
-              className={`max-w-full max-h-full object-contain rounded-lg shadow-2xl transition-all duration-300 ${
-                imageLoaded ? 'opacity-100' : 'opacity-0'
-              }`}
-              style={{ 
-                maxHeight: 'calc(100vh - 12rem)',
-                boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)'
-              }}
-              draggable={false}
-              onLoad={() => setImageLoaded(true)}
-            />
+            {currentPreviewUrl && (
+              <img
+                src={currentPreviewUrl}
+                alt=""
+                className={`max-w-full max-h-full object-contain rounded-lg shadow-2xl transition-all duration-300 ${
+                  imageLoaded ? 'opacity-100' : 'opacity-0'
+                }`}
+                style={{ 
+                  maxHeight: 'calc(100vh - 12rem)',
+                  boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)'
+                }}
+                draggable={false}
+                onLoad={() => setImageLoaded(true)}
+              />
+            )}
           </motion.div>
         </AnimatePresence>
       </div>
