@@ -71,31 +71,71 @@ export async function getOrCreateUserByClerkId(clerkId: string) {
   return user
 }
 
-export async function getUserSettings(clerkId: string) {
+export interface UserSettings {
+  // Gallery defaults
+  defaultPasswordEnabled: boolean
+  defaultDownloadEnabled: boolean
+  defaultGalleryExpiryDays: number | null
+  defaultWatermarkEnabled: boolean
+  // Business branding
+  businessName: string | null
+  logoUrl: string | null
+  brandColor: string
+  contactEmail: string | null
+  websiteUrl: string | null
+  // Notification preferences
+  notifyGalleryViewed: boolean
+  notifyImagesDownloaded: boolean
+  notifyArchiveReady: boolean
+  emailDigestFrequency: 'immediate' | 'daily' | 'weekly' | 'never'
+}
+
+const DEFAULT_SETTINGS: UserSettings = {
+  defaultPasswordEnabled: false,
+  defaultDownloadEnabled: true,
+  defaultGalleryExpiryDays: null,
+  defaultWatermarkEnabled: false,
+  businessName: null,
+  logoUrl: null,
+  brandColor: '#000000',
+  contactEmail: null,
+  websiteUrl: null,
+  notifyGalleryViewed: true,
+  notifyImagesDownloaded: true,
+  notifyArchiveReady: true,
+  emailDigestFrequency: 'immediate',
+}
+
+export async function getUserSettings(clerkId: string): Promise<UserSettings> {
   const user = await getUserByClerkId(clerkId)
   if (!user) {
-    return {
-      defaultPasswordEnabled: false,
-      defaultDownloadEnabled: true,
-    }
+    return DEFAULT_SETTINGS
   }
 
   const { data, error } = await supabaseAdmin
     .from('user_settings')
-    .select('default_password_enabled, default_download_enabled')
+    .select('*')
     .eq('user_id', user.id)
     .single()
 
   if (error || !data) {
-    return {
-      defaultPasswordEnabled: false,
-      defaultDownloadEnabled: true,
-    }
+    return DEFAULT_SETTINGS
   }
 
   return {
-    defaultPasswordEnabled: data.default_password_enabled,
-    defaultDownloadEnabled: data.default_download_enabled,
+    defaultPasswordEnabled: data.default_password_enabled ?? false,
+    defaultDownloadEnabled: data.default_download_enabled ?? true,
+    defaultGalleryExpiryDays: data.default_gallery_expiry_days ?? null,
+    defaultWatermarkEnabled: data.default_watermark_enabled ?? false,
+    businessName: data.business_name ?? null,
+    logoUrl: data.logo_url ?? null,
+    brandColor: data.brand_color ?? '#000000',
+    contactEmail: data.contact_email ?? null,
+    websiteUrl: data.website_url ?? null,
+    notifyGalleryViewed: data.notify_gallery_viewed ?? true,
+    notifyImagesDownloaded: data.notify_images_downloaded ?? true,
+    notifyArchiveReady: data.notify_archive_ready ?? true,
+    emailDigestFrequency: data.email_digest_frequency ?? 'immediate',
   }
 }
 

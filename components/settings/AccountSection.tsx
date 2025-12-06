@@ -1,6 +1,8 @@
 'use client'
 
-import { HardDrive, Image, Folder } from 'lucide-react'
+import { HardDrive, Image, Folder, Sparkles } from 'lucide-react'
+import { getPlan, getStorageLimitBytes, normalizePlanId, type LegacyPlanId } from '@/lib/config/pricing'
+import { ManageBillingButton } from '@/components/billing/ManageBillingButton'
 
 interface StorageUsage {
   totalBytes: number
@@ -10,6 +12,8 @@ interface StorageUsage {
 
 interface AccountSectionProps {
   storageUsage: StorageUsage
+  userPlan: LegacyPlanId
+  hasSubscription?: boolean
 }
 
 function formatBytes(bytes: number): string {
@@ -20,9 +24,12 @@ function formatBytes(bytes: number): string {
   return `${mb.toFixed(1)} MB`
 }
 
-export function AccountSection({ storageUsage }: AccountSectionProps) {
-  const storageLimit = 5 * 1024 * 1024 * 1024 // 5GB for free tier
+export function AccountSection({ storageUsage, userPlan, hasSubscription }: AccountSectionProps) {
+  const normalizedPlan = normalizePlanId(userPlan)
+  const plan = getPlan(normalizedPlan)
+  const storageLimit = getStorageLimitBytes(normalizedPlan)
   const usagePercent = Math.min((storageUsage.totalBytes / storageLimit) * 100, 100)
+  const isPaid = userPlan !== 'free'
 
   return (
     <section className="mb-12">
@@ -75,17 +82,46 @@ export function AccountSection({ storageUsage }: AccountSectionProps) {
         </div>
 
         {/* Plan info */}
-        <div className="flex items-center justify-between py-4 px-6 bg-gradient-to-r from-gray-50 to-gray-100 rounded-lg border">
-          <div>
-            <p className="font-medium">Free Plan</p>
-            <p className="text-sm text-gray-500">5GB storage included</p>
+        <div className={`flex items-center justify-between py-4 px-6 rounded-lg border ${
+          isPaid 
+            ? 'bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200' 
+            : 'bg-gradient-to-r from-gray-50 to-gray-100'
+        }`}>
+          <div className="flex items-center gap-3">
+            {isPaid && (
+              <div className="p-2 bg-blue-100 rounded-lg">
+                <Sparkles className="w-4 h-4 text-blue-600" />
+              </div>
+            )}
+            <div>
+              <p className="font-medium flex items-center gap-2">
+                {plan?.name || 'Free'} Plan
+                {isPaid && (
+                  <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">
+                    Active
+                  </span>
+                )}
+              </p>
+              <p className="text-sm text-gray-500">
+                {plan?.features?.find(f => f.includes('storage'))?.replace('storage', 'storage included') || '5GB storage included'}
+              </p>
+            </div>
           </div>
-          <a
-            href="/pricing"
-            className="text-sm text-blue-600 hover:underline font-medium"
-          >
-            Upgrade →
-          </a>
+          
+          <div className="flex items-center gap-3">
+            {isPaid && hasSubscription ? (
+              <ManageBillingButton 
+                className="inline-flex items-center text-sm text-gray-600 hover:text-gray-900 font-medium px-3 py-2 border rounded-lg hover:bg-gray-50 transition-colors"
+              />
+            ) : (
+              <a
+                href="/pricing"
+                className="inline-flex items-center text-sm text-blue-600 hover:text-blue-700 font-medium"
+              >
+                {isPaid ? 'Change plan' : 'Upgrade'} →
+              </a>
+            )}
+          </div>
         </div>
       </div>
     </section>

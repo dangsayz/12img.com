@@ -179,6 +179,20 @@ export interface Database {
           user_id: string
           default_password_enabled: boolean
           default_download_enabled: boolean
+          // Business branding
+          business_name: string | null
+          logo_url: string | null
+          brand_color: string
+          contact_email: string | null
+          website_url: string | null
+          // Notification preferences
+          notify_gallery_viewed: boolean
+          notify_images_downloaded: boolean
+          notify_archive_ready: boolean
+          email_digest_frequency: 'immediate' | 'daily' | 'weekly' | 'never'
+          // Gallery defaults
+          default_gallery_expiry_days: number | null
+          default_watermark_enabled: boolean
           created_at: string
           updated_at: string
         }
@@ -187,6 +201,17 @@ export interface Database {
           user_id: string
           default_password_enabled?: boolean
           default_download_enabled?: boolean
+          business_name?: string | null
+          logo_url?: string | null
+          brand_color?: string
+          contact_email?: string | null
+          website_url?: string | null
+          notify_gallery_viewed?: boolean
+          notify_images_downloaded?: boolean
+          notify_archive_ready?: boolean
+          email_digest_frequency?: 'immediate' | 'daily' | 'weekly' | 'never'
+          default_gallery_expiry_days?: number | null
+          default_watermark_enabled?: boolean
           created_at?: string
           updated_at?: string
         }
@@ -195,6 +220,17 @@ export interface Database {
           user_id?: string
           default_password_enabled?: boolean
           default_download_enabled?: boolean
+          business_name?: string | null
+          logo_url?: string | null
+          brand_color?: string
+          contact_email?: string | null
+          website_url?: string | null
+          notify_gallery_viewed?: boolean
+          notify_images_downloaded?: boolean
+          notify_archive_ready?: boolean
+          email_digest_frequency?: 'immediate' | 'daily' | 'weekly' | 'never'
+          default_gallery_expiry_days?: number | null
+          default_watermark_enabled?: boolean
           created_at?: string
           updated_at?: string
         }
