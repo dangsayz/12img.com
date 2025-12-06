@@ -51,7 +51,16 @@ export function QuickShareWidget({ className }: QuickShareWidgetProps) {
     }
   }, [isOpen, status])
 
+  const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB
+
   const handleUpload = useCallback(async (file: File) => {
+    // Validate file size client-side first
+    if (file.size > MAX_FILE_SIZE) {
+      setError('File too large. Maximum size is 10MB')
+      setStatus('error')
+      return
+    }
+
     setError('')
     setStatus('uploading')
     setProgress(0)

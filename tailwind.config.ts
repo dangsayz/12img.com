@@ -80,6 +80,7 @@ const config: Config = {
         'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
         'spin-slow': 'spin 3s linear infinite',
         shake: 'shake 0.5s ease-in-out',
+        shimmer: 'shimmer 1.5s infinite',
       },
       keyframes: {
         'border-beam': {
@@ -93,6 +94,9 @@ const config: Config = {
           '0%, 100%': { transform: 'translateX(0)' },
           '10%, 30%, 50%, 70%, 90%': { transform: 'translateX(-4px)' },
           '20%, 40%, 60%, 80%': { transform: 'translateX(4px)' },
+        },
+        shimmer: {
+          '100%': { transform: 'translateX(100%)' },
         },
       },
     },

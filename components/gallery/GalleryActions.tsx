@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useRef } from 'react'
-import { Plus, ExternalLink, Download, Loader2, ImageDown, X } from 'lucide-react'
+import { Plus, Download, Loader2, ImageDown, X } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Button } from '@/components/ui/button'
 import { UploadModal } from './UploadModal'
@@ -109,16 +109,6 @@ export function GalleryActions({ galleryId, gallerySlug, images = [], galleryTit
               : 'Download ZIP'}
           </span>
         </button>
-        <a
-          href={`/view-reel/${galleryId}`}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Button className="rounded-full h-9 bg-[#1C1917] hover:bg-[#292524] text-white font-medium px-4 text-sm">
-            <ExternalLink className="w-3.5 h-3.5 mr-1.5" />
-            View Live
-          </Button>
-        </a>
       </div>
 
       <UploadModal

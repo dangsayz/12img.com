@@ -5,7 +5,7 @@ import { ArrowLeft, Plus } from 'lucide-react'
 import { getOrCreateUserByClerkId, getUserWithUsage } from '@/server/queries/user.queries'
 import { getGalleryWithOwnershipCheck } from '@/server/queries/gallery.queries'
 import { getGalleryImages } from '@/server/queries/image.queries'
-import { getSignedUrlsBatch } from '@/lib/storage/signed-urls'
+import { getSignedUrlsWithSizes } from '@/lib/storage/signed-urls'
 import { Header } from '@/components/layout/Header'
 import { MasonryGrid } from '@/components/gallery/MasonryGrid'
 import { GalleryControlPanel } from '@/components/gallery/GalleryControlPanel'
@@ -43,20 +43,20 @@ export default async function GalleryViewPage({ params }: Props) {
 
   const images = await getGalleryImages(gallery.id)
   
-  // Only fetch thumbnail URLs for initial page load (much faster)
-  // Preview/original URLs are fetched on-demand in fullscreen viewer
-  const thumbnailUrls =
+  // Fetch all URL sizes upfront for crisp fullscreen viewing
+  const signedUrls =
     images.length > 0
-      ? await getSignedUrlsBatch(images.map((img) => img.storage_path), undefined, 'THUMBNAIL')
+      ? await getSignedUrlsWithSizes(images.map((img) => img.storage_path))
       : new Map()
 
   const imagesWithUrls = images.map((img) => {
+    const urls = signedUrls.get(img.storage_path)
     return {
       id: img.id,
-      storagePath: img.storage_path, // Pass storage path for on-demand URL fetching
-      thumbnailUrl: thumbnailUrls.get(img.storage_path) || '',
-      previewUrl: '', // Loaded on-demand in fullscreen
-      originalUrl: '', // Loaded on-demand for downloads
+      storagePath: img.storage_path,
+      thumbnailUrl: urls?.thumbnail || '',
+      previewUrl: urls?.preview || '',
+      originalUrl: urls?.original || '',
       width: img.width,
       height: img.height,
       originalFilename: img.original_filename,

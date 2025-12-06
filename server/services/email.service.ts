@@ -601,7 +601,7 @@ export async function sendGalleryInviteEmail(
       .select('*', { count: 'exact', head: true })
       .eq('gallery_id', gallery.id)
 
-    const galleryUrl = `${options.baseUrl}/view-reel/${gallery.id}`
+    const galleryUrl = `${options.baseUrl}/view-grid/${gallery.id}`
 
     const emailData: GalleryInviteEmailData = {
       galleryTitle: gallery.title,

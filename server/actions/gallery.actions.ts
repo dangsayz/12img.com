@@ -240,8 +240,7 @@ export async function deleteGallery(galleryId: string) {
 export async function sendGalleryToClient(
   galleryId: string,
   clientEmail: string,
-  personalMessage?: string,
-  baseUrl?: string
+  personalMessage?: string
 ) {
   const { userId: clerkId } = await auth()
   if (!clerkId) return { error: 'Unauthorized' }
@@ -271,7 +270,7 @@ export async function sendGalleryToClient(
         photographerName,
         photographerEmail,
         personalMessage: personalMessage?.trim() || undefined,
-        baseUrl: baseUrl || process.env.NEXT_PUBLIC_APP_URL || 'https://12img.com',
+        baseUrl: process.env.NEXT_PUBLIC_SITE_URL || 'https://12img.com',
       }
     )
 

@@ -9,7 +9,6 @@ import {
   Unlock, 
   Download, 
   Settings,
-  ExternalLink,
   Calendar,
   Image as ImageIcon,
   Share2,
@@ -69,12 +68,12 @@ export function GalleryControlPanel({ gallery }: GalleryControlPanelProps) {
   const [includePassword, setIncludePassword] = useState(false)
 
   // Build share URL on client only to avoid hydration mismatch
-  const relativePath = `/view-reel/${gallery.id}`
-  const [shareUrl, setShareUrl] = useState(relativePath)
+  const shareRelativePath = `/view-grid/${gallery.id}`
+  const [shareUrl, setShareUrl] = useState(shareRelativePath)
   
   useEffect(() => {
-    setShareUrl(`${window.location.origin}${relativePath}`)
-  }, [relativePath])
+    setShareUrl(`${window.location.origin}${shareRelativePath}`)
+  }, [shareRelativePath])
 
   const copyToClipboard = async () => {
     try {
@@ -156,8 +155,8 @@ export function GalleryControlPanel({ gallery }: GalleryControlPanelProps) {
     setSendError(null)
     
     try {
-      const baseUrl = typeof window !== 'undefined' ? window.location.origin : undefined
-      const result = await sendGalleryToClient(gallery.id, clientEmail, personalMessage, baseUrl)
+      // Don't pass baseUrl from client - let server use production URL from env
+      const result = await sendGalleryToClient(gallery.id, clientEmail, personalMessage)
       
       if (result.error) {
         setSendError(result.error)
@@ -238,15 +237,6 @@ export function GalleryControlPanel({ gallery }: GalleryControlPanelProps) {
         </div>
 
         <div className="mt-4 flex items-center gap-2">
-          <a
-            href={relativePath}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 h-9 px-4 text-sm font-medium text-gray-700 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-lg"
-          >
-            <ExternalLink className="w-4 h-4" />
-            Preview
-          </a>
           <button
             onClick={openSendModal}
             className="inline-flex items-center gap-2 h-9 px-4 text-sm font-medium text-white bg-neutral-900 hover:bg-neutral-800 rounded-lg shadow-sm"

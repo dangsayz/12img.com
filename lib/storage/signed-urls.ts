@@ -67,30 +67,44 @@ export async function getSignedUrlsBatch(
     
     // Process in parallel batches to avoid overwhelming the API
     const batchSize = 20
+    const maxRetries = 3
+    
     for (let i = 0; i < paths.length; i += batchSize) {
       const batch = paths.slice(i, i + batchSize)
       const results = await Promise.all(
         batch.map(async (path) => {
-          try {
-            const { data, error } = await supabaseAdmin.storage
-              .from('gallery-images')
-              .createSignedUrl(path, expiresIn, {
-                transform: {
-                  width: transform.width,
-                  quality: transform.quality,
-                  resize: 'contain',
-                },
-              })
-            
-            if (error || !data) {
-              console.error('[SignedUrls] Error for path:', path, error?.message)
+          // Retry logic for transient failures
+          for (let attempt = 1; attempt <= maxRetries; attempt++) {
+            try {
+              const { data, error } = await supabaseAdmin.storage
+                .from('gallery-images')
+                .createSignedUrl(path, expiresIn, {
+                  transform: {
+                    width: transform.width,
+                    quality: transform.quality,
+                    resize: 'contain',
+                  },
+                })
+              
+              if (error || !data) {
+                if (attempt < maxRetries) {
+                  await new Promise(r => setTimeout(r, 100 * attempt)) // Backoff
+                  continue
+                }
+                console.error('[SignedUrls] Error for path after retries:', path, error?.message)
+                return { path, url: null }
+              }
+              return { path, url: data.signedUrl }
+            } catch (err) {
+              if (attempt < maxRetries) {
+                await new Promise(r => setTimeout(r, 100 * attempt))
+                continue
+              }
+              console.error('[SignedUrls] Exception for path after retries:', path, err)
               return { path, url: null }
             }
-            return { path, url: data.signedUrl }
-          } catch (err) {
-            console.error('[SignedUrls] Exception for path:', path, err)
-            return { path, url: null }
           }
+          return { path, url: null }
         })
       )
       

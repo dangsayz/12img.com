@@ -6,6 +6,7 @@ import { supabaseAdmin } from '@/lib/supabase/admin'
 import { getOrCreateUserByClerkId } from '@/server/queries/user.queries'
 import { getGalleryById, verifyGalleryOwnership } from '@/server/queries/gallery.queries'
 import { getImageWithOwnershipCheck } from '@/server/queries/image.queries'
+import { getSignedUrlsBatch } from '@/lib/storage/signed-urls'
 
 export async function deleteImage(imageId: string) {
   console.log('[deleteImage] Starting delete for image:', imageId)
@@ -113,4 +114,20 @@ export async function setCoverImage(galleryId: string, imageId: string) {
   revalidatePath('/')
 
   return { success: true }
+}
+
+/**
+ * Get a fresh thumbnail URL for an image (for retry on load failure)
+ */
+export async function getThumbnailUrl(
+  storagePath: string
+): Promise<{ url: string | null; error?: string }> {
+  try {
+    const urlMap = await getSignedUrlsBatch([storagePath], undefined, 'THUMBNAIL')
+    const url = urlMap.get(storagePath)
+    return { url: url || null }
+  } catch (e) {
+    console.error('[getThumbnailUrl] Error:', e)
+    return { url: null, error: 'Failed to get URL' }
+  }
 }

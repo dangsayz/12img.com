@@ -1,12 +1,9 @@
 'use client'
 
-import { useState } from 'react'
 import Link from 'next/link'
-import { ArrowLeft, ExternalLink, PanelLeftClose, PanelLeftOpen } from 'lucide-react'
-import { Button } from '@/components/ui/button'
+import { ArrowLeft, ImageIcon } from 'lucide-react'
 import { UploadZone } from './UploadZone'
 import { MasonryGrid } from '@/components/gallery/MasonryGrid'
-import { AnimatePresence, motion } from 'framer-motion'
 
 interface UploadInterfaceProps {
   gallery: {
@@ -18,10 +15,6 @@ interface UploadInterfaceProps {
 }
 
 export function UploadInterface({ gallery, images }: UploadInterfaceProps) {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true)
-
-  // Auto-scroll to new items logic could be added here if we track previous image count
-
   return (
     <div className="min-h-screen bg-[#F5F5F5] pb-20">
       {/* Header / Nav Area */}
@@ -40,18 +33,6 @@ export function UploadInterface({ gallery, images }: UploadInterfaceProps) {
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
-            <a
-              href={`/view-reel/${gallery.id}`}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <Button variant="outline" className="rounded-full h-10 bg-white hover:bg-gray-50 border-gray-200 text-gray-700 font-medium px-6">
-                <ExternalLink className="w-4 h-4 mr-2" />
-                View Live
-              </Button>
-            </a>
-          </div>
         </div>
 
         {/* Main Content Card */}
@@ -91,7 +72,7 @@ export function UploadInterface({ gallery, images }: UploadInterfaceProps) {
               ) : (
                 <div className="flex flex-col items-center justify-center h-full min-h-[400px] text-center rounded-2xl bg-gray-50/50 border border-dashed border-gray-200">
                   <div className="h-12 w-12 bg-white rounded-xl flex items-center justify-center shadow-sm mb-4 border border-gray-100">
-                    <ExternalLink className="w-5 h-5 text-gray-400" />
+                    <ImageIcon className="w-5 h-5 text-gray-400" />
                   </div>
                   <p className="text-gray-900 font-medium">Collection Empty</p>
                   <p className="text-sm text-gray-500 mt-1 max-w-xs">

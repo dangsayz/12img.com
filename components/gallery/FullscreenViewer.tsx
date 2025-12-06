@@ -43,8 +43,9 @@ export function FullscreenViewer({
   const controlsTimeout = useRef<NodeJS.Timeout | null>(null)
   const currentImage = images[currentIndex]
   
-  // Get preview URL (from prop or cache), always fallback to thumbnail
+  // Get full quality URL for crisp viewing - prefer original, fall back to preview
   const currentPreviewUrl = 
+    currentImage.originalUrl ||
     currentImage.previewUrl || 
     (currentImage.storagePath && previewUrlCache[currentImage.storagePath]) ||
     currentImage.thumbnailUrl
