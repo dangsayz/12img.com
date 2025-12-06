@@ -1,12 +1,12 @@
 
 'use client'
 
-import React, { useMemo, useState, useEffect } from 'react'
+import React, { useState } from 'react'
 import { motion, useScroll, useSpring } from 'framer-motion'
 import { EditorialSpread } from '@/lib/editorial/types'
 import { Spread } from './Spread'
 import { SpreadOverview } from './SpreadOverview'
-import { ArrowLeft, Grid } from 'lucide-react'
+import { ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
 
 interface Props {
@@ -24,17 +24,12 @@ export function EditorialViewer({ spreads, title, galleryId }: Props) {
     restDelta: 0.001
   })
 
-  const [mounted, setMounted] = useState(false)
-  useEffect(() => setMounted(true), [])
-
   const scrollToSpread = (id: string) => {
     const element = document.getElementById(id)
     if (element) {
       element.scrollIntoView({ behavior: 'smooth' })
     }
   }
-
-  if (!mounted) return null
 
   return (
     <div className="min-h-screen bg-[#FAFAFA] text-neutral-900 font-sans selection:bg-neutral-900 selection:text-white">

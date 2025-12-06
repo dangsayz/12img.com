@@ -1,12 +1,13 @@
 'use client'
 
-import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
+import { useState, useCallback, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { MasonryItem } from './MasonryItem'
 import { FullscreenViewer } from './FullscreenViewer'
 
 interface Image {
   id: string
+  storagePath?: string  // For on-demand URL fetching
   thumbnailUrl: string  // 400px for grid display
   previewUrl: string    // 1920px for fullscreen viewing
   originalUrl: string   // Full resolution for downloads only
@@ -21,33 +22,8 @@ interface MasonryGridProps {
   galleryTitle?: string
 }
 
-const BREAKPOINTS = {
-  sm: 640,
-  md: 768,
-  lg: 1024,
-  xl: 1280,
-}
-
-const COLUMNS_BY_BREAKPOINT = {
-  default: 2,
-  sm: 3,
-  md: 4,
-  lg: 4,
-  xl: 5,
-}
-
-function getColumnCount(width: number): number {
-  if (width >= BREAKPOINTS.xl) return COLUMNS_BY_BREAKPOINT.xl
-  if (width >= BREAKPOINTS.lg) return COLUMNS_BY_BREAKPOINT.lg
-  if (width >= BREAKPOINTS.md) return COLUMNS_BY_BREAKPOINT.md
-  if (width >= BREAKPOINTS.sm) return COLUMNS_BY_BREAKPOINT.sm
-  return COLUMNS_BY_BREAKPOINT.default
-}
-
 export function MasonryGrid({ images: initialImages, editable = false, galleryId, galleryTitle }: MasonryGridProps) {
   const router = useRouter()
-  const containerRef = useRef<HTMLDivElement>(null)
-  const [columns, setColumns] = useState(COLUMNS_BY_BREAKPOINT.default)
   const [viewerOpen, setViewerOpen] = useState(false)
   const [viewerIndex, setViewerIndex] = useState(0)
   const [deletedIds, setDeletedIds] = useState<Set<string>>(new Set())
@@ -57,33 +33,6 @@ export function MasonryGrid({ images: initialImages, editable = false, galleryId
     initialImages.filter(img => !deletedIds.has(img.id)),
     [initialImages, deletedIds]
   )
-
-  // Clear deleted IDs when props change (server confirmed deletion)
-  useEffect(() => {
-    const currentIds = new Set(initialImages.map(img => img.id))
-    setDeletedIds(prev => {
-      const newSet = new Set<string>()
-      prev.forEach(id => {
-        if (currentIds.has(id)) newSet.add(id) // Keep if still pending
-      })
-      return newSet.size !== prev.size ? newSet : prev
-    })
-  }, [initialImages])
-
-  useEffect(() => {
-    const container = containerRef.current
-    if (!container) return
-
-    const observer = new ResizeObserver((entries) => {
-      const width = entries[0].contentRect.width
-      setColumns(getColumnCount(width))
-    })
-
-    observer.observe(container)
-    setColumns(getColumnCount(container.offsetWidth))
-
-    return () => observer.disconnect()
-  }, [])
 
   const handleImageDelete = useCallback((imageId: string) => {
     // Optimistic update - mark as deleted immediately
@@ -115,14 +64,13 @@ export function MasonryGrid({ images: initialImages, editable = false, galleryId
 
   return (
     <>
-      <div
-        ref={containerRef}
-        className="w-full"
-        style={{
-          columnCount: columns,
-          columnGap: '0.5rem',
-        }}
-      >
+      {/* 
+        Clean CSS Grid Layout
+        - 2 cols mobile, 3 cols tablet, 4 cols desktop  
+        - 3:4 portrait aspect ratio (no masonry, no layout shifts)
+        - Generous gap for breathing room
+      */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
         {images.map((image, index) => (
           <MasonryItem
             key={image.id}
@@ -143,6 +91,7 @@ export function MasonryGrid({ images: initialImages, editable = false, galleryId
           onClose={handleViewerClose}
           onNavigate={handleViewerNavigate}
           galleryTitle={galleryTitle}
+          gallerySlug={galleryId}
         />
       )}
     </>

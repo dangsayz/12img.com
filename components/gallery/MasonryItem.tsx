@@ -6,9 +6,12 @@ import { deleteImage, setCoverImage } from '@/server/actions/image.actions'
 
 interface Image {
   id: string
+  storagePath?: string  // For on-demand URL fetching
   thumbnailUrl: string  // 400px for grid display
   previewUrl: string    // 1920px for fullscreen viewing
   originalUrl: string   // Full resolution for downloads only
+  width?: number | null
+  height?: number | null
 }
 
 interface MasonryItemProps {
@@ -83,14 +86,14 @@ export function MasonryItem({
 
   return (
     <div
-      className="mb-1.5 break-inside-avoid overflow-hidden rounded-lg bg-gray-100 relative group"
+      className="overflow-hidden rounded-xl bg-gray-100 relative group"
       onMouseEnter={() => editable && setIsHovered(true)}
       onMouseLeave={() => {
         setIsHovered(false)
         setShowDeleteConfirm(false)
       }}
     >
-      {/* Image */}
+      {/* Image - Fixed 3:4 portrait aspect ratio for clean grid */}
       <div
         onClick={onClick}
         role="button"
@@ -101,10 +104,10 @@ export function MasonryItem({
             onClick()
           }
         }}
-        className="cursor-pointer"
+        className="cursor-pointer relative aspect-[3/4]"
       >
         {hasError || !image.thumbnailUrl ? (
-          <div className="aspect-square bg-gray-200 flex items-center justify-center">
+          <div className="absolute inset-0 bg-gray-200 flex items-center justify-center">
             <span className="text-gray-400 text-xs">Failed to load</span>
           </div>
         ) : (
@@ -112,16 +115,15 @@ export function MasonryItem({
             <img
               src={image.thumbnailUrl}
               alt=""
-              loading={index < 4 ? 'eager' : 'lazy'}
+              loading={index < 8 ? 'eager' : 'lazy'}
               decoding="async"
               onLoad={handleLoad}
               onError={() => setHasError(true)}
-              className={`w-full h-auto ${
+              className={`absolute inset-0 w-full h-full object-cover transition-all duration-200 ${
                 loaded ? 'opacity-100' : 'opacity-0'
-              } ${isHovered && editable ? 'brightness-75' : ''}`}
-              style={{ opacity: loaded ? 1 : 0 }}
+              } ${isHovered && editable ? 'brightness-90 scale-[1.02]' : ''}`}
             />
-            {!loaded && <div className="aspect-square bg-gray-200" />}
+            {!loaded && <div className="absolute inset-0 bg-gray-100" />}
           </>
         )}
       </div>

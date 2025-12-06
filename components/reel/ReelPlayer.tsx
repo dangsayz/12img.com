@@ -2,6 +2,7 @@
 'use client'
 
 import React, { useState, useEffect, useCallback, useRef } from 'react'
+import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, Play, Pause, Share2, Download, Check, Heart, ArrowRight, ChevronLeft, ChevronRight, ImageDown } from 'lucide-react'
 import Link from 'next/link'
@@ -50,8 +51,26 @@ export function ReelPlayer({
   const [showDownloadPrompt, setShowDownloadPrompt] = useState(false)
   const progressRef = useRef(0)
   const startTimeRef = useRef(Date.now())
+  const router = useRouter()
   
   const closeHref = `/gallery/${gallerySlug || galleryId}`
+  
+  // Instant close handler
+  const handleClose = useCallback(() => {
+    router.push(closeHref)
+  }, [router, closeHref])
+  
+  // Escape key handler for instant exit
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault()
+        handleClose()
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [handleClose])
   const fullAlbumCount = totalImageCount || images.length
   
   // Reel settings
@@ -206,12 +225,12 @@ export function ReelPlayer({
               <p className="text-[11px] opacity-70">{photographerName || 'Curated for you'}</p>
             </div>
           </div>
-          <Link 
-            href={closeHref}
+          <button 
+            onClick={handleClose}
             className="p-2.5 bg-black/30 backdrop-blur-xl rounded-full text-white/80 hover:text-white hover:bg-black/50 transition-colors border border-white/10"
           >
             <X className="w-5 h-5" />
-          </Link>
+          </button>
         </div>
 
         {/* Image Counter */}
