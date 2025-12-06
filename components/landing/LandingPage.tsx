@@ -93,8 +93,7 @@ export function LandingPage() {
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             {/* Left: Text Content */}
             <div>
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-amber-100 text-amber-700 rounded-full text-sm font-medium mb-6">
-                <IconZap className="w-4 h-4" />
+              <div className="inline-flex items-center px-3 py-1 bg-stone-100 text-stone-500 rounded-full text-xs font-medium tracking-wide uppercase mb-6">
                 For Photographers
               </div>
               
