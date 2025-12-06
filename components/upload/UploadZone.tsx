@@ -25,6 +25,12 @@ export function UploadZone({ galleryId, onUploadComplete }: UploadZoneProps) {
   const [isUploading, setIsUploading] = useState(false)
   const isUploadingRef = useRef(false)
   const uploadStartTime = useRef<number>(0)
+  const uploadsRef = useRef<FileItemState[]>([])
+  
+  // Keep ref in sync with state for reliable access in async functions
+  useEffect(() => {
+    uploadsRef.current = uploads
+  }, [uploads])
 
   // Calculate progress for large upload overlay
   const totalFiles = uploads.length
@@ -148,15 +154,11 @@ export function UploadZone({ galleryId, onUploadComplete }: UploadZoneProps) {
     setIsUploading(true)
     uploadStartTime.current = Date.now() // Track start time for estimates
 
-    // Get current pending items from state
-    let pendingItems: FileItemState[] = []
-    setUploads(prev => {
-      pendingItems = prev.filter(u => u.status === 'pending')
-      return prev
-    })
+    // Wait a bit for chunked file additions to complete (for large drops)
+    await new Promise(r => setTimeout(r, 100))
     
-    // Small delay to ensure state is captured
-    await new Promise(r => setTimeout(r, 50))
+    // Get pending items directly from ref (reliable in async context)
+    const pendingItems = uploadsRef.current.filter(u => u.status === 'pending')
     
     if (pendingItems.length === 0) {
       isUploadingRef.current = false
