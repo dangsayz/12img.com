@@ -110,18 +110,16 @@ export function LandingPage() {
                 </span>
               </div>
 
-              <Link 
-                href="/share"
-                className="mt-6 flex items-center justify-center sm:justify-start gap-3 px-5 py-4 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200/60 rounded-2xl hover:border-amber-300 hover:shadow-md transition-all group"
-              >
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 to-orange-400 flex items-center justify-center shadow-lg shrink-0">
-                  <IconUpload className="w-5 h-5 text-white" />
-                </div>
-                <div className="text-left">
-                  <p className="text-[#1C1917] font-semibold text-sm sm:text-base">Quick Share — No signup needed</p>
-                  <p className="text-[#78716C] text-xs sm:text-sm">Upload one image, get a link instantly →</p>
-                </div>
-              </Link>
+              <p className="mt-6 text-sm text-[#78716C]">
+                Or{' '}
+                <Link 
+                  href="/share"
+                  className="text-amber-600 hover:text-amber-700 font-medium underline underline-offset-2"
+                >
+                  upload a single image free
+                </Link>
+                {' '}— no account needed
+              </p>
             </div>
 
             {/* Right: App Preview Card */}
