@@ -114,14 +114,9 @@ export function MasonryItem({
     transform: `translateY(${displacement.y}px) rotate(${displacement.rotate}deg)`,
   } : {}
 
-  // Calculate aspect ratio for natural sizing
-  const aspectRatio = image.width && image.height 
-    ? image.width / image.height 
-    : 0.75 // Default to 3:4 portrait if dimensions unknown
-
   return (
     <div
-      className="mb-3 sm:mb-4 break-inside-avoid overflow-hidden bg-gray-100 rounded-2xl relative group cursor-pointer"
+      className="overflow-hidden bg-zinc-50 relative group cursor-pointer aspect-[3/4] shadow-sm hover:shadow-lg transition-shadow duration-300"
       style={displacementStyle}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => {
@@ -129,7 +124,7 @@ export function MasonryItem({
         setShowDeleteConfirm(false)
       }}
     >
-      {/* Image wrapper with natural aspect ratio */}
+      {/* Square container with centered image */}
       <div
         onClick={onClick}
         role="button"
@@ -140,16 +135,15 @@ export function MasonryItem({
             onClick()
           }
         }}
-        className="cursor-pointer relative w-full"
-        style={{ aspectRatio: aspectRatio }}
+        className="cursor-pointer relative w-full h-full p-3 flex items-center justify-center"
       >
         {(hasError && retryCount >= 3) || (!currentUrl && !isRetrying) ? (
-          <div className="absolute inset-0 bg-gray-200 flex items-center justify-center rounded-2xl">
-            <span className="text-gray-400 text-xs">Failed to load</span>
+          <div className="absolute inset-0 bg-zinc-100 flex items-center justify-center">
+            <span className="text-zinc-400 text-xs">Failed to load</span>
           </div>
         ) : isRetrying || (hasError && retryCount < 3) ? (
-          <div className="absolute inset-0 bg-gray-100 flex items-center justify-center rounded-2xl">
-            <RefreshCw className="w-4 h-4 text-gray-400 animate-spin" />
+          <div className="absolute inset-0 bg-zinc-50 flex items-center justify-center">
+            <RefreshCw className="w-4 h-4 text-neutral-400 animate-spin" />
           </div>
         ) : (
           <>
@@ -160,13 +154,13 @@ export function MasonryItem({
               decoding="async"
               onLoad={handleLoad}
               onError={() => setHasError(true)}
-              className={`w-full h-full object-cover rounded-2xl transition-all duration-300 ${
+              className={`max-w-full max-h-full object-contain transition-all duration-300 ${
                 loaded ? 'opacity-100' : 'opacity-0'
-              } group-hover:brightness-95`}
+              } group-hover:scale-[1.03]`}
             />
             {!loaded && (
-              <div className="absolute inset-0 bg-gray-100 rounded-2xl overflow-hidden">
-                <div className="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-gray-200/60 to-transparent" />
+              <div className="absolute inset-0 bg-zinc-100 overflow-hidden">
+                <div className="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-zinc-200/60 to-transparent" />
               </div>
             )}
           </>
@@ -175,7 +169,7 @@ export function MasonryItem({
 
       {/* Hover Overlay - Only in edit mode */}
       {editable && isHovered && (
-        <div className="absolute inset-0 pointer-events-none rounded-2xl">
+        <div className="absolute inset-0 pointer-events-none">
           {/* Action Buttons */}
           <div className="absolute top-2 right-2 flex gap-1.5 pointer-events-auto">
             {/* Delete Button */}

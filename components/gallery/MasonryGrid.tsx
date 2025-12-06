@@ -64,8 +64,8 @@ export function MasonryGrid({ images: initialImages, editable = false, galleryId
 
   return (
     <>
-      {/* Pinterest-style masonry using CSS columns */}
-      <div className="columns-2 sm:columns-3 lg:columns-4 xl:columns-5 gap-3 sm:gap-4 py-6">
+      {/* Clean grid with square containers - 4 per row max */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-5 py-8 px-2">
         {images.map((image, index) => (
           <MasonryItem
             key={image.id}

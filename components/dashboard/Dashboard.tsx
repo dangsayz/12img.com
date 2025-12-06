@@ -350,7 +350,7 @@ function GalleryCardGrid({ gallery, index }: { gallery: Gallery; index: number }
         onMouseLeave={() => { setIsHovered(false); setShowMenu(false) }}
       >
         {/* Image Container with Title Overlay */}
-        <div className="relative aspect-[3/4] rounded-2xl overflow-hidden bg-neutral-100">
+        <div className="relative aspect-[3/4] overflow-hidden bg-neutral-100">
           {gallery.coverImageUrl ? (
             <motion.img
               src={gallery.coverImageUrl}

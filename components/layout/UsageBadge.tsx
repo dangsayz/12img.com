@@ -68,48 +68,17 @@ export function UsageBadge({ plan, galleryCount, imageCount, storageUsed = 0 }: 
   return (
     <Link 
       href="/settings" 
-      className="hidden md:flex items-center gap-2 group"
+      className="hidden md:flex items-center"
+      title={`${storageDisplay} used`}
     >
-      {/* Plan Badge */}
+      {/* Clean Plan Badge Only */}
       <span className={cn(
-        "inline-flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1 rounded-full border transition-all",
+        "inline-flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1 rounded-full border transition-all hover:scale-105",
         PLAN_STYLES[normalizedPlan]
       )}>
         {PLAN_ICONS[normalizedPlan]}
         {planData.name}
       </span>
-      
-      {/* Storage Progress */}
-      <div className="flex items-center gap-2">
-        <div className="w-14 h-[5px] bg-gray-100 rounded-full overflow-hidden">
-          <div 
-            className={cn(
-              "h-full rounded-full transition-all duration-500 ease-out",
-              isAtStorageLimit && "bg-gradient-to-r from-rose-400 to-rose-500",
-              isNearStorageLimit && !isAtStorageLimit && "bg-gradient-to-r from-amber-400 to-amber-500",
-              !isNearStorageLimit && !isAtStorageLimit && "bg-gradient-to-r from-emerald-400 to-emerald-500"
-            )}
-            style={{ width: `${Math.max(storagePercent, 5)}%` }}
-          />
-        </div>
-        
-        {/* Storage Counter */}
-        <span className={cn(
-          "text-[10px] font-medium tabular-nums whitespace-nowrap transition-colors",
-          isAtStorageLimit && "text-rose-500",
-          isNearStorageLimit && !isAtStorageLimit && "text-amber-600",
-          !isNearStorageLimit && !isAtStorageLimit && "text-gray-400"
-        )}>
-          {storageDisplay}
-        </span>
-      </div>
-      
-      {/* Upgrade hint for non-elite */}
-      {normalizedPlan !== 'elite' && (
-        <span className="text-[10px] font-medium text-gray-300 group-hover:text-emerald-500 transition-colors">
-          Upgrade
-        </span>
-      )}
     </Link>
   )
 }
