@@ -39,28 +39,24 @@ export function Header({
           
           {/* Nav Links */}
           <nav className="flex items-center gap-0.5">
-            {isAuthenticated && (
-              <Link
-                href="/"
-                className="px-3 py-1.5 rounded-full text-xs font-medium text-[#78716C] hover:text-[#1C1917] hover:bg-[#FAF8F3] transition-all"
-              >
-                Galleries
-              </Link>
-            )}
+            <Link
+              href="/"
+              className="px-3 py-1.5 rounded-full text-xs font-medium text-[#78716C] hover:text-[#1C1917] hover:bg-[#FAF8F3] transition-all"
+            >
+              Galleries
+            </Link>
             <Link
               href="/pricing"
               className="px-3 py-1.5 rounded-full text-xs font-medium text-[#78716C] hover:text-[#1C1917] hover:bg-[#FAF8F3] transition-all"
             >
               Pricing
             </Link>
-            {isAuthenticated && (
-              <Link
-                href="/settings"
-                className="px-3 py-1.5 rounded-full text-xs font-medium text-[#78716C] hover:text-[#1C1917] hover:bg-[#FAF8F3] transition-all"
-              >
-                Settings
-              </Link>
-            )}
+            <Link
+              href="/settings"
+              className="px-3 py-1.5 rounded-full text-xs font-medium text-[#78716C] hover:text-[#1C1917] hover:bg-[#FAF8F3] transition-all"
+            >
+              Settings
+            </Link>
           </nav>
           
           {isAuthenticated ? (

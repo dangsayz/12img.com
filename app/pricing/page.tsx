@@ -1,7 +1,9 @@
 import type { Metadata } from 'next'
+import { auth } from '@clerk/nextjs/server'
 import { Header } from '@/components/layout/Header'
 import { PLANS } from '@/lib/config/pricing'
 import { PricingCard } from '@/components/pricing/PricingCard'
+import { getUserWithUsage } from '@/server/queries/user.queries'
 
 export const metadata: Metadata = {
   title: 'Pricing',
@@ -12,10 +14,19 @@ export const metadata: Metadata = {
   },
 }
 
-export default function PricingPage() {
+export default async function PricingPage() {
+  const { userId } = await auth()
+  const userData = userId ? await getUserWithUsage(userId) : null
+  
   return (
     <>
-      <Header />
+      <Header 
+        userPlan={userData?.plan || 'free'}
+        galleryCount={userData?.usage.galleryCount || 0}
+        imageCount={userData?.usage.imageCount || 0}
+        storageUsed={userData?.usage.totalBytes || 0}
+        isAuthenticated={!!userId}
+      />
       <main className="min-h-screen bg-[#FAF8F3]">
         <div className="container mx-auto px-4 pt-28 pb-16 max-w-7xl">
           <div className="text-center mb-12">

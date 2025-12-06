@@ -1,6 +1,6 @@
 import { auth, currentUser } from '@clerk/nextjs/server'
 import { redirect } from 'next/navigation'
-import { getUserSettings, getUserStorageUsage } from '@/server/queries/user.queries'
+import { getUserSettings, getUserStorageUsage, getUserWithUsage } from '@/server/queries/user.queries'
 import { Header } from '@/components/layout/Header'
 import { SettingsForm } from '@/components/forms/SettingsForm'
 import { AccountSection } from '@/components/settings/AccountSection'
@@ -15,13 +15,21 @@ export default async function SettingsPage() {
     redirect('/sign-in')
   }
 
-  const user = await currentUser()
-  const settings = await getUserSettings(userId)
-  const storageUsage = await getUserStorageUsage(userId)
+  const [user, settings, storageUsage, userData] = await Promise.all([
+    currentUser(),
+    getUserSettings(userId),
+    getUserStorageUsage(userId),
+    getUserWithUsage(userId),
+  ])
 
   return (
     <>
-      <Header />
+      <Header 
+        userPlan={userData?.plan || 'free'}
+        galleryCount={userData?.usage.galleryCount || 0}
+        imageCount={userData?.usage.imageCount || 0}
+        storageUsed={userData?.usage.totalBytes || 0}
+      />
       <main className="container mx-auto px-4 py-8 max-w-2xl">
         <h1 className="text-2xl font-semibold mb-8">Settings</h1>
 
