@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { MessageCircle, X, Send, Loader2, CheckCheck, CheckCircle2, Plus } from 'lucide-react'
+import { QuickShareWidget } from '@/components/share/QuickShareWidget'
 import { useAuth } from '@clerk/nextjs'
 import {
   getOrCreateConversation,
@@ -125,21 +126,29 @@ export function SupportWidget() {
 
   return (
     <>
-      {/* Floating Badge */}
-      <motion.button
-        onClick={() => setIsOpen(true)}
-        className="fixed bottom-6 right-6 z-50 flex items-center justify-center w-14 h-14 rounded-full bg-gradient-to-br from-gray-900 to-gray-800 text-white shadow-lg shadow-gray-900/25 hover:shadow-xl hover:shadow-gray-900/30 transition-shadow"
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
+      {/* Floating Buttons */}
+      <motion.div
+        className="fixed bottom-6 right-6 z-50 flex items-center gap-3"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: isOpen ? 0 : 1, y: isOpen ? 20 : 0, pointerEvents: isOpen ? 'none' : 'auto' }}
         transition={{ duration: 0.2 }}
       >
-        <MessageCircle className="w-6 h-6" />
-        {messages.some((m) => m.sender_type === 'admin' && !m.read_at) && (
-          <span className="absolute top-0 right-0 w-3 h-3 bg-blue-500 rounded-full ring-2 ring-white" />
-        )}
-      </motion.button>
+        {/* Quick Share Widget */}
+        <QuickShareWidget />
+
+        {/* Support Button */}
+        <motion.button
+          onClick={() => setIsOpen(true)}
+          className="flex items-center justify-center w-14 h-14 rounded-full bg-gradient-to-br from-gray-900 to-gray-800 text-white shadow-lg shadow-gray-900/25 hover:shadow-xl hover:shadow-gray-900/30 transition-shadow"
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+        >
+          <MessageCircle className="w-6 h-6" />
+          {messages.some((m) => m.sender_type === 'admin' && !m.read_at) && (
+            <span className="absolute top-0 right-0 w-3 h-3 bg-blue-500 rounded-full ring-2 ring-white" />
+          )}
+        </motion.button>
+      </motion.div>
 
       {/* Chat Window */}
       <AnimatePresence>
