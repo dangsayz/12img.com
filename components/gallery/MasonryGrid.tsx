@@ -5,6 +5,23 @@ import { useRouter } from 'next/navigation'
 import { MasonryItem } from './MasonryItem'
 import { FullscreenViewer } from './FullscreenViewer'
 
+// Vogue-inspired displacement patterns
+// Deterministic based on index for consistency
+function getDisplacement(index: number): { y: number; rotate: number } {
+  // Seeded pseudo-random based on index
+  const seed = (index * 7919) % 100
+  
+  // Vertical displacement: -20px to +20px
+  const yPattern = [0, 12, -8, 20, -15, 5, -20, 15, -5, 8]
+  const y = yPattern[index % 10]
+  
+  // Subtle rotation: -1.5° to +1.5°
+  const rotatePattern = [0, 0.8, -0.5, 1.2, -1, 0.3, -1.2, 0.6, -0.8, 1]
+  const rotate = rotatePattern[index % 10]
+  
+  return { y, rotate }
+}
+
 interface Image {
   id: string
   storagePath?: string  // For on-demand URL fetching
@@ -65,12 +82,11 @@ export function MasonryGrid({ images: initialImages, editable = false, galleryId
   return (
     <>
       {/* 
-        Clean CSS Grid Layout
-        - 2 cols mobile, 3 cols tablet, 4 cols desktop  
-        - 3:4 portrait aspect ratio (no masonry, no layout shifts)
-        - Generous gap for breathing room
+        Vogue Editorial Grid
+        - Sharp edges, displaced cards, 3:4 portrait
+        - Organic stagger for high-fashion feel
       */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6 py-8">
         {images.map((image, index) => (
           <MasonryItem
             key={image.id}
@@ -80,6 +96,7 @@ export function MasonryGrid({ images: initialImages, editable = false, galleryId
             editable={editable}
             galleryId={galleryId}
             onDelete={handleImageDelete}
+            displacement={getDisplacement(index)}
           />
         ))}
       </div>

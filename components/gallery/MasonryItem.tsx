@@ -21,6 +21,10 @@ interface MasonryItemProps {
   editable?: boolean
   galleryId?: string
   onDelete?: (imageId: string) => void
+  displacement?: {
+    y: number
+    rotate: number
+  }
 }
 
 export function MasonryItem({ 
@@ -29,7 +33,8 @@ export function MasonryItem({
   onClick, 
   editable,
   galleryId,
-  onDelete 
+  onDelete,
+  displacement 
 }: MasonryItemProps) {
   const [loaded, setLoaded] = useState(false)
   const [hasError, setHasError] = useState(false)
@@ -84,9 +89,15 @@ export function MasonryItem({
     setShowDeleteConfirm(false)
   }, [])
 
+  // Vogue-inspired displacement transform
+  const displacementStyle = displacement ? {
+    transform: `translateY(${displacement.y}px) rotate(${displacement.rotate}deg)`,
+  } : {}
+
   return (
     <div
-      className="overflow-hidden rounded-xl bg-gray-100 relative group"
+      className="overflow-hidden bg-gray-100 relative group"
+      style={displacementStyle}
       onMouseEnter={() => editable && setIsHovered(true)}
       onMouseLeave={() => {
         setIsHovered(false)

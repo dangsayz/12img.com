@@ -63,6 +63,9 @@ export default async function GalleryViewPage({ params }: Props) {
     }
   })
 
+  // Calculate total file size for download prompt
+  const totalFileSizeBytes = images.reduce((sum, img) => sum + (img.file_size_bytes || 0), 0)
+
   const galleryData = {
     id: gallery.id,
     title: gallery.title,
@@ -109,6 +112,7 @@ export default async function GalleryViewPage({ params }: Props) {
             gallerySlug={gallery.slug}
             images={imagesWithUrls}
             galleryTitle={gallery.title}
+            totalFileSizeBytes={totalFileSizeBytes}
           />
         </div>
 
