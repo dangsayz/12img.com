@@ -5,10 +5,10 @@ import { UserButton } from '@clerk/nextjs'
 import { Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { UsageBadge } from './UsageBadge'
-import type { PlanId } from '@/lib/config/pricing'
+import type { LegacyPlanId } from '@/lib/config/pricing'
 
 interface HeaderProps {
-  userPlan?: PlanId
+  userPlan?: LegacyPlanId | string
   galleryCount?: number
   imageCount?: number
 }

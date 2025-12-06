@@ -1,26 +1,27 @@
 'use client'
 
 import Link from 'next/link'
-import { getPlan, type PlanId } from '@/lib/config/pricing'
+import { getPlan, normalizePlanId, type LegacyPlanId } from '@/lib/config/pricing'
 import { cn } from '@/lib/utils/cn'
 
 interface UsageBadgeProps {
-  plan: PlanId
+  plan: LegacyPlanId | string
   galleryCount: number
   imageCount: number
 }
 
 export function UsageBadge({ plan, galleryCount, imageCount }: UsageBadgeProps) {
-  const planData = getPlan(plan)
+  const normalizedPlan = normalizePlanId(plan)
+  const planData = getPlan(normalizedPlan)
   
   if (!planData) return null
   
-  const galleryLimit = planData.limits.galleries
+  const galleryLimit = planData.limits.gallery_limit
   
   // Calculate usage percentages
   const galleryPercent = galleryLimit === 'unlimited' 
     ? 0 
-    : Math.min((galleryCount / galleryLimit) * 100, 100)
+    : Math.min((galleryCount / (galleryLimit as number)) * 100, 100)
   
   const isNearLimit = galleryPercent >= 80
   const isAtLimit = galleryPercent >= 100
@@ -40,10 +41,11 @@ export function UsageBadge({ plan, galleryCount, imageCount }: UsageBadgeProps) 
         {/* Plan Pill */}
         <span className={cn(
           "text-[11px] font-medium tracking-wide px-3 py-1.5 rounded-full transition-colors",
-          plan === 'free' && "bg-gray-100/80 text-gray-500",
-          plan === 'basic' && "bg-amber-50 text-amber-600",
-          plan === 'pro' && "bg-emerald-50 text-emerald-600",
-          plan === 'studio' && "bg-violet-50 text-violet-600",
+          normalizedPlan === 'free' && "bg-gray-100/80 text-gray-500",
+          normalizedPlan === 'essential' && "bg-amber-50 text-amber-600",
+          normalizedPlan === 'pro' && "bg-emerald-50 text-emerald-600",
+          normalizedPlan === 'studio' && "bg-violet-50 text-violet-600",
+          normalizedPlan === 'elite' && "bg-purple-50 text-purple-600",
         )}>
           {planData.name}
         </span>

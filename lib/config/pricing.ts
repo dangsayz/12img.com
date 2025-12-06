@@ -1,11 +1,31 @@
 /**
  * Centralized Pricing Configuration
  * 
- * All pricing information for 12img is defined here.
- * Update this file to change pricing across the entire application.
+ * SIMPLE STORAGE-ONLY PRICING
+ * No video, no RAW, no branding features
+ * Only photo uploads + storage
  */
 
-export type PlanId = 'free' | 'basic' | 'pro' | 'studio'
+export type PlanId = 'free' | 'essential' | 'pro' | 'studio' | 'elite'
+
+// Legacy plan mapping (basic -> essential)
+export type LegacyPlanId = PlanId | 'basic'
+
+export function normalizePlanId(plan: string | undefined | null): PlanId {
+  if (!plan) return 'free'
+  if (plan === 'basic') return 'essential' // Map legacy basic to essential
+  if (['free', 'essential', 'pro', 'studio', 'elite'].includes(plan)) {
+    return plan as PlanId
+  }
+  return 'free'
+}
+
+export interface PlanLimits {
+  storage_gb: number | 'unlimited'
+  image_limit: number | 'unlimited'
+  gallery_limit: number | 'unlimited'
+  expiry_days: number | 'unlimited'
+}
 
 export interface PricingPlan {
   id: PlanId
@@ -13,139 +33,143 @@ export interface PricingPlan {
   description: string
   monthlyPrice: number
   yearlyPrice: number
-  yearlyDiscount: string // e.g., "Save 2 months"
+  limits: PlanLimits
   features: string[]
-  limits: {
-    galleries: number | 'unlimited'
-    imagesPerGallery: number | 'unlimited'
-    storage?: string
-    linkExpiry: string
-  }
   cta: string
-  ctaHref: string
   popular?: boolean
-  badge?: string
 }
 
-// Core pricing values - change these to update prices everywhere
+// Core pricing values
 export const PRICING = {
-  free: {
-    monthly: 0,
-    yearly: 0,
-  },
-  basic: {
-    monthly: 10,
-    yearly: 100, // Save $20/year
-  },
-  pro: {
-    monthly: 15,
-    yearly: 150, // Save $30/year (2 months free)
-  },
-  studio: {
-    monthly: 20,
-    yearly: 200, // Save $40/year (2 months free)
-  },
+  free: { monthly: 0, yearly: 0 },
+  essential: { monthly: 6, yearly: 60 },
+  pro: { monthly: 12, yearly: 120 },
+  studio: { monthly: 18, yearly: 180 },
+  elite: { monthly: 30, yearly: 300 },
 } as const
 
-// Full plan definitions
+// Plan limits for enforcement
+export const PLAN_LIMITS: Record<PlanId, PlanLimits> = {
+  free: {
+    storage_gb: 2,
+    image_limit: 1300,
+    gallery_limit: 3,
+    expiry_days: 7,
+  },
+  essential: {
+    storage_gb: 10,
+    image_limit: 4000,
+    gallery_limit: 'unlimited',
+    expiry_days: 'unlimited',
+  },
+  pro: {
+    storage_gb: 100,
+    image_limit: 31000,
+    gallery_limit: 'unlimited',
+    expiry_days: 'unlimited',
+  },
+  studio: {
+    storage_gb: 500,
+    image_limit: 151000,
+    gallery_limit: 'unlimited',
+    expiry_days: 'unlimited',
+  },
+  elite: {
+    storage_gb: 'unlimited',
+    image_limit: 'unlimited',
+    gallery_limit: 'unlimited',
+    expiry_days: 'unlimited',
+  },
+}
+
+// Full plan definitions for UI
 export const PLANS: PricingPlan[] = [
   {
     id: 'free',
     name: 'Free',
-    description: 'Perfect to try it out',
+    description: 'Try it out',
     monthlyPrice: PRICING.free.monthly,
     yearlyPrice: PRICING.free.yearly,
-    yearlyDiscount: 'Free forever',
+    limits: PLAN_LIMITS.free,
     features: [
+      '2GB storage',
+      '1,300 images',
       '3 galleries',
-      '50 images per gallery',
-      'Password protection',
-      '7-day link expiry',
+      'JPG only',
+      '7-day gallery expiry',
     ],
-    limits: {
-      galleries: 3,
-      imagesPerGallery: 50,
-      linkExpiry: '7 days',
-    },
     cta: 'Get started',
-    ctaHref: '/sign-up',
   },
   {
-    id: 'basic',
-    name: 'Basic',
-    description: 'For hobbyists',
-    monthlyPrice: PRICING.basic.monthly,
-    yearlyPrice: PRICING.basic.yearly,
-    yearlyDiscount: 'Save $20/year',
+    id: 'essential',
+    name: 'Essential',
+    description: 'For getting started',
+    monthlyPrice: PRICING.essential.monthly,
+    yearlyPrice: PRICING.essential.yearly,
+    limits: PLAN_LIMITS.essential,
     features: [
-      '10 galleries',
-      '200 images per gallery',
-      'High quality exports',
-      'Password protection',
-      '30-day link expiry',
+      '10GB storage',
+      '4,000 images',
+      'Unlimited galleries',
+      'No expiry',
     ],
-    limits: {
-      galleries: 10,
-      imagesPerGallery: 200,
-      linkExpiry: '30 days',
-    },
-    cta: 'Get Basic',
-    ctaHref: '/sign-up?plan=basic',
+    cta: 'Get Essential',
   },
   {
     id: 'pro',
     name: 'Pro',
-    description: 'Most popular for pros',
+    description: 'For professionals',
     monthlyPrice: PRICING.pro.monthly,
     yearlyPrice: PRICING.pro.yearly,
-    yearlyDiscount: 'Save 2 months',
+    limits: PLAN_LIMITS.pro,
     features: [
-      '50 galleries',
-      '500 images per gallery',
-      'Auto ZIP backup',
-      'Custom branding',
-      'Analytics dashboard',
-      'No link expiry',
+      '100GB storage',
+      '31,000 images',
+      'Unlimited galleries',
+      'No expiry',
     ],
-    limits: {
-      galleries: 50,
-      imagesPerGallery: 500,
-      linkExpiry: 'Never expires',
-    },
     cta: 'Get Pro',
-    ctaHref: '/sign-up?plan=pro',
     popular: true,
-    badge: 'Most Popular',
   },
   {
     id: 'studio',
     name: 'Studio',
-    description: 'For high-volume professionals',
+    description: 'For high-volume',
     monthlyPrice: PRICING.studio.monthly,
     yearlyPrice: PRICING.studio.yearly,
-    yearlyDiscount: 'Save 2 months',
+    limits: PLAN_LIMITS.studio,
     features: [
+      '500GB storage',
+      '151,000 images',
       'Unlimited galleries',
-      'Unlimited images',
-      'Everything in Pro',
-      'Priority support',
-      'Team access (coming)',
-      'Custom domain',
-      'White-label',
+      'No expiry',
     ],
-    limits: {
-      galleries: 'unlimited',
-      imagesPerGallery: 'unlimited',
-      linkExpiry: 'Never expires',
-    },
     cta: 'Get Studio',
-    ctaHref: '/sign-up?plan=studio',
+  },
+  {
+    id: 'elite',
+    name: 'Elite',
+    description: 'Unlimited everything',
+    monthlyPrice: PRICING.elite.monthly,
+    yearlyPrice: PRICING.elite.yearly,
+    limits: PLAN_LIMITS.elite,
+    features: [
+      'Unlimited storage',
+      'Unlimited images',
+      'Unlimited galleries',
+      'Priority support',
+    ],
+    cta: 'Get Elite',
   },
 ]
 
 // Helper functions
 export function getPlan(id: PlanId): PricingPlan | undefined {
   return PLANS.find(plan => plan.id === id)
+}
+
+export function getPlanLimits(id: PlanId): PlanLimits {
+  return PLAN_LIMITS[id] || PLAN_LIMITS.free
 }
 
 export function getPopularPlan(): PricingPlan | undefined {
@@ -155,16 +179,40 @@ export function getPopularPlan(): PricingPlan | undefined {
 export function formatPrice(amount: number, period?: 'month' | 'year'): string {
   if (amount === 0) return 'Free'
   const formatted = `$${amount}`
-  if (period) return `${formatted}/${period}`
+  if (period) return `${formatted}/${period === 'month' ? 'mo' : 'yr'}`
   return formatted
 }
 
-export function getYearlySavings(planId: PlanId): number {
-  const plan = PRICING[planId]
-  return (plan.monthly * 12) - plan.yearly
+export function formatStorage(gb: number | 'unlimited'): string {
+  if (gb === 'unlimited') return 'Unlimited'
+  if (gb >= 1000) return `${gb / 1000}TB`
+  return `${gb}GB`
+}
+
+export function formatImageLimit(limit: number | 'unlimited'): string {
+  if (limit === 'unlimited') return 'Unlimited'
+  return limit.toLocaleString()
+}
+
+// Storage in bytes for calculations
+export function getStorageLimitBytes(planId: PlanId): number {
+  const limit = PLAN_LIMITS[planId]?.storage_gb
+  if (limit === 'unlimited') return Infinity
+  return (limit as number) * 1024 * 1024 * 1024 // Convert GB to bytes
+}
+
+export function getImageLimit(planId: PlanId): number {
+  const limit = PLAN_LIMITS[planId]?.image_limit
+  if (limit === 'unlimited') return Infinity
+  return limit as number
+}
+
+export function getGalleryLimit(planId: PlanId): number {
+  const limit = PLAN_LIMITS[planId]?.gallery_limit
+  if (limit === 'unlimited') return Infinity
+  return limit as number
 }
 
 // Compare competitor pricing
-export const COMPETITOR_YEARLY_PRICE = 300 // What competitors charge per year
-export const OUR_YEARLY_PRICE = PRICING.pro.yearly // Our Pro plan yearly
-
+export const COMPETITOR_YEARLY_PRICE = 300
+export const OUR_YEARLY_PRICE = PRICING.pro.yearly

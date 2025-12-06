@@ -128,7 +128,7 @@ export function PhotographerSection() {
                   <span className="text-5xl font-bold text-[#1C1917]">${proPlan.monthlyPrice}</span>
                   <span className="text-[#78716C]">/month</span>
                 </div>
-                <p className="text-sm text-[#A8A29E] mt-1">or ${proPlan.yearlyPrice}/year ({proPlan.yearlyDiscount})</p>
+                <p className="text-sm text-[#A8A29E] mt-1">or ${proPlan.yearlyPrice}/year</p>
               </div>
 
               {/* Features */}
@@ -144,7 +144,7 @@ export function PhotographerSection() {
               </div>
 
               {/* CTA */}
-              <Link href={proPlan.ctaHref} className="block">
+              <Link href={`/sign-up?plan=${proPlan.id}`} className="block">
                 <Button size="lg" className="w-full group">
                   {proPlan.cta}
                   <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />

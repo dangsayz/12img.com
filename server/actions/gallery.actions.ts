@@ -12,7 +12,7 @@ import {
   getGalleryWithOwnershipCheck,
   verifyGalleryOwnership,
 } from '@/server/queries/gallery.queries'
-import { getPlan, type PlanId } from '@/lib/config/pricing'
+import { getPlan, normalizePlanId } from '@/lib/config/pricing'
 import { sendGalleryInviteEmail } from '@/server/services/email.service'
 
 export async function createGallery(formData: FormData) {
@@ -25,18 +25,18 @@ export async function createGallery(formData: FormData) {
   if (!user) return { error: 'User not found' }
 
   // Check gallery limit based on user's plan
-  const userPlan = (user.plan || 'free') as PlanId
+  const userPlan = normalizePlanId(user.plan)
   const plan = getPlan(userPlan)
   
-  if (plan && plan.limits.galleries !== 'unlimited') {
+  if (plan && plan.limits.gallery_limit !== 'unlimited') {
     const { count: currentGalleryCount } = await supabaseAdmin
       .from('galleries')
       .select('*', { count: 'exact', head: true })
       .eq('user_id', user.id)
     
-    if (currentGalleryCount !== null && currentGalleryCount >= plan.limits.galleries) {
+    if (currentGalleryCount !== null && currentGalleryCount >= (plan.limits.gallery_limit as number)) {
       return { 
-        error: `You've reached the ${plan.limits.galleries} gallery limit for the ${plan.name} plan. Upgrade to create more galleries.`,
+        error: `You've reached the ${plan.limits.gallery_limit} gallery limit for the ${plan.name} plan. Upgrade to create more galleries.`,
         limitReached: true,
       }
     }

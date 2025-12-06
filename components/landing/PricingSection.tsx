@@ -13,7 +13,7 @@ const plans = PLANS.map(plan => ({
   description: plan.description,
   features: plan.features,
   cta: plan.cta,
-  href: plan.ctaHref,
+  href: `/sign-up?plan=${plan.id}`,
   popular: plan.popular || false,
 }))
 

@@ -15,11 +15,13 @@ export default async function CreateGalleryPage() {
   }
 
   const userData = await getUserWithUsage(userId)
-  const plan = getPlan(userData?.plan || 'free')
+  // Map 'basic' to 'essential' for legacy support
+  const planId = userData?.plan === 'basic' ? 'essential' : (userData?.plan || 'free')
+  const plan = getPlan(planId as any)
   
-  const galleryLimit = plan?.limits.galleries === 'unlimited' 
+  const galleryLimit = plan?.limits.gallery_limit === 'unlimited' 
     ? Infinity 
-    : (plan?.limits.galleries || 3)
+    : (plan?.limits.gallery_limit || 3)
   
   const currentCount = userData?.usage.galleryCount || 0
   const isAtLimit = currentCount >= galleryLimit
