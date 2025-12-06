@@ -110,7 +110,9 @@ export async function getUserWithUsage(clerkId: string) {
   return {
     id: user.id,
     email: user.email,
-    plan: (user.plan || 'free') as 'free' | 'basic' | 'pro' | 'studio',
+    plan: (user.plan || 'free') as 'free' | 'basic' | 'essential' | 'pro' | 'studio' | 'elite',
+    stripeCustomerId: user.stripe_customer_id,
+    stripeSubscriptionId: user.stripe_subscription_id,
     usage,
   }
 }

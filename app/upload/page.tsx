@@ -32,6 +32,7 @@ export default async function CreateGalleryPage() {
         userPlan={userData?.plan || 'free'}
         galleryCount={currentCount}
         imageCount={userData?.usage.imageCount || 0}
+        storageUsed={userData?.usage.totalBytes || 0}
       />
       
       <CreateGalleryForm 

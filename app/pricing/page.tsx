@@ -17,7 +17,7 @@ export default function PricingPage() {
     <>
       <Header />
       <main className="min-h-screen bg-[#FAF8F3]">
-        <div className="container mx-auto px-4 py-16 max-w-7xl">
+        <div className="container mx-auto px-4 pt-28 pb-16 max-w-7xl">
           <div className="text-center mb-12">
             <h1 className="text-4xl font-bold text-[#1C1917] mb-4">Simple, honest pricing</h1>
             <p className="text-lg text-[#78716C]">

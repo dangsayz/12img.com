@@ -6,8 +6,9 @@ import { v4 as uuidv4 } from 'uuid'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 import { getSignedUploadUrl } from '@/lib/storage/signed-urls'
 import { ALLOWED_MIME_TYPES, MAX_FILE_SIZE, MIME_TO_EXT } from '@/lib/utils/constants'
-import { getOrCreateUserByClerkId } from '@/server/queries/user.queries'
+import { getOrCreateUserByClerkId, getUserStorageUsage } from '@/server/queries/user.queries'
 import { verifyGalleryOwnership, getGalleryById } from '@/server/queries/gallery.queries'
+import { normalizePlanId, getStorageLimitBytes, getImageLimit } from '@/lib/config/pricing'
 
 interface UploadFileMetadata {
   localId: string
@@ -55,13 +56,36 @@ export async function generateSignedUploadUrls(request: {
   const isOwner = await verifyGalleryOwnership(request.galleryId, user.id)
   if (!isOwner) throw new Error('Access denied')
 
+  // Get user's current usage and plan limits
+  const usage = await getUserStorageUsage(clerkId)
+  const planId = normalizePlanId(user.plan)
+  
+  // Calculate total size of this upload batch
+  const batchSize = request.files.reduce((sum, f) => sum + f.fileSize, 0)
+  const batchCount = request.files.length
+  
+  // Check storage limit
+  const storageLimit = getStorageLimitBytes(planId)
+  if (storageLimit !== Infinity && (usage.totalBytes + batchSize) > storageLimit) {
+    const usedGB = (usage.totalBytes / (1024 * 1024 * 1024)).toFixed(1)
+    const limitGB = storageLimit / (1024 * 1024 * 1024)
+    throw new Error(`Storage limit exceeded. You've used ${usedGB}GB of ${limitGB}GB. Please upgrade your plan.`)
+  }
+  
+  // Check image count limit
+  const imageLimit = getImageLimit(planId)
+  if (imageLimit !== Infinity && (usage.imageCount + batchCount) > imageLimit) {
+    throw new Error(`Image limit exceeded. You have ${usage.imageCount} of ${imageLimit} images. Please upgrade your plan.`)
+  }
+
   const responses: UploadUrlResponse[] = []
 
   for (const file of request.files) {
-    // Validate
+    // Validate file size
     if (file.fileSize > MAX_FILE_SIZE) {
       throw new Error(`File too large: ${file.originalFilename}`)
     }
+    // Validate file type
     if (!ALLOWED_MIME_TYPES.includes(file.mimeType as typeof ALLOWED_MIME_TYPES[number])) {
       throw new Error(`Invalid file type: ${file.mimeType}`)
     }

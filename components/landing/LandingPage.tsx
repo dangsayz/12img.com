@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { PricingButton } from '@/components/billing/PricingButton'
+import { Header } from '@/components/layout/Header'
 // Custom lightweight icons
 const IconZap = ({ className = '' }: { className?: string }) => (
   <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -60,33 +61,8 @@ import { PLANS } from '@/lib/config/pricing'
 export function LandingPage() {
   return (
     <main className="min-h-screen bg-[#FAF8F3]">
-      {/* Clean Fixed Nav */}
-      <nav className="fixed top-0 left-0 right-0 z-50 px-4 py-4">
-        <div className="max-w-6xl mx-auto">
-          <div className="flex items-center justify-between bg-white/90 backdrop-blur-sm border border-[#E8E4DC] rounded-2xl px-5 py-3 shadow-sm">
-            <Link href="/" className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-[#1C1917] flex items-center justify-center text-white text-xs font-bold">
-                12
-              </div>
-              <span className="text-[17px] font-semibold text-[#1C1917]">img</span>
-            </Link>
-            <div className="flex items-center gap-3">
-              <Link 
-                href="/sign-in" 
-                className="text-sm font-medium text-[#78716C] hover:text-[#1C1917] transition-colors hidden sm:block px-3 py-2"
-              >
-                Sign In
-              </Link>
-              <Link 
-                href="/sign-up"
-                className="text-sm font-semibold text-white bg-[#1C1917] hover:bg-[#292524] px-5 py-2.5 rounded-xl transition-colors"
-              >
-                Get Started
-              </Link>
-            </div>
-          </div>
-        </div>
-      </nav>
+      {/* Universal Nav */}
+      <Header isAuthenticated={false} />
 
       {/* Hero Section - Clean & Simple */}
       <section className="pt-32 pb-16 px-4">
