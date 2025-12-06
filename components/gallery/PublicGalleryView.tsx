@@ -102,26 +102,48 @@ function HeroImage({
   image, 
   title,
   isOwner,
+  gallerySlug,
   onChangeCover
 }: { 
   image: Image
   title: string
   isOwner?: boolean
+  gallerySlug?: string
   onChangeCover?: () => void
 }) {
   const { scrollY } = useScroll()
-  const y = useTransform(scrollY, [0, 500], [0, 150])
-  const opacity = useTransform(scrollY, [0, 400], [1, 0])
-  const scale = useTransform(scrollY, [0, 500], [1, 1.1])
+  const y = useTransform(scrollY, [0, 500], [0, 100])
+  const opacity = useTransform(scrollY, [0, 300], [1, 0])
+  const scale = useTransform(scrollY, [0, 500], [1, 1.05])
   const [hasError, setHasError] = useState(false)
   const [isHovered, setIsHovered] = useState(false)
+  const [showCopied, setShowCopied] = useState(false)
+  
+  const handleShare = async () => {
+    const url = window.location.href
+    try {
+      await navigator.clipboard.writeText(url)
+      setShowCopied(true)
+      setTimeout(() => setShowCopied(false), 2000)
+    } catch {
+      // Fallback
+      const input = document.createElement('input')
+      input.value = url
+      document.body.appendChild(input)
+      input.select()
+      document.execCommand('copy')
+      document.body.removeChild(input)
+      setShowCopied(true)
+      setTimeout(() => setShowCopied(false), 2000)
+    }
+  }
   
   // Debug
   console.log('[HeroImage] URL:', image.signedUrl?.substring(0, 100) + '...')
   
   return (
     <section 
-      className="relative h-[85vh] sm:h-screen overflow-hidden bg-neutral-900"
+      className="relative h-[55vh] sm:h-[65vh] overflow-hidden bg-neutral-900"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
@@ -131,7 +153,7 @@ function HeroImage({
           <img
             src={image.signedUrl}
             alt=""
-            className="w-full h-full object-cover"
+            className="w-full h-full object-cover object-center"
             onError={() => {
               console.error('[HeroImage] Failed to load image')
               setHasError(true)
@@ -155,24 +177,45 @@ function HeroImage({
         <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/10 to-black/70" />
       </motion.div>
 
-      {/* Change Cover Overlay - Only for owners */}
-      {isOwner && (
-        <AnimatePresence>
-          {isHovered && (
-            <motion.button
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.2 }}
-              onClick={onChangeCover}
-              className="absolute top-6 right-6 z-20 flex items-center gap-2 px-4 py-2.5 bg-black/60 hover:bg-black/80 backdrop-blur-sm rounded-full text-white text-sm font-medium transition-colors cursor-pointer"
-            >
-              <Camera className="w-4 h-4" />
-              Change Cover
-            </motion.button>
+      {/* Top Actions Bar */}
+      <div className="absolute top-0 left-0 right-0 z-20 p-4 sm:p-6 flex items-center justify-between">
+        {/* Share Button - Always visible */}
+        <button
+          onClick={handleShare}
+          className="flex items-center gap-2 px-4 py-2.5 bg-black/50 hover:bg-black/70 backdrop-blur-sm rounded-full text-white text-sm font-medium transition-colors"
+        >
+          {showCopied ? (
+            <>
+              <Check className="w-4 h-4 text-green-400" />
+              <span className="hidden sm:inline">Link Copied!</span>
+            </>
+          ) : (
+            <>
+              <Share2 className="w-4 h-4" />
+              <span className="hidden sm:inline">Share Gallery</span>
+            </>
           )}
-        </AnimatePresence>
-      )}
+        </button>
+
+        {/* Change Cover - Only for owners */}
+        {isOwner && (
+          <AnimatePresence>
+            {isHovered && (
+              <motion.button
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                onClick={onChangeCover}
+                className="flex items-center gap-2 px-4 py-2.5 bg-black/50 hover:bg-black/70 backdrop-blur-sm rounded-full text-white text-sm font-medium transition-colors cursor-pointer"
+              >
+                <Camera className="w-4 h-4" />
+                Change Cover
+              </motion.button>
+            )}
+          </AnimatePresence>
+        )}
+      </div>
       
       {/* Content */}
       <motion.div 
@@ -449,6 +492,7 @@ export function PublicGalleryView({
           image={coverImage} 
           title={title} 
           isOwner={isOwner}
+          gallerySlug={gallerySlug}
           onChangeCover={() => setCoverPickerOpen(true)}
         />
       )}
