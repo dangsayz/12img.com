@@ -4,12 +4,14 @@ import { useEffect, useCallback, useState, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { X, ChevronLeft, ChevronRight, Download, Loader2, Share2, Check } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { getPreviewUrls, getOriginalUrl } from '@/server/actions/gallery.actions'
 
 interface Image {
   id: string
+  storagePath?: string  // For on-demand URL fetching
   thumbnailUrl: string  // 400px for grid thumbnails
-  previewUrl: string    // 1920px for fullscreen viewing (crisp, optimized)
-  originalUrl: string   // Full resolution for downloads only
+  previewUrl: string    // 1920px for fullscreen viewing (loaded on-demand)
+  originalUrl: string   // Full resolution for downloads only (loaded on-demand)
 }
 
 interface FullscreenViewerProps {
@@ -30,14 +32,21 @@ export function FullscreenViewer({
   gallerySlug,
 }: FullscreenViewerProps) {
   const [mounted, setMounted] = useState(false)
-  // Zoom removed - users view at optimal 1920px, download for full res
   const [showControls, setShowControls] = useState(true)
   const [imageLoaded, setImageLoaded] = useState(false)
   const [isDownloading, setIsDownloading] = useState(false)
   const [showCopied, setShowCopied] = useState(false)
+  // Cache for on-demand loaded URLs
+  const [previewUrlCache, setPreviewUrlCache] = useState<Record<string, string>>({})
+  const [isLoadingPreview, setIsLoadingPreview] = useState(false)
   const touchStart = useRef<{ x: number; y: number } | null>(null)
   const controlsTimeout = useRef<NodeJS.Timeout | null>(null)
   const currentImage = images[currentIndex]
+  
+  // Get preview URL (from prop or cache)
+  const currentPreviewUrl = currentImage.previewUrl || 
+    (currentImage.storagePath ? previewUrlCache[currentImage.storagePath] : '') ||
+    currentImage.thumbnailUrl // Fallback to thumbnail while loading
 
   // Share individual image
   const handleShare = useCallback(async () => {
@@ -62,15 +71,61 @@ export function FullscreenViewer({
     }
   }, [gallerySlug, currentImage.id])
 
-  // Download image at full resolution
+  // Fetch preview URLs on-demand when fullscreen opens or navigates
+  useEffect(() => {
+    const fetchPreviewUrls = async () => {
+      // Get current and adjacent images that need preview URLs
+      const indicesToFetch = [
+        currentIndex,
+        (currentIndex + 1) % images.length,
+        (currentIndex - 1 + images.length) % images.length,
+      ]
+      
+      const pathsToFetch = indicesToFetch
+        .map(i => images[i])
+        .filter(img => img.storagePath && !img.previewUrl && !previewUrlCache[img.storagePath!])
+        .map(img => img.storagePath!)
+      
+      if (pathsToFetch.length === 0) return
+      
+      setIsLoadingPreview(true)
+      try {
+        const result = await getPreviewUrls(pathsToFetch)
+        if ('urls' in result) {
+          setPreviewUrlCache(prev => ({ ...prev, ...result.urls }))
+        }
+      } catch (e) {
+        console.error('Failed to fetch preview URLs:', e)
+      } finally {
+        setIsLoadingPreview(false)
+      }
+    }
+    
+    fetchPreviewUrls()
+  }, [currentIndex, images, previewUrlCache])
+
+  // Download image at full resolution (fetches original URL on-demand)
   const handleDownload = useCallback(async () => {
     if (isDownloading) return
     
     setIsDownloading(true)
     
     try {
+      // Get original URL on-demand if not available
+      let downloadUrl = currentImage.originalUrl
+      if (!downloadUrl && currentImage.storagePath) {
+        const result = await getOriginalUrl(currentImage.storagePath)
+        if ('url' in result) {
+          downloadUrl = result.url
+        } else {
+          throw new Error(result.error)
+        }
+      }
+      
+      if (!downloadUrl) throw new Error('No download URL available')
+      
       // Fetch the image as a blob (full resolution)
-      const response = await fetch(currentImage.originalUrl)
+      const response = await fetch(downloadUrl)
       if (!response.ok) throw new Error('Failed to fetch image')
       
       const blob = await response.blob()
@@ -102,7 +157,7 @@ export function FullscreenViewer({
     } finally {
       setIsDownloading(false)
     }
-  }, [currentImage.originalUrl, currentIndex, galleryTitle, isDownloading])
+  }, [currentImage.originalUrl, currentImage.storagePath, currentIndex, galleryTitle, isDownloading])
 
   // Reset states on image change
   useEffect(() => {
@@ -171,17 +226,23 @@ export function FullscreenViewer({
     setMounted(true)
   }, [])
 
-  // Preload adjacent preview images (not full res - saves bandwidth)
+  // Preload adjacent preview images from cache
   useEffect(() => {
     const preloadIndexes = [
       (currentIndex - 1 + images.length) % images.length,
       (currentIndex + 1) % images.length,
     ]
     preloadIndexes.forEach(i => {
-      const img = new window.Image()
-      img.src = images[i].previewUrl
+      const image = images[i]
+      const url = image.previewUrl || 
+        (image.storagePath ? previewUrlCache[image.storagePath] : '') ||
+        image.thumbnailUrl
+      if (url) {
+        const img = new window.Image()
+        img.src = url
+      }
     })
-  }, [currentIndex, images])
+  }, [currentIndex, images, previewUrlCache])
 
   // Swipe handling
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
@@ -351,7 +412,7 @@ export function FullscreenViewer({
               </div>
             )}
             <img
-              src={currentImage.previewUrl}
+              src={currentPreviewUrl}
               alt=""
               className={`max-w-full max-h-full object-contain rounded-lg shadow-2xl transition-all duration-300 ${
                 imageLoaded ? 'opacity-100' : 'opacity-0'

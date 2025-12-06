@@ -14,6 +14,7 @@ import {
 } from '@/server/queries/gallery.queries'
 import { getPlan, normalizePlanId } from '@/lib/config/pricing'
 import { sendGalleryInviteEmail } from '@/server/services/email.service'
+import { getSignedUrlsBatch } from '@/lib/storage/signed-urls'
 
 export async function createGallery(formData: FormData) {
   const { userId: clerkId } = await auth()
@@ -293,5 +294,42 @@ export async function sendGalleryToClient(
   } catch (e) {
     console.error('[sendGalleryToClient] Error:', e)
     return { error: 'Failed to send gallery' }
+  }
+}
+
+/**
+ * Get preview URLs for images on-demand (for fullscreen viewing)
+ * This is called when user opens fullscreen viewer, not on page load
+ */
+export async function getPreviewUrls(
+  storagePaths: string[]
+): Promise<{ urls: Record<string, string> } | { error: string }> {
+  try {
+    const urlMap = await getSignedUrlsBatch(storagePaths, undefined, 'PREVIEW')
+    const urls: Record<string, string> = {}
+    urlMap.forEach((url, path) => {
+      urls[path] = url
+    })
+    return { urls }
+  } catch (e) {
+    console.error('[getPreviewUrls] Error:', e)
+    return { error: 'Failed to get preview URLs' }
+  }
+}
+
+/**
+ * Get original URL for a single image (for downloads)
+ */
+export async function getOriginalUrl(
+  storagePath: string
+): Promise<{ url: string } | { error: string }> {
+  try {
+    const urlMap = await getSignedUrlsBatch([storagePath], undefined, 'ORIGINAL')
+    const url = urlMap.get(storagePath)
+    if (!url) return { error: 'URL not found' }
+    return { url }
+  } catch (e) {
+    console.error('[getOriginalUrl] Error:', e)
+    return { error: 'Failed to get original URL' }
   }
 }
