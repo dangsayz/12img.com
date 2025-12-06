@@ -4,6 +4,7 @@ import { Inter, Cormorant_Garamond } from 'next/font/google'
 import './globals.css'
 import { Footer } from '@/components/landing/Footer'
 import { OrganizationJsonLd, SoftwareApplicationJsonLd } from '@/components/seo/JsonLd'
+import { SupportWidget } from '@/components/support/SupportWidget'
 
 const inter = Inter({ 
   subsets: ['latin'],
@@ -181,6 +182,7 @@ export default function RootLayout({
         <body className={`${inter.variable} ${cormorant.variable} font-sans antialiased`}>
           {children}
           <Footer />
+          <SupportWidget />
         </body>
       </html>
     </ClerkProvider>

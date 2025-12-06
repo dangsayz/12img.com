@@ -6,6 +6,7 @@ import { Dashboard } from '@/components/dashboard/Dashboard'
 import { LandingPage } from '@/components/landing/LandingPage'
 
 export const dynamic = 'force-dynamic'
+export const revalidate = 0
 
 export default async function HomePage() {
   const { userId } = await auth()

@@ -19,6 +19,7 @@ import {
   Shield,
   ChevronRight,
   ExternalLink,
+  MessageCircle,
 } from 'lucide-react'
 import { RealtimeIndicator } from './RealtimeIndicator'
 
@@ -58,6 +59,11 @@ const NAV_ITEMS = [
     title: 'Emails',
     href: '/admin/emails',
     icon: Mail,
+  },
+  {
+    title: 'Support',
+    href: '/admin/support',
+    icon: MessageCircle,
   },
   {
     title: 'Audit Logs',

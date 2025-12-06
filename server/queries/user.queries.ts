@@ -149,13 +149,35 @@ export async function getUserWithUsage(clerkId: string) {
 
   const usage = await getUserStorageUsage(clerkId)
   
+  // Check if admin-granted plan has expired
+  let effectivePlan = user.plan || 'free'
+  const expiresAt = user.admin_plan_expires_at
+  
+  if (expiresAt && new Date(expiresAt) < new Date()) {
+    // Plan has expired - revert to free
+    effectivePlan = 'free'
+    
+    // Update database to clear expired plan (async, don't wait)
+    void supabaseAdmin
+      .from('users')
+      .update({ 
+        plan: 'free',
+        admin_plan_expires_at: null,
+        admin_plan_granted_by: null,
+        admin_plan_granted_at: null,
+      })
+      .eq('id', user.id)
+      .then(() => console.log(`Auto-reverted expired plan for user ${user.id}`))
+  }
+  
   return {
     id: user.id,
     email: user.email,
-    plan: (user.plan || 'free') as 'free' | 'basic' | 'essential' | 'pro' | 'studio' | 'elite',
+    plan: effectivePlan as 'free' | 'basic' | 'essential' | 'pro' | 'studio' | 'elite',
     role: (user.role || 'user') as UserRole,
     stripeCustomerId: user.stripe_customer_id,
     stripeSubscriptionId: user.stripe_subscription_id,
+    planExpiresAt: expiresAt,
     usage,
   }
 }

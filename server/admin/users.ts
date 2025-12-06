@@ -290,11 +290,12 @@ export async function updateUserLimits(
 }
 
 /**
- * Update user's subscription plan
+ * Update user's subscription plan (with 30-day expiry for admin grants)
  */
 export async function updateUserPlan(
   userId: string,
-  plan: string
+  plan: string,
+  expiryDays: number = 30
 ): Promise<void> {
   const admin = await requireCapability('users.update_plan')
   
@@ -308,9 +309,20 @@ export async function updateUserPlan(
     throw new Error('User not found')
   }
   
+  // Calculate expiry date (30 days from now for non-free plans)
+  const now = new Date()
+  const expiresAt = plan === 'free' 
+    ? null 
+    : new Date(now.getTime() + expiryDays * 24 * 60 * 60 * 1000).toISOString()
+  
   const { error } = await supabaseAdmin
     .from('users')
-    .update({ plan })
+    .update({ 
+      plan,
+      admin_plan_expires_at: expiresAt,
+      admin_plan_granted_by: plan === 'free' ? null : admin.userId,
+      admin_plan_granted_at: plan === 'free' ? null : now.toISOString(),
+    })
     .eq('id', userId)
   
   if (error) {
@@ -321,7 +333,12 @@ export async function updateUserPlan(
     targetType: 'user',
     targetId: userId,
     targetIdentifier: targetUser.email,
-    metadata: { previousPlan: targetUser.plan, newPlan: plan },
+    metadata: { 
+      previousPlan: targetUser.plan, 
+      newPlan: plan,
+      expiresAt: expiresAt,
+      expiryDays: plan === 'free' ? null : expiryDays,
+    },
   })
 }
 
