@@ -3,7 +3,7 @@
 import { useState, useCallback, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
-import { Upload, Check, Copy, Link as LinkIcon, Image as ImageIcon, X } from 'lucide-react'
+import { Upload, X } from 'lucide-react'
 
 type Status = 'idle' | 'uploading' | 'success' | 'error'
 
@@ -218,66 +218,79 @@ export default function SharePage() {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
-                className="bg-white border border-neutral-200 rounded-2xl p-8 sm:p-12"
+                className="bg-white border border-neutral-200 rounded-2xl p-6 sm:p-8"
               >
+                {/* 3:4 Vertical Image Preview */}
                 {preview && (
                   <div className="mb-6">
-                    <img
-                      src={preview}
-                      alt="Uploaded"
-                      className="w-40 h-40 object-cover rounded-xl mx-auto shadow-lg"
-                    />
+                    <div className="relative w-48 mx-auto aspect-[3/4] rounded-xl overflow-hidden shadow-lg bg-neutral-100">
+                      <img
+                        src={preview}
+                        alt="Uploaded"
+                        className="absolute inset-0 w-full h-full object-cover"
+                      />
+                    </div>
                   </div>
                 )}
 
-                <div className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-4">
-                  <Check className="w-6 h-6 text-green-600" />
-                </div>
+                <p className="text-neutral-900 font-medium mb-4">
+                  Ready to share
+                </p>
 
-                <h2 className="text-xl font-semibold text-neutral-900 mb-6">
-                  Your link is ready!
-                </h2>
+                {/* Copy Link */}
+                <button
+                  onClick={copyToClipboard}
+                  className="w-full py-3 bg-neutral-900 text-white rounded-xl font-medium hover:bg-neutral-800 transition-colors mb-4"
+                >
+                  {copied ? 'Copied to clipboard' : 'Copy link'}
+                </button>
 
-                {/* URL Display */}
-                <div className="flex items-center gap-2 bg-neutral-50 border border-neutral-200 rounded-xl p-3 mb-4">
-                  <LinkIcon className="w-4 h-4 text-neutral-400 shrink-0" />
-                  <input
-                    type="text"
-                    value={shareUrl}
-                    readOnly
-                    className="flex-1 bg-transparent text-neutral-900 text-sm outline-none truncate"
-                  />
-                  <button
-                    onClick={copyToClipboard}
-                    className="shrink-0 px-3 py-1.5 bg-neutral-900 text-white rounded-lg text-sm font-medium hover:bg-neutral-800 transition-colors flex items-center gap-1.5"
+                {/* Share Options - Text only, no icons */}
+                <div className="grid grid-cols-2 gap-2 mb-6">
+                  <a
+                    href={`sms:?&body=Check this out ${shareUrl}`}
+                    className="py-2.5 px-4 bg-neutral-100 text-neutral-700 rounded-xl text-sm font-medium hover:bg-neutral-200 transition-colors text-center"
                   >
-                    {copied ? (
-                      <>
-                        <Check className="w-3.5 h-3.5" />
-                        Copied!
-                      </>
-                    ) : (
-                      <>
-                        <Copy className="w-3.5 h-3.5" />
-                        Copy
-                      </>
-                    )}
-                  </button>
+                    Text
+                  </a>
+                  <a
+                    href={`https://wa.me/?text=Take a look ${shareUrl}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="py-2.5 px-4 bg-neutral-100 text-neutral-700 rounded-xl text-sm font-medium hover:bg-neutral-200 transition-colors text-center"
+                  >
+                    WhatsApp
+                  </a>
+                  <a
+                    href={`https://twitter.com/intent/tweet?text=Shared via 12img.com&url=${encodeURIComponent(shareUrl)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="py-2.5 px-4 bg-neutral-100 text-neutral-700 rounded-xl text-sm font-medium hover:bg-neutral-200 transition-colors text-center"
+                  >
+                    Twitter
+                  </a>
+                  <a
+                    href={`mailto:?subject=Photo for you&body=Here's something I wanted to share: ${shareUrl}`}
+                    className="py-2.5 px-4 bg-neutral-100 text-neutral-700 rounded-xl text-sm font-medium hover:bg-neutral-200 transition-colors text-center"
+                  >
+                    Email
+                  </a>
                 </div>
 
-                <div className="flex items-center justify-center gap-3">
+                {/* Secondary actions */}
+                <div className="flex items-center justify-center gap-4 text-sm">
                   <a
                     href={shareUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-sm text-neutral-600 hover:text-neutral-900 transition-colors"
+                    className="text-neutral-500 hover:text-neutral-900 transition-colors"
                   >
-                    Open link →
+                    Open link
                   </a>
                   <span className="text-neutral-300">|</span>
                   <button
                     onClick={reset}
-                    className="text-sm text-neutral-600 hover:text-neutral-900 transition-colors"
+                    className="text-neutral-500 hover:text-neutral-900 transition-colors"
                   >
                     Upload another
                   </button>
@@ -311,19 +324,12 @@ export default function SharePage() {
           </AnimatePresence>
 
           {/* Info */}
-          <div className="mt-10 flex flex-wrap items-center justify-center gap-6 text-sm text-neutral-400">
-            <div className="flex items-center gap-2">
-              <ImageIcon className="w-4 h-4" />
-              <span>No sign-up</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <LinkIcon className="w-4 h-4" />
-              <span>Instant link</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Check className="w-4 h-4" />
-              <span>Free forever</span>
-            </div>
+          <div className="mt-10 flex flex-wrap items-center justify-center gap-4 text-xs text-neutral-400">
+            <span>No sign-up</span>
+            <span className="text-neutral-300">·</span>
+            <span>Instant link</span>
+            <span className="text-neutral-300">·</span>
+            <span>Free forever</span>
           </div>
         </div>
       </main>
