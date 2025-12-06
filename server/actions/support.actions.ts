@@ -23,6 +23,9 @@ export interface SupportConversation {
   updated_at: string
   user_email?: string
   user_name?: string
+  user_plan?: string
+  user_business_name?: string
+  user_joined_at?: string
   messages?: SupportMessage[]
   unread_count?: number
   last_message?: SupportMessage
@@ -148,6 +151,7 @@ export async function getUserMessages(): Promise<{
   success: boolean
   messages?: SupportMessage[]
   conversationId?: string
+  conversationStatus?: 'open' | 'resolved'
   error?: string
 }> {
   const { userId } = await auth()
@@ -168,13 +172,12 @@ export async function getUserMessages(): Promise<{
     return { success: true, messages: [] }
   }
 
-  // Get open conversation
+  // Get most recent conversation (open or resolved)
   const { data: conversation } = await supabase
     .from('support_conversations')
-    .select('id')
+    .select('id, status')
     .eq('user_id', user.id)
-    .eq('status', 'open')
-    .order('created_at', { ascending: false })
+    .order('updated_at', { ascending: false })
     .limit(1)
     .single()
 
@@ -193,7 +196,47 @@ export async function getUserMessages(): Promise<{
     success: true,
     messages: messages || [],
     conversationId: conversation.id,
+    conversationStatus: conversation.status as 'open' | 'resolved',
   }
+}
+
+// Start a new conversation (for users after previous was resolved)
+export async function startNewConversation(): Promise<{
+  success: boolean
+  conversationId?: string
+  error?: string
+}> {
+  const { userId } = await auth()
+  if (!userId) {
+    return { success: false, error: 'Not authenticated' }
+  }
+
+  const supabase = supabaseAdmin
+
+  // Get user's internal ID
+  const { data: user, error: userError } = await supabase
+    .from('users')
+    .select('id')
+    .eq('clerk_id', userId)
+    .single()
+
+  if (userError || !user) {
+    return { success: false, error: 'User not found' }
+  }
+
+  // Create a new conversation
+  const { data: conversation, error } = await supabase
+    .from('support_conversations')
+    .insert({ user_id: user.id, status: 'open' })
+    .select('id')
+    .single()
+
+  if (error) {
+    console.error('Error creating conversation:', error)
+    return { success: false, error: 'Failed to create conversation' }
+  }
+
+  return { success: true, conversationId: conversation.id }
 }
 
 // === ADMIN ACTIONS ===
@@ -229,7 +272,9 @@ export async function getAllConversations(): Promise<{
       *,
       users!support_conversations_user_id_fkey (
         id,
-        email
+        email,
+        plan,
+        created_at
       )
     `)
     .order('updated_at', { ascending: false })
@@ -259,6 +304,8 @@ export async function getAllConversations(): Promise<{
       return {
         ...conv,
         user_email: conv.users?.email,
+        user_plan: conv.users?.plan,
+        user_joined_at: conv.users?.created_at,
         last_message: messages?.[0],
         unread_count: count || 0,
       }
@@ -292,18 +339,31 @@ export async function getConversationById(conversationId: string): Promise<{
     return { success: false, error: 'Not authorized' }
   }
 
-  // Get conversation
+  // Get conversation with user info and settings
   const { data: conversation, error } = await supabase
     .from('support_conversations')
     .select(`
       *,
       users!support_conversations_user_id_fkey (
         id,
-        email
+        email,
+        plan,
+        created_at
       )
     `)
     .eq('id', conversationId)
     .single()
+
+  // Get user settings for business name
+  let businessName: string | null = null
+  if (conversation?.users?.id) {
+    const { data: settings } = await supabase
+      .from('user_settings')
+      .select('business_name')
+      .eq('user_id', conversation.users.id)
+      .single()
+    businessName = settings?.business_name || null
+  }
 
   if (error || !conversation) {
     return { success: false, error: 'Conversation not found' }
@@ -329,6 +389,9 @@ export async function getConversationById(conversationId: string): Promise<{
     conversation: {
       ...conversation,
       user_email: (conversation as any).users?.email,
+      user_plan: (conversation as any).users?.plan,
+      user_joined_at: (conversation as any).users?.created_at,
+      user_business_name: businessName,
       messages: messages || [],
     },
   }

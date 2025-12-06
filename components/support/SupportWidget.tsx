@@ -2,12 +2,13 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { MessageCircle, X, Send, Loader2, CheckCheck } from 'lucide-react'
+import { MessageCircle, X, Send, Loader2, CheckCheck, CheckCircle2, Plus } from 'lucide-react'
 import { useAuth } from '@clerk/nextjs'
 import {
   getOrCreateConversation,
   sendSupportMessage,
   getUserMessages,
+  startNewConversation,
   type SupportMessage,
 } from '@/server/actions/support.actions'
 
@@ -16,6 +17,7 @@ export function SupportWidget() {
   const [isOpen, setIsOpen] = useState(false)
   const [messages, setMessages] = useState<SupportMessage[]>([])
   const [conversationId, setConversationId] = useState<string | null>(null)
+  const [conversationStatus, setConversationStatus] = useState<'open' | 'resolved' | null>(null)
   const [input, setInput] = useState('')
   const [isSending, setIsSending] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
@@ -47,6 +49,18 @@ export function SupportWidget() {
     if (result.success) {
       setMessages(result.messages || [])
       setConversationId(result.conversationId || null)
+      setConversationStatus(result.conversationStatus || null)
+    }
+    setIsLoading(false)
+  }
+
+  const handleStartNewConversation = async () => {
+    setIsLoading(true)
+    const result = await startNewConversation()
+    if (result.success && result.conversationId) {
+      setConversationId(result.conversationId)
+      setConversationStatus('open')
+      setMessages([])
     }
     setIsLoading(false)
   }
@@ -167,6 +181,25 @@ export function SupportWidget() {
                 </div>
               </div>
 
+              {/* Resolved Banner */}
+              {conversationStatus === 'resolved' && messages.length > 0 && (
+                <div className="px-4 py-3 bg-green-50 border-b border-green-100">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2 text-green-700">
+                      <CheckCircle2 className="w-4 h-4" />
+                      <span className="text-sm font-medium">Issue resolved</span>
+                    </div>
+                    <button
+                      onClick={handleStartNewConversation}
+                      className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-green-700 bg-green-100 hover:bg-green-200 rounded-lg transition-colors"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                      New issue
+                    </button>
+                  </div>
+                </div>
+              )}
+
               {/* Messages */}
               <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-gray-50/50">
                 {isLoading ? (
@@ -225,31 +258,43 @@ export function SupportWidget() {
 
               {/* Input */}
               <div className="p-4 border-t border-gray-100 bg-white">
-                <div className="flex items-end gap-2">
-                  <textarea
-                    ref={inputRef}
-                    value={input}
-                    onChange={(e) => setInput(e.target.value)}
-                    onKeyDown={handleKeyDown}
-                    placeholder="Type your message..."
-                    rows={1}
-                    className="flex-1 resize-none rounded-xl border border-gray-200 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900/10 focus:border-gray-300 transition-all max-h-32"
-                    style={{ minHeight: '46px' }}
-                  />
-                  <motion.button
-                    onClick={handleSend}
-                    disabled={!input.trim() || isSending}
-                    className="flex items-center justify-center w-11 h-11 rounded-xl bg-gray-900 text-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-800 transition-colors"
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                  >
-                    {isSending ? (
-                      <Loader2 className="w-5 h-5 animate-spin" />
-                    ) : (
-                      <Send className="w-5 h-5" />
-                    )}
-                  </motion.button>
-                </div>
+                {conversationStatus === 'resolved' ? (
+                  <div className="text-center py-2">
+                    <p className="text-sm text-gray-500">This conversation has been closed.</p>
+                    <button
+                      onClick={handleStartNewConversation}
+                      className="mt-2 text-sm font-medium text-gray-900 hover:underline"
+                    >
+                      Start a new conversation
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex items-end gap-2">
+                    <textarea
+                      ref={inputRef}
+                      value={input}
+                      onChange={(e) => setInput(e.target.value)}
+                      onKeyDown={handleKeyDown}
+                      placeholder="Type your message..."
+                      rows={1}
+                      className="flex-1 resize-none rounded-xl border border-gray-200 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900/10 focus:border-gray-300 transition-all max-h-32"
+                      style={{ minHeight: '46px' }}
+                    />
+                    <motion.button
+                      onClick={handleSend}
+                      disabled={!input.trim() || isSending}
+                      className="flex items-center justify-center w-11 h-11 rounded-xl bg-gray-900 text-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-800 transition-colors"
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                    >
+                      {isSending ? (
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                      ) : (
+                        <Send className="w-5 h-5" />
+                      )}
+                    </motion.button>
+                  </div>
+                )}
               </div>
             </motion.div>
           </>

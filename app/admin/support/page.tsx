@@ -11,7 +11,13 @@ import {
   ArrowLeft,
   Inbox,
   Clock,
+  User,
+  Building2,
+  Calendar,
+  CreditCard,
+  ExternalLink,
 } from 'lucide-react'
+import Link from 'next/link'
 import {
   getAllConversations,
   getConversationById,
@@ -214,38 +220,77 @@ export default function AdminSupportPage() {
           {selectedConversation ? (
             <>
               {/* Conversation Header */}
-              <div className="p-4 border-b border-gray-100 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <button
-                    onClick={() => setSelectedConversation(null)}
-                    className="md:hidden p-1 hover:bg-gray-100 rounded-lg"
-                  >
-                    <ArrowLeft className="w-5 h-5" />
-                  </button>
-                  <div>
-                    <h3 className="font-medium text-gray-900">
-                      {selectedConversation.user_email}
-                    </h3>
-                    <div className="flex items-center gap-2 text-xs text-gray-500">
-                      <Clock className="w-3 h-3" />
-                      Started {formatDate(selectedConversation.created_at)}
+              <div className="p-4 border-b border-gray-100">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={() => setSelectedConversation(null)}
+                      className="md:hidden p-1 hover:bg-gray-100 rounded-lg"
+                    >
+                      <ArrowLeft className="w-5 h-5" />
+                    </button>
+                    <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center">
+                      <User className="w-5 h-5 text-gray-500" />
+                    </div>
+                    <div>
+                      <h3 className="font-medium text-gray-900">
+                        {selectedConversation.user_business_name || selectedConversation.user_email}
+                      </h3>
+                      {selectedConversation.user_business_name && (
+                        <p className="text-sm text-gray-500">{selectedConversation.user_email}</p>
+                      )}
                     </div>
                   </div>
+                  <button
+                    onClick={() =>
+                      handleStatusChange(
+                        selectedConversation.status === 'open' ? 'resolved' : 'open'
+                      )
+                    }
+                    className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                      selectedConversation.status === 'open'
+                        ? 'bg-green-50 text-green-700 hover:bg-green-100'
+                        : 'bg-amber-50 text-amber-700 hover:bg-amber-100'
+                    }`}
+                  >
+                    {selectedConversation.status === 'open' ? 'Mark Resolved' : 'Reopen'}
+                  </button>
                 </div>
-                <button
-                  onClick={() =>
-                    handleStatusChange(
-                      selectedConversation.status === 'open' ? 'resolved' : 'open'
-                    )
-                  }
-                  className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                    selectedConversation.status === 'open'
-                      ? 'bg-green-50 text-green-700 hover:bg-green-100'
-                      : 'bg-amber-50 text-amber-700 hover:bg-amber-100'
-                  }`}
-                >
-                  {selectedConversation.status === 'open' ? 'Mark Resolved' : 'Reopen'}
-                </button>
+                
+                {/* User Details Bar */}
+                <div className="flex flex-wrap items-center gap-4 text-xs text-gray-500 pt-2 border-t border-gray-100">
+                  {selectedConversation.user_plan && (
+                    <div className="flex items-center gap-1.5">
+                      <CreditCard className="w-3.5 h-3.5" />
+                      <span className="capitalize font-medium text-gray-700">
+                        {selectedConversation.user_plan} Plan
+                      </span>
+                    </div>
+                  )}
+                  {selectedConversation.user_joined_at && (
+                    <div className="flex items-center gap-1.5">
+                      <Calendar className="w-3.5 h-3.5" />
+                      <span>
+                        Joined {new Date(selectedConversation.user_joined_at).toLocaleDateString([], {
+                          month: 'short',
+                          day: 'numeric',
+                          year: 'numeric',
+                        })}
+                      </span>
+                    </div>
+                  )}
+                  <div className="flex items-center gap-1.5">
+                    <Clock className="w-3.5 h-3.5" />
+                    <span>Started {formatDate(selectedConversation.created_at)}</span>
+                  </div>
+                  <Link
+                    href={`/admin/users?search=${encodeURIComponent(selectedConversation.user_email || '')}`}
+                    className="flex items-center gap-1 text-blue-600 hover:text-blue-700 hover:underline ml-auto"
+                  >
+                    <span>View in Admin</span>
+                    <ExternalLink className="w-3 h-3" />
+                  </Link>
+                </div>
               </div>
 
               {/* Messages */}
