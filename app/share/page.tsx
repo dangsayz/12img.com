@@ -246,32 +246,40 @@ export default function SharePage() {
                 </button>
 
                 {/* Share Options - Text only, no icons */}
-                <div className="grid grid-cols-2 gap-2 mb-6">
+                <div className="grid grid-cols-3 gap-2 mb-6">
                   <a
                     href={`sms:?&body=Check this out ${shareUrl}`}
-                    className="py-2.5 px-4 bg-neutral-100 text-neutral-700 rounded-xl text-sm font-medium hover:bg-neutral-200 transition-colors text-center"
+                    className="py-2.5 px-3 bg-neutral-100 text-neutral-700 rounded-xl text-sm font-medium hover:bg-neutral-200 transition-colors text-center"
                   >
                     Text
                   </a>
                   <a
-                    href={`https://wa.me/?text=Take a look ${shareUrl}`}
+                    href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="py-2.5 px-4 bg-neutral-100 text-neutral-700 rounded-xl text-sm font-medium hover:bg-neutral-200 transition-colors text-center"
+                    className="py-2.5 px-3 bg-neutral-100 text-neutral-700 rounded-xl text-sm font-medium hover:bg-neutral-200 transition-colors text-center"
                   >
-                    WhatsApp
+                    Facebook
                   </a>
                   <a
-                    href={`https://twitter.com/intent/tweet?text=Shared via 12img.com&url=${encodeURIComponent(shareUrl)}`}
+                    href={`https://x.com/intent/tweet?text=Shared via 12img.com&url=${encodeURIComponent(shareUrl)}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="py-2.5 px-4 bg-neutral-100 text-neutral-700 rounded-xl text-sm font-medium hover:bg-neutral-200 transition-colors text-center"
+                    className="py-2.5 px-3 bg-neutral-100 text-neutral-700 rounded-xl text-sm font-medium hover:bg-neutral-200 transition-colors text-center"
                   >
-                    Twitter
+                    X
+                  </a>
+                  <a
+                    href={`https://pinterest.com/pin/create/button/?url=${encodeURIComponent(shareUrl)}&description=Shared via 12img.com`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="py-2.5 px-3 bg-neutral-100 text-neutral-700 rounded-xl text-sm font-medium hover:bg-neutral-200 transition-colors text-center"
+                  >
+                    Pinterest
                   </a>
                   <a
                     href={`mailto:?subject=Photo for you&body=Here's something I wanted to share: ${shareUrl}`}
-                    className="py-2.5 px-4 bg-neutral-100 text-neutral-700 rounded-xl text-sm font-medium hover:bg-neutral-200 transition-colors text-center"
+                    className="py-2.5 px-3 bg-neutral-100 text-neutral-700 rounded-xl text-sm font-medium hover:bg-neutral-200 transition-colors text-center col-span-2"
                   >
                     Email
                   </a>
