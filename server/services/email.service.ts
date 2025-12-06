@@ -459,8 +459,16 @@ function generateGalleryInviteEmailHtml(data: GalleryInviteEmailData): string {
           <!-- Header -->
           <tr>
             <td style="background: linear-gradient(135deg, #18181b 0%, #27272a 100%); padding: 40px 40px 30px;">
+              <!-- Logo -->
+              <table role="presentation" cellspacing="0" cellpadding="0" style="margin-bottom: 20px;">
+                <tr>
+                  <td style="background-color: #ffffff; border-radius: 8px; padding: 8px 12px;">
+                    <span style="font-size: 18px; font-weight: 800; color: #18181b; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">12<span style="color: #f59e0b;">img</span></span>
+                  </td>
+                </tr>
+              </table>
               <h1 style="margin: 0 0 8px; font-size: 28px; font-weight: 700; color: #ffffff;">
-                Your Photos Are Ready! 📸
+                Your Photos Are Ready
               </h1>
               <p style="margin: 0; font-size: 16px; color: #a1a1aa;">
                 ${data.galleryTitle}
@@ -544,7 +552,7 @@ function generateGalleryInviteEmailHtml(data: GalleryInviteEmailData): string {
  */
 function generateGalleryInviteEmailText(data: GalleryInviteEmailData): string {
   return `
-Your Photos Are Ready!
+Your Photos Are Ready
 
 Gallery: ${data.galleryTitle}
 Images: ${data.imageCount}
