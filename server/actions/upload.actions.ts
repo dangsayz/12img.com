@@ -78,31 +78,33 @@ export async function generateSignedUploadUrls(request: {
     throw new Error(`Image limit exceeded. You have ${usage.imageCount} of ${imageLimit} images. Please upgrade your plan.`)
   }
 
-  const responses: UploadUrlResponse[] = []
-
+  // Validate all files first
   for (const file of request.files) {
-    // Validate file size
     if (file.fileSize > MAX_FILE_SIZE) {
       throw new Error(`File too large: ${file.originalFilename}`)
     }
-    // Validate file type
     if (!ALLOWED_MIME_TYPES.includes(file.mimeType as typeof ALLOWED_MIME_TYPES[number])) {
       throw new Error(`Invalid file type: ${file.mimeType}`)
     }
-
-    const imageId = uuidv4()
-    const ext = MIME_TO_EXT[file.mimeType]
-    const storagePath = `${request.galleryId}/${imageId}.${ext}`
-
-    const { signedUrl, token } = await getSignedUploadUrl(storagePath)
-
-    responses.push({
-      localId: file.localId,
-      storagePath,
-      signedUrl,
-      token,
-    })
   }
+
+  // Generate all signed URLs in parallel for speed
+  const responses = await Promise.all(
+    request.files.map(async (file) => {
+      const imageId = uuidv4()
+      const ext = MIME_TO_EXT[file.mimeType]
+      const storagePath = `${request.galleryId}/${imageId}.${ext}`
+
+      const { signedUrl, token } = await getSignedUploadUrl(storagePath)
+
+      return {
+        localId: file.localId,
+        storagePath,
+        signedUrl,
+        token,
+      }
+    })
+  )
 
   return responses
 }
@@ -130,24 +132,25 @@ export async function confirmUploads(request: {
   const isOwner = await verifyGalleryOwnership(request.galleryId, user.id)
   if (!isOwner) throw new Error('Access denied')
 
-  const imageIds: string[] = []
+  // Insert all images in parallel for speed
+  const results = await Promise.all(
+    request.uploads.map(async (upload) => {
+      const { data, error } = await supabaseAdmin.rpc('insert_image_at_position', {
+        p_gallery_id: request.galleryId,
+        p_storage_path: upload.storagePath,
+        p_original_filename: upload.originalFilename,
+        p_file_size_bytes: upload.fileSize,
+        p_mime_type: upload.mimeType,
+        p_width: upload.width || null,
+        p_height: upload.height || null,
+      })
 
-  for (const upload of request.uploads) {
-    // Insert into database using function for proper positioning
-    const { data, error } = await supabaseAdmin.rpc('insert_image_at_position', {
-      p_gallery_id: request.galleryId,
-      p_storage_path: upload.storagePath,
-      p_original_filename: upload.originalFilename,
-      p_file_size_bytes: upload.fileSize,
-      p_mime_type: upload.mimeType,
-      p_width: upload.width || null,
-      p_height: upload.height || null,
+      if (error) throw new Error('Failed to save image')
+      return data as string
     })
+  )
 
-    if (error) throw new Error('Failed to save image')
-
-    imageIds.push(data)
-  }
+  const imageIds = results
 
   // Set first image as cover if no cover exists
   const gallery = await getGalleryById(request.galleryId)

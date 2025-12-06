@@ -16,7 +16,7 @@ function formatBytes(bytes: number, decimals = 1) {
 export interface FileItemState {
   id: string
   file: File
-  previewUrl: string
+  previewUrl?: string  // Optional - lazy loaded for memory efficiency
   status: 'pending' | 'uploading' | 'completed' | 'error'
   progress: number
   error?: string

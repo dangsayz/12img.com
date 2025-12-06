@@ -6,8 +6,9 @@ export const ALLOWED_MIME_TYPES = [
 ] as const
 
 export const MAX_FILE_SIZE = 25 * 1024 * 1024 // 25MB
-export const MAX_FILES_PER_UPLOAD = 100
-export const MAX_CONCURRENT_UPLOADS = 3
+export const MAX_FILES_PER_UPLOAD = 1000
+export const MAX_CONCURRENT_UPLOADS = 6
+export const SIGNED_URL_BATCH_SIZE = 50 // Generate signed URLs in batches
 
 export const MIME_TO_EXT: Record<string, string> = {
   'image/jpeg': 'jpg',

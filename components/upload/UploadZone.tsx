@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { Upload, Plus } from 'lucide-react'
 import { generateSignedUploadUrls, confirmUploads } from '@/server/actions/upload.actions'
 import { Button } from '@/components/ui/button'
-import { ALLOWED_MIME_TYPES, MAX_FILE_SIZE, MAX_CONCURRENT_UPLOADS } from '@/lib/utils/constants'
+import { ALLOWED_MIME_TYPES, MAX_FILE_SIZE, MAX_CONCURRENT_UPLOADS, SIGNED_URL_BATCH_SIZE } from '@/lib/utils/constants'
 import { DropOverlay } from './DropOverlay'
 import { FileStagingList } from './FileStagingList'
 import { FileItemState } from './FileItem'
@@ -86,20 +86,34 @@ export function UploadZone({ galleryId, onUploadComplete }: UploadZoneProps) {
   const handleFiles = useCallback((fileList: FileList | null) => {
     if (!fileList) return
 
-    const newUploads: FileItemState[] = []
-    Array.from(fileList).forEach((file) => {
-      const error = validateFile(file)
-      newUploads.push({
-        id: `up-${Date.now()}-${Math.random().toString(36).slice(2)}`,
-        file,
-        previewUrl: URL.createObjectURL(file),
-        status: error ? 'error' : 'pending',
-        progress: 0,
-        error: error || undefined,
+    // Process in chunks to avoid blocking UI
+    const files = Array.from(fileList)
+    const CHUNK_SIZE = 100
+    
+    const processChunk = (startIndex: number) => {
+      const chunk = files.slice(startIndex, startIndex + CHUNK_SIZE)
+      const newUploads: FileItemState[] = chunk.map((file) => {
+        const error = validateFile(file)
+        return {
+          id: `up-${Date.now()}-${Math.random().toString(36).slice(2)}-${startIndex}`,
+          file,
+          // Lazy preview - only create for first 20 files to save memory
+          previewUrl: startIndex < 20 ? URL.createObjectURL(file) : undefined,
+          status: error ? 'error' : 'pending' as const,
+          progress: 0,
+          error: error || undefined,
+        }
       })
-    })
 
-    setUploads((prev) => [...prev, ...newUploads])
+      setUploads((prev) => [...prev, ...newUploads])
+      
+      // Process next chunk after a small delay to keep UI responsive
+      if (startIndex + CHUNK_SIZE < files.length) {
+        setTimeout(() => processChunk(startIndex + CHUNK_SIZE), 10)
+      }
+    }
+    
+    processChunk(0)
   }, [])
 
   const handleDrop = useCallback((e: React.DragEvent) => {
@@ -109,7 +123,7 @@ export function UploadZone({ galleryId, onUploadComplete }: UploadZoneProps) {
     handleFiles(e.dataTransfer.files)
   }, [handleFiles])
 
-  // Upload Logic with Concurrency Control
+  // Upload Logic with Concurrency Control and Batched Signed URLs
   const processQueue = async () => {
     if (isUploadingRef.current) return
     
@@ -133,106 +147,118 @@ export function UploadZone({ galleryId, onUploadComplete }: UploadZoneProps) {
     }
 
     try {
-      // 1. Get Signed URLs for ALL pending items
-      const urlResponses = await generateSignedUploadUrls({
-        galleryId,
-        files: pendingItems.map(u => ({
-          localId: u.id,
-          mimeType: u.file.type,
-          fileSize: u.file.size,
-          originalFilename: u.file.name
+      // Process in batches to avoid server timeout
+      const allSuccessful: any[] = []
+      
+      for (let i = 0; i < pendingItems.length; i += SIGNED_URL_BATCH_SIZE) {
+        const batch = pendingItems.slice(i, i + SIGNED_URL_BATCH_SIZE)
+        
+        // 1. Get Signed URLs for this batch
+        const urlResponses = await generateSignedUploadUrls({
+          galleryId,
+          files: batch.map(u => ({
+            localId: u.id,
+            mimeType: u.file.type,
+            fileSize: u.file.size,
+            originalFilename: u.file.name
+          }))
+        })
+
+        // 2. Mark batch as uploading
+        setUploads(prev => prev.map(u => {
+          const hasUrl = urlResponses.find(r => r.localId === u.id)
+          return hasUrl ? { ...u, status: 'uploading' } : u
         }))
-      })
 
-      // 2. Mark as uploading
-      setUploads(prev => prev.map(u => {
-        const hasUrl = urlResponses.find(r => r.localId === u.id)
-        return hasUrl ? { ...u, status: 'uploading' } : u
-      }))
+        // 3. Create upload tasks for this batch
+        const tasks = urlResponses.map(urlInfo => async () => {
+          const item = batch.find(u => u.id === urlInfo.localId)
+          if (!item) return { ...urlInfo, success: false }
 
-      // 3. Create upload tasks
-      const tasks = urlResponses.map(urlInfo => async () => {
-        const item = pendingItems.find(u => u.id === urlInfo.localId)
-        if (!item) return { ...urlInfo, success: false }
+          return new Promise<{
+              localId: string
+              storagePath: string
+              token: string
+              success: boolean
+            }>((resolve) => {
+            const xhr = new XMLHttpRequest()
+            
+            xhr.upload.addEventListener('progress', (e) => {
+              if (e.lengthComputable) {
+                setUploads(prev => prev.map(u => 
+                  u.id === urlInfo.localId ? { ...u, progress: (e.loaded / e.total) * 100 } : u
+                ))
+              }
+            })
 
-        return new Promise<{
-            localId: string
-            storagePath: string
-            token: string
-            success: boolean
-          }>((resolve) => {
-          const xhr = new XMLHttpRequest()
-          
-          xhr.upload.addEventListener('progress', (e) => {
-            if (e.lengthComputable) {
-              setUploads(prev => prev.map(u => 
-                u.id === urlInfo.localId ? { ...u, progress: (e.loaded / e.total) * 100 } : u
-              ))
-            }
-          })
+            xhr.addEventListener('load', () => {
+              if (xhr.status >= 200 && xhr.status < 300) {
+                setUploads(prev => prev.map(u => 
+                  u.id === urlInfo.localId ? { ...u, status: 'completed', progress: 100 } : u
+                ))
+                resolve({ ...urlInfo, success: true })
+              } else {
+                 setUploads(prev => prev.map(u => 
+                  u.id === urlInfo.localId ? { ...u, status: 'error', error: `HTTP ${xhr.status}` } : u
+                ))
+                resolve({ ...urlInfo, success: false })
+              }
+            })
 
-          xhr.addEventListener('load', () => {
-            if (xhr.status >= 200 && xhr.status < 300) {
-              setUploads(prev => prev.map(u => 
-                u.id === urlInfo.localId ? { ...u, status: 'completed', progress: 100 } : u
-              ))
-              resolve({ ...urlInfo, success: true })
-            } else {
+            xhr.addEventListener('error', () => {
                setUploads(prev => prev.map(u => 
-                u.id === urlInfo.localId ? { ...u, status: 'error', error: `HTTP ${xhr.status}` } : u
-              ))
+                  u.id === urlInfo.localId ? { ...u, status: 'error', error: 'Network Error' } : u
+                ))
               resolve({ ...urlInfo, success: false })
-            }
+            })
+
+            xhr.open('PUT', urlInfo.signedUrl)
+            xhr.setRequestHeader('Content-Type', item.file.type)
+            xhr.send(item.file)
           })
+        })
 
-          xhr.addEventListener('error', () => {
-             setUploads(prev => prev.map(u => 
-                u.id === urlInfo.localId ? { ...u, status: 'error', error: 'Network Error' } : u
-              ))
-            resolve({ ...urlInfo, success: false })
+        // 4. Execute batch with concurrency limit
+        const results: any[] = []
+        const executing: Promise<any>[] = []
+
+        for (const task of tasks) {
+          const p = task().then(res => {
+            executing.splice(executing.indexOf(p), 1)
+            return res
           })
+          results.push(p)
+          executing.push(p)
 
-          xhr.open('PUT', urlInfo.signedUrl)
-          xhr.setRequestHeader('Content-Type', item.file.type)
-          xhr.send(item.file)
-        })
-      })
+          if (executing.length >= MAX_CONCURRENT_UPLOADS) {
+            await Promise.race(executing)
+          }
+        }
 
-      // 4. Execute with concurrency limit
-      const results: any[] = []
-      const executing: Promise<any>[] = []
-
-      for (const task of tasks) {
-        const p = task().then(res => {
-          executing.splice(executing.indexOf(p), 1)
-          return res
-        })
-        results.push(p)
-        executing.push(p)
-
-        if (executing.length >= MAX_CONCURRENT_UPLOADS) {
-          await Promise.race(executing)
+        const batchResults = await Promise.all(results)
+        const successful = batchResults.filter(r => r.success)
+        
+        // 5. Confirm this batch immediately
+        if (successful.length > 0) {
+          await confirmUploads({
+            galleryId,
+            uploads: successful.map(r => {
+               const upload = batch.find(u => u.id === r.localId)!
+               return {
+                 storagePath: r.storagePath,
+                 token: r.token,
+                 originalFilename: upload.file.name,
+                 fileSize: upload.file.size,
+                 mimeType: upload.file.type
+               }
+            })
+          })
+          allSuccessful.push(...successful)
         }
       }
-
-      const allResults = await Promise.all(results)
-      const successful = allResults.filter(r => r.success)
-
-      // 5. Confirm uploads
-      if (successful.length > 0) {
-        await confirmUploads({
-          galleryId,
-          uploads: successful.map(r => {
-             const upload = pendingItems.find(u => u.id === r.localId)!
-             return {
-               storagePath: r.storagePath,
-               token: r.token,
-               originalFilename: upload.file.name,
-               fileSize: upload.file.size,
-               mimeType: upload.file.type
-             }
-          })
-        })
+      
+      // Final refresh after all batches
+      if (allSuccessful.length > 0) {
         router.refresh()
         onUploadComplete()
       }
