@@ -57,14 +57,14 @@ export function CreateGalleryForm({
       
       const result = await createGallery(formData)
       
-      if (result.error || !result.slug) {
+      if (result.error || !result.galleryId) {
         setError(result.error || 'Failed to create gallery')
         setIsCreating(false)
         return
       }
 
       // Navigate to the gallery page where they can add images
-      router.push(`/gallery/${result.slug}`)
+      router.push(`/gallery/${result.galleryId}`)
     } catch (err) {
       setError('Something went wrong. Please try again.')
       setIsCreating(false)
