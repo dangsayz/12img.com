@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, Mail, Calendar, HardDrive, Image, Folder, Ban, CheckCircle, Shield, CreditCard } from 'lucide-react'
+import { ArrowLeft, Mail, Calendar, HardDrive, Image, Folder, Ban, CheckCircle, Shield, CreditCard, Copy, Hash } from 'lucide-react'
 import { getUser, getUserGalleries } from '@/server/admin/users'
 import { UserActions } from './UserActions'
 
@@ -94,7 +94,6 @@ export default async function UserDetailPage({ params }: Props) {
         </Link>
         <div className="flex-1">
           <h1 className="text-2xl font-semibold text-gray-900">{user.email}</h1>
-          <p className="text-sm text-gray-500 font-mono">{user.id}</p>
         </div>
         <div className="flex items-center gap-2">
           <span className={`inline-flex px-2.5 py-1 text-xs font-medium rounded-full ${PLAN_COLORS[user.plan] || PLAN_COLORS.free}`}>
@@ -169,8 +168,10 @@ export default async function UserDetailPage({ params }: Props) {
                 </p>
               </div>
               <div>
-                <p className="text-gray-500">Clerk ID</p>
-                <p className="font-mono text-xs">{user.clerk_id}</p>
+                <p className="text-gray-500">User ID</p>
+                <p className="font-medium text-sm text-gray-700">
+                  {user.clerk_id?.replace('user_', '').slice(0, 8)}...
+                </p>
               </div>
               <div>
                 <p className="text-gray-500">Joined</p>
