@@ -110,16 +110,12 @@ export function LandingPage() {
                 </span>
               </div>
 
-              <p className="mt-6 text-sm text-[#78716C]">
-                Or{' '}
-                <Link 
-                  href="/share"
-                  className="text-amber-600 hover:text-amber-700 font-medium underline underline-offset-2"
-                >
-                  upload a single image free
-                </Link>
-                {' '}— no account needed
-              </p>
+              <Link 
+                href="/share"
+                className="mt-4 text-xs text-[#A8A29E] hover:text-[#78716C] transition-colors"
+              >
+                Just need to share one image? →
+              </Link>
             </div>
 
             {/* Right: App Preview Card */}
