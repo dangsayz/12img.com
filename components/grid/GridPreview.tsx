@@ -55,11 +55,14 @@ export function GridPreview({
   const [viewerOpen, setViewerOpen] = useState(false)
   const [viewerIndex, setViewerIndex] = useState(0)
   const [isDownloading, setIsDownloading] = useState(false)
+  const [isMobile, setIsMobile] = useState(false)
+  const [showMobilePrompt, setShowMobilePrompt] = useState(false)
 
-  // Responsive column count
+  // Responsive column count and mobile detection
   useEffect(() => {
     function handleResize() {
       const width = window.innerWidth
+      setIsMobile(width < 768)
       if (width < 640) setNumCols(2)
       else if (width < 1024) setNumCols(3)
       else setNumCols(4)
@@ -125,12 +128,15 @@ export function GridPreview({
           </div>
           {downloadEnabled && (
             <button
-              onClick={handleDownloadAll}
+              onClick={() => isMobile ? setShowMobilePrompt(true) : handleDownloadAll()}
               disabled={isDownloading}
-              className="flex items-center gap-2 px-4 py-2 bg-gray-900 text-white text-sm font-medium rounded-lg hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex items-center gap-2 px-3 py-2 bg-gray-900 text-white text-sm font-medium rounded-lg hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <Download className="w-4 h-4" />
-              {isDownloading ? 'Preparing...' : `Download All (${formatFileSize(totalFileSizeBytes)})`}
+              <Download className="w-4 h-4 flex-shrink-0" />
+              <span className="hidden sm:inline">
+                {isDownloading ? 'Preparing...' : `Download All (${formatFileSize(totalFileSizeBytes)})`}
+              </span>
+              <span className="sm:hidden">Download</span>
             </button>
           )}
         </div>
@@ -227,6 +233,29 @@ export function GridPreview({
                 Download
               </button>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Mobile Download Prompt */}
+      {showMobilePrompt && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-6">
+          <div className="bg-white rounded-2xl p-6 max-w-sm w-full text-center shadow-xl">
+            <div className="w-14 h-14 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Download className="w-7 h-7 text-gray-400" />
+            </div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">
+              Download on Desktop
+            </h3>
+            <p className="text-gray-500 text-sm mb-6">
+              For the best experience downloading all {images.length} photos, please visit this gallery on a desktop computer.
+            </p>
+            <button
+              onClick={() => setShowMobilePrompt(false)}
+              className="w-full py-3 bg-gray-900 text-white font-medium rounded-xl hover:bg-gray-800"
+            >
+              Got it
+            </button>
           </div>
         </div>
       )}
