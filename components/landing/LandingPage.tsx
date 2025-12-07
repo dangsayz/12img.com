@@ -86,16 +86,16 @@ export function LandingPage() {
       </nav>
 
       {/* --- 1. Hero Section --- */}
-      <section className="pt-32 pb-16 lg:pt-48 lg:pb-32 px-6">
-        <div className="max-w-[1280px] mx-auto grid lg:grid-cols-12 gap-12 lg:gap-24">
+      <section className="pt-28 pb-12 md:pt-32 md:pb-16 lg:pt-48 lg:pb-32 px-4 sm:px-6">
+        <div className="max-w-[1280px] mx-auto grid lg:grid-cols-12 gap-8 lg:gap-24">
           
           {/* Text Column */}
           <div className="lg:col-span-5 flex flex-col justify-center">
-            <h1 className="font-serif text-4xl sm:text-5xl lg:text-[56px] leading-[1.1] text-[#141414] mb-8">
+            <h1 className="font-serif text-3xl sm:text-4xl lg:text-[56px] leading-[1.1] text-[#141414] mb-6 lg:mb-8">
               Deliver Galleries Faster. <br />
               <span className="italic font-light">Keep More Profit.</span>
             </h1>
-            <p className="text-lg text-[#525252] leading-relaxed mb-10 max-w-md">
+            <p className="text-base sm:text-lg text-[#525252] leading-relaxed mb-8 lg:mb-10 max-w-md">
               12IMG is the lean, mobile-first gallery platform for modern photographers. 
               Beautiful delivery, automated backups, and 40% more affordable than the rest.
             </p>
@@ -138,10 +138,10 @@ export function LandingPage() {
       </section>
 
       {/* --- 2. Migration Section --- */}
-      <section className="py-20 lg:py-32 px-6 bg-white border-t border-[#E5E5E5]">
-        <div className="max-w-[1280px] mx-auto grid lg:grid-cols-2 gap-16 lg:gap-32 items-center">
+      <section className="py-12 md:py-20 lg:py-32 px-4 sm:px-6 bg-white border-t border-[#E5E5E5]">
+        <div className="max-w-[1280px] mx-auto grid lg:grid-cols-2 gap-8 lg:gap-32 items-center">
           
-          <div className="order-2 lg:order-1 relative h-[500px] bg-[#F5F5F7] w-full border border-[#E5E5E5]">
+          <div className="order-2 lg:order-1 relative h-[300px] sm:h-[400px] lg:h-[500px] bg-[#F5F5F7] w-full border border-[#E5E5E5]">
             <div className="absolute inset-8 border border-[#E5E5E5] bg-white p-2 shadow-sm">
               <div className="relative w-full h-full overflow-hidden bg-gray-50">
                 <Image 
@@ -155,7 +155,7 @@ export function LandingPage() {
           </div>
 
           <div className="order-1 lg:order-2">
-            <h2 className="font-serif text-3xl sm:text-4xl lg:text-[42px] mb-6">
+            <h2 className="font-serif text-2xl sm:text-3xl lg:text-[42px] mb-4 lg:mb-6">
               Switch in a weekend, <br />
               keep your brand.
             </h2>
@@ -171,12 +171,12 @@ export function LandingPage() {
       </section>
 
       {/* --- 3. Client Galleries Experience --- */}
-      <section className="py-20 lg:py-32 px-6 bg-[#F5F5F7]">
-        <div className="max-w-[1280px] mx-auto grid lg:grid-cols-2 gap-16 lg:gap-32 items-center">
+      <section className="py-12 md:py-20 lg:py-32 px-4 sm:px-6 bg-[#F5F5F7]">
+        <div className="max-w-[1280px] mx-auto grid lg:grid-cols-2 gap-8 lg:gap-32 items-center">
           
           {/* Left: Visual */}
           <div className="relative">
-             <div className="aspect-[3/4] max-w-[500px] bg-white p-2 shadow-xl border border-gray-100 mx-auto lg:mr-auto">
+             <div className="aspect-[3/4] max-w-[320px] sm:max-w-[400px] lg:max-w-[500px] bg-white p-2 shadow-xl border border-gray-100 mx-auto lg:mr-auto">
                <div className="w-full h-full bg-gray-50 overflow-hidden relative">
                   <Image 
                      src="/images/showcase/modern-wedding-gallery-03.jpg" 
@@ -193,7 +193,7 @@ export function LandingPage() {
             <div className="inline-block px-3 py-1 border border-[#141414] text-xs font-medium uppercase tracking-wider mb-6">
               Client Experience
             </div>
-            <h2 className="font-serif text-3xl sm:text-4xl lg:text-[42px] mb-6">
+            <h2 className="font-serif text-2xl sm:text-3xl lg:text-[42px] mb-4 lg:mb-6">
               Designed for the mobile generation.
             </h2>
             <p className="text-[#525252] text-lg leading-relaxed mb-8">
@@ -219,11 +219,11 @@ export function LandingPage() {
       </section>
 
       {/* --- 4. Auto Zip & Backups --- */}
-      <section className="py-20 lg:py-32 px-6 bg-white border-y border-[#E5E5E5]">
-        <div className="max-w-[1280px] mx-auto grid lg:grid-cols-2 gap-16 lg:gap-32 items-center">
+      <section className="py-12 md:py-20 lg:py-32 px-4 sm:px-6 bg-white border-y border-[#E5E5E5]">
+        <div className="max-w-[1280px] mx-auto grid lg:grid-cols-2 gap-8 lg:gap-32 items-center">
           
           <div>
-            <h2 className="font-serif text-3xl sm:text-4xl lg:text-[42px] mb-6">
+            <h2 className="font-serif text-2xl sm:text-3xl lg:text-[42px] mb-4 lg:mb-6">
               Automatic Zip Backups. <br />
               <span className="text-[#525252] italic">Peace of mind included.</span>
             </h2>
@@ -235,18 +235,18 @@ export function LandingPage() {
             </p>
           </div>
 
-          <div className="h-[400px] bg-[#F5F5F7] border border-[#E5E5E5] flex items-center justify-center p-12">
-             <div className="flex items-center gap-6 opacity-60">
-                <div className="w-24 h-32 border-2 border-[#141414] flex items-center justify-center">
-                  <Upload className="w-8 h-8" />
+          <div className="h-[250px] sm:h-[300px] lg:h-[400px] bg-[#F5F5F7] border border-[#E5E5E5] flex items-center justify-center p-6 sm:p-12">
+             <div className="flex items-center gap-3 sm:gap-6 opacity-60">
+                <div className="w-14 h-20 sm:w-24 sm:h-32 border-2 border-[#141414] flex items-center justify-center">
+                  <Upload className="w-5 h-5 sm:w-8 sm:h-8" />
                 </div>
-                <ArrowRight className="w-6 h-6" />
-                <div className="w-24 h-32 border-2 border-[#141414] flex items-center justify-center bg-[#141414] text-white">
-                  <span className="font-bold text-xs">ZIP</span>
+                <ArrowRight className="w-4 h-4 sm:w-6 sm:h-6" />
+                <div className="w-14 h-20 sm:w-24 sm:h-32 border-2 border-[#141414] flex items-center justify-center bg-[#141414] text-white">
+                  <span className="font-bold text-[10px] sm:text-xs">ZIP</span>
                 </div>
-                <ArrowRight className="w-6 h-6" />
-                <div className="w-24 h-32 border-2 border-[#141414] flex items-center justify-center rounded-full border-dashed">
-                  <span className="text-xs font-serif">Email</span>
+                <ArrowRight className="w-4 h-4 sm:w-6 sm:h-6" />
+                <div className="w-14 h-20 sm:w-24 sm:h-32 border-2 border-[#141414] flex items-center justify-center rounded-full border-dashed">
+                  <span className="text-[10px] sm:text-xs font-serif">Email</span>
                 </div>
              </div>
           </div>
@@ -255,7 +255,7 @@ export function LandingPage() {
       </section>
 
       {/* --- 5. Slideshows (Future) --- */}
-      <section className="py-20 lg:py-32 px-6 bg-[#141414] text-white text-center">
+      <section className="py-12 md:py-20 lg:py-32 px-4 sm:px-6 bg-[#141414] text-white text-center">
         <div className="max-w-[1280px] mx-auto">
           <span className="inline-block px-3 py-1 border border-white/30 text-xs font-medium uppercase tracking-wider mb-8">
             Coming Soon
@@ -274,9 +274,9 @@ export function LandingPage() {
       </section>
 
       {/* --- 6. Features Grid --- */}
-      <section className="py-20 lg:py-32 px-6 bg-[#F5F5F7]">
+      <section className="py-12 md:py-20 lg:py-32 px-4 sm:px-6 bg-[#F5F5F7]">
         <div className="max-w-[1280px] mx-auto">
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
             
             {[
               { icon: Zap, title: "Fast on Mobile", desc: "Optimized for speed. Your galleries load instantly on 4G and 5G networks." },
@@ -296,7 +296,7 @@ export function LandingPage() {
       </section>
 
       {/* --- 7. Social Proof --- */}
-      <section className="py-20 px-6 border-t border-[#E5E5E5] bg-white">
+      <section className="py-12 md:py-20 px-4 sm:px-6 border-t border-[#E5E5E5] bg-white">
         <div className="max-w-[1280px] mx-auto text-center">
           <p className="text-sm font-medium uppercase tracking-widest text-[#525252] mb-12">Trusted by 10,000+ Photographers</p>
           <div className="flex flex-wrap justify-center gap-12 lg:gap-24 opacity-40 grayscale">
@@ -311,16 +311,16 @@ export function LandingPage() {
       </section>
 
       {/* --- 8. Pricing Preview --- */}
-      <section id="pricing" className="py-20 lg:py-32 px-6 bg-[#F5F5F7]">
+      <section id="pricing" className="py-12 md:py-20 lg:py-32 px-4 sm:px-6 bg-[#F5F5F7]">
         <div className="max-w-[1280px] mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="font-serif text-4xl lg:text-[42px] mb-4">Simple, honest pricing.</h2>
+          <div className="text-center mb-8 lg:mb-16">
+            <h2 className="font-serif text-2xl sm:text-3xl lg:text-[42px] mb-4">Simple, honest pricing.</h2>
             <p className="text-[#525252] text-lg">No hidden fees. Change plans anytime.</p>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 max-w-6xl mx-auto">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 max-w-6xl mx-auto">
             {/* Free */}
-            <div className="bg-white p-6 border border-[#E5E5E5] flex flex-col">
+            <div className="bg-white p-4 sm:p-6 border border-[#E5E5E5] flex flex-col">
               <h3 className="font-serif text-xl mb-1">Free</h3>
               <p className="text-xs text-gray-500 mb-4">Test drive</p>
               <div className="text-3xl font-bold mb-6">$0<span className="text-sm font-normal text-gray-500">/mo</span></div>
@@ -346,7 +346,7 @@ export function LandingPage() {
             </div>
 
             {/* Essential */}
-            <div className="bg-white p-6 border border-[#E5E5E5] flex flex-col">
+            <div className="bg-white p-4 sm:p-6 border border-[#E5E5E5] flex flex-col">
               <h3 className="font-serif text-xl mb-1">Essential</h3>
               <p className="text-xs text-gray-500 mb-4">For part-time photographers</p>
               <div className="text-3xl font-bold mb-6">$6<span className="text-sm font-normal text-gray-500">/mo</span></div>
@@ -372,8 +372,8 @@ export function LandingPage() {
             </div>
             
             {/* Pro - Recommended */}
-            <div className="bg-[#141414] text-white p-6 border border-[#141414] flex flex-col relative">
-              <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-amber-500 text-[10px] font-bold uppercase tracking-wider rounded-full whitespace-nowrap">
+            <div className="bg-[#141414] text-white p-4 sm:p-6 border border-[#141414] flex flex-col relative">
+              <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-white text-[#141414] text-[10px] font-bold uppercase tracking-wider whitespace-nowrap border border-[#141414]">
                 Most Popular
               </div>
               <h3 className="font-serif text-xl mb-1">Pro</h3>
@@ -401,7 +401,7 @@ export function LandingPage() {
             </div>
 
             {/* Studio */}
-            <div className="bg-white p-6 border border-[#E5E5E5] flex flex-col">
+            <div className="bg-white p-4 sm:p-6 border border-[#E5E5E5] flex flex-col">
               <h3 className="font-serif text-xl mb-1">Studio</h3>
               <p className="text-xs text-gray-500 mb-4">For busy studios</p>
               <div className="text-3xl font-bold mb-6">$18<span className="text-sm font-normal text-gray-500">/mo</span></div>
@@ -427,7 +427,7 @@ export function LandingPage() {
             </div>
 
             {/* Elite */}
-            <div className="bg-white p-6 border border-[#E5E5E5] flex flex-col">
+            <div className="bg-white p-4 sm:p-6 border border-[#E5E5E5] flex flex-col">
               <h3 className="font-serif text-xl mb-1">Elite</h3>
               <p className="text-xs text-gray-500 mb-4">For power users</p>
               <div className="text-3xl font-bold mb-6">$30<span className="text-sm font-normal text-gray-500">/mo</span></div>
@@ -462,9 +462,9 @@ export function LandingPage() {
       </section>
 
       {/* --- 9. Final CTA --- */}
-      <section className="py-32 px-6 bg-white border-t border-[#E5E5E5] text-center">
+      <section className="py-16 md:py-24 lg:py-32 px-4 sm:px-6 bg-white border-t border-[#E5E5E5] text-center">
         <div className="max-w-2xl mx-auto">
-          <h2 className="font-serif text-4xl lg:text-[52px] leading-tight mb-8">
+          <h2 className="font-serif text-2xl sm:text-3xl lg:text-[52px] leading-tight mb-6 lg:mb-8">
             Ready to send your next <br /> gallery with 12IMG?
           </h2>
           <p className="text-lg text-[#525252] mb-10">
@@ -477,9 +477,9 @@ export function LandingPage() {
       </section>
 
       {/* --- Footer --- */}
-      <footer className="bg-[#141414] text-white/60 py-20 px-6">
-        <div className="max-w-[1280px] mx-auto grid md:grid-cols-4 gap-12">
-          <div className="col-span-1">
+      <footer className="bg-[#141414] text-white/60 py-12 md:py-20 px-4 sm:px-6">
+        <div className="max-w-[1280px] mx-auto grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-12">
+          <div className="col-span-2 md:col-span-1">
              <div className="flex items-center gap-2 mb-6 text-white">
                 <div className="w-6 h-6 bg-white flex items-center justify-center text-black font-bold text-[10px] tracking-tighter">
                   12
