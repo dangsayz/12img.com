@@ -315,7 +315,7 @@ export function LandingPage() {
             {/* Essential */}
             <div className="bg-white p-10 border-r border-[#E5E5E5] text-center">
               <h3 className="font-serif text-2xl mb-2">Essential</h3>
-              <div className="text-4xl font-bold mb-4">$6</div>
+              <div className="text-4xl font-bold mb-4">$9</div>
               <p className="text-sm text-[#525252] mb-8">10GB Storage<br/>Unlimited Galleries</p>
               <Link href="/sign-up" className="block w-full py-3 border border-[#E5E5E5] text-sm font-medium hover:border-[#141414] transition-colors rounded-[2px]">
                 Start Free
@@ -327,7 +327,7 @@ export function LandingPage() {
               <div className="absolute top-0 left-0 w-full h-1 bg-[#141414]"></div>
               <div className="absolute top-3 right-3 text-[10px] font-bold uppercase tracking-wider text-[#141414]/60">Most Popular</div>
               <h3 className="font-serif text-2xl mb-2">Pro</h3>
-              <div className="text-4xl font-bold mb-4">$12</div>
+              <div className="text-4xl font-bold mb-4">$19</div>
               <p className="text-sm text-[#525252] mb-8">100GB Storage<br/>Unlimited Galleries</p>
               <Link href="/sign-up" className="block w-full py-3 bg-[#141414] text-white text-sm font-medium hover:bg-black transition-colors rounded-[2px]">
                 Get Started
@@ -337,7 +337,7 @@ export function LandingPage() {
             {/* Studio */}
             <div className="bg-white p-10 text-center">
               <h3 className="font-serif text-2xl mb-2">Studio</h3>
-              <div className="text-4xl font-bold mb-4">$18</div>
+              <div className="text-4xl font-bold mb-4">$39</div>
               <p className="text-sm text-[#525252] mb-8">500GB Storage<br/>Priority Support</p>
               <Link href="/sign-up" className="block w-full py-3 border border-[#E5E5E5] text-sm font-medium hover:border-[#141414] transition-colors rounded-[2px]">
                 Contact Sales
