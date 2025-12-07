@@ -44,10 +44,10 @@ export interface PricingPlan {
 // Core pricing values
 export const PRICING = {
   free: { monthly: 0, yearly: 0 },
-  essential: { monthly: 9, yearly: 90 },
-  pro: { monthly: 19, yearly: 190 },
-  studio: { monthly: 39, yearly: 390 },
-  elite: { monthly: 59, yearly: 590 },
+  essential: { monthly: 6, yearly: 60 },
+  pro: { monthly: 12, yearly: 120 },
+  studio: { monthly: 18, yearly: 180 },
+  elite: { monthly: 30, yearly: 300 },
 } as const
 
 // Plan limits for enforcement
