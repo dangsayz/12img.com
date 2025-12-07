@@ -9,9 +9,9 @@ const config: Config = {
   theme: {
     extend: {
       fontFamily: {
-        sans: ['Satoshi', 'var(--font-satoshi)', 'system-ui', 'sans-serif'],
-        serif: ['var(--font-migra)', 'Instrument Serif', 'serif'],
-        display: ['var(--font-migra)', 'Instrument Serif', 'serif'],
+        sans: ['Satoshi', 'system-ui', 'sans-serif'],
+        serif: ['var(--font-migra)', 'Instrument Serif', 'Times New Roman', 'serif'],
+        display: ['var(--font-migra)', 'Instrument Serif', 'Times New Roman', 'serif'],
       },
       colors: {
         background: 'var(--background)',

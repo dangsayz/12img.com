@@ -100,10 +100,10 @@ export function LandingPage() {
               Beautiful delivery, automated backups, and 40% more affordable than the rest.
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
-              <Link href="/sign-up" className="bg-[#141414] text-white px-8 py-4 text-center font-medium hover:bg-black transition-colors rounded-[2px] min-w-[160px]">
+              <Link href="/sign-up" className="bg-[#141414] text-white px-8 py-4 text-center font-bold hover:bg-black transition-colors rounded-[2px] min-w-[160px]">
                 Start free
               </Link>
-              <Link href="/view-reel/demo" className="bg-transparent border border-[#141414] text-[#141414] px-8 py-4 text-center font-medium hover:bg-[#141414] hover:text-white transition-colors rounded-[2px] min-w-[160px]">
+              <Link href="/view-reel/demo" className="bg-transparent border border-[#141414] text-[#141414] px-8 py-4 text-center font-bold hover:bg-[#141414] hover:text-white transition-colors rounded-[2px] min-w-[160px]">
                 View sample
               </Link>
             </div>
@@ -142,8 +142,15 @@ export function LandingPage() {
         <div className="max-w-[1280px] mx-auto grid lg:grid-cols-2 gap-16 lg:gap-32 items-center">
           
           <div className="order-2 lg:order-1 relative h-[500px] bg-[#F5F5F7] w-full border border-[#E5E5E5]">
-            <div className="absolute inset-8 border border-[#E5E5E5] bg-white flex items-center justify-center">
-              <span className="text-gray-300 font-serif italic text-2xl">Migration UI Placeholder</span>
+            <div className="absolute inset-8 border border-[#E5E5E5] bg-white p-2 shadow-sm">
+              <div className="relative w-full h-full overflow-hidden bg-gray-50">
+                <Image 
+                  src="/images/showcase/modern-wedding-gallery-04.jpg" 
+                  alt="Migration Dashboard" 
+                  fill 
+                  className="object-cover"
+                />
+              </div>
             </div>
           </div>
 
@@ -313,34 +320,79 @@ export function LandingPage() {
 
           <div className="grid lg:grid-cols-3 gap-0 max-w-4xl mx-auto border border-[#E5E5E5]">
             {/* Essential */}
-            <div className="bg-white p-10 border-r border-[#E5E5E5] text-center">
+            <div className="bg-white p-10 border-r border-[#E5E5E5] text-center flex flex-col">
               <h3 className="font-serif text-2xl mb-2">Essential</h3>
-              <div className="text-4xl font-bold mb-4">$6</div>
-              <p className="text-sm text-[#525252] mb-8">10GB Storage<br/>Unlimited Galleries</p>
+              <div className="text-4xl font-bold mb-6">$6<span className="text-base font-normal text-gray-500">/mo</span></div>
+              
+              <ul className="text-left space-y-3 mb-8 flex-1">
+                <li className="flex items-start gap-3 text-sm text-[#525252]">
+                  <Check className="w-4 h-4 mt-0.5 shrink-0" /> 10GB Storage
+                </li>
+                <li className="flex items-start gap-3 text-sm text-[#525252]">
+                  <Check className="w-4 h-4 mt-0.5 shrink-0" /> Up to 4,000 images
+                </li>
+                <li className="flex items-start gap-3 text-sm text-[#525252]">
+                  <Check className="w-4 h-4 mt-0.5 shrink-0" /> Unlimited galleries
+                </li>
+                <li className="flex items-start gap-3 text-sm text-[#525252]">
+                  <Check className="w-4 h-4 mt-0.5 shrink-0" /> Galleries never expire
+                </li>
+              </ul>
+
               <Link href="/sign-up" className="block w-full py-3 border border-[#E5E5E5] text-sm font-medium hover:border-[#141414] transition-colors rounded-[2px]">
-                Start Free
+                Get Essential
               </Link>
             </div>
             
             {/* Pro - Recommended */}
-            <div className="bg-[#EBEAE8] p-10 border-r border-[#E5E5E5] text-center relative">
+            <div className="bg-[#EBEAE8] p-10 border-r border-[#E5E5E5] text-center relative flex flex-col">
               <div className="absolute top-0 left-0 w-full h-1 bg-[#141414]"></div>
               <div className="absolute top-3 right-3 text-[10px] font-bold uppercase tracking-wider text-[#141414]/60">Most Popular</div>
               <h3 className="font-serif text-2xl mb-2">Pro</h3>
-              <div className="text-4xl font-bold mb-4">$12</div>
-              <p className="text-sm text-[#525252] mb-8">100GB Storage<br/>Unlimited Galleries</p>
+              <div className="text-4xl font-bold mb-6">$12<span className="text-base font-normal text-gray-500">/mo</span></div>
+              
+              <ul className="text-left space-y-3 mb-8 flex-1">
+                <li className="flex items-start gap-3 text-sm text-[#141414] font-medium">
+                  <Check className="w-4 h-4 mt-0.5 shrink-0" /> 100GB Storage
+                </li>
+                <li className="flex items-start gap-3 text-sm text-[#141414]">
+                  <Check className="w-4 h-4 mt-0.5 shrink-0" /> Up to 31,000 images
+                </li>
+                <li className="flex items-start gap-3 text-sm text-[#141414]">
+                  <Check className="w-4 h-4 mt-0.5 shrink-0" /> Unlimited galleries
+                </li>
+                <li className="flex items-start gap-3 text-sm text-[#141414]">
+                  <Check className="w-4 h-4 mt-0.5 shrink-0" /> Galleries never expire
+                </li>
+              </ul>
+
               <Link href="/sign-up" className="block w-full py-3 bg-[#141414] text-white text-sm font-medium hover:bg-black transition-colors rounded-[2px]">
-                Get Started
+                Get Pro
               </Link>
             </div>
 
             {/* Studio */}
-            <div className="bg-white p-10 text-center">
+            <div className="bg-white p-10 text-center flex flex-col">
               <h3 className="font-serif text-2xl mb-2">Studio</h3>
-              <div className="text-4xl font-bold mb-4">$18</div>
-              <p className="text-sm text-[#525252] mb-8">500GB Storage<br/>Priority Support</p>
+              <div className="text-4xl font-bold mb-6">$18<span className="text-base font-normal text-gray-500">/mo</span></div>
+              
+              <ul className="text-left space-y-3 mb-8 flex-1">
+                <li className="flex items-start gap-3 text-sm text-[#525252]">
+                  <Check className="w-4 h-4 mt-0.5 shrink-0" /> 500GB Storage
+                </li>
+                <li className="flex items-start gap-3 text-sm text-[#525252]">
+                  <Check className="w-4 h-4 mt-0.5 shrink-0" /> Up to 151,000 images
+                </li>
+                <li className="flex items-start gap-3 text-sm text-[#525252]">
+                  <Check className="w-4 h-4 mt-0.5 shrink-0" /> Unlimited galleries
+                </li>
+                <li className="flex items-start gap-3 text-sm text-[#525252]">
+                  <Check className="w-4 h-4 mt-0.5 shrink-0" /> Priority Support
+                </li>
+              </ul>
+
               <Link href="/sign-up" className="block w-full py-3 border border-[#E5E5E5] text-sm font-medium hover:border-[#141414] transition-colors rounded-[2px]">
-                Contact Sales
+                Get Studio
               </Link>
             </div>
           </div>

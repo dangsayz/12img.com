@@ -58,7 +58,7 @@ export function Header({
               <Link
                 key={link.href}
                 href={link.href}
-                className="px-3 py-1.5 rounded-full text-xs font-medium text-[#78716C] hover:text-[#1C1917] hover:bg-[#FAF8F3] transition-all"
+                className="px-3 py-1.5 rounded-full text-xs font-bold text-[#1C1917] hover:bg-[#FAF8F3] transition-all"
               >
                 {link.label}
               </Link>
@@ -136,7 +136,7 @@ export function Header({
               {/* Sign In - Hidden on mobile */}
               <Link
                 href="/sign-in"
-                className="hidden md:block px-3 py-1.5 rounded-full text-xs font-medium text-[#78716C] hover:text-[#1C1917] hover:bg-[#FAF8F3] transition-all"
+                className="hidden md:block px-3 py-1.5 rounded-full text-xs font-bold text-[#1C1917] hover:bg-[#FAF8F3] transition-all"
               >
                 Sign In
               </Link>
@@ -144,7 +144,7 @@ export function Header({
               {/* Get Started Button - Hidden on mobile */}
               <div className="hidden md:block">
                 <Link href="/sign-up">
-                  <Button size="sm" className="h-7 rounded-full bg-[#1C1917] px-3 text-xs font-medium text-white hover:bg-[#292524] transition-all">
+                  <Button size="sm" className="h-7 rounded-full bg-[#1C1917] px-3 text-xs font-bold text-white hover:bg-[#292524] transition-all">
                     Get Started
                   </Button>
                 </Link>
