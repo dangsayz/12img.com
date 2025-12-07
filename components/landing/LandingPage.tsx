@@ -11,10 +11,10 @@ export function LandingPage() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   return (
-    <div className="min-h-screen bg-[#F7F5F2] text-[#141414] font-sans selection:bg-black selection:text-white">
+    <div className="min-h-screen bg-[#F5F5F7] text-[#141414] font-sans selection:bg-black selection:text-white">
       
       {/* --- Navigation --- */}
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-[#F7F5F2]/95 backdrop-blur-sm border-b border-[#E5E5E5]">
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-[#F5F5F7]/95 backdrop-blur-sm border-b border-[#E5E5E5]">
         <div className="max-w-[1400px] mx-auto px-6 h-[72px] flex items-center justify-between">
           
           {/* Logo */}
@@ -33,9 +33,9 @@ export function LandingPage() {
               </span>
               {/* Dropdown Placeholder */}
               <div className="absolute top-full left-1/2 -translate-x-1/2 w-48 bg-white border border-[#E5E5E5] opacity-0 group-hover:opacity-100 invisible group-hover:visible transition-all duration-200 shadow-xl p-2 z-50">
-                <Link href="#" className="block px-4 py-2 text-sm hover:bg-[#F7F5F2]">Client Galleries</Link>
-                <Link href="#" className="block px-4 py-2 text-sm hover:bg-[#F7F5F2]">Zip Backup</Link>
-                <Link href="#" className="block px-4 py-2 text-sm hover:bg-[#F7F5F2] text-gray-400 cursor-not-allowed">AI Culling (Soon)</Link>
+                <Link href="#" className="block px-4 py-2 text-sm hover:bg-[#F5F5F7]">Client Galleries</Link>
+                <Link href="#" className="block px-4 py-2 text-sm hover:bg-[#F5F5F7]">Zip Backup</Link>
+                <Link href="#" className="block px-4 py-2 text-sm hover:bg-[#F5F5F7] text-gray-400 cursor-not-allowed">AI Culling (Soon)</Link>
               </div>
             </div>
             <div className="group relative cursor-pointer py-6">
@@ -43,8 +43,8 @@ export function LandingPage() {
                 Resources <ChevronDown className="w-3 h-3" />
               </span>
               <div className="absolute top-full left-1/2 -translate-x-1/2 w-48 bg-white border border-[#E5E5E5] opacity-0 group-hover:opacity-100 invisible group-hover:visible transition-all duration-200 shadow-xl p-2 z-50">
-                <Link href="#" className="block px-4 py-2 text-sm hover:bg-[#F7F5F2]">Blog</Link>
-                <Link href="#" className="block px-4 py-2 text-sm hover:bg-[#F7F5F2]">Help Center</Link>
+                <Link href="#" className="block px-4 py-2 text-sm hover:bg-[#F5F5F7]">Blog</Link>
+                <Link href="#" className="block px-4 py-2 text-sm hover:bg-[#F5F5F7]">Help Center</Link>
               </div>
             </div>
             <Link href="#pricing" className="text-sm font-medium opacity-80 hover:opacity-100 transition-opacity">Pricing</Link>
@@ -70,7 +70,7 @@ export function LandingPage() {
 
         {/* Mobile Menu Overlay */}
         {mobileMenuOpen && (
-          <div className="fixed inset-0 bg-[#F7F5F2] z-40 pt-24 px-6 md:hidden overflow-y-auto">
+          <div className="fixed inset-0 bg-[#F5F5F7] z-40 pt-24 px-6 md:hidden overflow-y-auto">
             <div className="flex flex-col gap-6 text-xl font-serif">
               <Link href="#" onClick={() => setMobileMenuOpen(false)} className="border-b border-gray-200 pb-4">Product</Link>
               <Link href="#" onClick={() => setMobileMenuOpen(false)} className="border-b border-gray-200 pb-4">Resources</Link>
@@ -141,7 +141,7 @@ export function LandingPage() {
       <section className="py-20 lg:py-32 px-6 bg-white border-t border-[#E5E5E5]">
         <div className="max-w-[1280px] mx-auto grid lg:grid-cols-2 gap-16 lg:gap-32 items-center">
           
-          <div className="order-2 lg:order-1 relative h-[500px] bg-[#F7F5F2] w-full border border-[#E5E5E5]">
+          <div className="order-2 lg:order-1 relative h-[500px] bg-[#F5F5F7] w-full border border-[#E5E5E5]">
             <div className="absolute inset-8 border border-[#E5E5E5] bg-white flex items-center justify-center">
               <span className="text-gray-300 font-serif italic text-2xl">Migration UI Placeholder</span>
             </div>
@@ -164,7 +164,7 @@ export function LandingPage() {
       </section>
 
       {/* --- 3. Client Galleries Experience --- */}
-      <section className="py-20 lg:py-32 px-6 bg-[#F7F5F2]">
+      <section className="py-20 lg:py-32 px-6 bg-[#F5F5F7]">
         <div className="max-w-[1280px] mx-auto grid lg:grid-cols-2 gap-16 lg:gap-32 items-center">
           
           {/* Left: Visual */}
@@ -228,7 +228,7 @@ export function LandingPage() {
             </p>
           </div>
 
-          <div className="h-[400px] bg-[#F7F5F2] border border-[#E5E5E5] flex items-center justify-center p-12">
+          <div className="h-[400px] bg-[#F5F5F7] border border-[#E5E5E5] flex items-center justify-center p-12">
              <div className="flex items-center gap-6 opacity-60">
                 <div className="w-24 h-32 border-2 border-[#141414] flex items-center justify-center">
                   <Upload className="w-8 h-8" />
@@ -267,7 +267,7 @@ export function LandingPage() {
       </section>
 
       {/* --- 6. Features Grid --- */}
-      <section className="py-20 lg:py-32 px-6 bg-[#F7F5F2]">
+      <section className="py-20 lg:py-32 px-6 bg-[#F5F5F7]">
         <div className="max-w-[1280px] mx-auto">
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
             
@@ -304,7 +304,7 @@ export function LandingPage() {
       </section>
 
       {/* --- 8. Pricing Preview --- */}
-      <section id="pricing" className="py-20 lg:py-32 px-6 bg-[#F7F5F2]">
+      <section id="pricing" className="py-20 lg:py-32 px-6 bg-[#F5F5F7]">
         <div className="max-w-[1280px] mx-auto">
           <div className="text-center mb-16">
             <h2 className="font-serif text-4xl lg:text-[42px] mb-4">Simple, honest pricing.</h2>
