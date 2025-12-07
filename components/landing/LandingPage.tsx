@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { useState } from 'react'
-import { Menu, X, ChevronDown, ArrowRight, Upload, Lock, Shield, Zap, Check } from 'lucide-react'
+import { Menu, X, ChevronDown, ArrowRight, Upload, Lock, Shield, Zap, Check, Instagram } from 'lucide-react'
 
 // --- Landing Page Component ---
 
@@ -312,21 +312,22 @@ export function LandingPage() {
           </div>
 
           <div className="grid lg:grid-cols-3 gap-0 max-w-4xl mx-auto border border-[#E5E5E5]">
-            {/* Starter */}
+            {/* Essential */}
             <div className="bg-white p-10 border-r border-[#E5E5E5] text-center">
-              <h3 className="font-serif text-2xl mb-2">Free</h3>
-              <div className="text-4xl font-bold mb-4">$0</div>
-              <p className="text-sm text-[#525252] mb-8">2GB Storage<br/>~500 Images</p>
+              <h3 className="font-serif text-2xl mb-2">Essential</h3>
+              <div className="text-4xl font-bold mb-4">$6</div>
+              <p className="text-sm text-[#525252] mb-8">10GB Storage<br/>Unlimited Galleries</p>
               <Link href="/sign-up" className="block w-full py-3 border border-[#E5E5E5] text-sm font-medium hover:border-[#141414] transition-colors rounded-[2px]">
                 Start Free
               </Link>
             </div>
             
             {/* Pro - Recommended */}
-            <div className="bg-[#F2F0EB] p-10 border-r border-[#E5E5E5] text-center relative">
+            <div className="bg-[#EBEAE8] p-10 border-r border-[#E5E5E5] text-center relative">
               <div className="absolute top-0 left-0 w-full h-1 bg-[#141414]"></div>
+              <div className="absolute top-3 right-3 text-[10px] font-bold uppercase tracking-wider text-[#141414]/60">Most Popular</div>
               <h3 className="font-serif text-2xl mb-2">Pro</h3>
-              <div className="text-4xl font-bold mb-4">$19</div>
+              <div className="text-4xl font-bold mb-4">$12</div>
               <p className="text-sm text-[#525252] mb-8">100GB Storage<br/>Unlimited Galleries</p>
               <Link href="/sign-up" className="block w-full py-3 bg-[#141414] text-white text-sm font-medium hover:bg-black transition-colors rounded-[2px]">
                 Get Started
@@ -336,8 +337,8 @@ export function LandingPage() {
             {/* Studio */}
             <div className="bg-white p-10 text-center">
               <h3 className="font-serif text-2xl mb-2">Studio</h3>
-              <div className="text-4xl font-bold mb-4">$39</div>
-              <p className="text-sm text-[#525252] mb-8">1TB Storage<br/>Priority Support</p>
+              <div className="text-4xl font-bold mb-4">$18</div>
+              <p className="text-sm text-[#525252] mb-8">500GB Storage<br/>Priority Support</p>
               <Link href="/sign-up" className="block w-full py-3 border border-[#E5E5E5] text-sm font-medium hover:border-[#141414] transition-colors rounded-[2px]">
                 Contact Sales
               </Link>
@@ -403,9 +404,10 @@ export function LandingPage() {
           <div>
             <h4 className="text-white font-medium mb-6">Social</h4>
             <div className="flex gap-4">
-               {/* Social Icons Placeholder */}
-               <div className="w-8 h-8 bg-white/10 hover:bg-white/20 transition-colors"></div>
-               <div className="w-8 h-8 bg-white/10 hover:bg-white/20 transition-colors"></div>
+               {/* Social Icons */}
+               <Link href="https://instagram.com/12img" target="_blank" className="w-8 h-8 flex items-center justify-center bg-white/10 hover:bg-white/20 transition-colors rounded-full">
+                 <Instagram className="w-4 h-4 text-white" />
+               </Link>
             </div>
           </div>
         </div>

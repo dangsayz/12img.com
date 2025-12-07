@@ -101,7 +101,7 @@ const clerkAppearance = {
     colorNeutral: '#1C1C1C',
     colorTextOnPrimaryBackground: '#FFFFFF',
     borderRadius: '12px',
-    fontFamily: 'var(--font-inter), system-ui, sans-serif',
+    fontFamily: 'Satoshi, system-ui, sans-serif',
     spacingUnit: '16px',
   },
   elements: {
@@ -157,6 +157,7 @@ export default function RootLayout({
     <ClerkProvider appearance={clerkAppearance}>
       <html lang="en">
         <head>
+          <link href="https://api.fontshare.com/v2/css?f[]=satoshi@900,700,500,301,701,300,501,401,901,400&display=swap" rel="stylesheet" />
           <OrganizationJsonLd
             name="12img"
             url={siteUrl}
@@ -172,7 +173,7 @@ export default function RootLayout({
             offers={{ price: '0', priceCurrency: 'USD' }}
           />
         </head>
-        <body className={`${satoshi.variable} ${migra.variable} font-sans antialiased`}>
+        <body className={`${migra.variable} font-sans antialiased`}>
           {children}
           <Footer />
           <SupportWidget />

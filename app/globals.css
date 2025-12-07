@@ -2,6 +2,15 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer base {
+  body {
+    @apply font-sans tracking-[0.02em] leading-relaxed text-foreground antialiased;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-serif tracking-tight font-normal;
+  }
+}
+
 :root {
   --background: #ffffff;
   --foreground: #171717;
