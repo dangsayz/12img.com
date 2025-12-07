@@ -318,82 +318,138 @@ export function LandingPage() {
             <p className="text-[#525252] text-lg">No hidden fees. Change plans anytime.</p>
           </div>
 
-          <div className="grid lg:grid-cols-3 gap-0 max-w-4xl mx-auto border border-[#E5E5E5]">
-            {/* Essential */}
-            <div className="bg-white p-10 border-r border-[#E5E5E5] text-center flex flex-col">
-              <h3 className="font-serif text-2xl mb-2">Essential</h3>
-              <div className="text-4xl font-bold mb-6">$6<span className="text-base font-normal text-gray-500">/mo</span></div>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 max-w-6xl mx-auto">
+            {/* Free */}
+            <div className="bg-white p-6 border border-[#E5E5E5] flex flex-col">
+              <h3 className="font-serif text-xl mb-1">Free</h3>
+              <p className="text-xs text-gray-500 mb-4">Test drive</p>
+              <div className="text-3xl font-bold mb-6">$0<span className="text-sm font-normal text-gray-500">/mo</span></div>
               
-              <ul className="text-left space-y-3 mb-8 flex-1">
-                <li className="flex items-start gap-3 text-sm text-[#525252]">
-                  <Check className="w-4 h-4 mt-0.5 shrink-0" /> 10GB Storage
+              <Link href="/sign-up" className="block w-full py-2.5 border border-[#E5E5E5] text-sm font-medium hover:border-[#141414] transition-colors rounded-[2px] text-center mb-6">
+                Start free
+              </Link>
+
+              <ul className="text-left space-y-2 flex-1">
+                <li className="flex items-start gap-2 text-xs text-[#525252]">
+                  <Check className="w-3.5 h-3.5 mt-0.5 shrink-0 text-emerald-600" /> 2GB storage
                 </li>
-                <li className="flex items-start gap-3 text-sm text-[#525252]">
-                  <Check className="w-4 h-4 mt-0.5 shrink-0" /> Up to 4,000 images
+                <li className="flex items-start gap-2 text-xs text-[#525252]">
+                  <Check className="w-3.5 h-3.5 mt-0.5 shrink-0 text-emerald-600" /> Up to 1,300 images
                 </li>
-                <li className="flex items-start gap-3 text-sm text-[#525252]">
-                  <Check className="w-4 h-4 mt-0.5 shrink-0" /> Unlimited galleries
+                <li className="flex items-start gap-2 text-xs text-[#525252]">
+                  <Check className="w-3.5 h-3.5 mt-0.5 shrink-0 text-emerald-600" /> 3 galleries
                 </li>
-                <li className="flex items-start gap-3 text-sm text-[#525252]">
-                  <Check className="w-4 h-4 mt-0.5 shrink-0" /> Galleries never expire
+                <li className="flex items-start gap-2 text-xs text-[#525252]">
+                  <Check className="w-3.5 h-3.5 mt-0.5 shrink-0 text-emerald-600" /> 7-day gallery expiry
                 </li>
               </ul>
+            </div>
 
-              <Link href="/sign-up" className="block w-full py-3 border border-[#E5E5E5] text-sm font-medium hover:border-[#141414] transition-colors rounded-[2px]">
+            {/* Essential */}
+            <div className="bg-white p-6 border border-[#E5E5E5] flex flex-col">
+              <h3 className="font-serif text-xl mb-1">Essential</h3>
+              <p className="text-xs text-gray-500 mb-4">For part-time photographers</p>
+              <div className="text-3xl font-bold mb-6">$6<span className="text-sm font-normal text-gray-500">/mo</span></div>
+              
+              <Link href="/sign-up" className="block w-full py-2.5 border border-[#E5E5E5] text-sm font-medium hover:border-[#141414] transition-colors rounded-[2px] text-center mb-6">
                 Get Essential
               </Link>
+
+              <ul className="text-left space-y-2 flex-1">
+                <li className="flex items-start gap-2 text-xs text-[#525252]">
+                  <Check className="w-3.5 h-3.5 mt-0.5 shrink-0 text-emerald-600" /> 10GB storage
+                </li>
+                <li className="flex items-start gap-2 text-xs text-[#525252]">
+                  <Check className="w-3.5 h-3.5 mt-0.5 shrink-0 text-emerald-600" /> Up to 4,000 images
+                </li>
+                <li className="flex items-start gap-2 text-xs text-[#525252]">
+                  <Check className="w-3.5 h-3.5 mt-0.5 shrink-0 text-emerald-600" /> Unlimited galleries
+                </li>
+                <li className="flex items-start gap-2 text-xs text-[#525252]">
+                  <Check className="w-3.5 h-3.5 mt-0.5 shrink-0 text-emerald-600" /> Galleries never expire
+                </li>
+              </ul>
             </div>
             
             {/* Pro - Recommended */}
-            <div className="bg-[#EBEAE8] p-10 border-r border-[#E5E5E5] text-center relative flex flex-col">
-              <div className="absolute top-0 left-0 w-full h-1 bg-[#141414]"></div>
-              <div className="absolute top-3 right-3 text-[10px] font-bold uppercase tracking-wider text-[#141414]/60">Most Popular</div>
-              <h3 className="font-serif text-2xl mb-2">Pro</h3>
-              <div className="text-4xl font-bold mb-6">$12<span className="text-base font-normal text-gray-500">/mo</span></div>
+            <div className="bg-[#141414] text-white p-6 border border-[#141414] flex flex-col relative">
+              <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-amber-500 text-[10px] font-bold uppercase tracking-wider rounded-full whitespace-nowrap">
+                Most Popular
+              </div>
+              <h3 className="font-serif text-xl mb-1">Pro</h3>
+              <p className="text-xs text-white/60 mb-4">Most popular</p>
+              <div className="text-3xl font-bold mb-6">$12<span className="text-sm font-normal text-white/60">/mo</span></div>
               
-              <ul className="text-left space-y-3 mb-8 flex-1">
-                <li className="flex items-start gap-3 text-sm text-[#141414] font-medium">
-                  <Check className="w-4 h-4 mt-0.5 shrink-0" /> 100GB Storage
-                </li>
-                <li className="flex items-start gap-3 text-sm text-[#141414]">
-                  <Check className="w-4 h-4 mt-0.5 shrink-0" /> Up to 31,000 images
-                </li>
-                <li className="flex items-start gap-3 text-sm text-[#141414]">
-                  <Check className="w-4 h-4 mt-0.5 shrink-0" /> Unlimited galleries
-                </li>
-                <li className="flex items-start gap-3 text-sm text-[#141414]">
-                  <Check className="w-4 h-4 mt-0.5 shrink-0" /> Galleries never expire
-                </li>
-              </ul>
-
-              <Link href="/sign-up" className="block w-full py-3 bg-[#141414] text-white text-sm font-medium hover:bg-black transition-colors rounded-[2px]">
+              <Link href="/sign-up" className="block w-full py-2.5 bg-white text-[#141414] text-sm font-medium hover:bg-gray-100 transition-colors rounded-[2px] text-center mb-6">
                 Get Pro
               </Link>
+
+              <ul className="text-left space-y-2 flex-1">
+                <li className="flex items-start gap-2 text-xs text-white/80">
+                  <Check className="w-3.5 h-3.5 mt-0.5 shrink-0 text-emerald-400" /> 100GB storage
+                </li>
+                <li className="flex items-start gap-2 text-xs text-white/80">
+                  <Check className="w-3.5 h-3.5 mt-0.5 shrink-0 text-emerald-400" /> Up to 31,000 images
+                </li>
+                <li className="flex items-start gap-2 text-xs text-white/80">
+                  <Check className="w-3.5 h-3.5 mt-0.5 shrink-0 text-emerald-400" /> Unlimited galleries
+                </li>
+                <li className="flex items-start gap-2 text-xs text-white/80">
+                  <Check className="w-3.5 h-3.5 mt-0.5 shrink-0 text-emerald-400" /> Galleries never expire
+                </li>
+              </ul>
             </div>
 
             {/* Studio */}
-            <div className="bg-white p-10 text-center flex flex-col">
-              <h3 className="font-serif text-2xl mb-2">Studio</h3>
-              <div className="text-4xl font-bold mb-6">$18<span className="text-base font-normal text-gray-500">/mo</span></div>
+            <div className="bg-white p-6 border border-[#E5E5E5] flex flex-col">
+              <h3 className="font-serif text-xl mb-1">Studio</h3>
+              <p className="text-xs text-gray-500 mb-4">For busy studios</p>
+              <div className="text-3xl font-bold mb-6">$18<span className="text-sm font-normal text-gray-500">/mo</span></div>
               
-              <ul className="text-left space-y-3 mb-8 flex-1">
-                <li className="flex items-start gap-3 text-sm text-[#525252]">
-                  <Check className="w-4 h-4 mt-0.5 shrink-0" /> 500GB Storage
-                </li>
-                <li className="flex items-start gap-3 text-sm text-[#525252]">
-                  <Check className="w-4 h-4 mt-0.5 shrink-0" /> Up to 151,000 images
-                </li>
-                <li className="flex items-start gap-3 text-sm text-[#525252]">
-                  <Check className="w-4 h-4 mt-0.5 shrink-0" /> Unlimited galleries
-                </li>
-                <li className="flex items-start gap-3 text-sm text-[#525252]">
-                  <Check className="w-4 h-4 mt-0.5 shrink-0" /> Priority Support
-                </li>
-              </ul>
-
-              <Link href="/sign-up" className="block w-full py-3 border border-[#E5E5E5] text-sm font-medium hover:border-[#141414] transition-colors rounded-[2px]">
+              <Link href="/sign-up" className="block w-full py-2.5 border border-[#E5E5E5] text-sm font-medium hover:border-[#141414] transition-colors rounded-[2px] text-center mb-6">
                 Get Studio
               </Link>
+
+              <ul className="text-left space-y-2 flex-1">
+                <li className="flex items-start gap-2 text-xs text-[#525252]">
+                  <Check className="w-3.5 h-3.5 mt-0.5 shrink-0 text-emerald-600" /> 500GB storage
+                </li>
+                <li className="flex items-start gap-2 text-xs text-[#525252]">
+                  <Check className="w-3.5 h-3.5 mt-0.5 shrink-0 text-emerald-600" /> Up to 151,000 images
+                </li>
+                <li className="flex items-start gap-2 text-xs text-[#525252]">
+                  <Check className="w-3.5 h-3.5 mt-0.5 shrink-0 text-emerald-600" /> Unlimited galleries
+                </li>
+                <li className="flex items-start gap-2 text-xs text-[#525252]">
+                  <Check className="w-3.5 h-3.5 mt-0.5 shrink-0 text-emerald-600" /> Priority Support
+                </li>
+              </ul>
+            </div>
+
+            {/* Elite */}
+            <div className="bg-white p-6 border border-[#E5E5E5] flex flex-col">
+              <h3 className="font-serif text-xl mb-1">Elite</h3>
+              <p className="text-xs text-gray-500 mb-4">For power users</p>
+              <div className="text-3xl font-bold mb-6">$30<span className="text-sm font-normal text-gray-500">/mo</span></div>
+              
+              <Link href="/sign-up" className="block w-full py-2.5 bg-[#141414] text-white text-sm font-medium hover:bg-black transition-colors rounded-[2px] text-center mb-6">
+                Get Elite
+              </Link>
+
+              <ul className="text-left space-y-2 flex-1">
+                <li className="flex items-start gap-2 text-xs text-[#525252]">
+                  <Check className="w-3.5 h-3.5 mt-0.5 shrink-0 text-emerald-600" /> 2TB storage
+                </li>
+                <li className="flex items-start gap-2 text-xs text-[#525252]">
+                  <Check className="w-3.5 h-3.5 mt-0.5 shrink-0 text-emerald-600" /> Up to 600,000 images
+                </li>
+                <li className="flex items-start gap-2 text-xs text-[#525252]">
+                  <Check className="w-3.5 h-3.5 mt-0.5 shrink-0 text-emerald-600" /> Unlimited galleries
+                </li>
+                <li className="flex items-start gap-2 text-xs text-[#525252]">
+                  <Check className="w-3.5 h-3.5 mt-0.5 shrink-0 text-emerald-600" /> Priority support
+                </li>
+              </ul>
             </div>
           </div>
           
