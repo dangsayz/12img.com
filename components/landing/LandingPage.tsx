@@ -2,364 +2,419 @@
 
 import Link from 'next/link'
 import Image from 'next/image'
-import { PricingButton } from '@/components/billing/PricingButton'
-import { Header } from '@/components/layout/Header'
-// Custom lightweight icons
-const IconZap = ({ className = '' }: { className?: string }) => (
-  <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
-  </svg>
-)
+import { useState } from 'react'
+import { Menu, X, ChevronDown, ArrowRight, Upload, Lock, Shield, Zap, Check } from 'lucide-react'
 
-const IconArrowRight = ({ className = '' }: { className?: string }) => (
-  <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M5 12h14M12 5l7 7-7 7" />
-  </svg>
-)
-
-const IconCheck = ({ className = '' }: { className?: string }) => (
-  <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M5 12l5 5L20 7" />
-  </svg>
-)
-
-const IconUpload = ({ className = '' }: { className?: string }) => (
-  <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M12 15V3M12 3l-4 4M12 3l4 4" />
-    <path d="M2 17v2a2 2 0 002 2h16a2 2 0 002-2v-2" />
-  </svg>
-)
-
-const IconLock = ({ className = '' }: { className?: string }) => (
-  <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-    <rect x="5" y="11" width="14" height="10" rx="2" />
-    <path d="M8 11V7a4 4 0 018 0v4" />
-  </svg>
-)
-
-const IconDownload = ({ className = '' }: { className?: string }) => (
-  <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M12 3v12M12 15l-4-4M12 15l4-4" />
-    <path d="M2 17v2a2 2 0 002 2h16a2 2 0 002-2v-2" />
-  </svg>
-)
-
-const IconMail = ({ className = '' }: { className?: string }) => (
-  <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-    <rect x="2" y="4" width="20" height="16" rx="2" />
-    <path d="M22 6l-10 7L2 6" />
-  </svg>
-)
-
-const IconShield = ({ className = '' }: { className?: string }) => (
-  <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M12 3l8 4v5c0 5.5-3.5 8.5-8 10-4.5-1.5-8-4.5-8-10V7l8-4z" />
-  </svg>
-)
-import { PLANS } from '@/lib/config/pricing'
+// --- Landing Page Component ---
 
 export function LandingPage() {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+
   return (
-    <main className="min-h-screen bg-[#FAF8F3]">
-      {/* Universal Nav */}
-      <Header isAuthenticated={false} />
+    <div className="min-h-screen bg-[#F7F5F2] text-[#141414] font-sans selection:bg-black selection:text-white">
+      
+      {/* --- Navigation --- */}
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-[#F7F5F2]/95 backdrop-blur-sm border-b border-[#E5E5E5]">
+        <div className="max-w-[1400px] mx-auto px-6 h-[72px] flex items-center justify-between">
+          
+          {/* Logo */}
+          <Link href="/" className="flex items-center gap-2 z-50">
+            <div className="w-8 h-8 bg-black flex items-center justify-center text-white font-bold text-xs tracking-tighter">
+              12
+            </div>
+            <span className="font-serif text-xl font-medium tracking-tight">img</span>
+          </Link>
 
-      {/* Hero Section - Clean & Simple */}
-      <section className="pt-32 pb-16 px-4">
-        <div className="max-w-6xl mx-auto">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
-            {/* Left: Text Content */}
-            <div>
-              <div className="inline-flex items-center px-3 py-1 bg-stone-100 text-stone-500 rounded-full text-xs font-medium tracking-wide uppercase mb-6">
-                For Photographers
+          {/* Desktop Nav Center */}
+          <div className="hidden md:flex items-center gap-8">
+            <div className="group relative cursor-pointer py-6">
+              <span className="text-sm font-medium flex items-center gap-1 opacity-80 hover:opacity-100 transition-opacity">
+                Product <ChevronDown className="w-3 h-3" />
+              </span>
+              {/* Dropdown Placeholder */}
+              <div className="absolute top-full left-1/2 -translate-x-1/2 w-48 bg-white border border-[#E5E5E5] opacity-0 group-hover:opacity-100 invisible group-hover:visible transition-all duration-200 shadow-xl p-2 z-50">
+                <Link href="#" className="block px-4 py-2 text-sm hover:bg-[#F7F5F2]">Client Galleries</Link>
+                <Link href="#" className="block px-4 py-2 text-sm hover:bg-[#F7F5F2]">Zip Backup</Link>
+                <Link href="#" className="block px-4 py-2 text-sm hover:bg-[#F7F5F2] text-gray-400 cursor-not-allowed">AI Culling (Soon)</Link>
               </div>
-              
-              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-[#1C1917] leading-[1.1] mb-6">
-                Share your work,
-                <span className="block text-amber-500">beautifully.</span>
-              </h1>
-              
-              <p className="text-lg text-[#78716C] mb-8 leading-relaxed max-w-lg">
-                Ultra-minimal client galleries. No clutter. Just your images presented in a cinematic, distraction-free environment.
-              </p>
-
-              <div className="flex flex-wrap gap-4 mb-8">
-                <Link 
-                  href="/sign-up"
-                  className="inline-flex items-center gap-2 px-6 py-3.5 bg-[#1C1917] text-white font-semibold rounded-xl hover:bg-[#292524] transition-colors"
-                >
-                  Get Started <IconArrowRight className="w-4 h-4" />
-                </Link>
-                <Link 
-                  href="/view-reel/demo"
-                  className="inline-flex items-center gap-2 px-6 py-3.5 bg-white text-[#1C1917] font-semibold rounded-xl border border-[#E8E4DC] hover:border-[#1C1917] transition-colors"
-                >
-                  View Demo
-                </Link>
+            </div>
+            <div className="group relative cursor-pointer py-6">
+              <span className="text-sm font-medium flex items-center gap-1 opacity-80 hover:opacity-100 transition-opacity">
+                Resources <ChevronDown className="w-3 h-3" />
+              </span>
+              <div className="absolute top-full left-1/2 -translate-x-1/2 w-48 bg-white border border-[#E5E5E5] opacity-0 group-hover:opacity-100 invisible group-hover:visible transition-all duration-200 shadow-xl p-2 z-50">
+                <Link href="#" className="block px-4 py-2 text-sm hover:bg-[#F7F5F2]">Blog</Link>
+                <Link href="#" className="block px-4 py-2 text-sm hover:bg-[#F7F5F2]">Help Center</Link>
               </div>
+            </div>
+            <Link href="#pricing" className="text-sm font-medium opacity-80 hover:opacity-100 transition-opacity">Pricing</Link>
+            <Link href="/view-reel/demo" className="text-sm font-medium opacity-80 hover:opacity-100 transition-opacity">Sample Galleries</Link>
+          </div>
 
-              <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-[#78716C]">
-                <span className="flex items-center gap-2">
-                  <IconCheck className="w-4 h-4 text-emerald-500" /> Free to start
-                </span>
-                <span className="flex items-center gap-2">
-                  <IconCheck className="w-4 h-4 text-emerald-500" /> No credit card
-                </span>
-                <span className="flex items-center gap-2">
-                  <IconCheck className="w-4 h-4 text-emerald-500" /> Setup in 30 seconds
-                </span>
+          {/* Desktop Nav Right */}
+          <div className="hidden md:flex items-center gap-6">
+            <Link href="/sign-in" className="text-sm font-medium hover:underline">Log in</Link>
+            <Link href="/sign-up" className="bg-[#141414] text-white text-sm font-medium px-6 py-2.5 hover:bg-black transition-colors rounded-[2px]">
+              Start free
+            </Link>
+          </div>
+
+          {/* Mobile Menu Toggle */}
+          <button 
+            className="md:hidden z-50 p-2"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          >
+            {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+          </button>
+        </div>
+
+        {/* Mobile Menu Overlay */}
+        {mobileMenuOpen && (
+          <div className="fixed inset-0 bg-[#F7F5F2] z-40 pt-24 px-6 md:hidden overflow-y-auto">
+            <div className="flex flex-col gap-6 text-xl font-serif">
+              <Link href="#" onClick={() => setMobileMenuOpen(false)} className="border-b border-gray-200 pb-4">Product</Link>
+              <Link href="#" onClick={() => setMobileMenuOpen(false)} className="border-b border-gray-200 pb-4">Resources</Link>
+              <Link href="#pricing" onClick={() => setMobileMenuOpen(false)} className="border-b border-gray-200 pb-4">Pricing</Link>
+              <Link href="/view-reel/demo" onClick={() => setMobileMenuOpen(false)} className="border-b border-gray-200 pb-4">Sample Galleries</Link>
+              <Link href="/sign-in" onClick={() => setMobileMenuOpen(false)} className="pb-4">Log in</Link>
+              <Link href="/sign-up" onClick={() => setMobileMenuOpen(false)} className="bg-[#141414] text-white text-center py-4 mt-4 font-sans font-medium rounded-[2px]">
+                Start free
+              </Link>
+            </div>
+          </div>
+        )}
+      </nav>
+
+      {/* --- 1. Hero Section --- */}
+      <section className="pt-32 pb-16 lg:pt-48 lg:pb-32 px-6">
+        <div className="max-w-[1280px] mx-auto grid lg:grid-cols-12 gap-12 lg:gap-24">
+          
+          {/* Text Column */}
+          <div className="lg:col-span-5 flex flex-col justify-center">
+            <h1 className="font-serif text-4xl sm:text-5xl lg:text-[56px] leading-[1.1] text-[#141414] mb-8">
+              Deliver Galleries Faster. <br />
+              <span className="italic font-light">Keep More Profit.</span>
+            </h1>
+            <p className="text-lg text-[#525252] leading-relaxed mb-10 max-w-md">
+              12IMG is the lean, mobile-first gallery platform for modern photographers. 
+              Beautiful delivery, automated backups, and 40% more affordable than the rest.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4">
+              <Link href="/sign-up" className="bg-[#141414] text-white px-8 py-4 text-center font-medium hover:bg-black transition-colors rounded-[2px] min-w-[160px]">
+                Start free
+              </Link>
+              <Link href="/view-reel/demo" className="bg-transparent border border-[#141414] text-[#141414] px-8 py-4 text-center font-medium hover:bg-[#141414] hover:text-white transition-colors rounded-[2px] min-w-[160px]">
+                View sample
+              </Link>
+            </div>
+          </div>
+
+          {/* Visual Column */}
+          <div className="lg:col-span-7 relative">
+            <div className="relative z-10 bg-white p-2 shadow-2xl border border-gray-100 aspect-[4/3] w-full max-w-[700px] ml-auto">
+               <div className="relative w-full h-full bg-gray-100 overflow-hidden">
+                 <Image 
+                   src="/images/showcase/modern-wedding-gallery-01.jpg" 
+                   alt="Gallery Dashboard" 
+                   fill 
+                   className="object-cover"
+                   priority
+                 />
+               </div>
+            </div>
+            {/* Overlapping Element */}
+            <div className="absolute -bottom-12 -left-4 lg:-left-12 z-20 w-48 h-64 bg-white p-2 shadow-xl border border-gray-100 hidden sm:block">
+              <div className="relative w-full h-full bg-gray-100 overflow-hidden">
+                <Image 
+                   src="/images/showcase/modern-wedding-gallery-02.jpg" 
+                   alt="Mobile View" 
+                   fill 
+                   className="object-cover"
+                 />
               </div>
+            </div>
+          </div>
+        </div>
+      </section>
 
-              <Link 
-                href="/share"
-                className="mt-4 text-xs text-[#A8A29E] hover:text-[#78716C] transition-colors"
-              >
-                Just need to share one image? →
+      {/* --- 2. Migration Section --- */}
+      <section className="py-20 lg:py-32 px-6 bg-white border-t border-[#E5E5E5]">
+        <div className="max-w-[1280px] mx-auto grid lg:grid-cols-2 gap-16 lg:gap-32 items-center">
+          
+          <div className="order-2 lg:order-1 relative h-[500px] bg-[#F7F5F2] w-full border border-[#E5E5E5]">
+            <div className="absolute inset-8 border border-[#E5E5E5] bg-white flex items-center justify-center">
+              <span className="text-gray-300 font-serif italic text-2xl">Migration UI Placeholder</span>
+            </div>
+          </div>
+
+          <div className="order-1 lg:order-2">
+            <h2 className="font-serif text-3xl sm:text-4xl lg:text-[42px] mb-6">
+              Switch in a weekend, <br />
+              keep your brand.
+            </h2>
+            <p className="text-[#525252] text-lg leading-relaxed mb-8">
+              Moving to 12IMG is simple. Our tools help you transfer your client data and active galleries without downtime. Keep your custom domain and your brand integrity.
+            </p>
+            <Link href="#" className="text-[#141414] font-medium border-b border-[#141414] pb-0.5 hover:text-gray-600 hover:border-gray-600 transition-colors">
+              Learn about migration
+            </Link>
+          </div>
+
+        </div>
+      </section>
+
+      {/* --- 3. Client Galleries Experience --- */}
+      <section className="py-20 lg:py-32 px-6 bg-[#F7F5F2]">
+        <div className="max-w-[1280px] mx-auto grid lg:grid-cols-2 gap-16 lg:gap-32 items-center">
+          
+          {/* Left: Visual */}
+          <div className="relative">
+             <div className="aspect-[3/4] max-w-[500px] bg-white p-2 shadow-xl border border-gray-100 mx-auto lg:mr-auto">
+               <div className="w-full h-full bg-gray-50 overflow-hidden relative">
+                  <Image 
+                     src="/images/showcase/modern-wedding-gallery-03.jpg" 
+                     alt="Mobile Gallery" 
+                     fill 
+                     className="object-cover"
+                   />
+               </div>
+             </div>
+          </div>
+
+          {/* Right: Copy */}
+          <div>
+            <div className="inline-block px-3 py-1 border border-[#141414] text-xs font-medium uppercase tracking-wider mb-6">
+              Client Experience
+            </div>
+            <h2 className="font-serif text-3xl sm:text-4xl lg:text-[42px] mb-6">
+              Designed for the mobile generation.
+            </h2>
+            <p className="text-[#525252] text-lg leading-relaxed mb-8">
+              Your clients view 80% of your work on their phones. 12IMG is built mobile-first, ensuring your images look stunning on any screen size without awkward cropping or slow load times.
+            </p>
+            <ul className="space-y-4 mb-8">
+              <li className="flex items-start gap-3">
+                <Check className="w-5 h-5 mt-0.5" />
+                <span className="text-[#525252]">Smart image grouping, no generic masonry</span>
+              </li>
+              <li className="flex items-start gap-3">
+                <Check className="w-5 h-5 mt-0.5" />
+                <span className="text-[#525252]">Instant touch interactions</span>
+              </li>
+              <li className="flex items-start gap-3">
+                <Check className="w-5 h-5 mt-0.5" />
+                <span className="text-[#525252]">Crisp, full-bleed mobile layouts</span>
+              </li>
+            </ul>
+          </div>
+
+        </div>
+      </section>
+
+      {/* --- 4. Auto Zip & Backups --- */}
+      <section className="py-20 lg:py-32 px-6 bg-white border-y border-[#E5E5E5]">
+        <div className="max-w-[1280px] mx-auto grid lg:grid-cols-2 gap-16 lg:gap-32 items-center">
+          
+          <div>
+            <h2 className="font-serif text-3xl sm:text-4xl lg:text-[42px] mb-6">
+              Automatic Zip Backups. <br />
+              <span className="text-[#525252] italic">Peace of mind included.</span>
+            </h2>
+            <p className="text-[#525252] text-lg leading-relaxed mb-6">
+              Every time you upload a gallery, 12IMG automatically generates a ZIP archive and emails a download link to you. 
+            </p>
+            <p className="text-[#525252] text-lg leading-relaxed mb-8">
+              It’s a failsafe backup that lives in your inbox, ensuring you never lose client deliverables even if you accidentally delete a gallery.
+            </p>
+          </div>
+
+          <div className="h-[400px] bg-[#F7F5F2] border border-[#E5E5E5] flex items-center justify-center p-12">
+             <div className="flex items-center gap-6 opacity-60">
+                <div className="w-24 h-32 border-2 border-[#141414] flex items-center justify-center">
+                  <Upload className="w-8 h-8" />
+                </div>
+                <ArrowRight className="w-6 h-6" />
+                <div className="w-24 h-32 border-2 border-[#141414] flex items-center justify-center bg-[#141414] text-white">
+                  <span className="font-bold text-xs">ZIP</span>
+                </div>
+                <ArrowRight className="w-6 h-6" />
+                <div className="w-24 h-32 border-2 border-[#141414] flex items-center justify-center rounded-full border-dashed">
+                  <span className="text-xs font-serif">Email</span>
+                </div>
+             </div>
+          </div>
+
+        </div>
+      </section>
+
+      {/* --- 5. Slideshows (Future) --- */}
+      <section className="py-20 lg:py-32 px-6 bg-[#141414] text-white text-center">
+        <div className="max-w-[1280px] mx-auto">
+          <span className="inline-block px-3 py-1 border border-white/30 text-xs font-medium uppercase tracking-wider mb-8">
+            Coming Soon
+          </span>
+          <h2 className="font-serif text-3xl sm:text-4xl lg:text-[42px] mb-8">
+            Cinematic Slideshows
+          </h2>
+          <div className="relative aspect-video max-w-[900px] mx-auto bg-[#222] border border-white/10 flex items-center justify-center">
+             <span className="font-serif italic text-2xl text-white/40">Video Player Placeholder</span>
+             {/* Decorative Elements */}
+             <div className="absolute bottom-8 left-8 right-8 h-1 bg-white/20">
+               <div className="w-1/3 h-full bg-white"></div>
+             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* --- 6. Features Grid --- */}
+      <section className="py-20 lg:py-32 px-6 bg-[#F7F5F2]">
+        <div className="max-w-[1280px] mx-auto">
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+            
+            {[
+              { icon: Zap, title: "Fast on Mobile", desc: "Optimized for speed. Your galleries load instantly on 4G and 5G networks." },
+              { icon: Shield, title: "Secure Storage", desc: "Enterprise-grade encryption and redundancy for your precious images." },
+              { icon: Lock, title: "Your Branding", desc: "Remove our logo, add yours. Custom domains and color palettes included." },
+              { icon: Check, title: "Made by Creatives", desc: "Built by working photographers who understand your daily workflow." }
+            ].map((feature, i) => (
+              <div key={i} className="border border-[#E5E5E5] bg-white p-8 h-full hover:border-[#141414] transition-colors duration-300">
+                <feature.icon className="w-6 h-6 mb-6 text-[#141414]" />
+                <h3 className="font-serif text-xl mb-3">{feature.title}</h3>
+                <p className="text-[#525252] text-sm leading-relaxed">{feature.desc}</p>
+              </div>
+            ))}
+
+          </div>
+        </div>
+      </section>
+
+      {/* --- 7. Social Proof --- */}
+      <section className="py-20 px-6 border-t border-[#E5E5E5] bg-white">
+        <div className="max-w-[1280px] mx-auto text-center">
+          <p className="text-sm font-medium uppercase tracking-widest text-[#525252] mb-12">Trusted by 10,000+ Photographers</p>
+          <div className="flex flex-wrap justify-center gap-12 lg:gap-24 opacity-40 grayscale">
+            {/* Logo Placeholders */}
+            <div className="h-8 w-32 bg-black/10"></div>
+            <div className="h-8 w-32 bg-black/10"></div>
+            <div className="h-8 w-32 bg-black/10"></div>
+            <div className="h-8 w-32 bg-black/10"></div>
+            <div className="h-8 w-32 bg-black/10"></div>
+          </div>
+        </div>
+      </section>
+
+      {/* --- 8. Pricing Preview --- */}
+      <section id="pricing" className="py-20 lg:py-32 px-6 bg-[#F7F5F2]">
+        <div className="max-w-[1280px] mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="font-serif text-4xl lg:text-[42px] mb-4">Simple, honest pricing.</h2>
+            <p className="text-[#525252] text-lg">No hidden fees. Change plans anytime.</p>
+          </div>
+
+          <div className="grid lg:grid-cols-3 gap-0 max-w-4xl mx-auto border border-[#E5E5E5]">
+            {/* Starter */}
+            <div className="bg-white p-10 border-r border-[#E5E5E5] text-center">
+              <h3 className="font-serif text-2xl mb-2">Free</h3>
+              <div className="text-4xl font-bold mb-4">$0</div>
+              <p className="text-sm text-[#525252] mb-8">2GB Storage<br/>~500 Images</p>
+              <Link href="/sign-up" className="block w-full py-3 border border-[#E5E5E5] text-sm font-medium hover:border-[#141414] transition-colors rounded-[2px]">
+                Start Free
+              </Link>
+            </div>
+            
+            {/* Pro - Recommended */}
+            <div className="bg-[#F2F0EB] p-10 border-r border-[#E5E5E5] text-center relative">
+              <div className="absolute top-0 left-0 w-full h-1 bg-[#141414]"></div>
+              <h3 className="font-serif text-2xl mb-2">Pro</h3>
+              <div className="text-4xl font-bold mb-4">$19</div>
+              <p className="text-sm text-[#525252] mb-8">100GB Storage<br/>Unlimited Galleries</p>
+              <Link href="/sign-up" className="block w-full py-3 bg-[#141414] text-white text-sm font-medium hover:bg-black transition-colors rounded-[2px]">
+                Get Started
               </Link>
             </div>
 
-            {/* Right: App Preview Card */}
-            <div className="relative">
-              <div className="bg-white rounded-3xl border border-[#E8E4DC] shadow-xl overflow-hidden">
-                {/* Browser Header */}
-                <div className="flex items-center gap-2 px-4 py-3 border-b border-[#E8E4DC] bg-[#FAFAF9]">
-                  <div className="flex gap-1.5">
-                    <div className="w-2.5 h-2.5 rounded-full bg-[#FF5F57]" />
-                    <div className="w-2.5 h-2.5 rounded-full bg-[#FFBD2E]" />
-                    <div className="w-2.5 h-2.5 rounded-full bg-[#28CA41]" />
-                  </div>
-                  <div className="flex-1 flex justify-center">
-                    <div className="flex items-center gap-1.5 px-3 py-1 bg-white rounded-md border border-[#E8E4DC] text-xs text-[#78716C]">
-                      <IconLock className="w-3 h-3" />
-                      12img.com/wedding
-                    </div>
-                  </div>
-                </div>
-                
-                {/* Gallery Preview */}
-                <div className="p-4 bg-[#FAF8F3]">
-                  <div className="grid grid-cols-3 gap-2">
-                    <div className="col-span-2 row-span-2 aspect-[4/3] relative rounded-xl overflow-hidden bg-stone-200">
-                      <Image 
-                        src="/images/showcase/modern-wedding-gallery-01.jpg" 
-                        alt="Gallery preview" 
-                        fill 
-                        className="object-cover"
-                        sizes="(max-width: 768px) 100vw, 50vw"
-                        priority
-                      />
-                    </div>
-                    <div className="aspect-square relative rounded-xl overflow-hidden bg-stone-200">
-                      <Image 
-                        src="/images/showcase/modern-wedding-gallery-02.jpg" 
-                        alt="Gallery preview" 
-                        fill 
-                        className="object-cover"
-                        sizes="25vw"
-                      />
-                    </div>
-                    <div className="aspect-square relative rounded-xl overflow-hidden bg-stone-200">
-                      <Image 
-                        src="/images/showcase/modern-wedding-gallery-03.jpg" 
-                        alt="Gallery preview" 
-                        fill 
-                        className="object-cover"
-                        sizes="25vw"
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Floating Stats Card */}
-              <div className="absolute -left-4 bottom-8 bg-white rounded-2xl p-4 shadow-lg border border-[#E8E4DC] hidden lg:block">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center">
-                    <IconZap className="w-5 h-5 text-emerald-600" />
-                  </div>
-                  <div>
-                    <p className="text-xs text-[#78716C]">Upload speed</p>
-                    <p className="text-sm font-bold text-[#1C1917]">2.4 seconds</p>
-                  </div>
-                </div>
-              </div>
+            {/* Studio */}
+            <div className="bg-white p-10 text-center">
+              <h3 className="font-serif text-2xl mb-2">Studio</h3>
+              <div className="text-4xl font-bold mb-4">$39</div>
+              <p className="text-sm text-[#525252] mb-8">1TB Storage<br/>Priority Support</p>
+              <Link href="/sign-up" className="block w-full py-3 border border-[#E5E5E5] text-sm font-medium hover:border-[#141414] transition-colors rounded-[2px]">
+                Contact Sales
+              </Link>
             </div>
+          </div>
+          
+          <div className="text-center mt-12">
+            <Link href="/pricing" className="text-sm font-medium border-b border-[#141414] pb-0.5 hover:text-gray-600 transition-colors">
+              View full pricing comparison
+            </Link>
           </div>
         </div>
       </section>
 
-      {/* Features Grid - Refined */}
-      <section className="py-24 px-4">
-        <div className="max-w-5xl mx-auto">
-          <div className="text-center mb-16">
-            <p className="text-amber-600 text-sm font-medium tracking-wide uppercase mb-3">Features</p>
-            <h2 className="text-3xl sm:text-4xl font-bold text-[#1C1917] mb-4">
-              Everything you need
-            </h2>
-            <p className="text-[#78716C] text-lg max-w-md mx-auto">
-              Simple tools that let your photography shine
-            </p>
-          </div>
-
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            {[
-              { icon: IconUpload, title: 'Fast Uploads', desc: 'Drag and drop hundreds of photos. They upload in seconds, not minutes.', gradient: 'from-amber-500 to-orange-500' },
-              { icon: IconLock, title: 'Password Protection', desc: 'Keep galleries private with simple PIN or password protection.', gradient: 'from-emerald-500 to-teal-500' },
-              { icon: IconDownload, title: 'Easy Downloads', desc: 'Clients download individual photos or the entire gallery as ZIP.', gradient: 'from-sky-500 to-blue-500' },
-              { icon: IconMail, title: 'Email Delivery', desc: 'Send gallery links directly to clients with one click.', gradient: 'from-violet-500 to-purple-500' },
-              { icon: IconShield, title: 'Secure Storage', desc: 'Your photos are stored safely with enterprise-grade security.', gradient: 'from-rose-500 to-pink-500' },
-              { icon: IconZap, title: 'Lightning Fast', desc: 'Optimized delivery means galleries load instantly on any device.', gradient: 'from-orange-500 to-amber-500' },
-            ].map((feature, i) => (
-              <div 
-                key={i} 
-                className="group relative bg-white rounded-2xl p-6 border border-[#E8E4DC]/80 hover:border-transparent transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_20px_40px_-12px_rgba(0,0,0,0.1)]"
-              >
-                <div className={`w-11 h-11 rounded-xl bg-gradient-to-br ${feature.gradient} flex items-center justify-center mb-5 shadow-lg`}>
-                  <feature.icon className="w-5 h-5 text-white" />
-                </div>
-                <h3 className="text-[17px] font-semibold text-[#1C1917] mb-2">{feature.title}</h3>
-                <p className="text-[#78716C] text-[14px] leading-relaxed">{feature.desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Social Proof - Simple Stats */}
-      <section className="py-16 px-4 bg-[#1C1917]">
-        <div className="max-w-4xl mx-auto">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
-            <div>
-              <p className="text-3xl sm:text-4xl font-bold text-white">10K+</p>
-              <p className="text-white/50 text-sm mt-1">Photographers</p>
-            </div>
-            <div>
-              <p className="text-3xl sm:text-4xl font-bold text-white">2.5M</p>
-              <p className="text-white/50 text-sm mt-1">Photos Delivered</p>
-            </div>
-            <div>
-              <p className="text-3xl sm:text-4xl font-bold text-white">99.9%</p>
-              <p className="text-white/50 text-sm mt-1">Uptime</p>
-            </div>
-            <div className="flex flex-col items-center">
-              <div className="flex items-center gap-1">
-                <p className="text-3xl sm:text-4xl font-bold text-white">4.9</p>
-                <div className="flex">
-                  {[1,2,3,4,5].map(i => (
-                    <svg key={i} className="w-4 h-4 text-amber-400" fill="currentColor" viewBox="0 0 20 20">
-                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                    </svg>
-                  ))}
-                </div>
-              </div>
-              <p className="text-white/50 text-sm mt-1">Rating</p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Pricing Section - Refined */}
-      <section id="pricing" className="py-24 px-4 bg-gradient-to-b from-[#FAF8F3] via-white to-[#FAF8F3]">
-        <div className="max-w-6xl mx-auto">
-          {/* Header */}
-          <div className="text-center mb-14">
-            <p className="text-amber-600 text-sm font-medium tracking-wide uppercase mb-3">Pricing</p>
-            <h2 className="text-3xl sm:text-4xl font-bold text-[#1C1917] mb-4">
-              Simple, honest pricing
-            </h2>
-            <p className="text-[#78716C] text-lg max-w-md mx-auto">
-              Just storage and images. No hidden fees.
-            </p>
-          </div>
-
-          {/* Pricing Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
-            {PLANS.map((plan) => (
-              <div 
-                key={plan.id}
-                className={`relative rounded-2xl p-5 transition-all duration-300 ${
-                  plan.popular 
-                    ? 'bg-[#1C1917] text-white scale-[1.02] shadow-2xl shadow-stone-900/20' 
-                    : 'bg-white border border-[#E8E4DC] hover:border-stone-300 hover:shadow-lg'
-                }`}
-              >
-                {plan.popular && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-gradient-to-r from-amber-400 to-orange-400 text-[#1C1917] text-[10px] font-bold rounded-full whitespace-nowrap shadow-lg">
-                    Most Popular
-                  </div>
-                )}
-                
-                <h3 className={`text-[15px] font-semibold mb-0.5 ${plan.popular ? 'text-white' : 'text-[#1C1917]'}`}>
-                  {plan.name}
-                </h3>
-                <p className={`text-xs mb-4 ${plan.popular ? 'text-white/60' : 'text-[#78716C]'}`}>
-                  {plan.description}
-                </p>
-                
-                <div className="mb-5">
-                  {plan.monthlyPrice === 0 ? (
-                    <span className={`text-3xl font-bold ${plan.popular ? 'text-white' : 'text-[#1C1917]'}`}>Free</span>
-                  ) : (
-                    <>
-                      <span className={`text-3xl font-bold ${plan.popular ? 'text-white' : 'text-[#1C1917]'}`}>
-                        ${plan.monthlyPrice}
-                      </span>
-                      <span className={`text-xs ${plan.popular ? 'text-white/60' : 'text-[#78716C]'}`}>/mo</span>
-                    </>
-                  )}
-                </div>
-
-                <PricingButton 
-                  planId={plan.id}
-                  className={`block w-full text-center py-2.5 rounded-xl font-semibold text-[13px] transition-all duration-200 mb-5 cursor-pointer ${
-                    plan.popular
-                      ? 'bg-white text-[#1C1917] hover:bg-stone-100 shadow-lg'
-                      : 'bg-[#1C1917] text-white hover:bg-[#292524]'
-                  }`}
-                >
-                  {plan.cta}
-                </PricingButton>
-
-                <ul className="space-y-2.5">
-                  {plan.features.map((feature, i) => (
-                    <li key={i} className={`flex items-start gap-2 text-[12px] leading-snug ${
-                      plan.popular ? 'text-white/80' : 'text-[#57534E]'
-                    }`}>
-                      <IconCheck className={`w-3.5 h-3.5 mt-0.5 flex-shrink-0 ${
-                        plan.popular ? 'text-emerald-400' : 'text-emerald-500'
-                      }`} />
-                      {feature}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
-          </div>
-
-          {/* Simple note */}
-          <p className="text-center text-[13px] text-[#A8A29E] mt-10">
-            All plans include password protection, download options, and mobile-optimized galleries.
-          </p>
-        </div>
-      </section>
-
-      {/* Final CTA */}
-      <section className="py-20 px-4 bg-[#1C1917]">
-        <div className="max-w-2xl mx-auto text-center">
-          <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">
-            Ready to get started?
+      {/* --- 9. Final CTA --- */}
+      <section className="py-32 px-6 bg-white border-t border-[#E5E5E5] text-center">
+        <div className="max-w-2xl mx-auto">
+          <h2 className="font-serif text-4xl lg:text-[52px] leading-tight mb-8">
+            Ready to send your next <br /> gallery with 12IMG?
           </h2>
-          <p className="text-white/60 mb-8">
-            Join thousands of photographers who trust 12img for their gallery delivery.
+          <p className="text-lg text-[#525252] mb-10">
+            Join thousands of photographers who have simplified their workflow.
           </p>
-          <Link 
-            href="/sign-up"
-            className="inline-flex items-center gap-2 px-8 py-4 bg-white text-[#1C1917] font-semibold rounded-xl hover:bg-stone-100 transition-colors"
-          >
-            Start for free <IconArrowRight className="w-4 h-4" />
+          <Link href="/sign-up" className="inline-block bg-[#141414] text-white px-10 py-4 text-center font-medium hover:bg-black transition-colors rounded-[2px] min-w-[200px]">
+            Start for free
           </Link>
         </div>
       </section>
-    </main>
+
+      {/* --- Footer --- */}
+      <footer className="bg-[#141414] text-white/60 py-20 px-6">
+        <div className="max-w-[1280px] mx-auto grid md:grid-cols-4 gap-12">
+          <div className="col-span-1">
+             <div className="flex items-center gap-2 mb-6 text-white">
+                <div className="w-6 h-6 bg-white flex items-center justify-center text-black font-bold text-[10px] tracking-tighter">
+                  12
+                </div>
+                <span className="font-serif text-lg font-medium tracking-tight">img</span>
+             </div>
+             <p className="text-sm leading-relaxed mb-6">
+               Minimal gallery delivery for professional photographers.
+             </p>
+          </div>
+          
+          <div>
+            <h4 className="text-white font-medium mb-6">Product</h4>
+            <ul className="space-y-4 text-sm">
+              <li><Link href="#" className="hover:text-white transition-colors">Client Galleries</Link></li>
+              <li><Link href="#" className="hover:text-white transition-colors">Pricing</Link></li>
+              <li><Link href="#" className="hover:text-white transition-colors">Sample Galleries</Link></li>
+            </ul>
+          </div>
+
+          <div>
+            <h4 className="text-white font-medium mb-6">Resources</h4>
+            <ul className="space-y-4 text-sm">
+              <li><Link href="#" className="hover:text-white transition-colors">Help Center</Link></li>
+              <li><Link href="#" className="hover:text-white transition-colors">Blog</Link></li>
+              <li><Link href="#" className="hover:text-white transition-colors">Terms of Service</Link></li>
+            </ul>
+          </div>
+
+          <div>
+            <h4 className="text-white font-medium mb-6">Social</h4>
+            <div className="flex gap-4">
+               {/* Social Icons Placeholder */}
+               <div className="w-8 h-8 bg-white/10 hover:bg-white/20 transition-colors"></div>
+               <div className="w-8 h-8 bg-white/10 hover:bg-white/20 transition-colors"></div>
+            </div>
+          </div>
+        </div>
+        <div className="max-w-[1280px] mx-auto mt-20 pt-8 border-t border-white/10 text-xs flex justify-between">
+           <p>© {new Date().getFullYear()} 12IMG. All rights reserved.</p>
+           <p>Made for photographers.</p>
+        </div>
+      </footer>
+
+    </div>
   )
 }
