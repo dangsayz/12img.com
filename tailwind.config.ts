@@ -9,9 +9,9 @@ const config: Config = {
   theme: {
     extend: {
       fontFamily: {
-        sans: ['var(--font-inter)', 'system-ui', 'sans-serif'],
-        serif: ['var(--font-cormorant)', 'Georgia', 'serif'],
-        display: ['var(--font-cormorant)', 'Georgia', 'serif'],
+        sans: ['var(--font-satoshi)', 'system-ui', 'sans-serif'],
+        serif: ['var(--font-migra)', 'Georgia', 'serif'],
+        display: ['var(--font-migra)', 'Georgia', 'serif'],
       },
       colors: {
         background: 'var(--background)',

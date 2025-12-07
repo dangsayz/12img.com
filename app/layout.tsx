@@ -1,21 +1,21 @@
 import type { Metadata } from 'next'
 import { ClerkProvider } from '@clerk/nextjs'
-import { Inter, Cormorant_Garamond } from 'next/font/google'
+import { Plus_Jakarta_Sans, Playfair_Display } from 'next/font/google'
 import './globals.css'
 import { Footer } from '@/components/landing/Footer'
 import { OrganizationJsonLd, SoftwareApplicationJsonLd } from '@/components/seo/JsonLd'
 import { SupportWidget } from '@/components/support/SupportWidget'
 
-const inter = Inter({ 
+const satoshi = Plus_Jakarta_Sans({ 
   subsets: ['latin'],
-  variable: '--font-inter',
+  variable: '--font-satoshi',
 })
 
-// Premium serif font for elegant titles
-const cormorant = Cormorant_Garamond({ 
+// Premium serif font for elegant titles (Migra proxy)
+const migra = Playfair_Display({ 
   subsets: ['latin'],
-  weight: ['300', '400', '500', '600'],
-  variable: '--font-cormorant',
+  variable: '--font-migra',
+  style: ['normal', 'italic'],
 })
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://12img.com'
@@ -172,7 +172,7 @@ export default function RootLayout({
             offers={{ price: '0', priceCurrency: 'USD' }}
           />
         </head>
-        <body className={`${inter.variable} ${cormorant.variable} font-sans antialiased`}>
+        <body className={`${satoshi.variable} ${migra.variable} font-sans antialiased`}>
           {children}
           <Footer />
           <SupportWidget />
