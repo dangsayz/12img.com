@@ -8,6 +8,10 @@ export interface EditorialImage {
   role?: 'hero' | 'supporting' | 'detail' | 'texture'
   dominantColor?: string
   orientation: 'landscape' | 'portrait' | 'square'
+  /** SEO proxy URL for downloads (same-origin, has Content-Disposition header) */
+  proxyUrl?: string
+  /** SEO-friendly filename for downloads */
+  seoFilename?: string
 }
 
 export type SpreadTemplate = 

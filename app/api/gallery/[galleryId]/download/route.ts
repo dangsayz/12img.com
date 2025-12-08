@@ -14,6 +14,7 @@ import { verifyPassword } from '@/lib/utils/password'
 import { getOrCreateUserByClerkId } from '@/server/queries/user.queries'
 import archiver from 'archiver'
 import { SIGNED_URL_EXPIRY } from '@/lib/utils/constants'
+import { getSeoDownloadFilename, getSeoArchiveFilename } from '@/lib/seo/image-urls'
 
 export async function GET(
   request: NextRequest,
@@ -134,7 +135,9 @@ export async function GET(
         }
 
         const arrayBuffer = await response.arrayBuffer()
-        const filename = `${String(i + 1).padStart(3, '0')}_${image.original_filename}`
+        // SEO-friendly filename: 12img-{gallery-slug}-photo-001.jpg
+        const extension = image.original_filename?.split('.').pop() || 'jpg'
+        const filename = getSeoDownloadFilename(gallery.title, i + 1, extension)
         imageBuffers.push({ filename, buffer: Buffer.from(arrayBuffer) })
         console.log(`[Download] Fetched image ${i + 1}/${images.length}`)
       } catch (err) {
@@ -177,12 +180,14 @@ export async function GET(
     const zipBuffer = await archivePromise
     
     console.log(`[Download] ZIP size: ${zipBuffer.length} bytes`)
-    const sanitizedTitle = gallery.title.replace(/[^a-z0-9]/gi, '_')
+    
+    // SEO-friendly archive filename: 12img-{gallery-slug}-gallery-{date}.zip
+    const archiveFilename = getSeoArchiveFilename(gallery.title)
 
     return new NextResponse(new Uint8Array(zipBuffer), {
       headers: {
         'Content-Type': 'application/zip',
-        'Content-Disposition': `attachment; filename="${sanitizedTitle}.zip"`,
+        'Content-Disposition': `attachment; filename="${archiveFilename}"`,
         'Content-Length': zipBuffer.length.toString(),
       },
     })

@@ -5,10 +5,13 @@ import { getPublicProfileBySlug } from '@/server/actions/profile.actions'
 import { getSignedUrlsBatch } from '@/lib/storage/signed-urls'
 import { ProfilePageClient } from './ProfilePageClient'
 import { ProfileUnavailable } from './not-found'
+import { PersonJsonLd, BreadcrumbJsonLd } from '@/components/seo/JsonLd'
 
 interface ProfilePageProps {
   params: Promise<{ slug: string }>
 }
+
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://12img.com'
 
 export async function generateMetadata({ params }: ProfilePageProps): Promise<Metadata> {
   const { slug } = await params
@@ -21,6 +24,8 @@ export async function generateMetadata({ params }: ProfilePageProps): Promise<Me
   }
 
   const profile = result
+  const photographerName = profile.display_name || 'Photographer'
+  const galleryCount = profile.galleries?.length || 0
   
   // Get signed URL for OG image (longer expiry for crawlers)
   let ogImageUrl: string | undefined
@@ -29,13 +34,27 @@ export async function generateMetadata({ params }: ProfilePageProps): Promise<Me
     ogImageUrl = urlMap.get(profile.portfolioImages[0].storage_path)
   }
 
+  // SEO-optimized description
+  const description = profile.bio 
+    ? profile.bio 
+    : `View ${photographerName}'s photography portfolio with ${galleryCount} ${galleryCount === 1 ? 'gallery' : 'galleries'} on 12img. Professional photo gallery delivery.`
+
   return {
-    title: profile.display_name || 'Photographer Profile',
-    description: profile.bio || `View ${profile.display_name || 'this photographer'}'s portfolio on 12img`,
+    title: `${photographerName} — Photography Portfolio`,
+    description,
     openGraph: {
-      title: profile.display_name || 'Photographer Profile',
-      description: profile.bio || `View ${profile.display_name || 'this photographer'}'s portfolio on 12img`,
+      title: `${photographerName} — Photography Portfolio`,
+      description,
       images: ogImageUrl ? [ogImageUrl] : undefined,
+      type: 'profile',
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: `${photographerName} — Photography Portfolio`,
+      description,
+    },
+    alternates: {
+      canonical: `${siteUrl}/profile/${slug}`,
     },
   }
 }
@@ -65,9 +84,9 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
   
   const allPaths = [...new Set([...portfolioPaths, ...galleryCoverPaths])]
   
-  // Get signed URLs for all images in batch (using PREVIEW size for quality)
+  // Get signed URLs for all images in batch (using PORTFOLIO size for highest quality)
   const signedUrlMap = allPaths.length > 0 
-    ? await getSignedUrlsBatch(allPaths, 3600, 'PREVIEW')
+    ? await getSignedUrlsBatch(allPaths, 3600, 'PORTFOLIO')
     : new Map<string, string>()
 
   // Transform portfolio images with signed URLs
@@ -82,13 +101,34 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
     coverImageUrl: g.coverImagePath ? signedUrlMap.get(g.coverImagePath) || null : null,
   }))
 
+  // Get hero image URL for Person schema
+  const heroImageUrl = portfolioImagesWithUrls[0]?.imageUrl || galleriesWithUrls[0]?.coverImageUrl || undefined
+
   return (
-    <ProfilePageClient 
-      profile={{
-        ...result,
-        portfolioImages: portfolioImagesWithUrls,
-        galleries: galleriesWithUrls,
-      }} 
-    />
+    <>
+      {/* Structured Data for SEO */}
+      <PersonJsonLd
+        name={result.display_name || 'Photographer'}
+        url={`${siteUrl}/profile/${slug}`}
+        image={heroImageUrl}
+        jobTitle="Photographer"
+        description={result.bio || undefined}
+      />
+      <BreadcrumbJsonLd
+        items={[
+          { name: 'Home', url: siteUrl },
+          { name: 'Photographers', url: `${siteUrl}/profiles` },
+          { name: result.display_name || 'Photographer', url: `${siteUrl}/profile/${slug}` },
+        ]}
+      />
+      
+      <ProfilePageClient 
+        profile={{
+          ...result,
+          portfolioImages: portfolioImagesWithUrls,
+          galleries: galleriesWithUrls,
+        }} 
+      />
+    </>
   )
 }

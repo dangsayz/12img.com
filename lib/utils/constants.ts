@@ -52,6 +52,11 @@ export const IMAGE_SIZES = {
     width: 1920,
     quality: 85,
   },
+  // Profile/Portfolio - highest quality for showcase pages
+  PORTFOLIO: {
+    width: 2400,
+    quality: 92,
+  },
   // Download - no transform, original file
   ORIGINAL: null,
 } as const

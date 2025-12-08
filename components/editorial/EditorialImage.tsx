@@ -17,6 +17,11 @@ export function EditorialImage({ image, priority = false, className, fit = 'cove
   const [isLoaded, setIsLoaded] = useState(false)
   const [hasError, setHasError] = useState(false)
 
+  // Use proxy URL if available for SEO-friendly downloads
+  // The proxy URL serves images from our domain with Content-Disposition header
+  const downloadUrl = image.proxyUrl || image.url
+  const downloadFilename = image.seoFilename || '12img-photo.jpg'
+
   return (
     <motion.div
       ref={ref}
@@ -31,19 +36,28 @@ export function EditorialImage({ image, priority = false, className, fit = 'cove
          </div>
       ) : (
         <>
-          <img
-            src={image.url}
-            alt=""
-            loading={priority ? 'eager' : 'lazy'}
-            onLoad={() => setIsLoaded(true)}
-            onError={() => setHasError(true)}
-            className={cn(
-              "w-full h-full transition-transform duration-[2s]",
-              fit === 'cover' ? 'object-cover' : 'object-contain',
-              isInView ? 'scale-100' : 'scale-105' // Subtle zoom out effect
-            )}
+          {/* Wrap in anchor for SEO-friendly right-click save */}
+          <a 
+            href={downloadUrl}
+            download={downloadFilename}
+            onClick={(e) => e.preventDefault()} // Prevent navigation on click
+            className="block w-full h-full"
             draggable={false}
-          />
+          >
+            <img
+              src={image.url}
+              alt=""
+              loading={priority ? 'eager' : 'lazy'}
+              onLoad={() => setIsLoaded(true)}
+              onError={() => setHasError(true)}
+              className={cn(
+                "w-full h-full transition-transform duration-[2s]",
+                fit === 'cover' ? 'object-cover' : 'object-contain',
+                isInView ? 'scale-100' : 'scale-105' // Subtle zoom out effect
+              )}
+              draggable={false}
+            />
+          </a>
           
           {/* Film Grain */}
           <div 

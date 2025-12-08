@@ -12,6 +12,10 @@ interface Image {
   thumbnailUrl: string
   previewUrl: string
   originalUrl: string
+  /** SEO proxy URL for downloads (same-origin) */
+  proxyUrl?: string
+  /** SEO-friendly filename for downloads */
+  seoFilename?: string
   width?: number | null
   height?: number | null
   processingStatus?: ProcessingStatus
@@ -160,17 +164,27 @@ export function MasonryItem({
           </div>
         ) : (
           <>
-            <img
-              src={currentUrl}
-              alt=""
-              loading={index < 20 ? 'eager' : 'lazy'}
-              decoding="async"
-              onLoad={handleLoad}
-              onError={() => setHasError(true)}
-              className={`max-w-full max-h-full object-contain transition-all duration-300 ${
-                loaded ? 'opacity-100' : 'opacity-0'
-              } group-hover:scale-[1.03]`}
-            />
+            {/* Wrap in anchor for SEO-friendly right-click save */}
+            <a
+              href={image.proxyUrl || currentUrl}
+              download={image.seoFilename || '12img-photo.jpg'}
+              onClick={(e) => e.preventDefault()} // Prevent navigation, allow right-click save
+              className="max-w-full max-h-full flex items-center justify-center"
+              draggable={false}
+            >
+              <img
+                src={currentUrl}
+                alt=""
+                loading={index < 20 ? 'eager' : 'lazy'}
+                decoding="async"
+                onLoad={handleLoad}
+                onError={() => setHasError(true)}
+                className={`max-w-full max-h-full object-contain transition-all duration-300 ${
+                  loaded ? 'opacity-100' : 'opacity-0'
+                } group-hover:scale-[1.03]`}
+                draggable={false}
+              />
+            </a>
             {!loaded && (
               <div className="absolute inset-0 bg-zinc-100 overflow-hidden">
                 <div className="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-zinc-200/60 to-transparent" />

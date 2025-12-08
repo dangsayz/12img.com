@@ -44,11 +44,112 @@ export function WebsiteJsonLd({ name, url, description }: WebsiteJsonLdProps) {
     name,
     url,
     description,
-    potentialAction: {
-      '@type': 'SearchAction',
-      target: `${url}/search?q={search_term_string}`,
-      'query-input': 'required name=search_term_string',
+    publisher: {
+      '@type': 'Organization',
+      name,
+      url,
     },
+    inLanguage: 'en-US',
+  }
+
+  return (
+    <script
+      type="application/ld+json"
+      suppressHydrationWarning
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+    />
+  )
+}
+
+interface ProductJsonLdProps {
+  name: string
+  description: string
+  url: string
+  brand: string
+  offers: Array<{
+    name: string
+    price: string
+    priceCurrency: string
+    availability?: string
+  }>
+}
+
+export function ProductJsonLd({ name, description, url, brand, offers }: ProductJsonLdProps) {
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    name,
+    description,
+    url,
+    brand: {
+      '@type': 'Brand',
+      name: brand,
+    },
+    offers: offers.map((offer) => ({
+      '@type': 'Offer',
+      name: offer.name,
+      price: offer.price,
+      priceCurrency: offer.priceCurrency,
+      availability: offer.availability || 'https://schema.org/InStock',
+      url,
+    })),
+  }
+
+  return (
+    <script
+      type="application/ld+json"
+      suppressHydrationWarning
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+    />
+  )
+}
+
+interface LocalBusinessJsonLdProps {
+  name: string
+  description: string
+  url: string
+  email?: string
+  priceRange?: string
+}
+
+export function LocalBusinessJsonLd({ name, description, url, email, priceRange }: LocalBusinessJsonLdProps) {
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'ProfessionalService',
+    name,
+    description,
+    url,
+    email,
+    priceRange: priceRange || '$',
+    '@id': url,
+  }
+
+  return (
+    <script
+      type="application/ld+json"
+      suppressHydrationWarning
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+    />
+  )
+}
+
+interface PersonJsonLdProps {
+  name: string
+  url: string
+  image?: string
+  jobTitle?: string
+  description?: string
+}
+
+export function PersonJsonLd({ name, url, image, jobTitle, description }: PersonJsonLdProps) {
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Person',
+    name,
+    url,
+    ...(image && { image }),
+    ...(jobTitle && { jobTitle }),
+    ...(description && { description }),
   }
 
   return (

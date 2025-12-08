@@ -6,6 +6,7 @@ import { getSignedUrlsWithSizes } from '@/lib/storage/signed-urls'
 import { LayoutEngine } from '@/lib/editorial/engine'
 import { EditorialViewer } from '@/components/editorial/EditorialViewer'
 import { PasswordGate } from '@/components/gallery/PasswordGate'
+import { getProxyImageUrl, getSeoDownloadFilename } from '@/lib/seo/image-urls'
 
 export const dynamic = 'force-dynamic'
 
@@ -110,12 +111,19 @@ export default async function EditorialLiveViewPage({ params }: Props) {
       ? await getSignedUrlsWithSizes(images.map((img) => img.storage_path))
       : new Map()
 
-  const imagesWithUrls = images.map((img) => {
+  const imagesWithUrls = images.map((img, index) => {
     const urls = signedUrls.get(img.storage_path)
+    // Use proxy URL for SEO-friendly filenames on right-click save
+    const proxyUrl = getProxyImageUrl(gallery.id, img.id)
+    const seoFilename = getSeoDownloadFilename(gallery.title, index + 1, 'jpg')
+    
     return {
       id: img.id,
       url: urls?.preview || urls?.thumbnail || '', // Prefer preview (1920px) for editorial
       thumbnailUrl: urls?.thumbnail || '',
+      // SEO proxy URL for downloads
+      proxyUrl,
+      seoFilename,
       width: img.width,
       height: img.height,
     }

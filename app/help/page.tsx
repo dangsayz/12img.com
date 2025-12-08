@@ -4,10 +4,15 @@ import { getUserWithUsage, checkIsAdmin } from '@/server/queries/user.queries'
 import { PLAN_TIERS, type PlanTier } from '@/lib/config/pricing-v2'
 import { Mail, MessageCircle } from 'lucide-react'
 import Link from 'next/link'
+import { FAQJsonLd } from '@/components/seo/JsonLd'
 
 export const metadata = {
-  title: 'Help Center | 12img',
-  description: 'Get help with 12img gallery platform. FAQs and support.',
+  title: 'Help Center — Photo Gallery Support & FAQs',
+  description: 'Get help with 12img photo gallery platform. Find answers to common questions about uploading photos, sharing galleries, password protection, and client downloads.',
+  openGraph: {
+    title: 'Help Center — 12img Photo Gallery Support',
+    description: 'Find answers to common questions about uploading photos, sharing galleries, and delivering images to clients.',
+  },
 }
 
 const faqs = [
@@ -54,8 +59,15 @@ export default async function HelpPage() {
   const planConfig = PLAN_TIERS[plan] || PLAN_TIERS.free
   const storageLimit = planConfig.storageGB * 1024 * 1024 * 1024
   
+  // Transform FAQs for JSON-LD schema
+  const faqSchemaData = faqs.map(faq => ({
+    question: faq.q,
+    answer: faq.a,
+  }))
+
   return (
     <div className="min-h-screen bg-stone-50">
+      <FAQJsonLd questions={faqSchemaData} />
       {userId && (
         <AppNav 
           userPlan={plan}

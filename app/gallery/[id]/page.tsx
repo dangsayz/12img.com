@@ -5,6 +5,7 @@ import { getGalleryWithOwnershipCheck } from '@/server/queries/gallery.queries'
 import { getGalleryImages } from '@/server/queries/image.queries'
 import { getSignedUrlsWithSizes } from '@/lib/storage/signed-urls'
 import { GalleryEditor } from '@/components/gallery/GalleryEditor'
+import { getProxyImageUrl, getSeoDownloadFilename } from '@/lib/seo/image-urls'
 
 export const dynamic = 'force-dynamic'
 
@@ -48,6 +49,10 @@ export default async function GalleryViewPage({ params }: Props) {
       : new Map()
 
   const imagesWithUrls = images.map((img, index) => {
+    // Generate SEO-friendly proxy URL and filename for downloads
+    const proxyUrl = getProxyImageUrl(gallery.id, img.id)
+    const seoFilename = getSeoDownloadFilename(gallery.title, index + 1, 'jpg')
+    
     // Only include URLs for the first batch
     if (index < INITIAL_BATCH_SIZE) {
       const urls = signedUrls.get(img.storage_path)
@@ -57,6 +62,9 @@ export default async function GalleryViewPage({ params }: Props) {
         thumbnailUrl: urls?.thumbnail || '',
         previewUrl: urls?.preview || '',
         originalUrl: urls?.original || '',
+        // SEO download URLs
+        proxyUrl,
+        seoFilename,
         width: img.width,
         height: img.height,
         originalFilename: img.original_filename,
@@ -71,6 +79,9 @@ export default async function GalleryViewPage({ params }: Props) {
       thumbnailUrl: '', // Will be fetched on-demand
       previewUrl: '',
       originalUrl: '',
+      // SEO download URLs
+      proxyUrl,
+      seoFilename,
       width: img.width,
       height: img.height,
       originalFilename: img.original_filename,

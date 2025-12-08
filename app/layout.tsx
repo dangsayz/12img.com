@@ -3,7 +3,7 @@ import { ClerkProvider } from '@clerk/nextjs'
 import { Plus_Jakarta_Sans, Playfair_Display } from 'next/font/google'
 import './globals.css'
 import { Footer } from '@/components/landing/Footer'
-import { OrganizationJsonLd, SoftwareApplicationJsonLd } from '@/components/seo/JsonLd'
+import { OrganizationJsonLd, SoftwareApplicationJsonLd, WebsiteJsonLd } from '@/components/seo/JsonLd'
 import { SupportWidget } from '@/components/support/SupportWidget'
 import { AuthModalProvider } from '@/components/auth/AuthModal'
 
@@ -173,6 +173,16 @@ export default function RootLayout({
             operatingSystem="Web"
             offers={{ price: '0', priceCurrency: 'USD' }}
           />
+          <WebsiteJsonLd
+            name="12img"
+            url={siteUrl}
+            description="Minimal photo gallery delivery for professional photographers. Upload, share, and deliver stunning client galleries."
+          />
+          {/* Preconnect to external domains for faster loading */}
+          <link rel="preconnect" href="https://api.fontshare.com" />
+          <link rel="preconnect" href="https://fonts.googleapis.com" />
+          <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+          <link rel="dns-prefetch" href="https://api.fontshare.com" />
         </head>
         <body className={`${migra.variable} font-sans antialiased`}>
           <AuthModalProvider>

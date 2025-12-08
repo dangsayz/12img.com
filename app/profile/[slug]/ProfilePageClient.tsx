@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { motion, useScroll, useTransform, useSpring, AnimatePresence } from 'framer-motion'
 import { Camera, Lock, Image as ImageIcon, Mail, Globe } from 'lucide-react'
 import { VisibilityBadge, LockIndicator, PrivateOverlay } from '@/components/ui/VisibilityBadge'
+import { LazyImage, HeroImage } from '@/components/ui/LazyImage'
 import { PublicHeader } from '@/components/profile/PublicHeader'
 import { PINEntryModal } from '@/components/profile/PINEntryModal'
 import { checkGalleryUnlocked } from '@/server/actions/profile.actions'
@@ -229,13 +230,23 @@ export function ProfilePageClient({ profile }: ProfilePageClientProps) {
     return spreads
   }, [displayImages])
 
-  // Scroll-based parallax for hero
+  // Responsive scroll thresholds - mobile screens need shorter distances
+  const [isMobile, setIsMobile] = useState(false)
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768)
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
+
+  // Scroll-based parallax for hero - delayed fade for better UX
   const { scrollY } = useScroll()
-  const heroY = useTransform(scrollY, [0, 500], [0, 100])
-  const heroOpacity = useTransform(scrollY, [0, 400], [1, 0])
-  const titleY = useTransform(scrollY, [0, 300], [0, -30])
-  const smoothHeroY = useSpring(heroY, { stiffness: 100, damping: 30 })
-  const smoothTitleY = useSpring(titleY, { stiffness: 100, damping: 30 })
+  // Mobile: shorter scroll distances, Desktop: longer for more dramatic effect
+  const heroY = useTransform(scrollY, [0, isMobile ? 400 : 600], [0, isMobile ? 50 : 80])
+  const heroOpacity = useTransform(scrollY, [isMobile ? 150 : 300, isMobile ? 500 : 800], [1, 0])
+  const titleY = useTransform(scrollY, [0, isMobile ? 250 : 400], [0, isMobile ? -15 : -20])
+  const smoothHeroY = useSpring(heroY, { stiffness: 80, damping: 25 })
+  const smoothTitleY = useSpring(titleY, { stiffness: 80, damping: 25 })
 
   // Track if page has loaded for staggered entrance
   const [hasLoaded, setHasLoaded] = useState(false)
@@ -287,25 +298,14 @@ export function ProfilePageClient({ profile }: ProfilePageClientProps) {
               style={{ y: smoothHeroY }}
             >
               {heroImage ? (
-                <div className="relative aspect-[4/5] lg:aspect-[3/4] overflow-hidden bg-stone-100 group">
-                  <motion.img
-                    src={heroImage}
-                    alt={profile.display_name || 'Portfolio'}
-                    className="w-full h-full object-cover"
-                    initial={{ scale: 1.1 }}
-                    animate={{ scale: 1 }}
-                    transition={{ duration: 1.8, ease: [0.22, 1, 0.36, 1] }}
-                  />
-                  {/* Cinematic vignette */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/10 via-transparent to-black/5 pointer-events-none" />
-                  {/* Subtle film grain texture */}
-                  <div className="absolute inset-0 opacity-[0.015] pointer-events-none mix-blend-overlay" 
-                    style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 256 256\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'noise\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.9\' numOctaves=\'4\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23noise)\'/%3E%3C/svg%3E")' }}
-                  />
-                </div>
+                <HeroImage
+                  src={heroImage}
+                  alt={profile.display_name || 'Portfolio'}
+                  className="aspect-[4/5] lg:aspect-[3/4]"
+                />
               ) : (
-                <div className="aspect-[4/5] lg:aspect-[3/4] bg-stone-100 flex items-center justify-center">
-                  <Camera className="w-12 h-12 text-stone-300" />
+                <div className="aspect-[4/5] lg:aspect-[3/4] bg-stone-900 flex items-center justify-center">
+                  <Camera className="w-12 h-12 text-stone-700" />
                 </div>
               )}
             </motion.div>
@@ -318,8 +318,8 @@ export function ProfilePageClient({ profile }: ProfilePageClientProps) {
               className="col-span-12 lg:col-span-5 lg:pl-8"
             >
               {/* Vertical text accent - refined */}
-              <div className="hidden lg:block mb-12">
-                <p className="text-[9px] tracking-[0.4em] text-stone-400/70 uppercase transform -rotate-90 origin-left translate-y-20 font-light">
+              <div className="hidden lg:block mb-12 h-24 overflow-visible">
+                <p className="text-[9px] tracking-[0.4em] text-stone-400/70 uppercase transform -rotate-90 origin-top-left translate-y-24 font-light whitespace-nowrap">
                   Photos by {profile.display_name || 'Artist'}
                 </p>
               </div>
@@ -492,45 +492,26 @@ export function ProfilePageClient({ profile }: ProfilePageClientProps) {
                 const shouldInjectQuote = spreadIndex === 2 && profile.galleries.length > 0
                 const shouldInjectStats = spreadIndex === 4 && (profile.galleries.length > 1 || displayImages.length > 5)
                 const shouldInjectDivider = spreadIndex > 0 && spreadIndex % 3 === 0 && !shouldInjectQuote && !shouldInjectStats
-                const handleImageClick = (image: typeof displayImages[0]) => {
-                  const gallery = profile.galleries.find(g => g.id === image.gallery_id)
-                  if (gallery) handleGalleryClick(gallery)
-                }
 
                 const renderImage = (image: typeof displayImages[0], className: string = '', aspectClass: string = 'aspect-[4/5]', imageIndex: number = 0) => {
-                  const gallery = profile.galleries.find(g => g.id === image.gallery_id)
-                  const isLocked = gallery?.is_locked && !unlockedGalleries.has(gallery.id)
                   const caption = getEditorialCaption(image.gallery_title, spreadIndex * 3 + imageIndex, spread.type)
                   
                   return (
                     <motion.div
                       key={image.id}
-                      initial={{ opacity: 0, y: 40 }}
+                      initial={{ opacity: 0, y: 50 }}
                       whileInView={{ opacity: 1, y: 0 }}
-                      viewport={{ once: true, margin: '-100px' }}
-                      transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
-                      className={`group cursor-pointer ${className}`}
-                      onClick={() => handleImageClick(image)}
+                      viewport={{ once: true, margin: '-80px' }}
+                      transition={{ duration: 1, ease: [0.22, 1, 0.36, 1] }}
+                      className={className}
                     >
-                      <div className={`relative ${aspectClass} overflow-hidden bg-stone-100`}>
-                        <img
+                      <div className="relative">
+                        <LazyImage
                           src={image.imageUrl}
                           alt={image.gallery_title}
-                          className="w-full h-full object-cover transition-all duration-700 group-hover:scale-[1.02]"
-                          style={{
-                            objectPosition: `${image.focal_x ?? 50}% ${image.focal_y ?? 50}%`
-                          }}
+                          aspectRatio={aspectClass}
+                          objectPosition={`${image.focal_x ?? 50}% ${image.focal_y ?? 50}%`}
                         />
-                        
-                        {/* Subtle hover overlay */}
-                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-500" />
-                        
-                        {/* Visibility indicator - private or locked */}
-                        {(isLocked || (gallery && !gallery.is_public)) && (
-                          <div className="absolute top-4 right-4">
-                            <LockIndicator isLocked={true} size="md" />
-                          </div>
-                        )}
                         
                         {/* Overlay caption (number style) */}
                         {caption.style === 'number' && caption.text && (
@@ -542,39 +523,28 @@ export function ProfilePageClient({ profile }: ProfilePageClientProps) {
                         )}
                       </div>
                       
-                      {/* Editorial Caption - Varied styles */}
+                      {/* Editorial Caption - Refined typography */}
                       {caption.style !== 'none' && caption.style !== 'number' && caption.text && (
-                        <div className="mt-4">
+                        <motion.div 
+                          className="mt-5"
+                          initial={{ opacity: 0, y: 10 }}
+                          whileInView={{ opacity: 1, y: 0 }}
+                          viewport={{ once: true }}
+                          transition={{ duration: 0.6, delay: 0.2 }}
+                        >
                           {caption.style === 'full' && (
-                            <>
-                              <p className="font-serif text-lg text-stone-800">{caption.text}</p>
-                              <p className="text-xs text-stone-400 tracking-wide mt-1">
-                                {gallery ? `${gallery.imageCount} images` : ''}
-                              </p>
-                            </>
+                            <p className="font-serif text-lg text-stone-700 tracking-tight">{caption.text}</p>
                           )}
                           {caption.style === 'short' && (
-                            <p className="font-serif text-base text-stone-600 italic">{caption.text}</p>
+                            <p className="font-serif text-base text-stone-500 italic font-light">{caption.text}</p>
                           )}
                           {caption.style === 'minimal' && (
-                            <p className="text-[11px] tracking-[0.2em] text-stone-400 uppercase">{caption.text}</p>
+                            <p className="text-[10px] tracking-[0.25em] text-stone-400/70 uppercase font-light">{caption.text}</p>
                           )}
                           {caption.style === 'date' && (
-                            <p className="text-[10px] tracking-[0.15em] text-stone-400">{caption.text}</p>
+                            <p className="text-[9px] tracking-[0.2em] text-stone-400/60 font-light">{caption.text}</p>
                           )}
-                        </div>
-                      )}
-                      
-                      {/* Visibility badge - only show when no caption */}
-                      {(isLocked || (gallery && !gallery.is_public)) && caption.style === 'none' && (
-                        <div className="mt-3">
-                          <VisibilityBadge 
-                            isPublic={gallery?.is_public ?? true}
-                            hasPassword={isLocked}
-                            variant="minimal"
-                            size="sm"
-                          />
-                        </div>
+                        </motion.div>
                       )}
                     </motion.div>
                   )
@@ -794,21 +764,21 @@ export function ProfilePageClient({ profile }: ProfilePageClientProps) {
                     <div className={`grid grid-cols-12 gap-6 lg:gap-12 items-center ${isEven ? '' : 'direction-rtl'}`}>
                       {/* Image */}
                       <div className={`col-span-12 lg:col-span-7 ${isEven ? '' : 'lg:col-start-6 lg:order-2'}`}>
-                        <div className="relative aspect-[4/3] overflow-hidden bg-stone-100">
+                        <div className="relative">
                           {gallery.coverImageUrl ? (
-                            <img
+                            <LazyImage
                               src={gallery.coverImageUrl}
                               alt={gallery.title}
-                              className="w-full h-full object-cover transition-all duration-700 group-hover:scale-[1.02]"
+                              aspectRatio="aspect-[4/3]"
                             />
                           ) : (
-                            <div className="w-full h-full flex items-center justify-center">
-                              <ImageIcon className="w-12 h-12 text-stone-300" />
+                            <div className="aspect-[4/3] bg-stone-900 flex items-center justify-center">
+                              <ImageIcon className="w-12 h-12 text-stone-700" />
                             </div>
                           )}
 
                           {/* Subtle hover overlay */}
-                          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-500" />
+                          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-500 pointer-events-none" />
 
                           {/* Visibility Badge - for private galleries (owner viewing) */}
                           {!gallery.is_public && profile.isOwner && (
@@ -915,49 +885,66 @@ export function ProfilePageClient({ profile }: ProfilePageClientProps) {
         </motion.main>
       </AnimatePresence>
 
-      {/* Footer - Minimal editorial */}
-      <footer className="py-20 lg:py-32">
-        <div className="max-w-6xl mx-auto px-6">
+      {/* Footer - Ultra minimal editorial */}
+      <footer className="py-24 lg:py-40 border-t border-stone-200/30">
+        <motion.div 
+          className="max-w-6xl mx-auto px-6"
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true }}
+          transition={{ duration: 1 }}
+        >
           <div className="flex flex-col items-center text-center">
             {/* Photographer mark */}
-            <div className="mb-8">
-              <p className="font-serif text-xl text-stone-800">
+            <div className="mb-10">
+              <p className="font-serif text-2xl text-stone-800 tracking-tight">
                 {profile.display_name || 'Photographer'}
               </p>
+              <motion.div 
+                className="w-8 h-px bg-stone-300 mx-auto mt-4"
+                initial={{ scaleX: 0 }}
+                whileInView={{ scaleX: 1 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6, delay: 0.3 }}
+              />
             </div>
 
-            {/* Contact links */}
-            <div className="flex items-center gap-6 mb-12">
+            {/* Contact links - refined */}
+            <div className="flex items-center gap-8 mb-16">
               {profile.contactEmail && (
-                <a
+                <motion.a
                   href={`mailto:${profile.contactEmail}`}
-                  className="w-10 h-10 rounded-full border border-stone-200 hover:border-stone-400 flex items-center justify-center transition-colors"
+                  className="w-11 h-11 rounded-full border border-stone-200 hover:border-stone-400 hover:bg-stone-50 flex items-center justify-center transition-all duration-300"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
                 >
-                  <Mail className="w-4 h-4 text-stone-500" />
-                </a>
+                  <Mail className="w-4 h-4 text-stone-400" />
+                </motion.a>
               )}
               {profile.websiteUrl && (
-                <a
+                <motion.a
                   href={profile.websiteUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-10 h-10 rounded-full border border-stone-200 hover:border-stone-400 flex items-center justify-center transition-colors"
+                  className="w-11 h-11 rounded-full border border-stone-200 hover:border-stone-400 hover:bg-stone-50 flex items-center justify-center transition-all duration-300"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
                 >
-                  <Globe className="w-4 h-4 text-stone-500" />
-                </a>
+                  <Globe className="w-4 h-4 text-stone-400" />
+                </motion.a>
               )}
             </div>
 
             {/* Divider */}
-            <div className="w-px h-12 bg-stone-200 mb-8" />
+            <div className="w-px h-16 bg-gradient-to-b from-stone-200 to-transparent mb-10" />
 
-            {/* Credits */}
-            <p className="text-[10px] tracking-[0.2em] text-stone-400 uppercase">
+            {/* Credits - ultra minimal */}
+            <p className="text-[9px] tracking-[0.3em] text-stone-400/70 uppercase font-light">
               Powered by{' '}
-              <a href="/" className="hover:text-stone-600 transition-colors">12img</a>
+              <a href="/" className="hover:text-stone-600 transition-colors duration-300">12img</a>
             </p>
           </div>
-        </div>
+        </motion.div>
       </footer>
 
       {/* PIN Entry Modal */}

@@ -71,7 +71,10 @@ export class LayoutEngine {
         aspectRatio: ratio,
         role,
         orientation,
-        dominantColor: '#ffffff' // Placeholder
+        dominantColor: '#ffffff', // Placeholder
+        // Pass through SEO properties for downloads
+        proxyUrl: img.proxyUrl,
+        seoFilename: img.seoFilename,
       }
     })
   }

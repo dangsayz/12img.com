@@ -1,6 +1,10 @@
 import { MetadataRoute } from 'next'
+import { createClient } from '@supabase/supabase-js'
 
-export default function sitemap(): MetadataRoute.Sitemap {
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
+
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://12img.com'
   const currentDate = new Date()
   
@@ -22,6 +26,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
       url: `${baseUrl}/features`,
       lastModified: currentDate,
       changeFrequency: 'monthly',
+      priority: 0.8,
+    },
+    {
+      url: `${baseUrl}/profiles`,
+      lastModified: currentDate,
+      changeFrequency: 'daily',
       priority: 0.8,
     },
     {
@@ -68,5 +78,31 @@ export default function sitemap(): MetadataRoute.Sitemap {
     },
   ]
 
-  return staticPages
+  // Dynamic pages - Public photographer profiles
+  let profilePages: MetadataRoute.Sitemap = []
+  
+  try {
+    const supabase = createClient(supabaseUrl, supabaseServiceKey)
+    
+    const { data: profiles } = await supabase
+      .from('users')
+      .select('profile_slug, updated_at')
+      .in('visibility_mode', ['PUBLIC', 'PUBLIC_LOCKED'])
+      .not('profile_slug', 'is', null)
+      .order('updated_at', { ascending: false })
+      .limit(1000)
+    
+    if (profiles) {
+      profilePages = profiles.map((profile) => ({
+        url: `${baseUrl}/profile/${profile.profile_slug}`,
+        lastModified: profile.updated_at ? new Date(profile.updated_at) : currentDate,
+        changeFrequency: 'weekly' as const,
+        priority: 0.7,
+      }))
+    }
+  } catch (error) {
+    console.error('Error fetching profiles for sitemap:', error)
+  }
+
+  return [...staticPages, ...profilePages]
 }
