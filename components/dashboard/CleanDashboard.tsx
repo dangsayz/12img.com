@@ -390,7 +390,7 @@ function GalleryCard({
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [isPublic, setIsPublic] = useState(gallery.isPublic)
 
-  const relativePath = `/view-reel/${gallery.id}`
+  const relativePath = `/view-reel/${gallery.slug}`
   const [shareUrl, setShareUrl] = useState(relativePath)
   
   useEffect(() => {

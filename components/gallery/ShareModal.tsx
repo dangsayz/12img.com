@@ -22,22 +22,23 @@ interface ShareModalProps {
   isOpen: boolean
   onClose: () => void
   galleryId: string
+  gallerySlug: string
   galleryTitle: string
   shareUrl: string
   currentTemplate?: GalleryTemplate
 }
 
-// Map template to the correct view URL path
-function getTemplateUrl(galleryId: string, template: GalleryTemplate): string {
+// Map template to the correct view URL path (using slug for clean URLs)
+function getTemplateUrl(gallerySlug: string, template: GalleryTemplate): string {
   switch (template) {
     case 'cinematic':
-      return `/view-reel/${galleryId}`
+      return `/view-reel/${gallerySlug}`
     case 'editorial':
-      return `/view-live/${galleryId}`
+      return `/view-live/${gallerySlug}`
     case 'mosaic':
     case 'clean-grid':
     default:
-      return `/view-grid/${galleryId}?template=${template}`
+      return `/view-reel/${gallerySlug}`
   }
 }
 
@@ -99,7 +100,7 @@ I've put together a beautiful gallery for you to browse, share with family and f
 Take your time looking through them — I hope they bring back wonderful memories!`
 }
 
-export function ShareModal({ isOpen, onClose, galleryId, galleryTitle, shareUrl, currentTemplate = 'mosaic' }: ShareModalProps) {
+export function ShareModal({ isOpen, onClose, galleryId, gallerySlug, galleryTitle, shareUrl, currentTemplate = 'mosaic' }: ShareModalProps) {
   const [activeTab, setActiveTab] = useState<'email' | 'sms'>('email')
   const [email, setEmail] = useState('')
   const [phone, setPhone] = useState('')
@@ -165,7 +166,7 @@ export function ShareModal({ isOpen, onClose, galleryId, galleryTitle, shareUrl,
     // Format phone number (basic cleanup)
     const cleanPhone = phone.replace(/[^\d+]/g, '')
     const templateUrl = typeof window !== 'undefined' 
-      ? `${window.location.origin}${getTemplateUrl(galleryId, selectedTemplate)}`
+      ? `${window.location.origin}${getTemplateUrl(gallerySlug, selectedTemplate)}`
       : shareUrl
     const smsBody = message.trim() 
       ? `${message}\n\n${galleryTitle}: ${templateUrl}`

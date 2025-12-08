@@ -1,6 +1,7 @@
 import { notFound, redirect } from 'next/navigation'
 import { cookies } from 'next/headers'
-import { getGalleryById } from '@/server/queries/gallery.queries'
+import { type Metadata } from 'next'
+import { getGalleryById, getGalleryBySlug } from '@/server/queries/gallery.queries'
 import { getGalleryImages } from '@/server/queries/image.queries'
 import { getSignedUrlsWithSizes } from '@/lib/storage/signed-urls'
 import { EditorialGallery } from '@/components/gallery/EditorialGallery'
@@ -13,18 +14,83 @@ import { type GalleryTemplate } from '@/components/gallery/templates'
 export const dynamic = 'force-dynamic'
 
 interface Props {
-  params: Promise<{ id: string }>
+  params: Promise<{ slug: string }>
+}
+
+// Helper to get gallery by slug or UUID (backwards compatibility)
+async function getGalleryBySlugOrId(slugOrId: string) {
+  // Try slug first
+  const bySlug = await getGalleryBySlug(slugOrId)
+  if (bySlug) return bySlug
+  
+  // Fallback to UUID for old links
+  const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(slugOrId)
+  if (isUUID) {
+    return await getGalleryById(slugOrId)
+  }
+  
+  return null
+}
+
+// Generate OG metadata for social sharing
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { slug } = await params
+  
+  // Handle demo redirect
+  if (slug === 'demo') {
+    return { title: 'Demo | 12img' }
+  }
+  
+  const gallery = await getGalleryBySlugOrId(slug)
+  
+  if (!gallery) {
+    return {
+      title: 'Gallery Not Found | 12img',
+    }
+  }
+  
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://www.12img.com'
+  const galleryUrl = `${baseUrl}/view-reel/${gallery.slug}`
+  
+  // Use OG image API which handles cover image or first image fallback
+  const ogImageUrl = `${baseUrl}/api/og/gallery/${gallery.id}`
+  
+  return {
+    title: `${gallery.title} | 12img`,
+    description: `View ${gallery.title} - a beautiful photo gallery on 12img`,
+    openGraph: {
+      title: gallery.title,
+      description: `View ${gallery.title} - a beautiful photo gallery on 12img`,
+      url: galleryUrl,
+      siteName: '12img',
+      images: [
+        {
+          url: ogImageUrl,
+          width: 1200,
+          height: 630,
+          alt: gallery.title,
+        },
+      ],
+      type: 'website',
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: gallery.title,
+      description: `View ${gallery.title} - a beautiful photo gallery on 12img`,
+      images: [ogImageUrl],
+    },
+  }
 }
 
 export default async function PublicViewPage({ params }: Props) {
-  const { id } = await params
+  const { slug } = await params
   
   // Redirect demo to the dedicated demo page
-  if (id === 'demo') {
+  if (slug === 'demo') {
     redirect('/demo')
   }
   
-  const gallery = await getGalleryById(id)
+  const gallery = await getGalleryBySlugOrId(slug)
   
   if (!gallery) {
     notFound()
@@ -118,7 +184,7 @@ export default async function PublicViewPage({ params }: Props) {
 
   // For editorial template, redirect to view-live (magazine engine)
   if (template === 'editorial') {
-    redirect(`/view-live/${id}`)
+    redirect(`/view-live/${gallery.slug}`)
   }
 
   const images = await getGalleryImages(gallery.id)

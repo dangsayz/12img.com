@@ -15,17 +15,18 @@ import { ShareModal } from '@/components/gallery/ShareModal'
 
 interface ShareStepProps {
   galleryId: string
+  gallerySlug: string
   galleryName: string
 }
 
-export function ShareStep({ galleryId, galleryName }: ShareStepProps) {
+export function ShareStep({ galleryId, gallerySlug, galleryName }: ShareStepProps) {
   const [copied, setCopied] = useState(false)
   const [shareUrl, setShareUrl] = useState('')
   const [showShareModal, setShowShareModal] = useState(false)
 
   useEffect(() => {
-    setShareUrl(`${window.location.origin}/view-reel/${galleryId}`)
-  }, [galleryId])
+    setShareUrl(`${window.location.origin}/view-reel/${gallerySlug}`)
+  }, [gallerySlug])
 
   const handleCopy = async () => {
     await navigator.clipboard.writeText(shareUrl)
@@ -163,6 +164,7 @@ export function ShareStep({ galleryId, galleryName }: ShareStepProps) {
         isOpen={showShareModal}
         onClose={() => setShowShareModal(false)}
         galleryId={galleryId}
+        gallerySlug={gallerySlug}
         galleryTitle={galleryName}
         shareUrl={shareUrl}
       />

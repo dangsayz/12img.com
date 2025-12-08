@@ -66,19 +66,19 @@ export function ProfilePageClient({ profile }: ProfilePageClientProps) {
 
   const handleGalleryClick = useCallback(async (gallery: Gallery) => {
     if (!gallery.is_locked) {
-      router.push(`/view-reel/${gallery.id}`)
+      router.push(`/view-reel/${gallery.slug}`)
       return
     }
 
     if (unlockedGalleries.has(gallery.id)) {
-      router.push(`/view-reel/${gallery.id}`)
+      router.push(`/view-reel/${gallery.slug}`)
       return
     }
 
     const isUnlocked = await checkGalleryUnlocked(gallery.id)
     if (isUnlocked) {
       setUnlockedGalleries(prev => new Set([...prev, gallery.id]))
-      router.push(`/view-reel/${gallery.id}`)
+      router.push(`/view-reel/${gallery.slug}`)
       return
     }
 
@@ -90,7 +90,7 @@ export function ProfilePageClient({ profile }: ProfilePageClientProps) {
     if (selectedGallery) {
       setUnlockedGalleries(prev => new Set([...prev, selectedGallery.id]))
       setPinModalOpen(false)
-      router.push(`/view-reel/${selectedGallery.id}`)
+      router.push(`/view-reel/${selectedGallery.slug}`)
     }
   }, [selectedGallery, router])
 

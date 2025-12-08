@@ -421,9 +421,9 @@ export function GalleryEditor({
 
   const getPreviewUrl = (template: GalleryTemplate) => {
     switch (template) {
-      case 'editorial': return `/view-live/${gallery.id}`
-      case 'cinematic': return `/view-reel/${gallery.id}`
-      default: return `/view-reel/${gallery.id}`
+      case 'editorial': return `/view-live/${gallery.slug}`
+      case 'cinematic': return `/view-reel/${gallery.slug}`
+      default: return `/view-reel/${gallery.slug}`
     }
   }
 
@@ -980,6 +980,7 @@ export function GalleryEditor({
         isOpen={showShareModal}
         onClose={() => setShowShareModal(false)}
         galleryId={gallery.id}
+        gallerySlug={gallery.slug}
         galleryTitle={currentTitle}
         shareUrl={shareUrl}
         currentTemplate={currentTemplate}

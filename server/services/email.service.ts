@@ -846,8 +846,8 @@ export async function sendGalleryInviteEmail(
       { galleryId: gallery.id }
     )
 
-    // Build gallery URL - use custom path if provided, otherwise default to view-reel
-    const galleryPathToUse = options.galleryPath || `/view-reel/${gallery.id}`
+    // Build gallery URL - use custom path if provided, otherwise default to view-reel with slug
+    const galleryPathToUse = options.galleryPath || `/view-reel/${gallery.slug}`
     const rawGalleryUrl = `${options.baseUrl}${galleryPathToUse}`
     const galleryUrl = emailLog 
       ? getTrackedLinkUrl(emailLog.id, rawGalleryUrl)

@@ -298,7 +298,7 @@ function GalleryCardGrid({ gallery, index }: { gallery: Gallery; index: number }
   const [isDeleted, setIsDeleted] = useState(false)
 
   // Build share URL on client only to avoid hydration mismatch
-  const relativePath = `/view-reel/${gallery.id}`
+  const relativePath = `/view-reel/${gallery.slug}`
   const [shareUrl, setShareUrl] = useState(relativePath)
   
   useEffect(() => {
@@ -428,7 +428,7 @@ function GalleryCardGrid({ gallery, index }: { gallery: Gallery; index: number }
                   onClick={(e) => {
                     e.preventDefault()
                     e.stopPropagation()
-                    window.open(`/view-reel/${gallery.id}`, '_blank')
+                    window.open(`/view-reel/${gallery.slug}`, '_blank')
                   }}
                   className="w-full px-4 py-2.5 text-left text-sm text-neutral-700 hover:bg-neutral-50 flex items-center gap-3"
                 >
@@ -529,7 +529,7 @@ function GalleryCardList({ gallery, index }: { gallery: Gallery; index: number }
   const [copied, setCopied] = useState(false)
   
   // Build share URL on client only to avoid hydration mismatch
-  const relativePath = `/view-reel/${gallery.id}`
+  const relativePath = `/view-reel/${gallery.slug}`
   const [shareUrl, setShareUrl] = useState(relativePath)
   
   useEffect(() => {

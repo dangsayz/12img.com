@@ -187,8 +187,8 @@ export async function toggleGalleryVisibility(galleryId: string, isPublic: boole
 
   revalidatePath('/')
   revalidatePath(`/gallery/${galleryId}`)
-  revalidatePath(`/view-reel/${galleryId}`)
-  revalidatePath(`/view-live/${galleryId}`)
+  revalidatePath(`/view-reel/${gallery.slug}`)
+  revalidatePath(`/view-live/${gallery.slug}`)
 
   return { success: true, isPublic }
 }
@@ -216,8 +216,8 @@ export async function updateGalleryTemplate(galleryId: string, template: string)
   if (error) return { error: 'Failed to update template' }
 
   revalidatePath(`/gallery/${galleryId}`)
-  revalidatePath(`/view-reel/${galleryId}`)
-  revalidatePath(`/view-live/${galleryId}`)
+  revalidatePath(`/view-reel/${gallery.slug}`)
+  revalidatePath(`/view-live/${gallery.slug}`)
 
   return { success: true, template }
 }
@@ -301,18 +301,18 @@ export async function deleteGallery(galleryId: string) {
 type GalleryTemplate = 'mosaic' | 'clean-grid' | 'cinematic' | 'editorial'
 
 /**
- * Map template to the correct view URL path
+ * Map template to the correct view URL path (using slug for clean URLs)
  */
-function getTemplateUrl(galleryId: string, template: GalleryTemplate): string {
+function getTemplateUrl(gallerySlug: string, template: GalleryTemplate): string {
   switch (template) {
     case 'cinematic':
-      return `/view-reel/${galleryId}`
+      return `/view-reel/${gallerySlug}`
     case 'editorial':
-      return `/view-live/${galleryId}`
+      return `/view-live/${gallerySlug}`
     case 'mosaic':
     case 'clean-grid':
     default:
-      return `/view-grid/${galleryId}?template=${template}`
+      return `/view-reel/${gallerySlug}`
   }
 }
 
@@ -346,9 +346,9 @@ export async function sendGalleryToClient(
   const photographerName = clerkUser?.fullName || clerkUser?.firstName || undefined
   const photographerEmail = clerkUser?.primaryEmailAddress?.emailAddress || user.email
 
-  // Build gallery URL based on selected template
+  // Build gallery URL based on selected template (using slug for clean URLs)
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://12img.com'
-  const galleryPath = getTemplateUrl(galleryId, template)
+  const galleryPath = getTemplateUrl(gallery.slug, template)
 
   try {
     const result = await sendGalleryInviteEmail(
@@ -479,8 +479,8 @@ export async function updateImageFocalPoint(
 
   // Revalidate gallery pages
   revalidatePath(`/gallery/${image.gallery_id}`)
-  revalidatePath(`/view-reel/${image.gallery_id}`)
-  revalidatePath(`/view-live/${image.gallery_id}`)
+  revalidatePath(`/view-reel/${gallery.slug}`)
+  revalidatePath(`/view-live/${gallery.slug}`)
 
   return { success: true }
 }
@@ -538,8 +538,8 @@ export async function updateGalleryPresentation(
   // Revalidate all gallery views
   revalidatePath('/')
   revalidatePath(`/gallery/${galleryId}`)
-  revalidatePath(`/view-reel/${galleryId}`)
-  revalidatePath(`/view-live/${galleryId}`)
+  revalidatePath(`/view-reel/${gallery.slug}`)
+  revalidatePath(`/view-live/${gallery.slug}`)
 
   return { success: true }
 }

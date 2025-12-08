@@ -42,6 +42,7 @@ export function SimpleWizard() {
   const [showOptions, setShowOptions] = useState(false)
   const [isCreating, setIsCreating] = useState(false)
   const [galleryId, setGalleryId] = useState<string | null>(null)
+  const [gallerySlug, setGallerySlug] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [hasDraft, setHasDraft] = useState(false)
   const [showDraftRestored, setShowDraftRestored] = useState(false)
@@ -131,8 +132,9 @@ export function SimpleWizard() {
         return
       }
 
-      if (result.galleryId) {
+      if (result.galleryId && result.slug) {
         setGalleryId(result.galleryId)
+        setGallerySlug(result.slug)
         clearDraft() // Clear the draft after successful creation
         setCurrentStep(1)
       }
@@ -355,6 +357,7 @@ export function SimpleWizard() {
             >
               <ShareStep 
                 galleryId={galleryId}
+                gallerySlug={gallerySlug!}
                 galleryName={galleryName}
               />
             </motion.div>
