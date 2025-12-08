@@ -3,7 +3,7 @@
 import { useState, useTransition, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, Loader2, User, Calendar, Package, FileText } from 'lucide-react'
+import { X, Loader2, Wand2 } from 'lucide-react'
 import { createClientProfile, getClientLocationSuggestions } from '@/server/actions/client.actions'
 import { type EventType } from '@/types/database'
 import { EVENT_TYPE_LABELS } from '@/lib/contracts/types'
@@ -377,7 +377,8 @@ export function CreateClientModal({ isOpen, onClose }: CreateClientModalProps) {
                         type="date"
                         value={formData.eventDate}
                         onChange={e => updateField('eventDate', e.target.value)}
-                        className="w-full px-4 py-3 text-base border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-stone-900/10 focus:border-stone-400"
+                        className="w-full h-12 px-4 text-base border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-stone-900/10 focus:border-stone-400 bg-white appearance-none"
+                        style={{ colorScheme: 'light' }}
                       />
                     </div>
 
@@ -550,26 +551,92 @@ export function CreateClientModal({ isOpen, onClose }: CreateClientModalProps) {
                           <label className="block text-sm font-medium text-stone-700 mb-2">
                             Balance Due
                           </label>
-                          <input
-                            type="date"
-                            value={formData.balanceDueDate}
-                            onChange={e => updateField('balanceDueDate', e.target.value)}
-                            className="w-full px-4 py-3 text-base border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-stone-900/10 focus:border-stone-400"
-                          />
+                          <div className="h-12 px-4 flex items-center text-base border border-stone-200 rounded-xl bg-stone-50">
+                            <span className="text-stone-600">
+                              {formData.packagePrice && formData.retainerFee
+                                ? `$${(parseFloat(formData.packagePrice) - parseFloat(formData.retainerFee)).toLocaleString()}`
+                                : formData.packagePrice
+                                ? `$${parseFloat(formData.packagePrice).toLocaleString()}`
+                                : '—'}
+                            </span>
+                          </div>
                         </div>
                       </div>
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-stone-700 mb-2">
-                        Notes
-                      </label>
+                      <div className="flex items-center justify-between mb-2">
+                        <label className="block text-sm font-medium text-stone-700">
+                          Notes
+                        </label>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const lines: string[] = []
+                            
+                            // Client info
+                            const clientName = formData.partnerFirstName
+                              ? `${formData.firstName} ${formData.lastName} & ${formData.partnerFirstName} ${formData.partnerLastName || formData.lastName}`
+                              : `${formData.firstName} ${formData.lastName}`
+                            lines.push(`CLIENT: ${clientName}`)
+                            if (formData.email) lines.push(`Email: ${formData.email}`)
+                            if (formData.phone) lines.push(`Phone: ${formData.phone}`)
+                            lines.push('')
+                            
+                            // Event info
+                            lines.push(`EVENT: ${EVENT_TYPE_LABELS[formData.eventType as EventType]}`)
+                            if (formData.eventDate) {
+                              const date = new Date(formData.eventDate + 'T00:00:00')
+                              lines.push(`Date: ${date.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}`)
+                            }
+                            if (formData.eventVenue) lines.push(`Venue: ${formData.eventVenue}`)
+                            if (formData.eventLocation) lines.push(`Location: ${formData.eventLocation}`)
+                            lines.push('')
+                            
+                            // Package info
+                            if (formData.packageName) {
+                              lines.push(`PACKAGE: ${formData.packageName}`)
+                            } else {
+                              lines.push('PACKAGE DETAILS')
+                            }
+                            if (formData.packageHours) lines.push(`Coverage: ${formData.packageHours} hours`)
+                            if (formData.packagePrice) {
+                              const price = parseFloat(formData.packagePrice)
+                              lines.push(`Investment: $${price.toLocaleString()}`)
+                            }
+                            lines.push('')
+                            
+                            // Payment breakdown
+                            if (formData.retainerFee || formData.packagePrice) {
+                              lines.push('PAYMENT SCHEDULE')
+                              if (formData.retainerFee) {
+                                const retainer = parseFloat(formData.retainerFee)
+                                lines.push(`Deposit: $${retainer.toLocaleString()} (due upon signing)`)
+                              }
+                              if (formData.packagePrice) {
+                                const price = parseFloat(formData.packagePrice)
+                                const retainer = formData.retainerFee ? parseFloat(formData.retainerFee) : 0
+                                const remaining = price - retainer
+                                if (remaining > 0) {
+                                  lines.push(`Balance: $${remaining.toLocaleString()} (due before event)`)
+                                }
+                              }
+                            }
+                            
+                            updateField('notes', lines.join('\n'))
+                          }}
+                          className="h-9 inline-flex items-center gap-1.5 px-3 text-sm font-medium text-amber-700 bg-amber-50 hover:bg-amber-100 active:bg-amber-200 rounded-lg transition-colors"
+                        >
+                          <Wand2 className="w-4 h-4" />
+                          Generate Summary
+                        </button>
+                      </div>
                       <textarea
                         value={formData.notes}
                         onChange={e => updateField('notes', e.target.value)}
-                        rows={3}
-                        className="w-full px-4 py-3 text-base border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-stone-900/10 focus:border-stone-400 resize-none"
-                        placeholder="Any additional notes..."
+                        rows={6}
+                        className="w-full px-4 py-3 text-base border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-stone-900/10 focus:border-stone-400 resize-none font-mono text-sm"
+                        placeholder="Tap 'Generate Summary' to create a detailed overview..."
                         enterKeyHint="done"
                       />
                     </div>
