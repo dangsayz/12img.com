@@ -12,6 +12,9 @@
   },
   "dependencies": {
     "@clerk/nextjs": "^6.35.6",
+    "@dnd-kit/core": "^6.3.1",
+    "@dnd-kit/sortable": "^10.0.0",
+    "@dnd-kit/utilities": "^3.2.2",
     "@stripe/stripe-js": "^8.5.3",
     "@supabase/supabase-js": "^2.39.1",
     "@types/sharp": "^0.32.0",

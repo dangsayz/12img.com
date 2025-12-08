@@ -33,12 +33,14 @@ import {
   Pencil,
   Link2,
   Send,
-  Globe
+  Globe,
+  GripVertical
 } from 'lucide-react'
 import { EmailActivity } from '@/components/gallery/EmailActivity'
 import { ShareModal } from '@/components/gallery/ShareModal'
 import { FocalPointEditor } from '@/components/gallery/FocalPointEditor'
 import { PresentationSettings } from '@/components/gallery/PresentationSettings'
+import { SortableImageGrid } from '@/components/gallery/SortableImageGrid'
 import { type GalleryTemplate, GALLERY_TEMPLATES, DEFAULT_TEMPLATE } from '@/components/gallery/templates'
 import type { PresentationData } from '@/lib/types/presentation'
 
@@ -227,6 +229,7 @@ export function GalleryEditor({
   const [showShareModal, setShowShareModal] = useState(false)
   const [focalPointImage, setFocalPointImage] = useState<GalleryImage | null>(null)
   const [showPresentationSettings, setShowPresentationSettings] = useState(false)
+  const [isReordering, setIsReordering] = useState(false)
   const [isEditingTitle, setIsEditingTitle] = useState(false)
   const [editedTitle, setEditedTitle] = useState(gallery.title)
   const [currentTitle, setCurrentTitle] = useState(gallery.title)
@@ -714,8 +717,26 @@ export function GalleryEditor({
             </div>
             
             <div className="flex items-center gap-2">
+              {/* Reorder button */}
               <button
-                onClick={() => setIsSelecting(!isSelecting)}
+                onClick={() => {
+                  setIsReordering(!isReordering)
+                  setIsSelecting(false)
+                }}
+                className={`flex items-center gap-2 px-4 py-2 text-sm transition-colors ${
+                  isReordering 
+                    ? 'bg-stone-900 text-white' 
+                    : 'text-stone-600 hover:bg-stone-100'
+                }`}
+              >
+                <GripVertical className="w-4 h-4" />
+                {isReordering ? 'Done' : 'Reorder'}
+              </button>
+              <button
+                onClick={() => {
+                  setIsSelecting(!isSelecting)
+                  setIsReordering(false)
+                }}
                 className={`px-4 py-2 text-sm transition-colors ${
                   isSelecting 
                     ? 'bg-stone-900 text-white' 
@@ -742,35 +763,48 @@ export function GalleryEditor({
             </div>
           </div>
 
-          {/* Dynamic Grid - Pic-Time Style Masonry */}
+          {/* Image Grid - Sortable or Masonry based on mode */}
           {loadedImages.length > 0 ? (
-            <div className="columns-2 md:columns-3 lg:columns-4 gap-2">
-              {loadedImages.slice(0, visibleCount).map((image, index) => {
-                // First image is hero (larger)
-                const isHero = index === 0
-                
-                return (
-                  <MasonryImageItem
-                    key={image.id}
-                    image={image}
-                    index={index}
-                    isHero={isHero}
-                    isSelecting={isSelecting}
-                    isSelected={selectedImages.has(image.id)}
-                    onSelect={() => {
-                      const newSelected = new Set(selectedImages)
-                      if (newSelected.has(image.id)) {
-                        newSelected.delete(image.id)
-                      } else {
-                        newSelected.add(image.id)
-                      }
-                      setSelectedImages(newSelected)
-                    }}
-                    onEditFocalPoint={() => setFocalPointImage(image)}
-                  />
-                )
-              })}
-            </div>
+            isReordering ? (
+              /* Sortable Grid for reordering */
+              <SortableImageGrid
+                galleryId={gallery.id}
+                images={loadedImages}
+                isSelecting={false}
+                selectedImages={new Set()}
+                onSelect={() => {}}
+                onImagesReorder={(newImages) => setLoadedImages(newImages)}
+              />
+            ) : (
+              /* Masonry Grid for viewing */
+              <div className="columns-2 md:columns-3 lg:columns-4 gap-2">
+                {loadedImages.slice(0, visibleCount).map((image, index) => {
+                  // First image is hero (larger)
+                  const isHero = index === 0
+                  
+                  return (
+                    <MasonryImageItem
+                      key={image.id}
+                      image={image}
+                      index={index}
+                      isHero={isHero}
+                      isSelecting={isSelecting}
+                      isSelected={selectedImages.has(image.id)}
+                      onSelect={() => {
+                        const newSelected = new Set(selectedImages)
+                        if (newSelected.has(image.id)) {
+                          newSelected.delete(image.id)
+                        } else {
+                          newSelected.add(image.id)
+                        }
+                        setSelectedImages(newSelected)
+                      }}
+                      onEditFocalPoint={() => setFocalPointImage(image)}
+                    />
+                  )
+                })}
+              </div>
+            )
           ) : (
             <div className="text-center py-24">
               <div className="w-20 h-20 bg-stone-100 flex items-center justify-center mx-auto mb-6">

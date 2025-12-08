@@ -517,6 +517,49 @@ export async function updateGalleryPresentation(
 }
 
 /**
+ * Get location suggestions for autocomplete
+ * Returns unique venues and locations from user's galleries
+ */
+export async function getLocationSuggestions(): Promise<{
+  venues: string[]
+  locations: string[]
+}> {
+  const { userId: clerkId } = await auth()
+  if (!clerkId) return { venues: [], locations: [] }
+
+  const user = await getOrCreateUserByClerkId(clerkId)
+  if (!user) return { venues: [], locations: [] }
+
+  const { data: galleries, error } = await supabaseAdmin
+    .from('galleries')
+    .select('presentation_data')
+    .eq('user_id', user.id)
+    .not('presentation_data', 'is', null)
+
+  if (error || !galleries) {
+    return { venues: [], locations: [] }
+  }
+
+  const venueSet = new Set<string>()
+  const locationSet = new Set<string>()
+
+  for (const gallery of galleries) {
+    const presentation = gallery.presentation_data as PresentationData | null
+    if (presentation?.venue) {
+      venueSet.add(presentation.venue)
+    }
+    if (presentation?.location) {
+      locationSet.add(presentation.location)
+    }
+  }
+
+  return {
+    venues: Array.from(venueSet).sort(),
+    locations: Array.from(locationSet).sort(),
+  }
+}
+
+/**
  * Get gallery presentation data
  */
 export async function getGalleryPresentation(

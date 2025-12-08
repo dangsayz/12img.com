@@ -20,7 +20,8 @@ import {
   Info,
   ExternalLink
 } from 'lucide-react'
-import { updateGalleryPresentation } from '@/server/actions/gallery.actions'
+import { updateGalleryPresentation, getLocationSuggestions } from '@/server/actions/gallery.actions'
+import { LocationAutocomplete } from './LocationAutocomplete'
 import {
   type PresentationData,
   type EventType,
@@ -81,6 +82,18 @@ export function PresentationSettings({
   const [typography, setTypography] = useState<Typography>(initialData?.typography || DEFAULT_PRESENTATION.typography!)
   const [customMessage, setCustomMessage] = useState(initialData?.customMessage || '')
   const [enableAnimations, setEnableAnimations] = useState(initialData?.enableAnimations ?? DEFAULT_PRESENTATION.enableAnimations!)
+  
+  // Location suggestions for autocomplete
+  const [venueSuggestions, setVenueSuggestions] = useState<string[]>([])
+  const [locationSuggestions, setLocationSuggestions] = useState<string[]>([])
+  
+  // Fetch location suggestions on mount
+  useEffect(() => {
+    getLocationSuggestions().then(({ venues, locations }) => {
+      setVenueSuggestions(venues)
+      setLocationSuggestions(locations)
+    })
+  }, [])
 
   const handleSave = async () => {
     setIsSaving(true)
@@ -279,30 +292,20 @@ export function PresentationSettings({
         onToggle={() => setActiveSection(activeSection === 'location' ? null : 'location')}
       >
         <div className="space-y-4">
-          <div>
-            <label className="block text-xs uppercase tracking-wider text-stone-400 mb-2">
-              Venue Name
-            </label>
-            <input
-              type="text"
-              value={venue}
-              onChange={(e) => setVenue(e.target.value)}
-              placeholder="Villa Cimbrone"
-              className="w-full px-4 py-3 border border-stone-200 focus:border-stone-400 focus:ring-0 text-stone-900 placeholder:text-stone-300"
-            />
-          </div>
-          <div>
-            <label className="block text-xs uppercase tracking-wider text-stone-400 mb-2">
-              City / Region
-            </label>
-            <input
-              type="text"
-              value={location}
-              onChange={(e) => setLocation(e.target.value)}
-              placeholder="Ravello, Italy"
-              className="w-full px-4 py-3 border border-stone-200 focus:border-stone-400 focus:ring-0 text-stone-900 placeholder:text-stone-300"
-            />
-          </div>
+          <LocationAutocomplete
+            value={venue}
+            onChange={setVenue}
+            suggestions={venueSuggestions}
+            placeholder="Villa Cimbrone"
+            label="Venue Name"
+          />
+          <LocationAutocomplete
+            value={location}
+            onChange={setLocation}
+            suggestions={locationSuggestions}
+            placeholder="Ravello, Italy"
+            label="City / Region"
+          />
         </div>
       </CollapsibleSection>
 

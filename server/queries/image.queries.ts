@@ -5,7 +5,7 @@ export async function getGalleryImages(galleryId: string) {
     .from('images')
     .select('*')
     .eq('gallery_id', galleryId)
-    .order('created_at', { ascending: true })
+    .order('position', { ascending: true })
 
   if (error) throw error
   return data || []

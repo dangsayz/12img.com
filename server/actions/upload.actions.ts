@@ -132,25 +132,23 @@ export async function confirmUploads(request: {
   const isOwner = await verifyGalleryOwnership(request.galleryId, user.id)
   if (!isOwner) throw new Error('Access denied')
 
-  // Insert all images in parallel for speed
-  const results = await Promise.all(
-    request.uploads.map(async (upload) => {
-      const { data, error } = await supabaseAdmin.rpc('insert_image_at_position', {
-        p_gallery_id: request.galleryId,
-        p_storage_path: upload.storagePath,
-        p_original_filename: upload.originalFilename,
-        p_file_size_bytes: upload.fileSize,
-        p_mime_type: upload.mimeType,
-        p_width: upload.width || null,
-        p_height: upload.height || null,
-      })
-
-      if (error) throw new Error('Failed to save image')
-      return data as string
+  // Insert images SEQUENTIALLY to preserve upload order
+  // The insert_image_at_position function uses row locking to get the next position
+  const imageIds: string[] = []
+  for (const upload of request.uploads) {
+    const { data, error } = await supabaseAdmin.rpc('insert_image_at_position', {
+      p_gallery_id: request.galleryId,
+      p_storage_path: upload.storagePath,
+      p_original_filename: upload.originalFilename,
+      p_file_size_bytes: upload.fileSize,
+      p_mime_type: upload.mimeType,
+      p_width: upload.width || null,
+      p_height: upload.height || null,
     })
-  )
 
-  const imageIds = results
+    if (error) throw new Error('Failed to save image')
+    imageIds.push(data as string)
+  }
 
   // Set first image as cover if no cover exists
   const gallery = await getGalleryById(request.galleryId)
@@ -207,5 +205,53 @@ async function queueImagesForProcessing(
     }).catch(err => {
       console.error('[Upload] Failed to queue processing for image:', imageIds[i], err)
     })
+  }
+}
+
+/**
+ * Update image positions for drag-and-drop reordering
+ * Uses optimized batch update with Promise.all for speed
+ */
+export async function updateImagePositions(
+  galleryId: string,
+  positions: { imageId: string; position: number }[]
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const { userId: clerkId } = await auth()
+    if (!clerkId) return { success: false, error: 'Unauthorized' }
+
+    const user = await getOrCreateUserByClerkId(clerkId)
+    if (!user) return { success: false, error: 'User not found' }
+
+    const isOwner = await verifyGalleryOwnership(galleryId, user.id)
+    if (!isOwner) return { success: false, error: 'Access denied' }
+
+    // Batch update using Promise.all for parallel execution
+    // This is much faster than sequential updates
+    const updatePromises = positions.map(({ imageId, position }) =>
+      supabaseAdmin
+        .from('images')
+        .update({ position })
+        .eq('id', imageId)
+        .eq('gallery_id', galleryId)
+    )
+
+    const results = await Promise.all(updatePromises)
+    
+    // Check for any errors
+    const failedUpdate = results.find(r => r.error)
+    if (failedUpdate?.error) {
+      console.error('[updateImagePositions] Batch update failed:', failedUpdate.error)
+      return { success: false, error: 'Failed to update positions' }
+    }
+
+    // Revalidate gallery pages
+    revalidatePath(`/gallery/${galleryId}`)
+    revalidatePath(`/gallery/${galleryId}/upload`)
+
+    return { success: true }
+  } catch (error) {
+    console.error('[updateImagePositions] Error:', error)
+    return { success: false, error: 'An error occurred' }
   }
 }
