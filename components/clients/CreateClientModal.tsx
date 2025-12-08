@@ -187,21 +187,23 @@ export function CreateClientModal({ isOpen, onClose }: CreateClientModalProps) {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
+          className="fixed inset-0 z-50 bg-black/50 md:flex md:items-center md:justify-center md:p-4"
           onClick={handleClose}
         >
+          {/* Mobile: Full-screen sheet from bottom | Desktop: Centered modal */}
           <motion.div
-            initial={{ opacity: 0, scale: 0.95, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+            initial={{ opacity: 0, y: '100%' }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: '100%' }}
+            transition={{ type: 'spring', damping: 25, stiffness: 300 }}
             onClick={e => e.stopPropagation()}
-            className="bg-white rounded-xl shadow-2xl w-full max-w-sm sm:max-w-md max-h-[90vh] flex flex-col"
+            className="bg-white w-full h-full md:h-auto md:max-h-[90vh] md:w-full md:max-w-md md:rounded-xl md:shadow-2xl flex flex-col"
           >
-            {/* Header */}
-            <div className="flex items-center justify-between px-4 py-3 border-b border-stone-100">
+            {/* Header - Safe area for notch */}
+            <div className="flex items-center justify-between px-5 pt-[max(1rem,env(safe-area-inset-top))] pb-3 border-b border-stone-100 bg-white sticky top-0 z-10">
               <div>
-                <h2 className="text-base font-medium text-stone-900">New Client</h2>
-                <p className="text-xs text-stone-500">
+                <h2 className="text-lg font-semibold text-stone-900">New Client</h2>
+                <p className="text-sm text-stone-500">
                   {step === 'client' && 'Contact info'}
                   {step === 'event' && 'Event details'}
                   {step === 'package' && 'Package'}
@@ -209,18 +211,19 @@ export function CreateClientModal({ isOpen, onClose }: CreateClientModalProps) {
               </div>
               <button
                 onClick={handleClose}
-                className="p-1.5 hover:bg-stone-100 rounded-lg transition-colors"
+                className="p-3 -mr-2 hover:bg-stone-100 rounded-full transition-colors active:bg-stone-200"
+                aria-label="Close"
               >
-                <X className="w-4 h-4 text-stone-500" />
+                <X className="w-5 h-5 text-stone-500" />
               </button>
             </div>
 
             {/* Progress */}
-            <div className="flex gap-1 px-4 pt-3">
+            <div className="flex gap-1.5 px-5 pt-4">
               {(['client', 'event', 'package'] as Step[]).map((s, i) => (
                 <div
                   key={s}
-                  className={`h-0.5 flex-1 rounded-full transition-colors ${
+                  className={`h-1 flex-1 rounded-full transition-colors ${
                     i <= ['client', 'event', 'package'].indexOf(step)
                       ? 'bg-stone-900'
                       : 'bg-stone-200'
@@ -229,8 +232,8 @@ export function CreateClientModal({ isOpen, onClose }: CreateClientModalProps) {
               ))}
             </div>
 
-            {/* Content */}
-            <div className="px-4 py-4 overflow-y-auto flex-1 min-h-0">
+            {/* Content - Scrollable area with generous padding */}
+            <div className="px-5 py-5 overflow-y-auto flex-1 min-h-0">
               <AnimatePresence mode="wait">
                 {step === 'client' && (
                   <motion.div
@@ -238,84 +241,98 @@ export function CreateClientModal({ isOpen, onClose }: CreateClientModalProps) {
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: -20 }}
-                    className="space-y-3"
+                    className="space-y-5"
                   >
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-xs font-medium text-stone-600 mb-1">
+                        <label className="block text-sm font-medium text-stone-700 mb-2">
                           First Name *
                         </label>
                         <input
                           type="text"
                           value={formData.firstName}
                           onChange={e => updateField('firstName', e.target.value.replace(/[^a-zA-ZÀ-ÿ\s'-]/g, ''))}
-                          className="w-full px-2.5 py-1.5 text-sm border border-stone-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-stone-900/10 focus:border-stone-400"
+                          className="w-full px-4 py-3 text-base border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-stone-900/10 focus:border-stone-400"
                           placeholder="Jane"
                           maxLength={50}
+                          autoComplete="given-name"
+                          enterKeyHint="next"
                         />
                       </div>
                       <div>
-                        <label className="block text-xs font-medium text-stone-600 mb-1">
+                        <label className="block text-sm font-medium text-stone-700 mb-2">
                           Last Name *
                         </label>
                         <input
                           type="text"
                           value={formData.lastName}
                           onChange={e => updateField('lastName', e.target.value.replace(/[^a-zA-ZÀ-ÿ\s'-]/g, ''))}
-                          className="w-full px-2.5 py-1.5 text-sm border border-stone-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-stone-900/10 focus:border-stone-400"
+                          className="w-full px-4 py-3 text-base border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-stone-900/10 focus:border-stone-400"
                           placeholder="Smith"
                           maxLength={50}
+                          autoComplete="family-name"
+                          enterKeyHint="next"
                         />
                       </div>
                     </div>
 
                     <div>
-                      <label className="block text-xs font-medium text-stone-600 mb-1">
+                      <label className="block text-sm font-medium text-stone-700 mb-2">
                         Email *
                       </label>
                       <input
                         type="email"
                         value={formData.email}
                         onChange={e => updateField('email', e.target.value)}
-                        className="w-full px-2.5 py-1.5 text-sm border border-stone-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-stone-900/10 focus:border-stone-400"
+                        className="w-full px-4 py-3 text-base border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-stone-900/10 focus:border-stone-400"
                         placeholder="jane@example.com"
+                        autoComplete="email"
+                        inputMode="email"
+                        enterKeyHint="next"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-xs font-medium text-stone-600 mb-1">
+                      <label className="block text-sm font-medium text-stone-700 mb-2">
                         Phone
                       </label>
                       <input
                         type="tel"
                         value={formData.phone}
                         onChange={e => updateField('phone', formatPhoneNumber(e.target.value))}
-                        className="w-full px-2.5 py-1.5 text-sm border border-stone-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-stone-900/10 focus:border-stone-400"
+                        className="w-full px-4 py-3 text-base border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-stone-900/10 focus:border-stone-400"
                         placeholder="000-000-0000"
                         maxLength={12}
+                        autoComplete="tel"
+                        inputMode="tel"
+                        enterKeyHint="next"
                       />
                     </div>
 
-                    <div className="pt-3 border-t border-stone-100">
-                      <p className="text-xs font-medium text-stone-600 mb-2">
+                    <div className="pt-4 border-t border-stone-100">
+                      <p className="text-sm font-medium text-stone-700 mb-3">
                         Partner (optional)
                       </p>
-                      <div className="grid grid-cols-2 gap-3">
+                      <div className="grid grid-cols-2 gap-4">
                         <input
                           type="text"
                           value={formData.partnerFirstName}
                           onChange={e => updateField('partnerFirstName', e.target.value.replace(/[^a-zA-ZÀ-ÿ\s'-]/g, ''))}
-                          className="px-2.5 py-1.5 text-sm border border-stone-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-stone-900/10 focus:border-stone-400"
+                          className="px-4 py-3 text-base border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-stone-900/10 focus:border-stone-400"
                           placeholder="First name"
                           maxLength={50}
+                          autoComplete="off"
+                          enterKeyHint="next"
                         />
                         <input
                           type="text"
                           value={formData.partnerLastName}
                           onChange={e => updateField('partnerLastName', e.target.value.replace(/[^a-zA-ZÀ-ÿ\s'-]/g, ''))}
-                          className="px-2.5 py-1.5 text-sm border border-stone-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-stone-900/10 focus:border-stone-400"
+                          className="px-4 py-3 text-base border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-stone-900/10 focus:border-stone-400"
                           placeholder="Last name"
                           maxLength={50}
+                          autoComplete="off"
+                          enterKeyHint="done"
                         />
                       </div>
                     </div>
@@ -328,22 +345,22 @@ export function CreateClientModal({ isOpen, onClose }: CreateClientModalProps) {
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: -20 }}
-                    className="space-y-3"
+                    className="space-y-5"
                   >
                     <div>
-                      <label className="block text-xs font-medium text-stone-600 mb-1">
+                      <label className="block text-sm font-medium text-stone-700 mb-3">
                         Event Type
                       </label>
-                      <div className="grid grid-cols-3 gap-1.5">
+                      <div className="grid grid-cols-3 gap-2">
                         {EVENT_TYPES.map(type => (
                           <button
                             key={type}
                             type="button"
                             onClick={() => updateField('eventType', type)}
-                            className={`px-2 py-1.5 text-xs rounded-lg border transition-colors ${
+                            className={`px-3 py-3 text-sm font-medium rounded-xl border transition-all active:scale-95 ${
                               formData.eventType === type
-                                ? 'border-stone-900 bg-stone-900 text-white'
-                                : 'border-stone-200 hover:border-stone-300'
+                                ? 'border-stone-900 bg-stone-900 text-white shadow-sm'
+                                : 'border-stone-200 hover:border-stone-300 active:bg-stone-50'
                             }`}
                           >
                             {EVENT_TYPE_LABELS[type]}
@@ -353,19 +370,19 @@ export function CreateClientModal({ isOpen, onClose }: CreateClientModalProps) {
                     </div>
 
                     <div>
-                      <label className="block text-xs font-medium text-stone-600 mb-1">
+                      <label className="block text-sm font-medium text-stone-700 mb-2">
                         Event Date
                       </label>
                       <input
                         type="date"
                         value={formData.eventDate}
                         onChange={e => updateField('eventDate', e.target.value)}
-                        className="w-full px-2.5 py-1.5 text-sm border border-stone-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-stone-900/10 focus:border-stone-400"
+                        className="w-full px-4 py-3 text-base border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-stone-900/10 focus:border-stone-400"
                       />
                     </div>
 
                     <div className="relative">
-                      <label className="block text-xs font-medium text-stone-600 mb-1">
+                      <label className="block text-sm font-medium text-stone-700 mb-2">
                         Location
                       </label>
                       <input
@@ -377,13 +394,15 @@ export function CreateClientModal({ isOpen, onClose }: CreateClientModalProps) {
                         }}
                         onFocus={() => setShowLocationSuggestions(true)}
                         onBlur={() => setTimeout(() => setShowLocationSuggestions(false), 150)}
-                        className="w-full px-2.5 py-1.5 text-sm border border-stone-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-stone-900/10 focus:border-stone-400"
+                        className="w-full px-4 py-3 text-base border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-stone-900/10 focus:border-stone-400"
                         placeholder="City, State"
                         maxLength={200}
+                        autoComplete="off"
+                        enterKeyHint="next"
                       />
                       {/* Location Suggestions Dropdown */}
                       {showLocationSuggestions && filteredLocations.length > 0 && (
-                        <div className="absolute z-10 w-full mt-1 bg-white border border-stone-200 rounded-lg shadow-lg max-h-32 overflow-y-auto">
+                        <div className="absolute z-10 w-full mt-1 bg-white border border-stone-200 rounded-xl shadow-lg max-h-40 overflow-y-auto">
                           {filteredLocations.map(loc => (
                             <button
                               key={loc}
@@ -392,9 +411,9 @@ export function CreateClientModal({ isOpen, onClose }: CreateClientModalProps) {
                                 updateField('eventLocation', loc)
                                 setShowLocationSuggestions(false)
                               }}
-                              className="w-full px-3 py-2 text-left text-sm hover:bg-stone-50 flex items-center gap-2"
+                              className="w-full px-4 py-3 text-left text-base hover:bg-stone-50 active:bg-stone-100 flex items-center gap-3 border-b border-stone-100 last:border-0"
                             >
-                              <span className="w-4 h-4 rounded border border-stone-300 flex items-center justify-center text-emerald-600">
+                              <span className="w-5 h-5 rounded-full border border-stone-300 flex items-center justify-center text-emerald-600 text-xs">
                                 ✓
                               </span>
                               {loc}
@@ -405,7 +424,7 @@ export function CreateClientModal({ isOpen, onClose }: CreateClientModalProps) {
                     </div>
 
                     <div className="relative">
-                      <label className="block text-xs font-medium text-stone-600 mb-1">
+                      <label className="block text-sm font-medium text-stone-700 mb-2">
                         Venue
                       </label>
                       <input
@@ -417,13 +436,15 @@ export function CreateClientModal({ isOpen, onClose }: CreateClientModalProps) {
                         }}
                         onFocus={() => setShowVenueSuggestions(true)}
                         onBlur={() => setTimeout(() => setShowVenueSuggestions(false), 150)}
-                        className="w-full px-2.5 py-1.5 text-sm border border-stone-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-stone-900/10 focus:border-stone-400"
+                        className="w-full px-4 py-3 text-base border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-stone-900/10 focus:border-stone-400"
                         placeholder="Venue name"
                         maxLength={200}
+                        autoComplete="off"
+                        enterKeyHint="done"
                       />
                       {/* Venue Suggestions Dropdown */}
                       {showVenueSuggestions && filteredVenues.length > 0 && (
-                        <div className="absolute z-10 w-full mt-1 bg-white border border-stone-200 rounded-lg shadow-lg max-h-32 overflow-y-auto">
+                        <div className="absolute z-10 w-full mt-1 bg-white border border-stone-200 rounded-xl shadow-lg max-h-40 overflow-y-auto">
                           {filteredVenues.map(venue => (
                             <button
                               key={venue}
@@ -432,9 +453,9 @@ export function CreateClientModal({ isOpen, onClose }: CreateClientModalProps) {
                                 updateField('eventVenue', venue)
                                 setShowVenueSuggestions(false)
                               }}
-                              className="w-full px-3 py-2 text-left text-sm hover:bg-stone-50 flex items-center gap-2"
+                              className="w-full px-4 py-3 text-left text-base hover:bg-stone-50 active:bg-stone-100 flex items-center gap-3 border-b border-stone-100 last:border-0"
                             >
-                              <span className="w-4 h-4 rounded border border-stone-300 flex items-center justify-center text-emerald-600">
+                              <span className="w-5 h-5 rounded-full border border-stone-300 flex items-center justify-center text-emerald-600 text-xs">
                                 ✓
                               </span>
                               {venue}
@@ -452,95 +473,104 @@ export function CreateClientModal({ isOpen, onClose }: CreateClientModalProps) {
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: -20 }}
-                    className="space-y-3"
+                    className="space-y-5"
                   >
                     <div>
-                      <label className="block text-xs font-medium text-stone-600 mb-1">
+                      <label className="block text-sm font-medium text-stone-700 mb-2">
                         Package Name
                       </label>
                       <input
                         type="text"
                         value={formData.packageName}
                         onChange={e => updateField('packageName', e.target.value)}
-                        className="w-full px-2.5 py-1.5 text-sm border border-stone-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-stone-900/10 focus:border-stone-400"
+                        className="w-full px-4 py-3 text-base border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-stone-900/10 focus:border-stone-400"
                         placeholder="e.g., Full Day Coverage"
+                        autoComplete="off"
+                        enterKeyHint="next"
                       />
                     </div>
 
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-xs font-medium text-stone-600 mb-1">
+                        <label className="block text-sm font-medium text-stone-700 mb-2">
                           Total Price ($)
                         </label>
                         <input
                           type="number"
                           value={formData.packagePrice}
                           onChange={e => updateField('packagePrice', e.target.value)}
-                          className="w-full px-2.5 py-1.5 text-sm border border-stone-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-stone-900/10 focus:border-stone-400"
+                          className="w-full px-4 py-3 text-base border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-stone-900/10 focus:border-stone-400"
                           placeholder="3500"
                           min="0"
+                          inputMode="decimal"
+                          enterKeyHint="next"
                         />
                       </div>
                       <div>
-                        <label className="block text-xs font-medium text-stone-600 mb-1">
+                        <label className="block text-sm font-medium text-stone-700 mb-2">
                           Hours
                         </label>
                         <input
                           type="number"
                           value={formData.packageHours}
                           onChange={e => updateField('packageHours', e.target.value)}
-                          className="w-full px-2.5 py-1.5 text-sm border border-stone-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-stone-900/10 focus:border-stone-400"
+                          className="w-full px-4 py-3 text-base border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-stone-900/10 focus:border-stone-400"
                           placeholder="8"
                           min="1"
                           max="24"
+                          inputMode="numeric"
+                          enterKeyHint="next"
                         />
                       </div>
                     </div>
 
                     {/* Payment Details */}
-                    <div className="pt-3 border-t border-stone-100">
-                      <p className="text-xs font-medium text-stone-600 mb-2">
+                    <div className="pt-4 border-t border-stone-100">
+                      <p className="text-sm font-medium text-stone-700 mb-3">
                         Payment Details
                       </p>
-                      <div className="grid grid-cols-2 gap-3">
+                      <div className="grid grid-cols-2 gap-4">
                         <div>
-                          <label className="block text-xs font-medium text-stone-600 mb-1">
-                            Deposit/Retainer ($)
+                          <label className="block text-sm font-medium text-stone-700 mb-2">
+                            Deposit ($)
                           </label>
                           <input
                             type="number"
                             value={formData.retainerFee}
                             onChange={e => updateField('retainerFee', e.target.value)}
-                            className="w-full px-2.5 py-1.5 text-sm border border-stone-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-stone-900/10 focus:border-stone-400"
+                            className="w-full px-4 py-3 text-base border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-stone-900/10 focus:border-stone-400"
                             placeholder="1000"
                             min="0"
                             max="99999"
+                            inputMode="decimal"
+                            enterKeyHint="next"
                           />
                         </div>
                         <div>
-                          <label className="block text-xs font-medium text-stone-600 mb-1">
-                            Balance Due Date
+                          <label className="block text-sm font-medium text-stone-700 mb-2">
+                            Balance Due
                           </label>
                           <input
                             type="date"
                             value={formData.balanceDueDate}
                             onChange={e => updateField('balanceDueDate', e.target.value)}
-                            className="w-full px-2.5 py-1.5 text-sm border border-stone-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-stone-900/10 focus:border-stone-400"
+                            className="w-full px-4 py-3 text-base border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-stone-900/10 focus:border-stone-400"
                           />
                         </div>
                       </div>
                     </div>
 
                     <div>
-                      <label className="block text-xs font-medium text-stone-600 mb-1">
+                      <label className="block text-sm font-medium text-stone-700 mb-2">
                         Notes
                       </label>
                       <textarea
                         value={formData.notes}
                         onChange={e => updateField('notes', e.target.value)}
-                        rows={2}
-                        className="w-full px-2.5 py-1.5 text-sm border border-stone-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-stone-900/10 focus:border-stone-400 resize-none"
+                        rows={3}
+                        className="w-full px-4 py-3 text-base border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-stone-900/10 focus:border-stone-400 resize-none"
                         placeholder="Any additional notes..."
+                        enterKeyHint="done"
                       />
                     </div>
                   </motion.div>
@@ -548,21 +578,21 @@ export function CreateClientModal({ isOpen, onClose }: CreateClientModalProps) {
               </AnimatePresence>
 
               {error && (
-                <p className="mt-3 text-xs text-red-600 bg-red-50 px-2.5 py-1.5 rounded-lg">
+                <p className="mt-4 text-sm text-red-600 bg-red-50 px-4 py-3 rounded-xl">
                   {error}
                 </p>
               )}
             </div>
 
-            {/* Footer */}
-            <div className="flex items-center justify-between px-4 py-3 border-t border-stone-100 bg-stone-50">
+            {/* Footer - Sticky at bottom with safe area padding */}
+            <div className="flex items-center justify-between px-5 py-4 pb-[max(1rem,env(safe-area-inset-bottom))] border-t border-stone-100 bg-white sticky bottom-0">
               <button
                 onClick={() => {
                   if (step === 'event') setStep('client')
                   else if (step === 'package') setStep('event')
                   else handleClose()
                 }}
-                className="px-3 py-1.5 text-sm text-stone-600 hover:text-stone-900 transition-colors"
+                className="px-5 py-3 text-base font-medium text-stone-600 hover:text-stone-900 active:bg-stone-100 rounded-xl transition-colors"
               >
                 {step === 'client' ? 'Cancel' : 'Back'}
               </button>
@@ -574,7 +604,7 @@ export function CreateClientModal({ isOpen, onClose }: CreateClientModalProps) {
                     else if (step === 'event') setStep('package')
                   }}
                   disabled={!canProceed()}
-                  className="px-4 py-1.5 text-sm bg-stone-900 text-white rounded-lg hover:bg-stone-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-6 py-3 text-base font-medium bg-stone-900 text-white rounded-xl hover:bg-stone-800 active:bg-stone-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed min-w-[120px]"
                 >
                   Continue
                 </button>
@@ -582,10 +612,10 @@ export function CreateClientModal({ isOpen, onClose }: CreateClientModalProps) {
                 <button
                   onClick={handleSubmit}
                   disabled={isPending}
-                  className="inline-flex items-center gap-1.5 px-4 py-1.5 text-sm bg-stone-900 text-white rounded-lg hover:bg-stone-800 transition-colors disabled:opacity-50"
+                  className="inline-flex items-center justify-center gap-2 px-6 py-3 text-base font-medium bg-stone-900 text-white rounded-xl hover:bg-stone-800 active:bg-stone-700 transition-colors disabled:opacity-50 min-w-[120px]"
                 >
-                  {isPending && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-                  Create
+                  {isPending && <Loader2 className="w-4 h-4 animate-spin" />}
+                  Create Client
                 </button>
               )}
             </div>

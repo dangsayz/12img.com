@@ -36,7 +36,8 @@ import {
   Send,
   Globe,
   GripVertical,
-  Shield
+  Shield,
+  FileText
 } from 'lucide-react'
 import { EmailActivity } from '@/components/gallery/EmailActivity'
 import { ShareModal } from '@/components/gallery/ShareModal'
@@ -711,7 +712,7 @@ export function GalleryEditor({
       <div className="bg-white border-t border-stone-100">
         <div className="max-w-7xl mx-auto px-6 py-12">
           {/* Grid Header */}
-          <div className="flex items-center justify-between mb-8">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
             <div className="flex items-center gap-4">
               <h2 className="text-lg font-medium text-stone-900">All Photos</h2>
               
@@ -727,7 +728,7 @@ export function GalleryEditor({
                   ) : (
                     templateIcons[currentTemplate]
                   )}
-                  <span>{GALLERY_TEMPLATES.find(t => t.id === currentTemplate)?.name || 'Layout'}</span>
+                  <span className="hidden sm:inline">{GALLERY_TEMPLATES.find(t => t.id === currentTemplate)?.name || 'Layout'}</span>
                   <ChevronDown className={`w-3 h-3 transition-transform ${showTemplates ? 'rotate-180' : ''}`} />
                 </button>
                 
@@ -768,7 +769,8 @@ export function GalleryEditor({
               </div>
             </div>
             
-            <div className="flex items-center gap-2">
+            {/* Desktop Actions */}
+            <div className="hidden sm:flex items-center gap-2">
               {/* Reorder button */}
               <button
                 onClick={() => {
@@ -811,6 +813,45 @@ export function GalleryEditor({
               >
                 <Plus className="w-4 h-4" />
                 Add Photos
+              </Link>
+            </div>
+            
+            {/* Mobile Actions - Simplified row */}
+            <div className="flex sm:hidden items-center gap-2 overflow-x-auto pb-2 -mx-2 px-2">
+              <button
+                onClick={() => {
+                  setIsReordering(!isReordering)
+                  setIsSelecting(false)
+                }}
+                className={`flex-shrink-0 flex items-center gap-1.5 px-3 py-2 text-sm rounded-lg transition-colors ${
+                  isReordering 
+                    ? 'bg-stone-900 text-white' 
+                    : 'bg-stone-100 text-stone-600'
+                }`}
+              >
+                <GripVertical className="w-4 h-4" />
+                {isReordering ? 'Done' : 'Reorder'}
+              </button>
+              <button
+                onClick={() => {
+                  setIsSelecting(!isSelecting)
+                  setIsReordering(false)
+                }}
+                className={`flex-shrink-0 px-3 py-2 text-sm rounded-lg transition-colors ${
+                  isSelecting 
+                    ? 'bg-stone-900 text-white' 
+                    : 'bg-stone-100 text-stone-600'
+                }`}
+              >
+                {isSelecting ? `${selectedImages.size}` : 'Select'}
+              </button>
+              <Link
+                href={getPreviewUrl(currentTemplate)}
+                target="_blank"
+                className="flex-shrink-0 flex items-center gap-1.5 px-3 py-2 bg-stone-100 text-stone-600 text-sm rounded-lg"
+              >
+                <Eye className="w-4 h-4" />
+                Preview
               </Link>
             </div>
           </div>
@@ -975,6 +1016,42 @@ export function GalleryEditor({
           />
         )}
       </AnimatePresence>
+
+      {/* Mobile Floating Action Bar */}
+      <div className="fixed bottom-0 left-0 right-0 sm:hidden z-40 pb-safe">
+        <div className="bg-white border-t border-stone-200 px-4 py-3 flex items-center justify-around gap-2 shadow-lg">
+          <Link
+            href="/dashboard/clients"
+            className="flex-1 flex flex-col items-center gap-1 py-2 text-stone-600 hover:text-stone-900 transition-colors"
+          >
+            <div className="w-10 h-10 rounded-full bg-stone-100 flex items-center justify-center">
+              <FileText className="w-5 h-5" />
+            </div>
+            <span className="text-xs font-medium">Contracts</span>
+          </Link>
+          <Link
+            href="/gallery/create"
+            className="flex-1 flex flex-col items-center gap-1 py-2 text-stone-600 hover:text-stone-900 transition-colors"
+          >
+            <div className="w-10 h-10 rounded-full bg-stone-900 flex items-center justify-center">
+              <Plus className="w-5 h-5 text-white" />
+            </div>
+            <span className="text-xs font-medium">New Album</span>
+          </Link>
+          <Link
+            href={`/gallery/${gallery.id}/upload`}
+            className="flex-1 flex flex-col items-center gap-1 py-2 text-stone-600 hover:text-stone-900 transition-colors"
+          >
+            <div className="w-10 h-10 rounded-full bg-emerald-500 flex items-center justify-center">
+              <Plus className="w-5 h-5 text-white" />
+            </div>
+            <span className="text-xs font-medium">Add Photos</span>
+          </Link>
+        </div>
+      </div>
+
+      {/* Bottom padding for mobile floating bar */}
+      <div className="h-24 sm:hidden" />
     </div>
   )
 }
