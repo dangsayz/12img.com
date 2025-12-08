@@ -218,18 +218,29 @@ export function CreateClientModal({ isOpen, onClose }: CreateClientModalProps) {
               </button>
             </div>
 
-            {/* Progress */}
-            <div className="flex gap-1.5 px-5 pt-4">
-              {(['client', 'event', 'package'] as Step[]).map((s, i) => (
-                <div
-                  key={s}
-                  className={`h-1 flex-1 rounded-full transition-colors ${
-                    i <= ['client', 'event', 'package'].indexOf(step)
-                      ? 'bg-stone-900'
-                      : 'bg-stone-200'
-                  }`}
-                />
-              ))}
+            {/* Progress - Tappable navigation */}
+            <div className="flex gap-2 px-5 pt-4">
+              {(['client', 'event', 'package'] as Step[]).map((s, i) => {
+                const currentIndex = ['client', 'event', 'package'].indexOf(step)
+                const isCompleted = i < currentIndex
+                const isCurrent = i === currentIndex
+                const canNavigate = i <= currentIndex // Can go back to completed steps
+                
+                return (
+                  <button
+                    key={s}
+                    type="button"
+                    onClick={() => canNavigate && setStep(s)}
+                    disabled={!canNavigate}
+                    className={`h-2 flex-1 rounded-full transition-all ${
+                      isCompleted || isCurrent
+                        ? 'bg-stone-900'
+                        : 'bg-stone-200'
+                    } ${canNavigate ? 'cursor-pointer active:scale-95' : 'cursor-default'}`}
+                    aria-label={`Go to ${s} step`}
+                  />
+                )
+              })}
             </div>
 
             {/* Content - Scrollable area with generous padding */}
@@ -482,7 +493,7 @@ export function CreateClientModal({ isOpen, onClose }: CreateClientModalProps) {
                       </label>
                       <input
                         type="text"
-                        value={formData.packageName}
+                        value={formData.packageName || `${EVENT_TYPE_LABELS[formData.eventType as EventType]} Photography`}
                         onChange={e => updateField('packageName', e.target.value)}
                         className="w-full px-4 py-3 text-base border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-stone-900/10 focus:border-stone-400"
                         placeholder="e.g., Full Day Coverage"
