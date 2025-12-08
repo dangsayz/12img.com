@@ -107,40 +107,37 @@ export function EditorialViewer({
         })}
       </main>
 
-      {/* Share Button - Elegant, centered, fades with scroll */}
+      {/* Share Button - Minimal, editorial aesthetic */}
       <motion.div 
-        className="fixed bottom-24 left-1/2 -translate-x-1/2 z-40"
+        className="fixed bottom-28 left-1/2 -translate-x-1/2 z-40"
         style={{ opacity: scrollIndicatorOpacity }}
       >
         <motion.button
           onClick={handleCopyLink}
-          className="group relative flex items-center gap-2.5 px-5 py-2.5 bg-white/90 backdrop-blur-sm border border-neutral-200/80 rounded-full shadow-sm hover:shadow-md hover:border-neutral-300 transition-all duration-300"
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
+          className="group flex items-center gap-3 text-neutral-400 hover:text-neutral-600 transition-colors duration-500"
+          whileTap={{ scale: 0.95 }}
         >
           <AnimatePresence mode="wait">
             {copied ? (
-              <motion.div
-                key="check"
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.8 }}
-                className="flex items-center gap-2"
+              <motion.span
+                key="copied"
+                initial={{ opacity: 0, y: 4 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -4 }}
+                className="text-[10px] uppercase tracking-[0.25em] text-neutral-500"
               >
-                <Check className="w-3.5 h-3.5 text-green-600" />
-                <span className="text-xs font-medium tracking-wide text-green-600">Link Copied</span>
-              </motion.div>
+                Copied
+              </motion.span>
             ) : (
-              <motion.div
+              <motion.span
                 key="share"
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.8 }}
-                className="flex items-center gap-2"
+                initial={{ opacity: 0, y: 4 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -4 }}
+                className="text-[10px] uppercase tracking-[0.25em]"
               >
-                <Link2 className="w-3.5 h-3.5 text-neutral-500 group-hover:text-neutral-700 transition-colors" />
-                <span className="text-xs font-medium tracking-wide text-neutral-600 group-hover:text-neutral-800 transition-colors">Share Gallery</span>
-              </motion.div>
+                Share
+              </motion.span>
             )}
           </AnimatePresence>
         </motion.button>

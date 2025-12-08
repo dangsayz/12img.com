@@ -1,28 +1,38 @@
 'use client'
 
 import { useState, useTransition, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, usePathname } from 'next/navigation'
 import { validateGalleryPassword } from '@/server/actions/auth.actions'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Lock, ShieldX, AlertTriangle } from 'lucide-react'
+import { Lock, ShieldX, AlertTriangle, HelpCircle } from 'lucide-react'
 
 interface PasswordGateProps {
   galleryId: string
   gallerySlug: string
+  photographerName?: string
 }
 
 const MAX_ATTEMPTS = 5
 const LOCKOUT_DURATION = 60 // seconds
 
-export function PasswordGate({ galleryId, gallerySlug }: PasswordGateProps) {
+export function PasswordGate({ galleryId, gallerySlug, photographerName }: PasswordGateProps) {
   const router = useRouter()
+  const pathname = usePathname()
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
   const [attempts, setAttempts] = useState(0)
   const [isLockedOut, setIsLockedOut] = useState(false)
   const [lockoutTimer, setLockoutTimer] = useState(0)
   const [shake, setShake] = useState(false)
+  const [showHelp, setShowHelp] = useState(false)
+  
+  // Determine which route we're on to redirect back to the same view type
+  const getRedirectPath = () => {
+    if (pathname?.includes('/view-live/')) return `/view-live/${gallerySlug}`
+    if (pathname?.includes('/view-grid/')) return `/view-grid/${gallerySlug}`
+    return `/view-reel/${gallerySlug}`
+  }
 
   // Lockout timer countdown
   useEffect(() => {
@@ -59,7 +69,7 @@ export function PasswordGate({ galleryId, gallerySlug }: PasswordGateProps) {
       const result = await validateGalleryPassword(galleryId, password)
 
       if (result.success) {
-        router.push(`/view-reel/${galleryId}`)
+        router.push(getRedirectPath())
         router.refresh()
       } else {
         const newAttempts = attempts + 1
@@ -150,10 +160,27 @@ export function PasswordGate({ galleryId, gallerySlug }: PasswordGateProps) {
         {isPending ? 'Checking...' : 'View Gallery'}
       </Button>
 
-      {attempts >= 1 && (
-        <p className="text-xs text-gray-400 text-center">
-          Don't have the password? Ask the photographer who shared this gallery.
-        </p>
+      {/* Forgot password help */}
+      <button
+        type="button"
+        onClick={() => setShowHelp(!showHelp)}
+        className="w-full text-xs text-stone-400 hover:text-stone-600 transition-colors flex items-center justify-center gap-1.5"
+      >
+        <HelpCircle className="w-3 h-3" />
+        Forgot password?
+      </button>
+
+      {showHelp && (
+        <div className="p-4 rounded-xl bg-stone-50 border border-stone-100 space-y-3 text-sm">
+          <p className="text-stone-600">
+            The password was set by {photographerName || 'the photographer'} who shared this gallery with you.
+          </p>
+          <div className="space-y-2 text-stone-500 text-xs">
+            <p>• Check the email or message where you received this link</p>
+            <p>• The password may be a simple PIN like "1234" or a word</p>
+            <p>• Contact {photographerName || 'them'} directly if you need help</p>
+          </div>
+        </div>
       )}
     </form>
   )
