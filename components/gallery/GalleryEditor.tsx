@@ -247,7 +247,9 @@ export function GalleryEditor({
   const [downloadsEnabled, setDownloadsEnabled] = useState(gallery.download_enabled)
   const [isTogglingDownloads, setIsTogglingDownloads] = useState(false)
   const [isLocked, setIsLocked] = useState(gallery.is_locked)
-  const [currentPassword, setCurrentPassword] = useState<string | null>(null) // Stored when user sets it
+  const [currentPassword, setCurrentPassword] = useState<string | null>(
+    (gallery as { password_plain?: string | null }).password_plain ?? null
+  )
   const [showPasswordModal, setShowPasswordModal] = useState(false)
   const [newPassword, setNewPassword] = useState('')
   const [isSavingPassword, setIsSavingPassword] = useState(false)

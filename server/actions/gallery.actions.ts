@@ -242,6 +242,7 @@ export async function updateGalleryPassword(galleryId: string, password: string 
     .from('galleries')
     .update({ 
       password_hash: passwordHash,
+      password_plain: password, // Store plain for owner display
       is_locked: isLocked
     })
     .eq('id', galleryId)
@@ -253,7 +254,7 @@ export async function updateGalleryPassword(galleryId: string, password: string 
   revalidatePath(`/view-reel/${gallery.slug}`)
   revalidatePath(`/view-live/${gallery.slug}`)
 
-  return { success: true, isLocked }
+  return { success: true, isLocked, password }
 }
 
 export async function updateGalleryTemplate(galleryId: string, template: string) {

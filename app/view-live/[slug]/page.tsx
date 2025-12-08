@@ -145,9 +145,22 @@ export default async function EditorialLiveViewPage({ params }: Props) {
   }
 
   // Check if gallery is password protected
+  // Debug: Log password protection status
+  console.log('[view-live] Gallery password check:', {
+    galleryId: gallery.id,
+    hasPasswordHash: !!gallery.password_hash,
+    isLocked: gallery.is_locked,
+    passwordHashLength: gallery.password_hash?.length || 0,
+  })
+  
   if (gallery.password_hash) {
     const cookieStore = await cookies()
     const accessCookie = cookieStore.get(`gallery_access_${gallery.id}`)
+    
+    console.log('[view-live] Cookie check:', {
+      hasCookie: !!accessCookie,
+      cookieValue: accessCookie?.value,
+    })
     
     // If no valid access cookie, show password gate
     if (!accessCookie || accessCookie.value !== 'granted') {

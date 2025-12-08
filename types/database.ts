@@ -299,6 +299,7 @@ export interface Database {
           title: string
           slug: string
           password_hash: string | null
+          password_plain: string | null
           download_enabled: boolean
           cover_image_id: string | null
           template: string
@@ -316,6 +317,7 @@ export interface Database {
           title: string
           slug: string
           password_hash?: string | null
+          password_plain?: string | null
           download_enabled?: boolean
           cover_image_id?: string | null
           is_locked?: boolean
@@ -331,6 +333,7 @@ export interface Database {
           title?: string
           slug?: string
           password_hash?: string | null
+          password_plain?: string | null
           download_enabled?: boolean
           cover_image_id?: string | null
           template?: string
