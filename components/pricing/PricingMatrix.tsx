@@ -91,8 +91,26 @@ export function PricingMatrix({ showAllFeatures = true, className = '', currentP
         </div>
       </div>
 
-      {/* Matrix Table - Editorial Style */}
-      <div className="w-full overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0">
+      {/* Mobile: Stacked Cards */}
+      <div className="md:hidden space-y-4">
+        {plans.map((plan) => (
+          <MobilePlanCard
+            key={plan.id}
+            plan={plan}
+            price={getPrice(plan.id)}
+            billingPeriod={billingPeriod}
+            buttonState={getButtonState(plan.id)}
+            buttonText={getButtonText(plan)}
+            currentPlan={currentPlan}
+            showAllFeatures={showAllFeatures}
+            expandedGroups={expandedGroups}
+            onToggleGroup={toggleGroup}
+          />
+        ))}
+      </div>
+
+      {/* Desktop: Matrix Table */}
+      <div className="hidden md:block w-full overflow-x-auto">
         <div className="min-w-[800px]">
           <table className="w-full border-collapse">
             {/* Header */}
@@ -199,13 +217,6 @@ export function PricingMatrix({ showAllFeatures = true, className = '', currentP
           </table>
         </div>
       </div>
-
-      {/* Mobile hint */}
-      <div className="mt-8 text-center md:hidden">
-        <p className="text-xs text-[#525252] tracking-wide">
-          Swipe to compare →
-        </p>
-      </div>
     </div>
   )
 }
@@ -294,6 +305,159 @@ function FeatureRowComponent({ feature, plans, isLast }: FeatureRowComponentProp
         </td>
       ))}
     </tr>
+  )
+}
+
+// ─── Mobile Plan Card ───
+interface MobilePlanCardProps {
+  plan: typeof PLAN_TIERS[PlanTier]
+  price: number
+  billingPeriod: 'monthly' | 'annual'
+  buttonState: 'current' | 'upgrade' | 'downgrade' | 'signup'
+  buttonText: string
+  currentPlan: PlanTier | null
+  showAllFeatures: boolean
+  expandedGroups: Set<FeatureGroupId>
+  onToggleGroup: (groupId: FeatureGroupId) => void
+}
+
+function MobilePlanCard({
+  plan,
+  price,
+  billingPeriod,
+  buttonState,
+  buttonText,
+  currentPlan,
+  showAllFeatures,
+  expandedGroups,
+  onToggleGroup,
+}: MobilePlanCardProps) {
+  const [isExpanded, setIsExpanded] = useState(plan.isPopular || currentPlan === plan.id)
+
+  return (
+    <div className={`bg-white border rounded-xl overflow-hidden ${
+      plan.isPopular ? 'border-[#141414] ring-1 ring-[#141414]' : 'border-[#E5E5E5]'
+    }`}>
+      {/* Card Header */}
+      <div className="p-5">
+        <div className="flex items-start justify-between">
+          <div>
+            {currentPlan === plan.id ? (
+              <span className="text-[10px] uppercase tracking-wider text-emerald-600 font-medium">
+                Your Plan
+              </span>
+            ) : plan.isPopular && (
+              <span className="text-[10px] uppercase tracking-wider text-[#525252]">
+                Popular
+              </span>
+            )}
+            <h3 className="font-serif text-xl text-[#141414] mt-1">{plan.name}</h3>
+          </div>
+          <div className="text-right">
+            <span className="font-serif text-3xl text-[#141414]">${price}</span>
+            <span className="text-sm text-[#525252]">/mo</span>
+            {billingPeriod === 'annual' && plan.monthlyPrice > 0 && (
+              <div className="text-xs text-[#525252]">${plan.annualPrice}/yr</div>
+            )}
+          </div>
+        </div>
+
+        {/* Key info */}
+        <div className="mt-4 flex items-center gap-4 text-sm text-[#525252]">
+          <span>{plan.storageGB >= 1000 ? `${plan.storageGB / 1000}TB` : `${plan.storageGB}GB`} storage</span>
+          <span>•</span>
+          <span>{plan.galleryLimit === 'unlimited' ? 'Unlimited' : plan.galleryLimit} galleries</span>
+        </div>
+
+        {/* CTA Button */}
+        <div className="mt-5">
+          {buttonState === 'current' ? (
+            <div className="w-full px-4 py-3 text-sm font-medium text-[#525252] text-center border border-[#E5E5E5] rounded-lg">
+              Current Plan
+            </div>
+          ) : (
+            <PricingButton
+              planId={plan.id}
+              className={`w-full px-4 py-3 text-sm font-semibold transition-all rounded-lg ${
+                plan.isPopular
+                  ? 'bg-[#141414] text-white active:bg-black'
+                  : 'bg-white text-[#141414] border border-[#141414] active:bg-[#F5F5F7]'
+              }`}
+            >
+              {buttonText}
+            </PricingButton>
+          )}
+        </div>
+      </div>
+
+      {/* Expandable Features */}
+      {showAllFeatures && (
+        <>
+          <button
+            onClick={() => setIsExpanded(!isExpanded)}
+            className="w-full px-5 py-3 flex items-center justify-between border-t border-[#E5E5E5] bg-[#F5F5F7] text-sm"
+          >
+            <span className="text-[#525252]">View features</span>
+            <svg
+              className={`w-4 h-4 text-[#525252] transition-transform ${isExpanded ? 'rotate-180' : ''}`}
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+
+          {isExpanded && (
+            <div className="border-t border-[#E5E5E5]">
+              {FEATURE_GROUPS.map((group) => {
+                const groupFeatures = FEATURE_ROWS.filter(f => f.group === group.id)
+                const isGroupExpanded = expandedGroups.has(group.id)
+
+                return (
+                  <div key={group.id}>
+                    <button
+                      onClick={() => onToggleGroup(group.id)}
+                      className="w-full px-5 py-3 flex items-center gap-2 text-left bg-[#F5F5F7]/50 border-b border-[#E5E5E5]/50"
+                    >
+                      <svg
+                        className={`w-3 h-3 text-[#525252] transition-transform ${isGroupExpanded ? 'rotate-90' : ''}`}
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                      </svg>
+                      <span className="text-sm font-medium text-[#141414]">{group.label}</span>
+                      <span className="text-[10px] text-[#525252]">({groupFeatures.length})</span>
+                    </button>
+
+                    {isGroupExpanded && (
+                      <div className="divide-y divide-[#E5E5E5]/50">
+                        {groupFeatures.map((feature) => (
+                          <div key={feature.id} className="px-5 py-3 flex items-center justify-between">
+                            <div className="flex-1 min-w-0 pr-4">
+                              <div className="text-sm text-[#141414]">{feature.label}</div>
+                              {feature.description && (
+                                <div className="text-xs text-[#525252] mt-0.5">{feature.description}</div>
+                              )}
+                            </div>
+                            <FeatureCell
+                              value={feature.availability[plan.id]}
+                              isPopularPlan={plan.isPopular}
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </>
+      )}
+    </div>
   )
 }
 

@@ -42,13 +42,13 @@ export default async function PricingPage() {
         />
       )}
       <main>
-        <div className={`container mx-auto px-4 pb-16 max-w-7xl ${userId ? 'pt-8' : 'pt-28'}`}>
+        <div className={`container mx-auto px-4 pb-16 max-w-7xl ${userId ? 'pt-6 lg:pt-8' : 'pt-20 lg:pt-28'}`}>
           {/* Hero */}
-          <div className="text-center mb-12">
-            <h1 className="font-serif text-4xl md:text-5xl font-bold text-[#141414] mb-4">
+          <div className="text-center mb-8 lg:mb-12">
+            <h1 className="font-serif text-3xl md:text-4xl lg:text-5xl font-bold text-[#141414] mb-3 lg:mb-4">
               Simple, honest pricing
             </h1>
-            <p className="text-lg text-stone-500 max-w-2xl mx-auto">
+            <p className="text-base lg:text-lg text-stone-500 max-w-2xl mx-auto px-4">
               No hidden fees. No video bloat. Just storage for photographers who need it.
             </p>
           </div>
