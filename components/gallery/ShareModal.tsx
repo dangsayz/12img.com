@@ -295,13 +295,13 @@ export function ShareModal({ isOpen, onClose, galleryId, galleryTitle, shareUrl,
                   <label className="block text-xs font-medium text-stone-500 uppercase tracking-wider mb-2">
                     Gallery View
                   </label>
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="flex flex-wrap gap-2">
                     {GALLERY_TEMPLATES.map((template) => (
                       <button
                         key={template.id}
                         type="button"
                         onClick={() => setSelectedTemplate(template.id)}
-                        className={`flex items-center gap-2 px-3 py-2.5 rounded-xl border text-sm font-medium transition-all ${
+                        className={`flex items-center gap-1.5 px-3 py-2 rounded-lg border text-xs font-medium transition-all ${
                           selectedTemplate === template.id
                             ? 'border-stone-900 bg-stone-900 text-white'
                             : 'border-stone-200 bg-stone-50 text-stone-600 hover:border-stone-300'
@@ -390,13 +390,13 @@ export function ShareModal({ isOpen, onClose, galleryId, galleryTitle, shareUrl,
                   <label className="block text-xs font-medium text-stone-500 uppercase tracking-wider mb-2">
                     Gallery View
                   </label>
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="flex flex-wrap gap-2">
                     {GALLERY_TEMPLATES.map((template) => (
                       <button
                         key={template.id}
                         type="button"
                         onClick={() => setSelectedTemplate(template.id)}
-                        className={`flex items-center gap-2 px-3 py-2.5 rounded-xl border text-sm font-medium transition-all ${
+                        className={`flex items-center gap-1.5 px-3 py-2 rounded-lg border text-xs font-medium transition-all ${
                           selectedTemplate === template.id
                             ? 'border-stone-900 bg-stone-900 text-white'
                             : 'border-stone-200 bg-stone-50 text-stone-600 hover:border-stone-300'

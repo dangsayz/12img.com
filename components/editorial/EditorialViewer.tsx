@@ -57,20 +57,20 @@ export function EditorialViewer({
         style={{ scaleX }}
       />
 
-      {/* Navigation / Controls */}
-      <nav className="fixed top-0 left-0 right-0 z-40 p-6 flex justify-between items-start pointer-events-none mix-blend-difference text-white">
+      {/* Navigation / Controls - Hidden on title spread to avoid text overlap */}
+      <nav className="fixed top-0 left-0 right-0 z-40 p-4 md:p-6 flex justify-between items-center pointer-events-none">
         <Link 
           href="/"
-          className="pointer-events-auto flex items-center gap-2 group opacity-50 hover:opacity-100 transition-opacity"
+          className="pointer-events-auto flex items-center gap-2 group opacity-60 hover:opacity-100 transition-opacity bg-white/80 backdrop-blur-sm px-3 py-2 rounded-full shadow-sm"
         >
-          <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
-          <span className="text-sm font-medium tracking-widest uppercase">Index</span>
+          <ArrowLeft className="w-4 h-4 text-stone-600 group-hover:-translate-x-1 transition-transform" />
+          <span className="text-xs font-medium tracking-wide text-stone-600 uppercase hidden sm:inline">Back</span>
         </Link>
         
         {/* Right side - Image count */}
         {imageCount && imageCount > 0 && (
-          <div className="pointer-events-auto opacity-50">
-            <span className="text-sm font-medium tracking-wide">
+          <div className="pointer-events-auto bg-white/80 backdrop-blur-sm px-3 py-2 rounded-full shadow-sm">
+            <span className="text-xs font-medium tracking-wide text-stone-600">
               {imageCount} <span className="text-[10px] uppercase tracking-wider opacity-70">images</span>
             </span>
           </div>

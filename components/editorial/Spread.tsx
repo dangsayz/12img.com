@@ -13,11 +13,11 @@ interface Props {
 export function Spread({ spread, debug }: Props) {
   const isViewportHeight = spread.height === 'viewport'
   
-  // Theme configuration
+  // Theme configuration - neutral palette only
   const themeStyles = {
     light: 'bg-[#FAFAFA] text-neutral-900',
     dark: 'bg-[#0F172A] text-white selection:bg-white selection:text-black', // Navy
-    accent: 'bg-[#EBCB8B] text-neutral-900', // Mustard/Gold
+    accent: 'bg-stone-100 text-neutral-900', // Subtle warm gray instead of yellow
   }
   
   const currentTheme = spread.theme || 'light'

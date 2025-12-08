@@ -15,6 +15,7 @@
     "@stripe/stripe-js": "^8.5.3",
     "@supabase/supabase-js": "^2.39.1",
     "@types/sharp": "^0.32.0",
+    "@vercel/analytics": "^1.6.1",
     "archiver": "^7.0.1",
     "bcryptjs": "^2.4.3",
     "browser-image-compression": "^2.0.2",

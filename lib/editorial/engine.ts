@@ -308,14 +308,12 @@ export class LayoutEngine {
   }
 
   /**
-   * Step 3: Inject Typography (Quotes, Drop Caps)
+   * Step 3: Inject Typography (Title only - quotes disabled for cleaner experience)
    */
   private injectTypography(spreads: EditorialSpread[], title: string): EditorialSpread[] {
     const injected = [...spreads]
     
     // Inject Title Spread at the beginning
-    // We modify the first spread or add a new one
-    // Let's create a dedicated title spread
     const titleSpread: EditorialSpread = {
       id: 'spread-title',
       template: 'hero-intro',
@@ -338,34 +336,8 @@ export class LayoutEngine {
     
     injected.unshift(titleSpread)
 
-    // Inject quotes every ~5 spreads
-    for (let i = 4; i < injected.length; i += 5) {
-      const quote = QUOTES[Math.floor(Math.random() * QUOTES.length)]
-      const letter = quote.charAt(0)
-      
-      const quoteSpread: EditorialSpread = {
-        id: `spread-quote-${i}`,
-        template: 'quote-focus',
-        height: 'auto',
-        pageNumber: 0, // decorative
-        elements: [
-          {
-            id: `quote-${i}`,
-            type: 'quote',
-            content: quote,
-            span: { colStart: 3, colSpan: 8 }
-          },
-          {
-            id: `letter-${i}`,
-            type: 'letter',
-            content: letter,
-            span: { colStart: 1, colSpan: 2 } // Overlap intention
-          }
-        ]
-      }
-      
-      injected.splice(i, 0, quoteSpread)
-    }
+    // Note: Quote injection disabled for cleaner gallery experience
+    // Photographers can add custom quotes in future via gallery settings
 
     return injected
   }
