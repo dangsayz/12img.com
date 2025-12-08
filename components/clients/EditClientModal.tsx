@@ -643,38 +643,38 @@ export function EditClientModal({ isOpen, onClose, client }: EditClientModalProp
               )}
             </div>
 
-            {/* Footer - Sticky with large touch targets */}
-            <div className="flex-shrink-0 flex items-center gap-3 px-5 py-4 border-t border-stone-100 bg-white">
-              {/* Cancel / Back button */}
-              <button
-                onClick={currentStepIndex > 0 ? goPrev : onClose}
-                className="h-12 px-5 text-base font-medium text-stone-600 hover:text-stone-900 active:bg-stone-100 rounded-xl transition-colors"
-              >
-                {currentStepIndex > 0 ? 'Back' : 'Cancel'}
-              </button>
-
-              <div className="flex-1" />
-
-              {/* Next / Save button */}
-              {currentStepIndex < STEPS.length - 1 ? (
+            {/* Footer - Sticky with large touch targets and safe area */}
+            <div className="flex-shrink-0 px-5 pt-4 pb-6 border-t border-stone-100 bg-white" style={{ paddingBottom: 'max(1.5rem, env(safe-area-inset-bottom))' }}>
+              <div className="flex items-center justify-between gap-4">
+                {/* Cancel / Back button */}
                 <button
-                  onClick={goNext}
-                  disabled={!canProceed()}
-                  className="h-12 px-6 inline-flex items-center gap-2 text-base font-medium bg-stone-900 text-white rounded-xl hover:bg-stone-800 active:bg-stone-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  onClick={currentStepIndex > 0 ? goPrev : onClose}
+                  className="h-14 min-w-[100px] px-6 text-base font-medium text-stone-600 hover:text-stone-900 active:bg-stone-100 rounded-xl transition-colors"
                 >
-                  Next
-                  <ChevronRight className="w-5 h-5" />
+                  {currentStepIndex > 0 ? 'Back' : 'Cancel'}
                 </button>
-              ) : (
-                <button
-                  onClick={handleSubmit}
-                  disabled={isPending || !canProceed()}
-                  className="h-12 px-8 inline-flex items-center gap-2 text-base font-medium bg-stone-900 text-white rounded-xl hover:bg-stone-800 active:bg-stone-700 transition-colors disabled:opacity-50"
-                >
-                  {isPending && <Loader2 className="w-5 h-5 animate-spin" />}
-                  Save
-                </button>
-              )}
+
+                {/* Next / Save button */}
+                {currentStepIndex < STEPS.length - 1 ? (
+                  <button
+                    onClick={goNext}
+                    disabled={!canProceed()}
+                    className="h-14 min-w-[120px] px-8 inline-flex items-center justify-center gap-2 text-base font-medium bg-stone-900 text-white rounded-xl hover:bg-stone-800 active:bg-stone-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Next
+                    <ChevronRight className="w-5 h-5" />
+                  </button>
+                ) : (
+                  <button
+                    onClick={handleSubmit}
+                    disabled={isPending || !canProceed()}
+                    className="h-14 min-w-[120px] px-8 inline-flex items-center justify-center gap-2 text-base font-medium bg-stone-900 text-white rounded-xl hover:bg-stone-800 active:bg-stone-700 transition-colors disabled:opacity-50"
+                  >
+                    {isPending && <Loader2 className="w-5 h-5 animate-spin" />}
+                    Save
+                  </button>
+                )}
+              </div>
             </div>
           </motion.div>
         </>
