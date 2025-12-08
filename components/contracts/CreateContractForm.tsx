@@ -452,7 +452,7 @@ export function CreateContractForm({ client }: CreateContractFormProps) {
                                       <div className="flex items-center gap-2 flex-wrap">
                                         <h4 className="font-semibold text-stone-900">{clause.title}</h4>
                                         {clause.isRequired && (
-                                          <span className="text-xs px-2 py-0.5 bg-amber-100 text-amber-700 rounded-full font-medium">
+                                          <span className="text-xs px-2 py-0.5 bg-stone-900 text-white rounded-full font-medium">
                                             Required
                                           </span>
                                         )}

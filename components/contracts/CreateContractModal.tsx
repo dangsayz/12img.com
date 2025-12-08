@@ -644,7 +644,7 @@ export function CreateContractModal({ isOpen, onClose, client }: CreateContractM
                                             <div className="flex items-center gap-2 flex-wrap">
                                               <h4 className="font-semibold text-stone-900">{clause.title}</h4>
                                               {clause.isRequired && (
-                                                <span className="text-[10px] px-2 py-0.5 bg-amber-100 text-amber-700 rounded-full font-semibold uppercase tracking-wide">
+                                                <span className="text-[10px] px-2 py-0.5 bg-stone-900 text-white rounded-full font-semibold uppercase tracking-wide">
                                                   Required
                                                 </span>
                                               )}
