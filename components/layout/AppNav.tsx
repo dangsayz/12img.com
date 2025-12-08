@@ -16,7 +16,8 @@ import {
   Shield,
   ChevronRight,
   Users,
-  UserCircle
+  UserCircle,
+  FileSignature
 } from 'lucide-react'
 
 export type UserRole = 'user' | 'support' | 'admin' | 'super_admin'
@@ -133,15 +134,30 @@ export function AppNav({
             <Link 
               href="/dashboard/clients"
               className={`
-                flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-full transition-colors
+                p-2 rounded-full transition-colors
                 ${pathname.startsWith('/dashboard/clients')
                   ? 'bg-stone-100 text-stone-900'
                   : 'text-stone-500 hover:text-stone-900 hover:bg-stone-50'
                 }
               `}
+              title="Clients"
             >
               <UserCircle className="w-4 h-4" />
-              <span className="hidden sm:inline">Clients</span>
+            </Link>
+            
+            {/* Contracts/Portal Link */}
+            <Link 
+              href="/dashboard/clients"
+              className={`
+                p-2 rounded-full transition-colors
+                ${pathname.includes('/contracts') || pathname.includes('/portal')
+                  ? 'bg-stone-100 text-stone-900'
+                  : 'text-stone-500 hover:text-stone-900 hover:bg-stone-50'
+                }
+              `}
+              title="Contracts & Portal"
+            >
+              <FileSignature className="w-4 h-4" />
             </Link>
             
             {/* New Gallery Button */}
@@ -237,6 +253,33 @@ export function AppNav({
                       </Link>
                     )
                   })}
+                  
+                  {/* Clients */}
+                  <Link
+                    href="/dashboard/clients"
+                    onClick={() => setMobileOpen(false)}
+                    className={`
+                      flex items-center gap-3 px-4 py-3 rounded-xl transition-all
+                      ${pathname.startsWith('/dashboard/clients')
+                        ? 'bg-stone-100 text-stone-900' 
+                        : 'text-stone-600 hover:bg-stone-50'
+                      }
+                    `}
+                  >
+                    <UserCircle className="w-5 h-5" />
+                    <span className="font-medium">Clients</span>
+                    {pathname.startsWith('/dashboard/clients') && <ChevronRight className="w-4 h-4 ml-auto text-stone-400" />}
+                  </Link>
+                  
+                  {/* Contracts & Portal */}
+                  <Link
+                    href="/dashboard/clients"
+                    onClick={() => setMobileOpen(false)}
+                    className="flex items-center gap-3 px-4 py-3 rounded-xl text-stone-600 hover:bg-stone-50 transition-all"
+                  >
+                    <FileSignature className="w-5 h-5" />
+                    <span className="font-medium">Contracts & Portal</span>
+                  </Link>
                   
                   <Link
                     href="/help"

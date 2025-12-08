@@ -149,12 +149,22 @@ describe('Merge Fields', () => {
       expect(data.package_hours).toBe('10')
     })
 
-    it('calculates retainer and balance', () => {
+    it('calculates retainer and balance with default 50%', () => {
       const data = buildMergeDataFromClient(mockClient)
       
       expect(data.package_price_formatted).toBe('$5,000')
       expect(data.retainer_amount).toBe('$2,500')
+      expect(data.retainer_percentage).toBe('50%')
       expect(data.remaining_balance).toBe('$2,500')
+    })
+
+    it('uses actual retainer fee when set', () => {
+      const clientWithRetainer = { ...mockClient, retainerFee: 1000 }
+      const data = buildMergeDataFromClient(clientWithRetainer)
+      
+      expect(data.retainer_amount).toBe('$1,000')
+      expect(data.retainer_percentage).toBe('20%')
+      expect(data.remaining_balance).toBe('$4,000')
     })
 
     it('formats event date', () => {

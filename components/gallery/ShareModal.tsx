@@ -88,6 +88,17 @@ function removeContact(email: string) {
   localStorage.setItem(CONTACTS_STORAGE_KEY, JSON.stringify(filtered))
 }
 
+// Generate a professional default message for the client
+function getDefaultMessage(galleryTitle: string): string {
+  return `Hi there! 🎉
+
+Your photos from "${galleryTitle}" are ready to view!
+
+I've put together a beautiful gallery for you to browse, share with family and friends, and download your favorites.
+
+Take your time looking through them — I hope they bring back wonderful memories!`
+}
+
 export function ShareModal({ isOpen, onClose, galleryId, galleryTitle, shareUrl, currentTemplate = 'mosaic' }: ShareModalProps) {
   const [activeTab, setActiveTab] = useState<'email' | 'sms'>('email')
   const [email, setEmail] = useState('')
@@ -104,14 +115,16 @@ export function ShareModal({ isOpen, onClose, galleryId, galleryTitle, shareUrl,
     setSavedContacts(getSavedContacts())
   }, [isOpen])
 
-  // Reset state when modal opens
+  // Reset state when modal opens and set default message
   useEffect(() => {
     if (isOpen) {
       setStatus('idle')
       setErrorMessage('')
       setSelectedTemplate(currentTemplate)
+      // Pre-fill with a professional default message
+      setMessage(getDefaultMessage(galleryTitle))
     }
-  }, [isOpen, currentTemplate])
+  }, [isOpen, currentTemplate, galleryTitle])
 
   const handleSendEmail = () => {
     if (!email.trim()) return
@@ -320,13 +333,13 @@ export function ShareModal({ isOpen, onClose, galleryId, galleryTitle, shareUrl,
                 {/* Personal Message */}
                 <div>
                   <label className="block text-xs font-medium text-stone-500 uppercase tracking-wider mb-2">
-                    Personal Message (Optional)
+                    Personal Message
                   </label>
                   <textarea
                     value={message}
                     onChange={(e) => setMessage(e.target.value)}
                     placeholder="Add a personal note to your client..."
-                    rows={2}
+                    rows={5}
                     className="w-full px-3 py-2 bg-stone-50 border border-stone-200 rounded-xl text-sm text-stone-900 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-stone-900 focus:border-transparent transition-all resize-none"
                   />
                 </div>

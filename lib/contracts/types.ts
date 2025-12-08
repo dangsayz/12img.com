@@ -42,7 +42,8 @@ export interface MergeFieldData {
   package_description: string
   
   // Calculated Fields
-  retainer_amount: string
+  retainer_amount: string      // Dollar amount: "$100"
+  retainer_percentage: string  // Percentage: "50%"
   remaining_balance: string
   payment_due_date: string
   delivery_weeks: string
@@ -79,8 +80,9 @@ export interface MergeFieldData {
 
 // Default merge field values
 export const DEFAULT_MERGE_DATA: Partial<MergeFieldData> = {
-  retainer_amount: '50%',
-  remaining_balance: '50%',
+  retainer_amount: '$0',
+  retainer_percentage: '50%',
+  remaining_balance: '$0',
   payment_due_date: '14 days before the event',
   delivery_weeks: '4-6',
   estimated_images: '300-500',

@@ -584,8 +584,8 @@ export function CreateClientModal({ isOpen, onClose }: CreateClientModalProps) {
               )}
             </div>
 
-            {/* Footer - Sticky at bottom with safe area padding */}
-            <div className="flex items-center justify-between px-5 py-4 pb-[max(1rem,env(safe-area-inset-bottom))] border-t border-stone-100 bg-white sticky bottom-0">
+            {/* Footer - Sticky at bottom with safe area padding + extra space for floating widgets */}
+            <div className="flex items-center justify-between px-5 py-4 pb-[max(5rem,calc(env(safe-area-inset-bottom)+4rem))] sm:pb-4 border-t border-stone-100 bg-white sticky bottom-0">
               <button
                 onClick={() => {
                   if (step === 'event') setStep('client')

@@ -25,6 +25,7 @@ import {
   Sparkles,
   MousePointer2,
   Lightbulb,
+  Mail,
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
@@ -41,6 +42,7 @@ import {
   resendContract,
   duplicateContract,
   archiveContract,
+  sendContractCopy,
 } from '@/server/actions/contract.actions'
 
 interface ContractEditorProps {
@@ -86,6 +88,7 @@ export function ContractEditor({ contract, clientName, clientId }: ContractEdito
   const [showHints, setShowHints] = useState(false)
   const [expirationDays, setExpirationDays] = useState(30)
   const [showSendConfirm, setShowSendConfirm] = useState(false)
+  const [showCopySentModal, setShowCopySentModal] = useState(false)
   
   // Check if this is the first time viewing contracts
   useEffect(() => {
@@ -94,6 +97,19 @@ export function ContractEditor({ contract, clientName, clientId }: ContractEdito
       setShowHints(true)
     }
   }, [contract.status])
+  
+  // Handle Escape key to close modals
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        if (showCopySentModal) setShowCopySentModal(false)
+        if (showDeleteConfirm) setShowDeleteConfirm(false)
+        if (showSendConfirm) setShowSendConfirm(false)
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [showCopySentModal, showDeleteConfirm, showSendConfirm])
   
   const dismissHints = () => {
     localStorage.setItem('contract-editor-hints-seen', 'true')
@@ -244,7 +260,26 @@ export function ContractEditor({ contract, clientName, clientId }: ContractEdito
       }
 
       setSuccess('Contract archived successfully')
-      router.refresh()
+      // Redirect back to client page after brief delay
+      setTimeout(() => {
+        router.push(`/dashboard/clients/${clientId}`)
+      }, 1500)
+    })
+  }
+
+  const handleSendCopy = () => {
+    setError(null)
+    setSuccess(null)
+    
+    startTransition(async () => {
+      const result = await sendContractCopy(contract.id)
+
+      if (!result.success) {
+        setError(result.error?.message || 'Failed to send contract copy')
+        return
+      }
+
+      setShowCopySentModal(true)
     })
   }
 
@@ -425,7 +460,7 @@ export function ContractEditor({ contract, clientName, clientId }: ContractEdito
                 <button
                   onClick={handleDuplicate}
                   disabled={isPending}
-                  className="inline-flex items-center gap-2 px-3 py-2 border border-stone-200 rounded-lg hover:bg-stone-50 transition-colors text-sm"
+                  className="inline-flex items-center gap-2 px-3 py-2 border border-stone-300 text-stone-700 rounded-lg hover:bg-stone-100 transition-colors text-sm font-medium"
                 >
                   <Copy className="w-4 h-4" />
                   Duplicate
@@ -433,7 +468,7 @@ export function ContractEditor({ contract, clientName, clientId }: ContractEdito
                 <button
                   onClick={handleResendContract}
                   disabled={isPending}
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-stone-900 text-white text-sm rounded-lg hover:bg-stone-800 transition-colors disabled:opacity-50"
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-amber-500 text-white text-sm rounded-lg hover:bg-amber-600 transition-colors disabled:opacity-50 font-medium"
                 >
                   {isPending ? (
                     <Loader2 className="w-4 h-4 animate-spin" />
@@ -450,15 +485,27 @@ export function ContractEditor({ contract, clientName, clientId }: ContractEdito
                 <button
                   onClick={handleDuplicate}
                   disabled={isPending}
-                  className="inline-flex items-center gap-2 px-3 py-2 border border-stone-200 rounded-lg hover:bg-stone-50 transition-colors text-sm"
+                  className="inline-flex items-center gap-2 px-3 py-2 border border-stone-300 text-stone-700 rounded-lg hover:bg-stone-100 transition-colors text-sm font-medium"
                 >
                   <Copy className="w-4 h-4" />
                   Duplicate
                 </button>
                 <button
+                  onClick={handleSendCopy}
+                  disabled={isPending}
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors text-sm font-medium disabled:opacity-50"
+                >
+                  {isPending ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Send className="w-4 h-4" />
+                  )}
+                  Send Copy
+                </button>
+                <button
                   onClick={handleArchive}
                   disabled={isPending}
-                  className="inline-flex items-center gap-2 px-3 py-2 border border-stone-200 rounded-lg hover:bg-stone-50 transition-colors text-sm"
+                  className="inline-flex items-center gap-2 px-3 py-2 border border-stone-300 text-stone-700 rounded-lg hover:bg-stone-100 transition-colors text-sm font-medium"
                 >
                   <Archive className="w-4 h-4" />
                   Archive
@@ -744,6 +791,98 @@ export function ContractEditor({ contract, clientName, clientId }: ContractEdito
                     <Send className="w-4 h-4" />
                   )}
                   Send Contract
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Contract Copy Sent Success Modal */}
+      <AnimatePresence>
+        {showCopySentModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+            onClick={() => setShowCopySentModal(false)}
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+              className="bg-white rounded-2xl w-full max-w-md shadow-2xl overflow-hidden"
+              onClick={e => e.stopPropagation()}
+            >
+              {/* Elegant Header */}
+              <div className="relative bg-stone-900 px-6 py-10 text-center">
+                <motion.div
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ delay: 0.1, type: 'spring', damping: 15 }}
+                  className="relative w-14 h-14 bg-white rounded-full flex items-center justify-center mx-auto mb-5"
+                >
+                  <Check className="w-7 h-7 text-stone-900" />
+                </motion.div>
+                <h2 className="relative text-xl font-medium text-white mb-1 tracking-tight">Contract Copy Sent</h2>
+                <p className="relative text-stone-400 text-sm">A copy has been delivered to your client</p>
+              </div>
+
+              {/* Details */}
+              <div className="px-6 py-6 space-y-5">
+                {/* Recipient */}
+                <div className="flex items-start gap-4">
+                  <div className="w-10 h-10 rounded-full bg-stone-100 flex items-center justify-center shrink-0">
+                    <Mail className="w-4 h-4 text-stone-600" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs text-stone-400 uppercase tracking-wider mb-0.5">Delivered to</p>
+                    <p className="font-medium text-stone-900 truncate">{clientName}</p>
+                    <p className="text-sm text-stone-500 truncate">{contract.client?.email}</p>
+                  </div>
+                </div>
+
+                {/* Signed Date */}
+                <div className="flex items-start gap-4">
+                  <div className="w-10 h-10 rounded-full bg-stone-100 flex items-center justify-center shrink-0">
+                    <CheckCircle2 className="w-4 h-4 text-stone-600" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-xs text-stone-400 uppercase tracking-wider mb-0.5">Originally Signed</p>
+                    <p className="font-medium text-stone-900">
+                      {contract.signedAt ? new Date(contract.signedAt).toLocaleDateString('en-US', {
+                        weekday: 'long',
+                        month: 'long',
+                        day: 'numeric',
+                        year: 'numeric',
+                      }) : 'Date unavailable'}
+                    </p>
+                  </div>
+                </div>
+
+                {/* What was sent */}
+                <div className="flex items-start gap-4">
+                  <div className="w-10 h-10 rounded-full bg-stone-100 flex items-center justify-center shrink-0">
+                    <FileText className="w-4 h-4 text-stone-600" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-xs text-stone-400 uppercase tracking-wider mb-0.5">Email Contains</p>
+                    <p className="font-medium text-stone-900">Signed contract confirmation</p>
+                    <p className="text-sm text-stone-500">With signature details for their records</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Footer */}
+              <div className="px-6 py-4 border-t border-stone-100 flex items-center justify-between">
+                <p className="text-xs text-stone-400">Press Esc to close</p>
+                <button
+                  onClick={() => setShowCopySentModal(false)}
+                  className="px-6 py-2.5 bg-stone-900 text-white text-sm font-medium rounded-lg hover:bg-stone-800 transition-colors"
+                >
+                  Done
                 </button>
               </div>
             </motion.div>

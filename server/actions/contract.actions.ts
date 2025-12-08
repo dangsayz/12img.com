@@ -1049,6 +1049,83 @@ export async function resendContract(
 }
 
 // ============================================
+// SEND COPY OF SIGNED CONTRACT
+// ============================================
+
+export async function sendContractCopy(
+  contractId: string
+): Promise<ActionResult<{ sent: boolean }>> {
+  const { userId: clerkId } = await auth()
+  if (!clerkId) {
+    return { success: false, error: userError('UNAUTHORIZED', 'Please sign in to continue') }
+  }
+
+  const user = await getOrCreateUserByClerkId(clerkId)
+  if (!user) {
+    return { success: false, error: systemError('USER_NOT_FOUND', 'User account not found') }
+  }
+
+  try {
+    // Get contract with client and signature
+    const { data: contract, error: contractError } = await supabaseAdmin
+      .from('contracts')
+      .select('*, client_profiles(*), contract_signatures(*)')
+      .eq('id', contractId)
+      .eq('photographer_id', user.id)
+      .single()
+
+    if (contractError || !contract) {
+      return { success: false, error: userError('NOT_FOUND', 'Contract not found') }
+    }
+
+    // Only allow sending copy for signed contracts
+    if (contract.status !== 'signed') {
+      return { success: false, error: userError('INVALID_STATE', 'Can only send copy of signed contracts') }
+    }
+
+    const client = contract.client_profiles as unknown as Tables<'client_profiles'>
+    const signature = Array.isArray(contract.contract_signatures) 
+      ? contract.contract_signatures[0] 
+      : contract.contract_signatures
+
+    if (!signature) {
+      return { success: false, error: userError('NOT_FOUND', 'Signature not found') }
+    }
+
+    // Get user settings for photographer info
+    const { data: settings } = await supabaseAdmin
+      .from('user_settings')
+      .select('business_name, contact_email')
+      .eq('user_id', user.id)
+      .single()
+
+    const photographerName = settings?.business_name || 'Your Photographer'
+    const clientName = `${client.first_name}${client.partner_first_name ? ` & ${client.partner_first_name}` : ''}`
+    const eventType = client.event_type ? client.event_type.charAt(0).toUpperCase() + client.event_type.slice(1) : 'Photography'
+
+    // Send confirmation email to client
+    const emailResult = await sendSignatureConfirmationEmail({
+      clientEmail: client.email,
+      clientName,
+      photographerName,
+      photographerEmail: settings?.contact_email || user.email,
+      eventType,
+      signedAt: signature.signed_at,
+    })
+
+    if (!emailResult.success) {
+      console.error('[sendContractCopy] Email error')
+      return { success: false, error: systemError('EMAIL_ERROR', 'Failed to send email') }
+    }
+
+    return { success: true, data: { sent: true } }
+  } catch (e) {
+    console.error('[sendContractCopy] Exception:', e)
+    return { success: false, error: systemError('UNKNOWN', 'An unexpected error occurred') }
+  }
+}
+
+// ============================================
 // DUPLICATE CONTRACT (Create new draft from existing)
 // ============================================
 

@@ -139,7 +139,8 @@ export function buildMergeDataFromClient(
     : ''
   
   const packagePrice = client.packagePrice ?? 0
-  const retainerAmount = packagePrice * 0.5
+  // Use actual retainer fee from client profile, or default to 50% of package price
+  const retainerAmount = client.retainerFee ?? (packagePrice * 0.5)
   const remainingBalance = packagePrice - retainerAmount
   
   // Calculate payment due date (14 days before event)
@@ -182,6 +183,7 @@ export function buildMergeDataFromClient(
     
     // Calculated Fields
     retainer_amount: formatCurrency(retainerAmount),
+    retainer_percentage: packagePrice > 0 ? `${Math.round((retainerAmount / packagePrice) * 100)}%` : '50%',
     remaining_balance: formatCurrency(remainingBalance),
     payment_due_date: paymentDueDate,
     delivery_weeks: DEFAULT_MERGE_DATA.delivery_weeks || '4-6',
@@ -358,7 +360,8 @@ export function getAvailableMergeFields(): Array<{
     { field: 'package_description', description: 'Package description', category: 'Package' },
     
     // Payment
-    { field: 'retainer_amount', description: 'Retainer amount (50% of package)', category: 'Payment' },
+    { field: 'retainer_amount', description: 'Retainer amount in dollars (e.g. $100)', category: 'Payment' },
+    { field: 'retainer_percentage', description: 'Retainer as percentage (e.g. 50%)', category: 'Payment' },
     { field: 'remaining_balance', description: 'Remaining balance', category: 'Payment' },
     { field: 'payment_due_date', description: 'Payment due date', category: 'Payment' },
     

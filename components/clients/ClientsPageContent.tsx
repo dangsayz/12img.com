@@ -219,80 +219,82 @@ function ClientRow({ client }: { client: ClientWithStats }) {
     >
       <Link
         href={`/dashboard/clients/${client.id}`}
-        className="flex items-center gap-4 p-4 hover:bg-stone-50 transition-colors group"
+        className="flex items-center gap-3 sm:gap-4 p-4 hover:bg-stone-50 transition-colors group active:bg-stone-100"
       >
         {/* Avatar */}
-        <div className="w-12 h-12 rounded-full bg-stone-100 flex items-center justify-center flex-shrink-0">
-          <span className="text-lg font-medium text-stone-600">
+        <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-stone-100 flex items-center justify-center flex-shrink-0">
+          <span className="text-base sm:text-lg font-medium text-stone-600">
             {client.firstName[0]}
             {client.lastName[0]}
           </span>
         </div>
 
-        {/* Info */}
+        {/* Info - Mobile optimized */}
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <h3 className="font-medium text-stone-900 truncate">
-              {client.firstName} {client.lastName}
+            <h3 className="font-medium text-stone-900 truncate text-[15px] sm:text-base">
+              {client.firstName}
               {client.partnerFirstName && (
-                <span className="text-stone-500"> & {client.partnerFirstName}</span>
+                <span className="text-stone-400 font-normal"> & {client.partnerFirstName}</span>
               )}
             </h3>
             {client.unreadMessages > 0 && (
-              <span className="px-1.5 py-0.5 text-xs font-medium bg-blue-500 text-white rounded-full">
+              <span className="w-5 h-5 text-[11px] font-semibold bg-blue-500 text-white rounded-full flex items-center justify-center flex-shrink-0">
                 {client.unreadMessages}
               </span>
             )}
           </div>
-          <div className="flex items-center gap-3 mt-1 text-sm text-stone-500">
-            <span className="flex items-center gap-1">
-              <Mail className="w-3.5 h-3.5" />
-              {client.email}
-            </span>
-            {client.phone && (
-              <span className="flex items-center gap-1">
-                <Phone className="w-3.5 h-3.5" />
-                {client.phone}
-              </span>
+          {/* Mobile: single line with email only, truncated */}
+          <p className="text-sm text-stone-500 truncate mt-0.5 flex items-center gap-1.5">
+            <Mail className="w-3.5 h-3.5 flex-shrink-0 text-stone-400" />
+            <span className="truncate">{client.email}</span>
+          </p>
+        </div>
+
+        {/* Right side - Phone on mobile, more info on desktop */}
+        <div className="flex items-center gap-3 flex-shrink-0">
+          {/* Phone - compact on mobile */}
+          {client.phone && (
+            <div className="text-right hidden xs:block sm:hidden">
+              <p className="text-xs text-stone-400 tabular-nums">{client.phone}</p>
+            </div>
+          )}
+          
+          {/* Desktop: Event Info + Phone */}
+          <div className="hidden sm:block text-right min-w-[100px]">
+            <p className="text-sm font-medium text-stone-700">
+              {EVENT_TYPE_LABELS[client.eventType]}
+            </p>
+            {eventDate && (
+              <p className="text-xs text-stone-500">
+                {eventDate.toLocaleDateString('en-US', {
+                  month: 'short',
+                  day: 'numeric',
+                })}
+                {isUpcoming && daysUntil !== null && daysUntil <= 30 && (
+                  <span className="ml-1 text-amber-600">({daysUntil}d)</span>
+                )}
+              </p>
             )}
           </div>
-        </div>
 
-        {/* Event Info */}
-        <div className="hidden sm:block text-right">
-          <p className="text-sm font-medium text-stone-700">
-            {EVENT_TYPE_LABELS[client.eventType]}
-          </p>
-          {eventDate && (
-            <p className="text-xs text-stone-500">
-              {eventDate.toLocaleDateString('en-US', {
-                month: 'short',
-                day: 'numeric',
-                year: 'numeric',
-              })}
-              {isUpcoming && daysUntil !== null && daysUntil <= 30 && (
-                <span className="ml-1 text-amber-600">({daysUntil}d)</span>
-              )}
-            </p>
-          )}
-        </div>
+          {/* Contract Status - Desktop only */}
+          <div className="hidden md:block min-w-[90px]">
+            {statusConfig ? (
+              <span
+                className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${statusConfig.bgColor} ${statusConfig.color}`}
+              >
+                <FileText className="w-3 h-3" />
+                {statusConfig.label}
+              </span>
+            ) : (
+              <span className="text-xs text-stone-400">No contract</span>
+            )}
+          </div>
 
-        {/* Contract Status */}
-        <div className="hidden md:block">
-          {statusConfig ? (
-            <span
-              className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${statusConfig.bgColor} ${statusConfig.color}`}
-            >
-              <FileText className="w-3 h-3" />
-              {statusConfig.label}
-            </span>
-          ) : (
-            <span className="text-xs text-stone-400">No contract</span>
-          )}
+          {/* Arrow */}
+          <ChevronRight className="w-5 h-5 text-stone-300 group-hover:text-stone-500 transition-colors flex-shrink-0" />
         </div>
-
-        {/* Arrow */}
-        <ChevronRight className="w-5 h-5 text-stone-300 group-hover:text-stone-500 transition-colors" />
       </Link>
     </motion.div>
   )
