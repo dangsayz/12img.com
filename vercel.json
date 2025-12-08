@@ -2,12 +2,8 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "crons": [
     {
-      "path": "/api/cron/process-archives?secret=${CRON_SECRET}",
+      "path": "/api/cron/daily?secret=${CRON_SECRET}",
       "schedule": "0 6 * * *"
-    },
-    {
-      "path": "/api/cron/update-delivery-progress",
-      "schedule": "0 0 * * *"
     }
   ],
   "functions": {
