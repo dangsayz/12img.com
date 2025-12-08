@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { UserButton } from '@clerk/nextjs'
-import { Plus, Shield, Menu, X, Users, MessageSquare } from 'lucide-react'
+import { Plus, Menu, X, Users, MessageSquare } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Button } from '@/components/ui/button'
 import { UsageBadge } from './UsageBadge'
@@ -96,14 +96,22 @@ export function Header({
                 </Button>
               </Link>
 
-              {/* Admin Link - Only for admins, hidden on mobile */}
+              {/* Floating Admin Indicator - Bottom Left */}
               {isAdmin && (
                 <Link
                   href="/admin"
-                  className="hidden md:block p-1.5 rounded-full text-amber-600 hover:bg-amber-50 transition-all"
+                  className="fixed bottom-6 left-6 z-50 group"
                   title="Admin Panel"
                 >
-                  <Shield className="h-4 w-4" />
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="w-8 h-8 rounded-full bg-stone-900/90 backdrop-blur-sm flex items-center justify-center shadow-lg shadow-black/10 border border-stone-700/50 transition-all duration-300 group-hover:bg-stone-800 group-hover:scale-105"
+                  >
+                    <span className="text-[9px] font-bold text-stone-400 group-hover:text-white transition-colors">
+                      ⌘
+                    </span>
+                  </motion.div>
                 </Link>
               )}
 
@@ -213,10 +221,10 @@ export function Header({
                         <Link
                           href="/admin"
                           onClick={() => setMobileMenuOpen(false)}
-                          className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium text-amber-600 hover:bg-amber-50 transition-colors"
+                          className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium text-stone-600 hover:bg-stone-100 transition-colors"
                         >
-                          <Shield className="h-4 w-4" />
-                          Admin Panel
+                          <span className="text-xs">⌘</span>
+                          Admin
                         </Link>
                       )}
                       

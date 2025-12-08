@@ -15,7 +15,6 @@ import {
   Menu,
   X,
   CreditCard,
-  Shield,
   Users
 } from 'lucide-react'
 
@@ -190,13 +189,13 @@ export function DashboardLayout({ children, userPlan = 'free', businessName, isA
               <span className="font-medium">Help & Support</span>
             </Link>
             
-            {/* Admin Link - Only for admins */}
+            {/* Admin Link - Only for admins (in mobile sidebar) */}
             {isAdmin && (
               <Link
                 href="/admin"
-                className="flex items-center gap-3 px-3 py-2 text-violet-600 hover:text-violet-700 hover:bg-violet-50 transition-colors"
+                className="flex items-center gap-3 px-3 py-2 text-stone-600 hover:text-stone-900 hover:bg-stone-100 transition-colors"
               >
-                <Shield className="w-5 h-5" />
+                <span className="text-sm">⌘</span>
                 <span className="font-medium">Admin</span>
               </Link>
             )}
@@ -225,6 +224,25 @@ export function DashboardLayout({ children, userPlan = 'free', businessName, isA
           {children}
         </div>
       </main>
+
+      {/* Floating Admin Indicator - Bottom Left */}
+      {isAdmin && (
+        <Link
+          href="/admin"
+          className="fixed bottom-6 left-6 z-50 group lg:left-[calc(18rem+1.5rem)]"
+          title="Admin Panel"
+        >
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="w-8 h-8 rounded-full bg-stone-900/90 backdrop-blur-sm flex items-center justify-center shadow-lg shadow-black/10 border border-stone-700/50 transition-all duration-300 group-hover:bg-stone-800 group-hover:scale-105"
+          >
+            <span className="text-[9px] font-bold text-stone-400 group-hover:text-white transition-colors">
+              ⌘
+            </span>
+          </motion.div>
+        </Link>
+      )}
     </div>
   )
 }

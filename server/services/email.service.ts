@@ -88,6 +88,97 @@ const log = {
 }
 
 /**
+ * Check if an email address is suppressed (bounced, complained, etc.)
+ * Returns suppression info if suppressed, null if OK to send.
+ */
+export async function checkEmailSuppression(userId: string, email: string): Promise<{
+  suppressed: boolean
+  reason?: string
+  details?: string
+  suppressedAt?: string
+} | null> {
+  try {
+    const { data, error } = await supabaseAdmin
+      .from('email_suppression_list')
+      .select('reason, details, created_at')
+      .or(`user_id.eq.${userId},user_id.is.null`)
+      .eq('email', email.toLowerCase())
+      .or('expires_at.is.null,expires_at.gt.now()')
+      .limit(1)
+      .single()
+    
+    if (error || !data) {
+      return null // Not suppressed
+    }
+    
+    return {
+      suppressed: true,
+      reason: data.reason,
+      details: data.details,
+      suppressedAt: data.created_at,
+    }
+  } catch {
+    // If table doesn't exist or other error, allow sending
+    return null
+  }
+}
+
+/**
+ * Add an email to the suppression list.
+ */
+export async function addToSuppressionList(
+  userId: string,
+  email: string,
+  reason: 'hard_bounce' | 'spam_complaint' | 'manual' | 'unsubscribe',
+  details?: string
+): Promise<void> {
+  try {
+    await supabaseAdmin
+      .from('email_suppression_list')
+      .upsert({
+        user_id: userId,
+        email: email.toLowerCase(),
+        reason,
+        details,
+        created_at: new Date().toISOString(),
+      }, {
+        onConflict: 'user_id,email',
+      })
+    
+    log.info('Added to suppression list', { userId, email, reason })
+  } catch (err) {
+    log.error('Failed to add to suppression list', err)
+  }
+}
+
+/**
+ * Remove an email from the suppression list (admin action).
+ */
+export async function removeFromSuppressionList(
+  userId: string,
+  email: string
+): Promise<boolean> {
+  try {
+    const { error } = await supabaseAdmin
+      .from('email_suppression_list')
+      .delete()
+      .eq('user_id', userId)
+      .eq('email', email.toLowerCase())
+    
+    if (error) {
+      log.error('Failed to remove from suppression list', error)
+      return false
+    }
+    
+    log.info('Removed from suppression list', { userId, email })
+    return true
+  } catch (err) {
+    log.error('Failed to remove from suppression list', err)
+    return false
+  }
+}
+
+/**
  * Format bytes to human-readable size.
  */
 function formatFileSize(bytes: number): string {
@@ -826,6 +917,20 @@ export async function sendGalleryInviteEmail(
   if (!isEmailConfigured()) {
     log.error('Email not configured - RESEND_API_KEY missing')
     return { success: false, error: 'Email service not configured' }
+  }
+
+  // Check if email is suppressed (bounced, complained, etc.)
+  const suppression = await checkEmailSuppression(gallery.user_id, recipientEmail)
+  if (suppression?.suppressed) {
+    log.info('Email suppressed', { 
+      recipient: recipientEmail, 
+      reason: suppression.reason,
+      details: suppression.details 
+    })
+    return { 
+      success: false, 
+      error: `Cannot send to ${recipientEmail}: ${suppression.reason === 'hard_bounce' ? 'Email address bounced previously' : suppression.reason === 'spam_complaint' ? 'Recipient marked previous email as spam' : 'Email address is suppressed'}. Contact support to resolve.`
+    }
   }
 
   try {

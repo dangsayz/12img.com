@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
+import { usePathname } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { MessageCircle, X, Send, Loader2, CheckCheck, CheckCircle2, Plus } from 'lucide-react'
 import { QuickShareWidget } from '@/components/share/QuickShareWidget'
@@ -15,6 +16,7 @@ import {
 
 export function SupportWidget() {
   const { isSignedIn, isLoaded } = useAuth()
+  const pathname = usePathname()
   const [isOpen, setIsOpen] = useState(false)
   const [messages, setMessages] = useState<SupportMessage[]>([])
   const [conversationId, setConversationId] = useState<string | null>(null)
@@ -24,6 +26,9 @@ export function SupportWidget() {
   const [isLoading, setIsLoading] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
+  
+  // Hide widget on admin pages
+  const isAdminPage = pathname?.startsWith('/admin')
 
   // Load messages when widget opens
   useEffect(() => {
@@ -123,6 +128,9 @@ export function SupportWidget() {
 
   // Show QuickShareWidget for all users, but chat only for authenticated users
   const showChatButton = isLoaded && isSignedIn
+
+  // Don't render on admin pages
+  if (isAdminPage) return null
 
   return (
     <>

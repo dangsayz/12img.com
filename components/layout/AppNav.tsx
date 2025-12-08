@@ -13,7 +13,6 @@ import {
   Settings,
   CreditCard,
   HelpCircle,
-  Shield,
   ChevronRight,
   Users,
   ChevronDown,
@@ -185,17 +184,7 @@ export function AppNav({
               </AnimatePresence>
             </div>
             
-            {/* Admin Link */}
-            {isAdmin && (
-              <Link
-                href="/admin"
-                className="p-2 rounded-full text-amber-600 hover:bg-amber-50 transition-all hidden md:flex"
-                title="Admin"
-              >
-                <Shield className="w-4 h-4" />
-              </Link>
-            )}
-            
+                        
             {/* User Button - Desktop */}
             <div className="hidden md:block">
               <UserButton 
@@ -283,9 +272,9 @@ export function AppNav({
                     <Link
                       href="/admin"
                       onClick={() => setMobileOpen(false)}
-                      className="flex items-center gap-3 px-4 py-3 rounded-xl text-amber-600 hover:bg-amber-50 transition-all"
+                      className="flex items-center gap-3 px-4 py-3 rounded-xl text-stone-600 hover:bg-stone-100 transition-all"
                     >
-                      <Shield className="w-5 h-5" />
+                      <span className="text-sm">⌘</span>
                       <span className="font-medium">Admin</span>
                     </Link>
                   )}
@@ -365,6 +354,25 @@ export function AppNav({
       
       {/* Spacer for fixed nav */}
       <div className="h-16" />
+
+      {/* Floating Admin Indicator - Bottom Left */}
+      {isAdmin && (
+        <Link
+          href="/admin"
+          className="fixed bottom-6 left-6 z-50 group"
+          title="Admin Panel"
+        >
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="w-8 h-8 rounded-full bg-stone-900/90 backdrop-blur-sm flex items-center justify-center shadow-lg shadow-black/10 border border-stone-700/50 transition-all duration-300 group-hover:bg-stone-800 group-hover:scale-105"
+          >
+            <span className="text-[9px] font-bold text-stone-400 group-hover:text-white transition-colors">
+              ⌘
+            </span>
+          </motion.div>
+        </Link>
+      )}
     </>
   )
 }

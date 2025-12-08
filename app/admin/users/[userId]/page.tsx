@@ -1,8 +1,9 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, Mail, Calendar, HardDrive, Image, Folder, Ban, CheckCircle, Shield, CreditCard, Copy, Hash } from 'lucide-react'
-import { getUser, getUserGalleries } from '@/server/admin/users'
+import { ArrowLeft, Mail, Calendar, HardDrive, Image, Folder, Ban, CheckCircle, Shield, CreditCard, Copy, Hash, Eye, Lock, Globe } from 'lucide-react'
+import { getUser, getUserGalleries, getUserEmailActivity } from '@/server/admin/users'
 import { UserActions } from './UserActions'
+import { EmailActivitySection } from './EmailActivitySection'
 
 interface Props {
   params: Promise<{ userId: string }>
@@ -45,12 +46,14 @@ export default async function UserDetailPage({ params }: Props) {
   
   let user: any = null
   let galleries: any[] = []
+  let emailActivity: Awaited<ReturnType<typeof getUserEmailActivity>> | null = null
   let error: string | null = null
   
   try {
-    [user, galleries] = await Promise.all([
+    [user, galleries, emailActivity] = await Promise.all([
       getUser(userId),
       getUserGalleries(userId),
+      getUserEmailActivity(userId),
     ])
   } catch (err) {
     console.error('User detail page error:', err)
@@ -225,24 +228,45 @@ export default async function UserDetailPage({ params }: Props) {
             {galleries && galleries.length > 0 ? (
               <div className="space-y-2">
                 {galleries.map((gallery: any) => (
-                  <div
+                  <Link
                     key={gallery.id}
-                    className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                    href={`/admin/galleries/${gallery.id}`}
+                    className="flex items-center justify-between p-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors group"
                   >
-                    <div>
-                      <p className="font-medium text-sm">{gallery.title}</p>
-                      <p className="text-xs text-gray-500">/{gallery.slug}</p>
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="flex items-center gap-1.5">
+                        {gallery.is_public ? (
+                          <Globe className="w-3.5 h-3.5 text-emerald-500" />
+                        ) : (
+                          <Lock className="w-3.5 h-3.5 text-gray-400" />
+                        )}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="font-medium text-sm truncate">{gallery.title}</p>
+                        <p className="text-xs text-gray-500 truncate">/{gallery.slug}</p>
+                      </div>
                     </div>
-                    <div className="text-right text-sm text-gray-500">
-                      {gallery.images?.[0]?.count || 0} images
+                    <div className="flex items-center gap-3">
+                      <span className="text-sm text-gray-500">
+                        {gallery.images?.[0]?.count || 0} images
+                      </span>
+                      <Eye className="w-4 h-4 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity" />
                     </div>
-                  </div>
+                  </Link>
                 ))}
               </div>
             ) : (
               <p className="text-sm text-gray-500">No galleries yet</p>
             )}
           </div>
+          
+          {/* Email Activity */}
+          {emailActivity && (
+            <EmailActivitySection 
+              emails={emailActivity.emails} 
+              stats={emailActivity.stats} 
+            />
+          )}
         </div>
         
         {/* Actions Sidebar */}

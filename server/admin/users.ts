@@ -406,6 +406,160 @@ export async function getUserGalleries(userId: string) {
 }
 
 /**
+ * Admin Email Activity Types
+ */
+export interface AdminEmailLog {
+  id: string
+  gallery_id: string | null
+  gallery_title: string | null
+  gallery_slug: string | null
+  email_type: string
+  recipient_email: string
+  recipient_name: string | null
+  subject: string
+  status: string
+  error_message: string | null
+  resend_message_id: string | null
+  opened_at: string | null
+  opened_count: number
+  last_opened_at: string | null
+  clicked_at: string | null
+  clicked_count: number
+  last_clicked_at: string | null
+  downloaded_at: string | null
+  download_count: number
+  last_downloaded_at: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface AdminEmailStats {
+  totalSent: number
+  totalDelivered: number
+  totalOpened: number
+  totalClicked: number
+  totalBounced: number
+  totalFailed: number
+  openRate: number
+  clickRate: number
+  bounceRate: number
+}
+
+/**
+ * Get user's email activity (admin view - full details)
+ */
+export async function getUserEmailActivity(userId: string): Promise<{
+  emails: AdminEmailLog[]
+  stats: AdminEmailStats
+}> {
+  await requireCapability('users.view')
+  
+  // Fetch all email logs for this user with gallery info
+  const { data: emails, error } = await supabaseAdmin
+    .from('email_logs')
+    .select(`
+      id,
+      gallery_id,
+      email_type,
+      recipient_email,
+      recipient_name,
+      subject,
+      status,
+      error_message,
+      resend_message_id,
+      opened_at,
+      opened_count,
+      last_opened_at,
+      clicked_at,
+      clicked_count,
+      last_clicked_at,
+      downloaded_at,
+      download_count,
+      last_downloaded_at,
+      created_at,
+      updated_at,
+      galleries (title, slug)
+    `)
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false })
+    .limit(100)
+  
+  if (error) {
+    console.error('[getUserEmailActivity] Error:', error)
+    return { emails: [], stats: getEmptyEmailStats() }
+  }
+  
+  // Transform to include gallery info
+  const emailList: AdminEmailLog[] = (emails || []).map((email: any) => ({
+    ...email,
+    gallery_title: email.galleries?.title || null,
+    gallery_slug: email.galleries?.slug || null,
+  }))
+  
+  // Calculate stats
+  const stats = calculateEmailStats(emailList)
+  
+  return { emails: emailList, stats }
+}
+
+function getEmptyEmailStats(): AdminEmailStats {
+  return {
+    totalSent: 0,
+    totalDelivered: 0,
+    totalOpened: 0,
+    totalClicked: 0,
+    totalBounced: 0,
+    totalFailed: 0,
+    openRate: 0,
+    clickRate: 0,
+    bounceRate: 0,
+  }
+}
+
+function calculateEmailStats(emails: AdminEmailLog[]): AdminEmailStats {
+  if (emails.length === 0) return getEmptyEmailStats()
+  
+  const totalSent = emails.length
+  const totalDelivered = emails.filter(e => e.status === 'delivered' || e.status === 'opened').length
+  const totalOpened = emails.filter(e => e.opened_at).length
+  const totalClicked = emails.filter(e => e.clicked_at).length
+  const totalBounced = emails.filter(e => e.status === 'bounced').length
+  const totalFailed = emails.filter(e => e.status === 'failed').length
+  
+  return {
+    totalSent,
+    totalDelivered,
+    totalOpened,
+    totalClicked,
+    totalBounced,
+    totalFailed,
+    openRate: totalSent > 0 ? Math.round((totalOpened / totalSent) * 100) : 0,
+    clickRate: totalSent > 0 ? Math.round((totalClicked / totalSent) * 100) : 0,
+    bounceRate: totalSent > 0 ? Math.round((totalBounced / totalSent) * 100) : 0,
+  }
+}
+
+/**
+ * Get email events for a specific email log (admin view)
+ */
+export async function getEmailEvents(emailLogId: string) {
+  await requireCapability('users.view')
+  
+  const { data, error } = await supabaseAdmin
+    .from('email_events')
+    .select('*')
+    .eq('email_log_id', emailLogId)
+    .order('created_at', { ascending: true })
+  
+  if (error) {
+    console.error('[getEmailEvents] Error:', error)
+    return []
+  }
+  
+  return data || []
+}
+
+/**
  * Get dashboard statistics
  */
 export async function getDashboardStats() {

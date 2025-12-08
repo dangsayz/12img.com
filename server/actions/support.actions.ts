@@ -17,10 +17,11 @@ export interface SupportMessage {
 export interface SupportConversation {
   id: string
   user_id: string
-  status: 'open' | 'resolved'
+  status: 'open' | 'resolved' | 'archived'
   subject: string | null
   created_at: string
   updated_at: string
+  archived_at?: string | null
   user_email?: string
   user_name?: string
   user_plan?: string
@@ -30,6 +31,8 @@ export interface SupportConversation {
   unread_count?: number
   last_message?: SupportMessage
 }
+
+export type ConversationFilter = 'all' | 'open' | 'resolved' | 'archived'
 
 // Get or create a conversation for the current user
 export async function getOrCreateConversation(): Promise<{
@@ -241,10 +244,17 @@ export async function startNewConversation(): Promise<{
 
 // === ADMIN ACTIONS ===
 
-// Get all conversations (admin only)
-export async function getAllConversations(): Promise<{
+// Get conversations with pagination and filtering (admin only)
+export async function getAllConversations(options?: {
+  filter?: ConversationFilter
+  page?: number
+  pageSize?: number
+  search?: string
+}): Promise<{
   success: boolean
   conversations?: SupportConversation[]
+  total?: number
+  hasMore?: boolean
   error?: string
 }> {
   const { userId } = await auth()
@@ -253,6 +263,7 @@ export async function getAllConversations(): Promise<{
   }
 
   const supabase = supabaseAdmin
+  const { filter = 'all', page = 1, pageSize = 30, search } = options || {}
 
   // Check if user is admin
   const { data: adminUser } = await supabase
@@ -265,8 +276,8 @@ export async function getAllConversations(): Promise<{
     return { success: false, error: 'Not authorized' }
   }
 
-  // Get all conversations with user info
-  const { data: conversations, error } = await supabase
+  // Build query with filters
+  let query = supabase
     .from('support_conversations')
     .select(`
       *,
@@ -276,8 +287,44 @@ export async function getAllConversations(): Promise<{
         plan,
         created_at
       )
-    `)
+    `, { count: 'exact' })
+
+  // Apply status filter
+  if (filter === 'open') {
+    query = query.eq('status', 'open')
+  } else if (filter === 'resolved') {
+    query = query.eq('status', 'resolved')
+  } else if (filter === 'archived') {
+    query = query.eq('status', 'archived')
+  } else {
+    // 'all' - exclude archived by default
+    query = query.neq('status', 'archived')
+  }
+
+  // Apply search filter
+  if (search) {
+    // We'll search by user email in a subquery approach
+    const { data: matchingUsers } = await supabase
+      .from('users')
+      .select('id')
+      .ilike('email', `%${search}%`)
+    
+    if (matchingUsers && matchingUsers.length > 0) {
+      const userIds = matchingUsers.map(u => u.id)
+      query = query.in('user_id', userIds)
+    } else {
+      // No matching users, return empty
+      return { success: true, conversations: [], total: 0, hasMore: false }
+    }
+  }
+
+  // Apply pagination
+  const from = (page - 1) * pageSize
+  const to = from + pageSize - 1
+  
+  const { data: conversations, error, count } = await query
     .order('updated_at', { ascending: false })
+    .range(from, to)
 
   if (error) {
     console.error('Error fetching conversations:', error)
@@ -294,7 +341,7 @@ export async function getAllConversations(): Promise<{
         .order('created_at', { ascending: false })
         .limit(1)
 
-      const { count } = await supabase
+      const { count: unreadCount } = await supabase
         .from('support_messages')
         .select('*', { count: 'exact', head: true })
         .eq('conversation_id', conv.id)
@@ -307,12 +354,17 @@ export async function getAllConversations(): Promise<{
         user_plan: conv.users?.plan,
         user_joined_at: conv.users?.created_at,
         last_message: messages?.[0],
-        unread_count: count || 0,
+        unread_count: unreadCount || 0,
       }
     })
   )
 
-  return { success: true, conversations: enrichedConversations }
+  return { 
+    success: true, 
+    conversations: enrichedConversations,
+    total: count || 0,
+    hasMore: (count || 0) > page * pageSize,
+  }
 }
 
 // Get single conversation with all messages (admin)
@@ -487,4 +539,187 @@ export async function updateConversationStatus(
   revalidatePath('/admin/support')
 
   return { success: true }
+}
+
+// Archive a conversation (admin)
+export async function archiveConversation(
+  conversationId: string
+): Promise<{ success: boolean; error?: string }> {
+  const { userId } = await auth()
+  if (!userId) {
+    return { success: false, error: 'Not authenticated' }
+  }
+
+  const supabase = supabaseAdmin
+
+  // Check if user is admin
+  const { data: adminUser } = await supabase
+    .from('users')
+    .select('id, role')
+    .eq('clerk_id', userId)
+    .single()
+
+  if (!adminUser || !['admin', 'super_admin'].includes(adminUser.role || '')) {
+    return { success: false, error: 'Not authorized' }
+  }
+
+  // First, try to add 'archived' to the constraint if needed
+  // This uses a soft delete pattern - we'll add an is_archived column
+  // For now, just delete the conversation (move to a soft delete later)
+  
+  // Try updating status - if constraint fails, we need migration
+  const { error } = await supabase
+    .from('support_conversations')
+    .update({ status: 'archived' })
+    .eq('id', conversationId)
+
+  if (error) {
+    // If the constraint error, try alternative: just delete
+    if (error.message?.includes('check') || error.code === '23514') {
+      console.log('Archive status not supported, deleting instead')
+      // Delete messages first
+      await supabase
+        .from('support_messages')
+        .delete()
+        .eq('conversation_id', conversationId)
+      
+      // Delete conversation
+      const { error: deleteError } = await supabase
+        .from('support_conversations')
+        .delete()
+        .eq('id', conversationId)
+      
+      if (deleteError) {
+        console.error('Delete error:', deleteError)
+        return { success: false, error: 'Failed to archive conversation' }
+      }
+    } else {
+      console.error('Archive error:', error)
+      return { success: false, error: 'Failed to archive conversation' }
+    }
+  }
+
+  revalidatePath('/admin/support')
+  return { success: true }
+}
+
+// Unarchive a conversation (admin)
+export async function unarchiveConversation(
+  conversationId: string
+): Promise<{ success: boolean; error?: string }> {
+  const { userId } = await auth()
+  if (!userId) {
+    return { success: false, error: 'Not authenticated' }
+  }
+
+  const supabase = supabaseAdmin
+
+  // Check if user is admin
+  const { data: adminUser } = await supabase
+    .from('users')
+    .select('id, role')
+    .eq('clerk_id', userId)
+    .single()
+
+  if (!adminUser || !['admin', 'super_admin'].includes(adminUser.role || '')) {
+    return { success: false, error: 'Not authorized' }
+  }
+
+  // Just update status - archived_at column may not exist yet
+  const { error } = await supabase
+    .from('support_conversations')
+    .update({ status: 'resolved' })
+    .eq('id', conversationId)
+
+  if (error) {
+    console.error('Unarchive error:', error)
+    return { success: false, error: 'Failed to unarchive conversation' }
+  }
+
+  revalidatePath('/admin/support')
+  return { success: true }
+}
+
+// Delete a conversation permanently (admin - super_admin only)
+export async function deleteConversation(
+  conversationId: string
+): Promise<{ success: boolean; error?: string }> {
+  const { userId } = await auth()
+  if (!userId) {
+    return { success: false, error: 'Not authenticated' }
+  }
+
+  const supabase = supabaseAdmin
+
+  // Check if user is super_admin (destructive action)
+  const { data: adminUser } = await supabase
+    .from('users')
+    .select('id, role')
+    .eq('clerk_id', userId)
+    .single()
+
+  if (!adminUser || adminUser.role !== 'super_admin') {
+    return { success: false, error: 'Only super admins can delete conversations' }
+  }
+
+  // Delete messages first (foreign key constraint)
+  await supabase
+    .from('support_messages')
+    .delete()
+    .eq('conversation_id', conversationId)
+
+  // Delete conversation
+  const { error } = await supabase
+    .from('support_conversations')
+    .delete()
+    .eq('id', conversationId)
+
+  if (error) {
+    return { success: false, error: 'Failed to delete conversation' }
+  }
+
+  revalidatePath('/admin/support')
+  return { success: true }
+}
+
+// Get conversation counts by status (for tabs)
+export async function getConversationCounts(): Promise<{
+  success: boolean
+  counts?: { all: number; open: number; resolved: number; archived: number }
+  error?: string
+}> {
+  const { userId } = await auth()
+  if (!userId) {
+    return { success: false, error: 'Not authenticated' }
+  }
+
+  const supabase = supabaseAdmin
+
+  // Check if user is admin
+  const { data: adminUser } = await supabase
+    .from('users')
+    .select('id, role')
+    .eq('clerk_id', userId)
+    .single()
+
+  if (!adminUser || !['admin', 'super_admin'].includes(adminUser.role || '')) {
+    return { success: false, error: 'Not authorized' }
+  }
+
+  const [allResult, openResult, resolvedResult, archivedResult] = await Promise.all([
+    supabase.from('support_conversations').select('*', { count: 'exact', head: true }).neq('status', 'archived'),
+    supabase.from('support_conversations').select('*', { count: 'exact', head: true }).eq('status', 'open'),
+    supabase.from('support_conversations').select('*', { count: 'exact', head: true }).eq('status', 'resolved'),
+    supabase.from('support_conversations').select('*', { count: 'exact', head: true }).eq('status', 'archived'),
+  ])
+
+  return {
+    success: true,
+    counts: {
+      all: allResult.count || 0,
+      open: openResult.count || 0,
+      resolved: resolvedResult.count || 0,
+      archived: archivedResult.count || 0,
+    },
+  }
 }

@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import { ClerkProvider } from '@clerk/nextjs'
 import { Plus_Jakarta_Sans, Playfair_Display } from 'next/font/google'
 import './globals.css'
-import { Footer } from '@/components/landing/Footer'
+import { ConditionalFooter } from '@/components/landing/ConditionalFooter'
 import { OrganizationJsonLd, SoftwareApplicationJsonLd, WebsiteJsonLd } from '@/components/seo/JsonLd'
 import { SupportWidget } from '@/components/support/SupportWidget'
 import { AuthModalProvider } from '@/components/auth/AuthModal'
@@ -187,7 +187,7 @@ export default function RootLayout({
         <body className={`${migra.variable} font-sans antialiased`}>
           <AuthModalProvider>
             {children}
-            <Footer />
+            <ConditionalFooter />
             <SupportWidget />
           </AuthModalProvider>
         </body>
