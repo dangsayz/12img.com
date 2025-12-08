@@ -5,6 +5,7 @@ import { createPortal } from 'react-dom'
 import { X, ChevronLeft, ChevronRight, Download, Loader2, Share2, Check } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { getPreviewUrls, getOriginalUrl } from '@/server/actions/gallery.actions'
+import { PinterestShareButtonDark } from '@/components/ui/PinterestShareButton'
 import type { ProcessingStatus } from '@/types/database'
 import type { ImageDerivatives } from '@/lib/storage/signed-urls'
 
@@ -321,7 +322,15 @@ export function FullscreenViewer({
 
         {/* Actions */}
         <div className="flex items-center gap-2">
-          {/* Share button */}
+          {/* Pinterest share button */}
+          {currentPreviewUrl && (
+            <PinterestShareButtonDark
+              imageUrl={currentPreviewUrl}
+              pageUrl={gallerySlug ? `${typeof window !== 'undefined' ? window.location.origin : ''}/view-reel/${gallerySlug}` : undefined}
+              description={galleryTitle ? `${galleryTitle} | 12img` : '12img'}
+            />
+          )}
+          {/* Copy link button */}
           {gallerySlug && (
             <button
               onClick={(e) => {
@@ -329,7 +338,7 @@ export function FullscreenViewer({
                 handleShare()
               }}
               className="p-3 text-white/70 hover:text-white bg-white/10 hover:bg-white/20 backdrop-blur-xl rounded-full transition-all duration-200 border border-white/10"
-              aria-label="Share this image"
+              aria-label="Copy link"
             >
               <AnimatePresence mode="wait">
                 {showCopied ? (

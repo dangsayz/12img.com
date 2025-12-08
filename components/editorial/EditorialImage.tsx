@@ -1,17 +1,21 @@
 
+'use client'
+
 import React, { useState, useRef } from 'react'
 import { motion, useInView } from 'framer-motion'
 import { cn } from '@/lib/utils/cn'
 import { EditorialImage as IEditorialImage } from '@/lib/editorial/types'
+import { PinterestShareButton } from '@/components/ui/PinterestShareButton'
 
 interface Props {
   image: IEditorialImage
   priority?: boolean
   className?: string
   fit?: 'cover' | 'contain'
+  galleryTitle?: string
 }
 
-export function EditorialImage({ image, priority = false, className, fit = 'cover' }: Props) {
+export function EditorialImage({ image, priority = false, className, fit = 'cover', galleryTitle }: Props) {
   const ref = useRef<HTMLDivElement>(null)
   const isInView = useInView(ref, { once: true, margin: '-100px' })
   const [isLoaded, setIsLoaded] = useState(false)
@@ -28,7 +32,7 @@ export function EditorialImage({ image, priority = false, className, fit = 'cove
       initial={{ opacity: 0, filter: 'blur(10px)' }}
       animate={isInView ? { opacity: 1, filter: 'blur(0px)' } : { opacity: 0, filter: 'blur(10px)' }}
       transition={{ duration: 1.2, ease: [0.22, 1, 0.36, 1] }}
-      className={cn("relative overflow-hidden bg-neutral-100 w-full h-full", className)}
+      className={cn("relative overflow-hidden bg-neutral-100 w-full h-full group", className)}
     >
       {hasError ? (
          <div className="absolute inset-0 flex items-center justify-center bg-neutral-100">
@@ -71,6 +75,16 @@ export function EditorialImage({ image, priority = false, className, fit = 'cove
           
           {/* Subtle Vignette */}
           <div className="absolute inset-0 bg-radial-gradient from-transparent to-black/5 pointer-events-none" />
+          
+          {/* Pinterest share on hover */}
+          <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10">
+            <PinterestShareButton
+              imageUrl={image.url}
+              description={galleryTitle ? `${galleryTitle} | 12img` : '12img'}
+              variant="icon"
+              size="sm"
+            />
+          </div>
         </>
       )}
     </motion.div>

@@ -41,6 +41,7 @@ import {
 } from 'lucide-react'
 import { EmailActivity } from '@/components/gallery/EmailActivity'
 import { ShareModal } from '@/components/gallery/ShareModal'
+import { PinterestShareButton } from '@/components/ui/PinterestShareButton'
 import { FocalPointEditor } from '@/components/gallery/FocalPointEditor'
 import { PresentationSettings } from '@/components/gallery/PresentationSettings'
 import { SortableImageGrid } from '@/components/gallery/SortableImageGrid'
@@ -489,7 +490,7 @@ export function GalleryEditor({
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="relative aspect-[4/5] bg-white shadow-2xl shadow-stone-900/10"
+                  className="relative aspect-[4/5] bg-white shadow-2xl shadow-stone-900/10 group"
                 >
                   <Image
                     src={coverImage.previewUrl}
@@ -498,6 +499,16 @@ export function GalleryEditor({
                     className="object-cover"
                     priority
                   />
+                  {/* Pinterest share on hover */}
+                  <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10">
+                    <PinterestShareButton
+                      imageUrl={coverImage.originalUrl || coverImage.previewUrl}
+                      pageUrl={shareUrl}
+                      description={`${gallery.title} | 12img`}
+                      variant="icon"
+                      size="md"
+                    />
+                  </div>
                 </motion.div>
               ) : (
                 <div className="aspect-[4/5] bg-stone-200 flex items-center justify-center">

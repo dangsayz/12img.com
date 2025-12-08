@@ -3,6 +3,7 @@
 import { useState, useCallback, useTransition, useEffect } from 'react'
 import { Trash2, Loader2, RefreshCw } from 'lucide-react'
 import { deleteImage, getThumbnailUrl } from '@/server/actions/image.actions'
+import { PinterestShareButton } from '@/components/ui/PinterestShareButton'
 import type { ProcessingStatus } from '@/types/database'
 import type { ImageDerivatives } from '@/lib/storage/signed-urls'
 
@@ -28,7 +29,10 @@ interface MasonryItemProps {
   onClick: () => void
   editable?: boolean
   galleryId?: string
+  galleryTitle?: string
   onDelete?: (imageId: string) => void
+  /** Show Pinterest share button on hover (for public galleries) */
+  showPinterestShare?: boolean
   displacement?: {
     y: number
     rotate: number
@@ -41,7 +45,9 @@ export function MasonryItem({
   onClick, 
   editable,
   galleryId,
+  galleryTitle,
   onDelete,
+  showPinterestShare = false,
   displacement 
 }: MasonryItemProps) {
   const [loaded, setLoaded] = useState(false)
@@ -194,7 +200,7 @@ export function MasonryItem({
         )}
       </div>
 
-      {/* Hover Overlay - Only in edit mode */}
+      {/* Hover Overlay - Edit mode */}
       {editable && isHovered && (
         <div className="absolute inset-0 pointer-events-none">
           {/* Action Buttons */}
@@ -229,6 +235,20 @@ export function MasonryItem({
               Cancel
             </button>
           )}
+        </div>
+      )}
+
+      {/* Hover Overlay - Public view with Pinterest */}
+      {!editable && showPinterestShare && isHovered && currentUrl && (
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute top-2 right-2 pointer-events-auto">
+            <PinterestShareButton
+              imageUrl={currentUrl}
+              description={galleryTitle ? `${galleryTitle} | 12img` : '12img'}
+              variant="icon"
+              size="sm"
+            />
+          </div>
         </div>
       )}
     </div>

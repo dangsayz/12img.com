@@ -29,10 +29,18 @@ export function SpreadOverview({ spreads, onSpreadClick }: Props) {
         {/* Masonry Grid of Mini Spreads */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 md:gap-8">
           {contentSpreads.map((spread) => (
-            <button
+            <div
               key={spread.id}
+              role="button"
+              tabIndex={0}
               onClick={() => onSpreadClick(spread.id)}
-              className="group flex flex-col gap-3 text-left w-full focus:outline-none"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault()
+                  onSpreadClick(spread.id)
+                }
+              }}
+              className="group flex flex-col gap-3 text-left w-full focus:outline-none cursor-pointer"
             >
               {/* Thumbnail Container - Using scale transform for fidelity */}
               <div 
@@ -62,7 +70,7 @@ export function SpreadOverview({ spreads, onSpreadClick }: Props) {
                   {spread.template.replace('-', ' ')}
                 </span>
               </div>
-            </button>
+            </div>
           ))}
         </div>
       </div>

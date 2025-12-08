@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Download, ChevronDown, Share2, Check, Loader2, Heart, X, ArrowLeft } from 'lucide-react'
 // Note: Heart used in FullscreenViewer, X used for close button
 import Link from 'next/link'
+import { PinterestShareButton, PinterestShareButtonDark } from '@/components/ui/PinterestShareButton'
 
 interface GalleryImage {
   id: string
@@ -83,12 +84,14 @@ function FullscreenViewer({
   onClose,
   onNavigate,
   downloadEnabled,
+  galleryTitle,
 }: {
   images: GalleryImage[]
   currentIndex: number
   onClose: () => void
   onNavigate: (index: number) => void
   downloadEnabled?: boolean
+  galleryTitle?: string
 }) {
   const image = images[currentIndex]
   const [isFavorite, setIsFavorite] = useState(false)
@@ -100,12 +103,21 @@ function FullscreenViewer({
       exit={{ opacity: 0 }}
       className="fixed inset-0 z-[100] bg-black"
     >
-      <button
-        onClick={onClose}
-        className="absolute top-4 right-4 z-50 p-3 rounded-full bg-white/10 hover:bg-white/20 transition-colors"
-      >
-        <X className="w-5 h-5 text-white" />
-      </button>
+      {/* Top bar with Pinterest and close */}
+      <div className="absolute top-4 right-4 z-50 flex items-center gap-2">
+        {image.previewUrl && (
+          <PinterestShareButtonDark
+            imageUrl={image.previewUrl}
+            description={galleryTitle ? `${galleryTitle} | 12img` : '12img'}
+          />
+        )}
+        <button
+          onClick={onClose}
+          className="p-3 rounded-full bg-white/10 hover:bg-white/20 transition-colors"
+        >
+          <X className="w-5 h-5 text-white" />
+        </button>
+      </div>
 
       <div className="absolute inset-0 flex items-center justify-center p-4 md:p-16">
         <motion.img
@@ -163,6 +175,59 @@ function FullscreenViewer({
   )
 }
 
+// Clean Grid Card - For uniform grid layout with Pinterest
+function CleanGridCard({
+  image,
+  index,
+  onClick,
+  galleryTitle,
+}: {
+  image: GalleryImage
+  index: number
+  onClick: () => void
+  galleryTitle?: string
+}) {
+  const [isHovered, setIsHovered] = useState(false)
+  
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      transition={{ duration: 0.5, delay: Math.min(index * 0.05, 0.2) }}
+      className="relative overflow-hidden cursor-pointer group aspect-[4/5]"
+      onClick={onClick}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
+      <Image
+        src={image.thumbnailUrl}
+        alt=""
+        fill
+        className="object-cover transition-transform duration-500 group-hover:scale-[1.02]"
+        style={{ objectPosition: `${image.focalX ?? 50}% ${image.focalY ?? 50}%` }}
+        sizes="(max-width: 768px) 50vw, 33vw"
+      />
+      {/* Subtle hover */}
+      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-300" />
+      {/* Pinterest share on hover */}
+      {isHovered && image.originalUrl && (
+        <div 
+          className="absolute top-2 right-2 z-10"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <PinterestShareButton
+            imageUrl={image.originalUrl}
+            description={galleryTitle ? `${galleryTitle} | 12img` : '12img'}
+            variant="icon"
+            size="sm"
+          />
+        </div>
+      )}
+    </motion.div>
+  )
+}
+
 // Image Card - Clean, no effects on image
 function ImageCard({
   image,
@@ -170,21 +235,27 @@ function ImageCard({
   onClick,
   className = '',
   priority = false,
+  galleryTitle,
 }: {
   image: GalleryImage
   index: number
   onClick: () => void
   className?: string
   priority?: boolean
+  galleryTitle?: string
 }) {
+  const [isHovered, setIsHovered] = useState(false)
+  
   return (
     <motion.div
       initial={{ opacity: 0 }}
       whileInView={{ opacity: 1 }}
       viewport={{ once: true, margin: '-50px' }}
       transition={{ duration: 0.4, delay: Math.min(index * 0.03, 0.15) }}
-      className={`relative overflow-hidden cursor-pointer ${className}`}
+      className={`relative overflow-hidden cursor-pointer group ${className}`}
       onClick={onClick}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
     >
       <Image
         src={image.previewUrl || image.thumbnailUrl}
@@ -195,6 +266,20 @@ function ImageCard({
         sizes="(max-width: 768px) 100vw, 50vw"
         priority={priority}
       />
+      {/* Pinterest share on hover */}
+      {isHovered && (image.originalUrl || image.previewUrl || image.thumbnailUrl) && (
+        <div 
+          className="absolute top-2 right-2 z-10"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <PinterestShareButton
+            imageUrl={image.originalUrl || image.previewUrl || image.thumbnailUrl}
+            description={galleryTitle ? `${galleryTitle} | 12img` : '12img'}
+            variant="icon"
+            size="sm"
+          />
+        </div>
+      )}
     </motion.div>
   )
 }
@@ -376,6 +461,7 @@ export function PublicGalleryView({
                           onClick={() => openViewer(getGlobalIndex(row.images[0]))}
                           className="md:col-span-2 aspect-[4/3] md:aspect-[16/10]"
                           priority={rowIdx === 0}
+                          galleryTitle={title}
                         />
                         <div className="grid grid-rows-2 gap-3 md:gap-4">
                           {row.images.slice(1).map((img) => (
@@ -385,6 +471,7 @@ export function PublicGalleryView({
                               index={getGlobalIndex(img)}
                               onClick={() => openViewer(getGlobalIndex(img))}
                               className="aspect-[4/3]"
+                              galleryTitle={title}
                             />
                           ))}
                         </div>
@@ -403,6 +490,7 @@ export function PublicGalleryView({
                               index={getGlobalIndex(img)}
                               onClick={() => openViewer(getGlobalIndex(img))}
                               className="aspect-[4/3]"
+                              galleryTitle={title}
                             />
                           ))}
                         </div>
@@ -411,6 +499,7 @@ export function PublicGalleryView({
                           index={getGlobalIndex(row.images[0])}
                           onClick={() => openViewer(getGlobalIndex(row.images[0]))}
                           className="md:col-span-2 aspect-[4/3] md:aspect-[16/10] order-1 md:order-2"
+                          galleryTitle={title}
                         />
                       </div>
                     )
@@ -426,6 +515,7 @@ export function PublicGalleryView({
                             index={getGlobalIndex(img)}
                             onClick={() => openViewer(getGlobalIndex(img))}
                             className={`aspect-[3/4]`}
+                            galleryTitle={title}
                           />
                         ))}
                       </div>
@@ -447,6 +537,7 @@ export function PublicGalleryView({
                               index={getGlobalIndex(img)}
                               onClick={() => openViewer(getGlobalIndex(img))}
                               className={aspectClass}
+                              galleryTitle={title}
                             />
                           )
                         })}
@@ -462,6 +553,7 @@ export function PublicGalleryView({
                           index={getGlobalIndex(row.images[0])}
                           onClick={() => openViewer(getGlobalIndex(row.images[0]))}
                           className="aspect-[16/9]"
+                          galleryTitle={title}
                         />
                       </div>
                     )
@@ -477,26 +569,13 @@ export function PublicGalleryView({
                ============================================ */
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
               {images.map((image, idx) => (
-                <motion.div
+                <CleanGridCard
                   key={image.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.5, delay: Math.min(idx * 0.05, 0.2) }}
-                  className="relative overflow-hidden cursor-pointer group aspect-[4/5]"
+                  image={image}
+                  index={idx}
                   onClick={() => openViewer(idx)}
-                >
-                  <Image
-                    src={image.thumbnailUrl}
-                    alt=""
-                    fill
-                    className="object-cover transition-transform duration-500 group-hover:scale-[1.02]"
-                    style={{ objectPosition: `${image.focalX ?? 50}% ${image.focalY ?? 50}%` }}
-                    sizes="(max-width: 768px) 50vw, 33vw"
-                  />
-                  {/* Subtle hover */}
-                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-300" />
-                </motion.div>
+                  galleryTitle={title}
+                />
               ))}
             </div>
           )}
@@ -534,6 +613,7 @@ export function PublicGalleryView({
             onClose={() => setViewerOpen(false)}
             onNavigate={setViewerIndex}
             downloadEnabled={downloadEnabled}
+            galleryTitle={title}
           />
         )}
       </AnimatePresence>

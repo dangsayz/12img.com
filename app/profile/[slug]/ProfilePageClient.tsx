@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { motion, useScroll, useTransform, useSpring, AnimatePresence } from 'framer-motion'
 import { Camera, Lock, Image as ImageIcon, Mail, Globe } from 'lucide-react'
 import { VisibilityBadge, LockIndicator, PrivateOverlay } from '@/components/ui/VisibilityBadge'
+import { PinterestShareButton } from '@/components/ui/PinterestShareButton'
 import { LazyImage, HeroImage } from '@/components/ui/LazyImage'
 import { PublicHeader } from '@/components/profile/PublicHeader'
 import { PINEntryModal } from '@/components/profile/PINEntryModal'
@@ -503,7 +504,7 @@ export function ProfilePageClient({ profile }: ProfilePageClientProps) {
                       whileInView={{ opacity: 1, y: 0 }}
                       viewport={{ once: true, margin: '-80px' }}
                       transition={{ duration: 1, ease: [0.22, 1, 0.36, 1] }}
-                      className={className}
+                      className={`${className} group`}
                     >
                       <div className="relative">
                         <LazyImage
@@ -512,6 +513,16 @@ export function ProfilePageClient({ profile }: ProfilePageClientProps) {
                           aspectRatio={aspectClass}
                           objectPosition={`${image.focal_x ?? 50}% ${image.focal_y ?? 50}%`}
                         />
+                        
+                        {/* Pinterest share on hover */}
+                        <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10">
+                          <PinterestShareButton
+                            imageUrl={image.imageUrl}
+                            description={`${image.gallery_title} by ${profile.display_name || 'Photographer'} | 12img`}
+                            variant="icon"
+                            size="sm"
+                          />
+                        </div>
                         
                         {/* Overlay caption (number style) */}
                         {caption.style === 'number' && caption.text && (

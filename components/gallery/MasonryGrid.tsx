@@ -56,9 +56,11 @@ interface MasonryGridProps {
   editable?: boolean
   galleryId?: string
   galleryTitle?: string
+  /** Show Pinterest share on image hover (for public galleries) */
+  showPinterestShare?: boolean
 }
 
-export function MasonryGrid({ images: initialImages, editable = false, galleryId, galleryTitle }: MasonryGridProps) {
+export function MasonryGrid({ images: initialImages, editable = false, galleryId, galleryTitle, showPinterestShare = false }: MasonryGridProps) {
   const router = useRouter()
   const [viewerOpen, setViewerOpen] = useState(false)
   const [viewerIndex, setViewerIndex] = useState(0)
@@ -112,7 +114,9 @@ export function MasonryGrid({ images: initialImages, editable = false, galleryId
             onClick={() => handleImageClick(index)}
             editable={editable}
             galleryId={galleryId}
+            galleryTitle={galleryTitle}
             onDelete={handleImageDelete}
+            showPinterestShare={showPinterestShare}
           />
         ))}
       </div>
