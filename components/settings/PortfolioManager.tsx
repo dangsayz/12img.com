@@ -10,7 +10,9 @@ import {
   Image as ImageIcon,
   Check,
   Loader2,
-  ChevronDown
+  ChevronDown,
+  LayoutGrid,
+  Layers
 } from 'lucide-react'
 import {
   getPortfolioImages,
@@ -46,6 +48,8 @@ export function PortfolioManager() {
   const [selectedGallery, setSelectedGallery] = useState<string>('all')
   const [isPickerOpen, setIsPickerOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
+  const [isLoadingImages, setIsLoadingImages] = useState(false)
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
 
@@ -79,11 +83,20 @@ export function PortfolioManager() {
     if (!isPickerOpen) return
 
     async function loadAvailable() {
-      const result = await getAvailableImagesForPortfolio(
-        selectedGallery === 'all' ? undefined : selectedGallery
-      )
-      if (result.data) {
-        setAvailableImages(result.data)
+      setIsLoadingImages(true)
+      try {
+        const result = await getAvailableImagesForPortfolio(
+          selectedGallery === 'all' ? undefined : selectedGallery
+        )
+        if (result.data) {
+          setAvailableImages(result.data)
+        } else if (result.error) {
+          console.error('Failed to load images:', result.error)
+        }
+      } catch (e) {
+        console.error('Exception loading images:', e)
+      } finally {
+        setIsLoadingImages(false)
       }
     }
     loadAvailable()
@@ -282,63 +295,169 @@ export function PortfolioManager() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setIsPickerOpen(false)}
-              className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50"
+              className="fixed inset-0 bg-black/60 backdrop-blur-md z-50"
             />
             
             {/* Modal */}
             <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="fixed inset-4 md:inset-10 bg-white rounded-2xl shadow-2xl z-50 flex flex-col overflow-hidden"
+              initial={{ opacity: 0, y: 20, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 20, scale: 0.98 }}
+              transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+              className="fixed inset-4 md:inset-8 lg:inset-12 bg-white rounded-2xl shadow-2xl z-50 flex flex-col overflow-hidden"
             >
               {/* Header */}
-              <div className="flex items-center justify-between px-6 py-4 border-b border-stone-200">
-                <div>
-                  <h3 className="text-lg font-medium text-stone-900">Select Portfolio Images</h3>
-                  <p className="text-sm text-stone-500">
-                    {portfolioImages.length}/{MAX_PORTFOLIO_IMAGES} selected
-                  </p>
-                </div>
+              <div className="flex items-center justify-between px-6 py-5 border-b border-stone-100">
                 <div className="flex items-center gap-4">
-                  {/* Gallery filter */}
+                  <div className="w-10 h-10 bg-stone-900 rounded-xl flex items-center justify-center">
+                    <Layers className="w-5 h-5 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-stone-900">Select Portfolio Images</h3>
+                    <p className="text-sm text-stone-500">
+                      <span className="font-medium text-stone-700">{portfolioImages.length}</span>
+                      <span className="text-stone-400"> / {MAX_PORTFOLIO_IMAGES} selected</span>
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="flex items-center gap-3">
+                  {/* Custom Gallery Dropdown */}
                   <div className="relative">
-                    <select
-                      value={selectedGallery}
-                      onChange={(e) => setSelectedGallery(e.target.value)}
-                      className="appearance-none pl-4 pr-10 py-2 bg-stone-100 border-0 rounded-lg text-sm font-medium text-stone-700 focus:ring-2 focus:ring-stone-900"
+                    <button
+                      onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                      className="flex items-center gap-2 px-4 py-2.5 bg-stone-50 hover:bg-stone-100 border border-stone-200 rounded-xl text-sm font-medium text-stone-700 transition-colors min-w-[200px] justify-between"
                     >
-                      <option value="all">All Galleries</option>
-                      {galleries.map(g => (
-                        <option key={g.id} value={g.id}>
-                          {g.title} ({g.imageCount})
-                        </option>
-                      ))}
-                    </select>
-                    <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400 pointer-events-none" />
+                      <div className="flex items-center gap-2">
+                        <LayoutGrid className="w-4 h-4 text-stone-400" />
+                        <span className="truncate max-w-[140px]">
+                          {selectedGallery === 'all' 
+                            ? 'All Galleries' 
+                            : galleries.find(g => g.id === selectedGallery)?.title || 'Select Gallery'
+                          }
+                        </span>
+                      </div>
+                      <ChevronDown className={`w-4 h-4 text-stone-400 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} />
+                    </button>
+                    
+                    {/* Dropdown Menu */}
+                    <AnimatePresence>
+                      {isDropdownOpen && (
+                        <motion.div
+                          initial={{ opacity: 0, y: -8, scale: 0.96 }}
+                          animate={{ opacity: 1, y: 0, scale: 1 }}
+                          exit={{ opacity: 0, y: -8, scale: 0.96 }}
+                          transition={{ duration: 0.15 }}
+                          className="absolute top-full right-0 mt-2 w-72 bg-white rounded-xl shadow-xl border border-stone-200 overflow-hidden z-10"
+                        >
+                          <div className="max-h-80 overflow-y-auto py-2">
+                            {/* All Galleries Option */}
+                            <button
+                              onClick={() => {
+                                setSelectedGallery('all')
+                                setIsDropdownOpen(false)
+                              }}
+                              className={`w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-stone-50 transition-colors ${
+                                selectedGallery === 'all' ? 'bg-stone-50' : ''
+                              }`}
+                            >
+                              <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
+                                selectedGallery === 'all' ? 'bg-stone-900 text-white' : 'bg-stone-100 text-stone-500'
+                              }`}>
+                                <LayoutGrid className="w-4 h-4" />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-medium text-stone-900">All Galleries</p>
+                                <p className="text-xs text-stone-500">
+                                  {galleries.reduce((sum, g) => sum + g.imageCount, 0)} images total
+                                </p>
+                              </div>
+                              {selectedGallery === 'all' && (
+                                <Check className="w-4 h-4 text-stone-900" />
+                              )}
+                            </button>
+                            
+                            {/* Divider */}
+                            <div className="h-px bg-stone-100 my-2" />
+                            
+                            {/* Gallery Options */}
+                            {galleries.map(gallery => (
+                              <button
+                                key={gallery.id}
+                                onClick={() => {
+                                  setSelectedGallery(gallery.id)
+                                  setIsDropdownOpen(false)
+                                }}
+                                className={`w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-stone-50 transition-colors ${
+                                  selectedGallery === gallery.id ? 'bg-stone-50' : ''
+                                }`}
+                              >
+                                <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold ${
+                                  selectedGallery === gallery.id 
+                                    ? 'bg-stone-900 text-white' 
+                                    : 'bg-stone-100 text-stone-500'
+                                }`}>
+                                  {gallery.title.charAt(0).toUpperCase()}
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-sm font-medium text-stone-900 truncate">{gallery.title}</p>
+                                  <p className="text-xs text-stone-500">{gallery.imageCount} images</p>
+                                </div>
+                                {selectedGallery === gallery.id && (
+                                  <Check className="w-4 h-4 text-stone-900" />
+                                )}
+                              </button>
+                            ))}
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
                   </div>
                   
                   <button
                     onClick={() => setIsPickerOpen(false)}
-                    className="p-2 hover:bg-stone-100 rounded-lg transition-colors"
+                    className="p-2.5 hover:bg-stone-100 rounded-xl transition-colors"
                   >
-                    <X className="w-5 h-5 text-stone-600" />
+                    <X className="w-5 h-5 text-stone-500" />
                   </button>
                 </div>
               </div>
               
+              {/* Click outside to close dropdown */}
+              {isDropdownOpen && (
+                <div 
+                  className="fixed inset-0 z-[5]" 
+                  onClick={() => setIsDropdownOpen(false)}
+                />
+              )}
+              
               {/* Image Grid */}
-              <div className="flex-1 overflow-y-auto p-6">
-                {availableImages.length === 0 ? (
+              <div className="flex-1 overflow-y-auto p-6 bg-stone-50/50">
+                {isLoadingImages ? (
+                  <div className="flex flex-col items-center justify-center h-full">
+                    <Loader2 className="w-8 h-8 text-stone-400 animate-spin mb-4" />
+                    <p className="text-sm text-stone-500">Loading images...</p>
+                  </div>
+                ) : availableImages.length === 0 ? (
                   <div className="flex flex-col items-center justify-center h-full text-center">
-                    <ImageIcon className="w-12 h-12 text-stone-300 mb-4" />
-                    <p className="text-stone-500">No images found in this gallery</p>
+                    <div className="w-20 h-20 bg-stone-100 rounded-2xl flex items-center justify-center mb-4">
+                      <ImageIcon className="w-10 h-10 text-stone-300" />
+                    </div>
+                    <p className="text-stone-600 font-medium mb-1">No images found</p>
+                    <p className="text-sm text-stone-400">This gallery doesn't have any images yet</p>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-3">
-                    {availableImages.map((image) => (
-                      <button
+                  <motion.div 
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 gap-3"
+                  >
+                    {availableImages.map((image, index) => (
+                      <motion.button
                         key={image.id}
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ delay: index * 0.02, duration: 0.2 }}
                         onClick={() => {
                           if (image.isInPortfolio) {
                             handleRemove(image.id)
@@ -348,51 +467,68 @@ export function PortfolioManager() {
                         }}
                         disabled={isPending || (!image.isInPortfolio && portfolioImages.length >= MAX_PORTFOLIO_IMAGES)}
                         className={`
-                          relative aspect-square rounded-lg overflow-hidden group
-                          ${image.isInPortfolio ? 'ring-2 ring-emerald-500' : ''}
-                          ${!image.isInPortfolio && portfolioImages.length >= MAX_PORTFOLIO_IMAGES ? 'opacity-50 cursor-not-allowed' : ''}
+                          relative aspect-square rounded-xl overflow-hidden group transition-all duration-200
+                          ${image.isInPortfolio 
+                            ? 'ring-2 ring-stone-900 ring-offset-2 ring-offset-stone-50' 
+                            : 'hover:ring-2 hover:ring-stone-300 hover:ring-offset-2 hover:ring-offset-stone-50'
+                          }
+                          ${!image.isInPortfolio && portfolioImages.length >= MAX_PORTFOLIO_IMAGES 
+                            ? 'opacity-40 cursor-not-allowed' 
+                            : 'cursor-pointer'
+                          }
                         `}
                       >
                         <Image
                           src={getImageUrl(image.storagePath)}
                           alt=""
                           fill
-                          className="object-cover"
-                          sizes="(max-width: 640px) 33vw, (max-width: 768px) 25vw, 12.5vw"
+                          className="object-cover transition-transform duration-300 group-hover:scale-105"
+                          sizes="(max-width: 640px) 33vw, (max-width: 768px) 25vw, (max-width: 1024px) 20vw, 14vw"
                         />
                         
                         {/* Selection overlay */}
                         <div className={`
-                          absolute inset-0 flex items-center justify-center transition-all
+                          absolute inset-0 flex items-center justify-center transition-all duration-200
                           ${image.isInPortfolio 
-                            ? 'bg-emerald-500/20' 
-                            : 'bg-black/0 group-hover:bg-black/30'
+                            ? 'bg-stone-900/30' 
+                            : 'bg-black/0 group-hover:bg-black/20'
                           }
                         `}>
                           {image.isInPortfolio ? (
-                            <div className="w-8 h-8 bg-emerald-500 rounded-full flex items-center justify-center">
-                              <Check className="w-5 h-5 text-white" />
-                            </div>
+                            <motion.div 
+                              initial={{ scale: 0 }}
+                              animate={{ scale: 1 }}
+                              className="w-10 h-10 bg-stone-900 rounded-full flex items-center justify-center shadow-lg"
+                            >
+                              <Check className="w-5 h-5 text-white" strokeWidth={3} />
+                            </motion.div>
                           ) : (
-                            <div className="w-8 h-8 bg-white/90 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                            <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-lg">
                               <Plus className="w-5 h-5 text-stone-700" />
                             </div>
                           )}
                         </div>
-                      </button>
+                        
+                        {/* Gallery badge on hover */}
+                        <div className="absolute bottom-0 left-0 right-0 p-2 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
+                          <p className="text-[10px] text-white/90 truncate font-medium">
+                            {image.galleryTitle}
+                          </p>
+                        </div>
+                      </motion.button>
                     ))}
-                  </div>
+                  </motion.div>
                 )}
               </div>
               
               {/* Footer */}
-              <div className="px-6 py-4 border-t border-stone-200 bg-stone-50 flex items-center justify-between">
+              <div className="px-6 py-4 border-t border-stone-100 bg-white flex items-center justify-between">
                 <p className="text-sm text-stone-500">
                   Click images to add or remove from your portfolio
                 </p>
                 <button
                   onClick={() => setIsPickerOpen(false)}
-                  className="px-6 py-2 bg-stone-900 text-white font-medium rounded-lg hover:bg-stone-800 transition-colors"
+                  className="px-6 py-2.5 bg-stone-900 text-white text-sm font-medium rounded-xl hover:bg-stone-800 transition-colors shadow-sm"
                 >
                   Done
                 </button>
