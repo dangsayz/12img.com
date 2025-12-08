@@ -11,7 +11,7 @@ import {
   Settings,
   HelpCircle,
   ChevronRight,
-  Sparkles,
+  Zap,
   Menu,
   X,
   CreditCard,
@@ -154,7 +154,7 @@ export function DashboardLayout({ children, userPlan = 'free', businessName, isA
             <div className="mx-4 mb-4">
               <div className="relative overflow-hidden bg-gradient-to-br from-violet-500 to-purple-600 p-4 text-white">
                 <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 -translate-y-1/2 translate-x-1/2" />
-                <Sparkles className="w-6 h-6 mb-2 text-violet-200" />
+                <Zap className="w-6 h-6 mb-2 text-violet-200" />
                 <h4 className="font-semibold mb-1">Unlock Pro</h4>
                 <p className="text-xs text-violet-200 mb-3">
                   Get unlimited galleries, custom branding & more

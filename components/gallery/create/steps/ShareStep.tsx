@@ -8,7 +8,7 @@ import {
   ExternalLink, 
   Mail, 
   Smartphone,
-  Sparkles
+  CheckCircle
 } from 'lucide-react'
 import Link from 'next/link'
 import { ShareModal } from '@/components/gallery/ShareModal'
@@ -58,7 +58,7 @@ export function ShareStep({ galleryId, galleryName }: ShareStepProps) {
           className="text-center mb-12"
         >
           <div className="w-20 h-20 bg-emerald-500 flex items-center justify-center mx-auto mb-6">
-            <Sparkles className="w-10 h-10 text-white" />
+            <CheckCircle className="w-10 h-10 text-white" />
           </div>
           <h1 className="text-3xl font-serif text-[#141414] mb-2">
             Your Gallery is Ready!

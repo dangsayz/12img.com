@@ -156,22 +156,26 @@ export function InlineEditField({
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.98 }}
             transition={{ duration: 0.15 }}
-            className="flex items-center gap-2"
+            className="flex items-center gap-3"
           >
             {label && (
               <span className="text-xs text-stone-400 uppercase tracking-wider shrink-0">
                 {label}
               </span>
             )}
-            <div className="flex items-center gap-1.5 flex-1">
-              {prefix && <span className="text-stone-500">{prefix}</span>}
+            <div className={`flex items-center gap-2 flex-1 ${dark ? 'bg-white/10 backdrop-blur-sm' : 'bg-white'} rounded-xl p-1 ring-2 ${dark ? 'ring-white/20' : 'ring-stone-900/10'} shadow-lg`}>
+              {prefix && <span className={`pl-2 ${dark ? 'text-white/60' : 'text-stone-400'} font-medium`}>{prefix}</span>}
               {type === 'select' && options ? (
                 <select
                   ref={inputRef as React.RefObject<HTMLSelectElement>}
                   value={editValue}
                   onChange={e => setEditValue(e.target.value)}
                   onKeyDown={handleKeyDown}
-                  className="flex-1 px-2 py-1 text-sm text-stone-900 bg-white border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-stone-900 focus:border-transparent"
+                  className={`flex-1 px-3 py-2.5 text-sm font-medium rounded-lg focus:outline-none transition-colors ${
+                    dark 
+                      ? 'bg-white text-stone-900' 
+                      : 'bg-stone-50 text-stone-900 focus:bg-white'
+                  }`}
                 >
                   {options.map(opt => (
                     <option key={opt.value} value={opt.value}>
@@ -190,32 +194,46 @@ export function InlineEditField({
                   max={max}
                   step={type === 'currency' ? '0.01' : type === 'percentage' ? '1' : undefined}
                   placeholder={placeholder}
-                  className="flex-1 min-w-0 px-2 py-1 text-sm text-stone-900 bg-white border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-stone-900 focus:border-transparent"
+                  className={`flex-1 min-w-0 px-3 py-2.5 text-sm font-medium rounded-lg focus:outline-none transition-colors ${
+                    dark 
+                      ? 'bg-white text-stone-900 placeholder:text-stone-400' 
+                      : 'bg-stone-50 text-stone-900 placeholder:text-stone-400 focus:bg-white'
+                  }`}
                 />
               )}
-              {suffix && <span className="text-stone-500">{suffix}</span>}
+              {suffix && <span className={`pr-2 ${dark ? 'text-white/60' : 'text-stone-400'} font-medium`}>{suffix}</span>}
               
-              <button
-                onClick={handleSave}
-                disabled={isPending}
-                className="p-1.5 text-white bg-stone-900 rounded-lg hover:bg-stone-800 transition-colors disabled:opacity-50"
-              >
-                {isPending ? (
-                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                ) : (
-                  <Check className="w-3.5 h-3.5" />
-                )}
-              </button>
-              <button
-                onClick={handleCancel}
-                disabled={isPending}
-                className="p-1.5 text-stone-600 bg-stone-100 rounded-lg hover:bg-stone-200 transition-colors disabled:opacity-50"
-              >
-                <X className="w-3.5 h-3.5" />
-              </button>
+              <div className="flex items-center gap-1 pr-1">
+                <button
+                  onClick={handleSave}
+                  disabled={isPending}
+                  className={`p-2 rounded-lg transition-all disabled:opacity-50 ${
+                    dark
+                      ? 'bg-white text-stone-900 hover:bg-stone-100 shadow-sm'
+                      : 'bg-stone-900 text-white hover:bg-stone-800 shadow-sm'
+                  }`}
+                >
+                  {isPending ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Check className="w-4 h-4" />
+                  )}
+                </button>
+                <button
+                  onClick={handleCancel}
+                  disabled={isPending}
+                  className={`p-2 rounded-lg transition-all disabled:opacity-50 ${
+                    dark
+                      ? 'bg-white/10 text-white hover:bg-white/20'
+                      : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
+                  }`}
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
             </div>
             {error && (
-              <span className="absolute -bottom-5 left-0 text-xs text-red-600">
+              <span className="absolute -bottom-6 left-0 text-xs text-red-500 font-medium">
                 {error}
               </span>
             )}

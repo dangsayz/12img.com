@@ -349,6 +349,135 @@ export async function checkGalleryUnlocked(galleryId: string): Promise<boolean> 
 }
 
 // ============================================
+// PROFILE COVER IMAGE
+// ============================================
+
+/**
+ * Upload a profile cover image (3:4 vertical aspect ratio)
+ * Stores in profile-covers bucket, updates user.cover_image_url
+ */
+export async function uploadProfileCover(formData: FormData): Promise<{ success?: boolean, url?: string, error?: string }> {
+  const { userId: clerkId } = await auth()
+  if (!clerkId) return { error: 'Unauthorized' }
+
+  const user = await getOrCreateUserByClerkId(clerkId)
+  if (!user) return { error: 'User not found' }
+
+  try {
+    const file = formData.get('file') as File
+    if (!file) return { error: 'No file provided' }
+
+    // Validate file type
+    const validTypes = ['image/jpeg', 'image/png', 'image/webp']
+    if (!validTypes.includes(file.type)) {
+      return { error: 'Invalid file type. Use JPEG, PNG, or WebP.' }
+    }
+
+    // Validate file size (max 10MB)
+    if (file.size > 10 * 1024 * 1024) {
+      return { error: 'File too large. Maximum 10MB.' }
+    }
+
+    // Generate unique filename
+    const ext = file.name.split('.').pop() || 'jpg'
+    const filename = `${user.id}/${Date.now()}.${ext}`
+
+    // Delete old cover if exists
+    if (user.cover_image_url) {
+      const oldPath = user.cover_image_url.split('/profile-covers/')[1]
+      if (oldPath) {
+        await supabaseAdmin.storage.from('profile-covers').remove([oldPath])
+      }
+    }
+
+    // Upload to profile-covers bucket
+    const { error: uploadError } = await supabaseAdmin.storage
+      .from('profile-covers')
+      .upload(filename, file, {
+        contentType: file.type,
+        upsert: true,
+      })
+
+    if (uploadError) {
+      console.error('Profile cover upload error:', uploadError)
+      return { error: 'Failed to upload image' }
+    }
+
+    // Get public URL
+    const { data: urlData } = supabaseAdmin.storage
+      .from('profile-covers')
+      .getPublicUrl(filename)
+
+    const coverUrl = urlData.publicUrl
+
+    // Update user record
+    const { error: updateError } = await supabaseAdmin
+      .from('users')
+      .update({ cover_image_url: coverUrl })
+      .eq('id', user.id)
+
+    if (updateError) {
+      console.error('Profile cover update error:', updateError)
+      return { error: 'Failed to save cover image' }
+    }
+
+    revalidatePath('/settings')
+    revalidatePath('/profiles')
+    if (user.profile_slug) {
+      revalidatePath(`/profile/${user.profile_slug}`)
+    }
+
+    return { success: true, url: coverUrl }
+  } catch (e) {
+    console.error('Profile cover upload exception:', e)
+    return { error: 'An unexpected error occurred' }
+  }
+}
+
+/**
+ * Remove profile cover image
+ */
+export async function removeProfileCover(): Promise<{ success?: boolean, error?: string }> {
+  const { userId: clerkId } = await auth()
+  if (!clerkId) return { error: 'Unauthorized' }
+
+  const user = await getOrCreateUserByClerkId(clerkId)
+  if (!user) return { error: 'User not found' }
+
+  try {
+    // Delete from storage if exists
+    if (user.cover_image_url) {
+      const oldPath = user.cover_image_url.split('/profile-covers/')[1]
+      if (oldPath) {
+        await supabaseAdmin.storage.from('profile-covers').remove([oldPath])
+      }
+    }
+
+    // Clear URL in database
+    const { error } = await supabaseAdmin
+      .from('users')
+      .update({ cover_image_url: null })
+      .eq('id', user.id)
+
+    if (error) {
+      console.error('Profile cover remove error:', error)
+      return { error: 'Failed to remove cover image' }
+    }
+
+    revalidatePath('/settings')
+    revalidatePath('/profiles')
+    if (user.profile_slug) {
+      revalidatePath(`/profile/${user.profile_slug}`)
+    }
+
+    return { success: true }
+  } catch (e) {
+    console.error('Profile cover remove exception:', e)
+    return { error: 'An unexpected error occurred' }
+  }
+}
+
+// ============================================
 // PUBLIC PROFILE QUERIES
 // ============================================
 
@@ -361,6 +490,7 @@ export async function getPublicProfiles(limit = 50, offset = 0) {
         display_name,
         profile_slug,
         avatar_url,
+        cover_image_url,
         visibility_mode,
         created_at
       `, { count: 'exact' })
@@ -392,16 +522,12 @@ export async function getPublicProfiles(limit = 50, offset = 0) {
         .in('user_id', profileIds),
     ])
 
-    // Map gallery_id to user_id and count galleries per user
-    const galleryToUser = new Map<string, string>()
+    // Count galleries per user
     const countMap = new Map<string, number>()
     const userGalleries = new Map<string, string[]>()
     
     galleryCounts?.forEach(g => {
-      galleryToUser.set(g.id, g.user_id)
       countMap.set(g.user_id, (countMap.get(g.user_id) || 0) + 1)
-      
-      // Track galleries per user
       const existing = userGalleries.get(g.user_id) || []
       existing.push(g.id)
       userGalleries.set(g.user_id, existing)
@@ -412,44 +538,43 @@ export async function getPublicProfiles(limit = 50, offset = 0) {
       if (s.business_name) settingsMap.set(s.user_id, s.business_name)
     })
 
-    // Get cover image for each profile - fetch one image per user's first gallery
-    const coverMap = new Map<string, string>()
-    
-    // Fetch cover images for each user in parallel
-    const coverPromises = profileIds.map(async (userId) => {
-      const userGalleryIds = userGalleries.get(userId) || []
-      if (userGalleryIds.length === 0) return
-      
-      // Get first image from this user's galleries
-      const { data: firstImage } = await supabaseAdmin
-        .from('images')
-        .select('storage_path, gallery_id')
-        .in('gallery_id', userGalleryIds)
-        .order('created_at', { ascending: true })
-        .limit(1)
-        .single()
-      
-      if (firstImage?.storage_path) {
-        coverMap.set(userId, firstImage.storage_path)
-      }
-    })
-    
-    await Promise.all(coverPromises)
-
+    // For profiles WITHOUT a dedicated cover, fallback to first gallery image
+    const fallbackCoverMap = new Map<string, string>()
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
     
-    const profiles = data?.map(p => {
-      const coverPath = coverMap.get(p.id)
-      return {
-        ...p,
-        display_name: p.display_name || settingsMap.get(p.id) || null,
-        galleryCount: countMap.get(p.id) || 0,
-        coverImagePath: coverPath || null,
-        coverImageUrl: coverPath 
-          ? `${supabaseUrl}/storage/v1/object/public/gallery-images/${coverPath}`
-          : null,
-      }
-    }) || []
+    const profilesNeedingFallback = data?.filter(p => !p.cover_image_url) || []
+    
+    if (profilesNeedingFallback.length > 0) {
+      const coverPromises = profilesNeedingFallback.map(async (profile) => {
+        const userGalleryIds = userGalleries.get(profile.id) || []
+        if (userGalleryIds.length === 0) return
+        
+        const { data: firstImage } = await supabaseAdmin
+          .from('images')
+          .select('storage_path')
+          .in('gallery_id', userGalleryIds)
+          .order('created_at', { ascending: true })
+          .limit(1)
+          .single()
+        
+        if (firstImage?.storage_path) {
+          fallbackCoverMap.set(
+            profile.id, 
+            `${supabaseUrl}/storage/v1/object/public/gallery-images/${firstImage.storage_path}`
+          )
+        }
+      })
+      
+      await Promise.all(coverPromises)
+    }
+    
+    const profiles = data?.map(p => ({
+      ...p,
+      display_name: p.display_name || settingsMap.get(p.id) || null,
+      galleryCount: countMap.get(p.id) || 0,
+      // Prefer dedicated cover_image_url, fallback to gallery image
+      coverImageUrl: p.cover_image_url || fallbackCoverMap.get(p.id) || null,
+    })) || []
 
     return { profiles, total: count || 0 }
   } catch (e) {

@@ -1,6 +1,7 @@
 'use client'
 
 import { ProfileVisibilitySettings } from '@/components/profile/ProfileVisibilitySettings'
+import { ProfileCoverUpload } from '@/components/settings/ProfileCoverUpload'
 import type { ProfileVisibilityMode } from '@/types/database'
 
 interface ProfileVisibilitySectionProps {
@@ -8,6 +9,7 @@ interface ProfileVisibilitySectionProps {
   profileSlug: string | null
   displayName: string | null
   bio: string | null
+  coverImageUrl?: string | null
 }
 
 export function ProfileVisibilitySection({
@@ -15,6 +17,7 @@ export function ProfileVisibilitySection({
   profileSlug,
   displayName,
   bio,
+  coverImageUrl,
 }: ProfileVisibilitySectionProps) {
   return (
     <section className="mb-16">
@@ -24,12 +27,25 @@ export function ProfileVisibilitySection({
       <p className="text-sm text-stone-500 mb-6">
         Control who can see your profile and galleries. Make your work discoverable or keep it private.
       </p>
-      <ProfileVisibilitySettings
-        currentMode={currentMode as ProfileVisibilityMode}
-        profileSlug={profileSlug}
-        displayName={displayName}
-        bio={bio}
-      />
+      
+      <div className="space-y-8">
+        <ProfileVisibilitySettings
+          currentMode={currentMode as ProfileVisibilityMode}
+          profileSlug={profileSlug}
+          displayName={displayName}
+          bio={bio}
+        />
+        
+        {/* Profile Cover Upload - only show if profile is public */}
+        {currentMode !== 'PRIVATE' && (
+          <div className="pt-6 border-t border-stone-100">
+            <ProfileCoverUpload 
+              currentCoverUrl={coverImageUrl || null}
+              displayName={displayName}
+            />
+          </div>
+        )}
+      </div>
     </section>
   )
 }

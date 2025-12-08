@@ -12,7 +12,6 @@ import {
   Lock,
   Download,
   ChevronDown,
-  Sparkles,
   Save
 } from 'lucide-react'
 import { createGallery } from '@/server/actions/gallery.actions'

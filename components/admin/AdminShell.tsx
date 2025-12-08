@@ -14,7 +14,7 @@ import {
   ScrollText,
   Settings,
   Flag,
-  Sparkles,
+  HeadphonesIcon,
   Crown,
   Shield,
   ExternalLink,
@@ -94,7 +94,7 @@ const ROLE_CONFIG = {
   },
   support: {
     label: 'Support',
-    icon: Sparkles,
+    icon: HeadphonesIcon,
     className: 'border border-[#E5E5E5] bg-white text-[#141414]',
   },
 }

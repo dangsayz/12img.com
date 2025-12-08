@@ -2,7 +2,7 @@
 
 import { useState, useRef, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Upload, Share2, Copy, Check, Download, Sparkles, X, Loader2 } from 'lucide-react'
+import { Upload, Share2, Copy, Check, Download, X, Loader2, Gift } from 'lucide-react'
 import Image from 'next/image'
 
 interface CardData {
@@ -194,7 +194,7 @@ export function DemoCardGenerator() {
                 </p>
                 
                 <div className="mt-4 flex items-center gap-2 text-xs text-stone-400">
-                  <Sparkles className="w-3.5 h-3.5" />
+                  <Gift className="w-3.5 h-3.5" />
                   <span>Free beautiful card to share</span>
                 </div>
               </div>

@@ -6,9 +6,8 @@ import { motion, useScroll, useSpring, useTransform } from 'framer-motion'
 import { EditorialSpread } from '@/lib/editorial/types'
 import { Spread } from './Spread'
 import { SpreadOverview } from './SpreadOverview'
-import { ArrowLeft, ChevronDown, Share2 } from 'lucide-react'
+import { ArrowLeft, ChevronDown } from 'lucide-react'
 import Link from 'next/link'
-import { ShareCardModal } from './ShareCardModal'
 
 interface PreviewImage {
   id: string
@@ -37,12 +36,6 @@ export function EditorialViewer({
   previewImages = []
 }: Props) {
   const [debug, setDebug] = useState(false)
-  const [showShareModal, setShowShareModal] = useState(false)
-  
-  // Build gallery URL
-  const galleryUrl = typeof window !== 'undefined' 
-    ? `${window.location.origin}/view-live/${galleryId}`
-    : `https://12img.com/view-live/${galleryId}`
   const { scrollYProgress } = useScroll()
   const scaleX = useSpring(scrollYProgress, {
     stiffness: 100,
@@ -81,15 +74,8 @@ export function EditorialViewer({
           <span className="text-xs font-medium tracking-wide text-stone-600 uppercase hidden sm:inline">Back</span>
         </Link>
         
-        {/* Right side - Share + Image count */}
+        {/* Right side - Image count */}
         <div className="pointer-events-auto flex items-center gap-2">
-          <button
-            onClick={() => setShowShareModal(true)}
-            className="flex items-center gap-2 bg-white/80 backdrop-blur-sm px-3 py-2 rounded-full shadow-sm opacity-60 hover:opacity-100 transition-opacity"
-          >
-            <Share2 className="w-4 h-4 text-stone-600" />
-            <span className="text-xs font-medium tracking-wide text-stone-600 uppercase hidden sm:inline">Share</span>
-          </button>
           {imageCount && imageCount > 0 && (
             <div className="bg-white/80 backdrop-blur-sm px-3 py-2 rounded-full shadow-sm hidden sm:block">
               <span className="text-xs font-medium tracking-wide text-stone-600">
@@ -145,15 +131,6 @@ export function EditorialViewer({
       {/* Index Sheet Footer */}
       <SpreadOverview spreads={spreads} onSpreadClick={scrollToSpread} />
 
-      {/* Share Card Modal */}
-      <ShareCardModal
-        isOpen={showShareModal}
-        onClose={() => setShowShareModal(false)}
-        title={title}
-        imageCount={imageCount || 0}
-        previewImages={previewImages}
-        galleryUrl={galleryUrl}
-      />
     </div>
   )
 }

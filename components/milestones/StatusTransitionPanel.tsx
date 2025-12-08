@@ -11,7 +11,6 @@ import {
   Palette,
   Gift,
   Archive,
-  Sparkles,
 } from 'lucide-react'
 import {
   type ExtendedContractStatus,
@@ -52,7 +51,7 @@ const TRANSITION_ACTIONS: Partial<Record<ExtendedContractStatus, {
     color: 'bg-purple-600 hover:bg-purple-700',
   },
   ready: {
-    icon: Sparkles,
+    icon: CheckCircle,
     label: 'Mark Editing Complete',
     description: 'Photos are ready for delivery',
     confirmText: 'Editing Complete',

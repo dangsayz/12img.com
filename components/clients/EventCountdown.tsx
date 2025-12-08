@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Calendar, Sparkles, Heart, PartyPopper, Baby, Users, Briefcase, Camera } from 'lucide-react'
+import { Calendar, Star, Heart, PartyPopper, Baby, Users, Briefcase, Camera } from 'lucide-react'
 import type { EventType } from '@/types/database'
 
 interface EventCountdownProps {
@@ -47,38 +47,38 @@ function getUrgencyLevel(days: number): 'relaxed' | 'approaching' | 'soon' | 'im
 
 const urgencyConfig = {
   relaxed: {
-    gradient: 'from-stone-100 to-stone-50',
-    ring: 'from-stone-300 to-stone-200',
+    gradient: 'from-stone-50 to-white',
+    ring: 'from-stone-400 to-stone-300',
     accent: 'text-stone-600',
     glow: '',
     message: 'Plenty of time',
   },
   approaching: {
-    gradient: 'from-amber-50 to-orange-50',
-    ring: 'from-amber-400 to-orange-300',
-    accent: 'text-amber-600',
+    gradient: 'from-stone-50 to-white',
+    ring: 'from-stone-500 to-stone-400',
+    accent: 'text-stone-700',
     glow: '',
     message: 'Coming up',
   },
   soon: {
-    gradient: 'from-amber-100 to-orange-100',
-    ring: 'from-amber-500 to-orange-400',
-    accent: 'text-amber-700',
-    glow: 'shadow-amber-200/50',
-    message: 'Getting close!',
+    gradient: 'from-stone-100 to-stone-50',
+    ring: 'from-stone-600 to-stone-500',
+    accent: 'text-stone-800',
+    glow: '',
+    message: 'Getting close',
   },
   imminent: {
-    gradient: 'from-rose-100 to-pink-100',
-    ring: 'from-rose-500 to-pink-400',
+    gradient: 'from-rose-50 to-white',
+    ring: 'from-rose-400 to-rose-300',
     accent: 'text-rose-600',
-    glow: 'shadow-rose-200/50',
-    message: 'Almost here!',
+    glow: '',
+    message: 'Almost here',
   },
   today: {
-    gradient: 'from-emerald-100 to-teal-100',
-    ring: 'from-emerald-500 to-teal-400',
+    gradient: 'from-emerald-50 to-white',
+    ring: 'from-emerald-500 to-emerald-400',
     accent: 'text-emerald-600',
-    glow: 'shadow-emerald-200/50',
+    glow: '',
     message: "It's today!",
   },
 }
@@ -333,31 +333,17 @@ export function EventCountdown({
         </div>
         
         {/* Event date footer */}
-        <div className="mt-4 pt-4 border-t border-stone-200/40">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Calendar className="w-3.5 h-3.5 text-stone-400" />
-              <p className="text-xs text-stone-500">
-                {eventDate.toLocaleDateString('en-US', { 
-                  weekday: 'long',
-                  month: 'long', 
-                  day: 'numeric', 
-                  year: 'numeric' 
-                })}
-              </p>
-            </div>
-            
-            {/* Progress indicator */}
-            <div className="flex items-center gap-2">
-              <div className="w-16 h-1 bg-stone-200/60 rounded-full overflow-hidden">
-                <motion.div
-                  initial={{ width: 0 }}
-                  animate={{ width: `${progress}%` }}
-                  transition={{ duration: 1, ease: 'easeOut' }}
-                  className={`h-full bg-gradient-to-r ${config.ring} rounded-full`}
-                />
-              </div>
-            </div>
+        <div className="mt-4 pt-4 border-t border-stone-200/50">
+          <div className="flex items-center gap-2">
+            <Calendar className="w-3.5 h-3.5 text-stone-400" />
+            <p className="text-sm text-stone-500">
+              {eventDate.toLocaleDateString('en-US', { 
+                weekday: 'long',
+                month: 'long', 
+                day: 'numeric', 
+                year: 'numeric' 
+              })}
+            </p>
           </div>
         </div>
       </div>

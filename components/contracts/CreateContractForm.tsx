@@ -16,7 +16,6 @@ import {
   Clock,
   DollarSign,
   Users,
-  Sparkles,
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { type ClientProfile, EVENT_TYPE_LABELS, CLAUSE_CATEGORY_LABELS } from '@/lib/contracts/types'
@@ -182,7 +181,7 @@ export function CreateContractForm({ client }: CreateContractFormProps) {
                   </>
                 ) : (
                   <>
-                    <Sparkles className="w-4 h-4" />
+                    <FileText className="w-4 h-4" />
                     <span className="hidden sm:inline">Create Contract</span>
                     <span className="sm:hidden">Create</span>
                   </>
@@ -488,7 +487,7 @@ export function CreateContractForm({ client }: CreateContractFormProps) {
                   </>
                 ) : (
                   <>
-                    <Sparkles className="w-5 h-5" />
+                    <FileText className="w-5 h-5" />
                     Create Contract
                   </>
                 )}

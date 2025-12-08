@@ -1,9 +1,9 @@
 'use client'
 
-import { useState, useCallback, useMemo } from 'react'
+import { useState, useCallback, useMemo, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { motion } from 'framer-motion'
-import { Camera, Lock, Image as ImageIcon, Mail, Globe, ArrowDown } from 'lucide-react'
+import { motion, useScroll, useTransform, useSpring, AnimatePresence } from 'framer-motion'
+import { Camera, Lock, Image as ImageIcon, Mail, Globe } from 'lucide-react'
 import { VisibilityBadge, LockIndicator, PrivateOverlay } from '@/components/ui/VisibilityBadge'
 import { PublicHeader } from '@/components/profile/PublicHeader'
 import { PINEntryModal } from '@/components/profile/PINEntryModal'
@@ -229,162 +229,218 @@ export function ProfilePageClient({ profile }: ProfilePageClientProps) {
     return spreads
   }, [displayImages])
 
+  // Scroll-based parallax for hero
+  const { scrollY } = useScroll()
+  const heroY = useTransform(scrollY, [0, 500], [0, 100])
+  const heroOpacity = useTransform(scrollY, [0, 400], [1, 0])
+  const titleY = useTransform(scrollY, [0, 300], [0, -30])
+  const smoothHeroY = useSpring(heroY, { stiffness: 100, damping: 30 })
+  const smoothTitleY = useSpring(titleY, { stiffness: 100, damping: 30 })
+
+  // Track if page has loaded for staggered entrance
+  const [hasLoaded, setHasLoaded] = useState(false)
+  useEffect(() => {
+    const timer = setTimeout(() => setHasLoaded(true), 100)
+    return () => clearTimeout(timer)
+  }, [])
+
   return (
-    <div className="min-h-screen bg-[#faf9f7]">
+    <div className="min-h-screen bg-[#faf9f7] overflow-x-hidden">
       <PublicHeader />
 
-      {/* Editorial Hero - Clean, minimal, magazine-style */}
-      <section className="relative min-h-screen flex flex-col">
-        {/* Top bar with name */}
-        <div className="pt-8 pb-6 text-center">
-          <motion.h1
-            initial={{ opacity: 0, y: -10 }}
+      {/* Editorial Hero - Ultra minimal, magazine-style */}
+      <motion.section 
+        className="relative min-h-screen flex flex-col"
+        style={{ opacity: heroOpacity }}
+      >
+        {/* Top bar with name - refined entrance */}
+        <motion.div 
+          className="pt-12 pb-8 text-center"
+          style={{ y: smoothTitleY }}
+        >
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
-            className="font-serif text-2xl sm:text-3xl tracking-[0.2em] text-stone-800 uppercase"
+            transition={{ duration: 1.2, ease: [0.22, 1, 0.36, 1] }}
           >
-            {profile.display_name || 'Photographer'}
-          </motion.h1>
-        </div>
+            <h1 className="font-serif text-2xl sm:text-3xl tracking-[0.25em] text-stone-800 uppercase font-light">
+              {profile.display_name || 'Photographer'}
+            </h1>
+            <motion.div 
+              className="w-8 h-px bg-stone-300 mx-auto mt-4"
+              initial={{ scaleX: 0 }}
+              animate={{ scaleX: 1 }}
+              transition={{ duration: 0.8, delay: 0.6, ease: [0.22, 1, 0.36, 1] }}
+            />
+          </motion.div>
+        </motion.div>
 
-        {/* Hero Image - Editorial asymmetric layout */}
-        <div className="flex-1 flex items-center justify-center px-6 sm:px-12 lg:px-24 pb-12">
-          <div className="grid grid-cols-12 gap-6 lg:gap-12 w-full max-w-7xl items-center">
+        {/* Hero Image - Editorial asymmetric layout with parallax */}
+        <div className="flex-1 flex items-center justify-center px-6 sm:px-12 lg:px-24 pb-16">
+          <div className="grid grid-cols-12 gap-8 lg:gap-16 w-full max-w-7xl items-center">
             {/* Image - Takes 7 columns on desktop */}
             <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 1, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
+              initial={{ opacity: 0, y: 60 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 1.2, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}
               className="col-span-12 lg:col-span-7"
+              style={{ y: smoothHeroY }}
             >
               {heroImage ? (
-                <div className="relative aspect-[4/5] lg:aspect-[3/4] overflow-hidden bg-stone-100">
-                  <img
+                <div className="relative aspect-[4/5] lg:aspect-[3/4] overflow-hidden bg-stone-100 group">
+                  <motion.img
                     src={heroImage}
                     alt={profile.display_name || 'Portfolio'}
                     className="w-full h-full object-cover"
+                    initial={{ scale: 1.1 }}
+                    animate={{ scale: 1 }}
+                    transition={{ duration: 1.8, ease: [0.22, 1, 0.36, 1] }}
                   />
-                  {/* Subtle paper texture overlay */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/5 to-transparent pointer-events-none" />
+                  {/* Cinematic vignette */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/10 via-transparent to-black/5 pointer-events-none" />
+                  {/* Subtle film grain texture */}
+                  <div className="absolute inset-0 opacity-[0.015] pointer-events-none mix-blend-overlay" 
+                    style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 256 256\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'noise\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.9\' numOctaves=\'4\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23noise)\'/%3E%3C/svg%3E")' }}
+                  />
                 </div>
               ) : (
-                <div className="aspect-[4/5] lg:aspect-[3/4] bg-stone-200 flex items-center justify-center">
-                  <Camera className="w-16 h-16 text-stone-300" />
+                <div className="aspect-[4/5] lg:aspect-[3/4] bg-stone-100 flex items-center justify-center">
+                  <Camera className="w-12 h-12 text-stone-300" />
                 </div>
               )}
             </motion.div>
 
             {/* Text content - Takes 5 columns on desktop */}
             <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 1, delay: 0.4, ease: [0.22, 1, 0.36, 1] }}
+              initial={{ opacity: 0, y: 40 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 1.2, delay: 0.6, ease: [0.22, 1, 0.36, 1] }}
               className="col-span-12 lg:col-span-5 lg:pl-8"
             >
-              {/* Vertical text accent */}
-              <div className="hidden lg:block mb-8">
-                <p className="text-[10px] tracking-[0.3em] text-stone-400 uppercase transform -rotate-90 origin-left translate-y-24">
+              {/* Vertical text accent - refined */}
+              <div className="hidden lg:block mb-12">
+                <p className="text-[9px] tracking-[0.4em] text-stone-400/70 uppercase transform -rotate-90 origin-left translate-y-20 font-light">
                   Photos by {profile.display_name || 'Artist'}
                 </p>
               </div>
 
-              {/* Featured gallery title */}
+              {/* Featured gallery title - editorial typography */}
               {profile.galleries[0] && (
-                <div className="mb-8">
-                  <h2 className="font-serif text-3xl sm:text-4xl lg:text-5xl text-stone-800 leading-tight tracking-tight">
+                <motion.div 
+                  className="mb-10"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 1, delay: 0.9 }}
+                >
+                  <h2 className="font-serif text-3xl sm:text-4xl lg:text-[2.75rem] text-stone-800 leading-[1.15] tracking-[-0.01em]">
                     {profile.galleries[0].title}
                   </h2>
-                  <div className="mt-4 w-12 h-px bg-stone-300" />
-                  <p className="mt-4 text-sm text-stone-500 tracking-wide">
+                  <motion.div 
+                    className="mt-6 w-16 h-px bg-stone-300"
+                    initial={{ scaleX: 0, originX: 0 }}
+                    animate={{ scaleX: 1 }}
+                    transition={{ duration: 0.6, delay: 1.2 }}
+                  />
+                  <p className="mt-5 text-[11px] tracking-[0.2em] text-stone-400 uppercase font-light">
                     {new Date(profile.galleries[0].created_at).toLocaleDateString('en-US', {
                       month: 'long',
-                      day: 'numeric',
                       year: 'numeric'
                     })}
                   </p>
-                </div>
+                </motion.div>
               )}
 
-              {/* Bio */}
+              {/* Bio - refined */}
               {profile.bio && (
-                <p className="text-stone-600 leading-relaxed max-w-md font-light">
+                <motion.p 
+                  className="text-stone-500 leading-[1.8] max-w-md font-light text-[15px]"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 1, delay: 1.1 }}
+                >
                   {profile.bio}
-                </p>
+                </motion.p>
               )}
 
-              {/* Contact */}
-              <div className="mt-8 flex items-center gap-4">
+              {/* Contact - minimal */}
+              <motion.div 
+                className="mt-10 flex items-center gap-6"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 1, delay: 1.3 }}
+              >
                 {profile.contactEmail && (
                   <a
                     href={`mailto:${profile.contactEmail}`}
-                    className="text-xs tracking-[0.15em] text-stone-500 hover:text-stone-800 transition-colors uppercase"
+                    className="text-[10px] tracking-[0.2em] text-stone-400 hover:text-stone-700 transition-colors duration-500 uppercase"
                   >
                     Contact
                   </a>
                 )}
                 {profile.contactEmail && profile.websiteUrl && (
-                  <span className="text-stone-300">·</span>
+                  <span className="w-1 h-1 rounded-full bg-stone-300" />
                 )}
                 {profile.websiteUrl && (
                   <a
                     href={profile.websiteUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-xs tracking-[0.15em] text-stone-500 hover:text-stone-800 transition-colors uppercase"
+                    className="text-[10px] tracking-[0.2em] text-stone-400 hover:text-stone-700 transition-colors duration-500 uppercase"
                   >
                     Website
                   </a>
                 )}
-              </div>
+              </motion.div>
             </motion.div>
           </div>
         </div>
 
-        {/* Scroll indicator */}
+        {/* Scroll indicator - ultra minimal */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ duration: 0.6, delay: 1 }}
-          className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2"
+          transition={{ duration: 1, delay: 1.5 }}
+          className="absolute bottom-12 left-1/2 -translate-x-1/2"
         >
           <motion.div
-            animate={{ y: [0, 6, 0] }}
-            transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
-          >
-            <ArrowDown className="w-4 h-4 text-stone-400" />
-          </motion.div>
+            className="w-px h-12 bg-gradient-to-b from-stone-300 to-transparent"
+            animate={{ scaleY: [1, 0.6, 1] }}
+            transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
+          />
         </motion.div>
-      </section>
+      </motion.section>
 
-      {/* Tab Navigation - Editorial style */}
-      <nav className="sticky top-0 z-40 bg-[#faf9f7]/95 backdrop-blur-sm border-b border-stone-200/50">
+      {/* Tab Navigation - Ultra minimal editorial */}
+      <nav className="sticky top-0 z-40 bg-[#faf9f7]/98 backdrop-blur-md border-b border-stone-200/30">
         <div className="max-w-7xl mx-auto px-6">
-          <div className="flex items-center justify-center gap-12 h-16">
+          <div className="flex items-center justify-center gap-16 h-14">
             <button
               onClick={() => setActiveTab('portfolio')}
-              className={`text-xs tracking-[0.2em] uppercase transition-colors relative py-6 ${
-                activeTab === 'portfolio' ? 'text-stone-900' : 'text-stone-400 hover:text-stone-600'
+              className={`text-[10px] tracking-[0.25em] uppercase transition-all duration-500 relative py-5 ${
+                activeTab === 'portfolio' ? 'text-stone-800' : 'text-stone-400 hover:text-stone-600'
               }`}
             >
               Portfolio
               {activeTab === 'portfolio' && (
                 <motion.div
                   layoutId="activeTab"
-                  className="absolute bottom-0 left-0 right-0 h-px bg-stone-900"
+                  className="absolute bottom-0 left-0 right-0 h-[2px] bg-stone-800"
+                  transition={{ type: 'spring', stiffness: 500, damping: 35 }}
                 />
               )}
             </button>
             <button
               onClick={() => setActiveTab('galleries')}
-              className={`text-xs tracking-[0.2em] uppercase transition-colors relative py-6 ${
-                activeTab === 'galleries' ? 'text-stone-900' : 'text-stone-400 hover:text-stone-600'
+              className={`text-[10px] tracking-[0.25em] uppercase transition-all duration-500 relative py-5 ${
+                activeTab === 'galleries' ? 'text-stone-800' : 'text-stone-400 hover:text-stone-600'
               }`}
             >
               Galleries
               {activeTab === 'galleries' && (
                 <motion.div
                   layoutId="activeTab"
-                  className="absolute bottom-0 left-0 right-0 h-px bg-stone-900"
+                  className="absolute bottom-0 left-0 right-0 h-[2px] bg-stone-800"
+                  transition={{ type: 'spring', stiffness: 500, damping: 35 }}
                 />
               )}
             </button>
@@ -393,25 +449,39 @@ export function ProfilePageClient({ profile }: ProfilePageClientProps) {
       </nav>
 
       {/* Content */}
-      <main className="py-24 lg:py-32">
+      <AnimatePresence mode="wait">
+        <motion.main 
+          key={activeTab}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -20 }}
+          transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+          className="py-32 lg:py-40"
+        >
         {activeTab === 'portfolio' ? (
           /* Editorial Portfolio Layout */
           displayImages.length > 0 ? (
-            <div className="space-y-24 lg:space-y-40">
-              {/* Opening editorial text block */}
+            <div className="space-y-32 lg:space-y-48">
+              {/* Opening editorial text block - refined */}
               {profile.bio && (
                 <motion.div
-                  initial={{ opacity: 0, y: 20 }}
+                  initial={{ opacity: 0, y: 30 }}
                   whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.8 }}
+                  viewport={{ once: true, margin: '-50px' }}
+                  transition={{ duration: 1, ease: [0.22, 1, 0.36, 1] }}
                   className="max-w-2xl mx-auto px-6 text-center"
                 >
-                  <div className="w-px h-12 bg-stone-300 mx-auto mb-8" />
-                  <p className="font-serif text-xl lg:text-2xl text-stone-700 leading-relaxed italic">
+                  <motion.div 
+                    className="w-px h-16 bg-gradient-to-b from-transparent via-stone-300 to-transparent mx-auto mb-10"
+                    initial={{ scaleY: 0 }}
+                    whileInView={{ scaleY: 1 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.8, delay: 0.2 }}
+                  />
+                  <p className="font-serif text-xl lg:text-2xl text-stone-600 leading-[1.8] italic font-light">
                     "{profile.bio}"
                   </p>
-                  <p className="mt-6 text-xs tracking-[0.2em] text-stone-400 uppercase">
+                  <p className="mt-8 text-[10px] tracking-[0.3em] text-stone-400 uppercase font-light">
                     — {profile.display_name}
                   </p>
                 </motion.div>
@@ -842,7 +912,8 @@ export function ProfilePageClient({ profile }: ProfilePageClientProps) {
             </div>
           )
         )}
-      </main>
+        </motion.main>
+      </AnimatePresence>
 
       {/* Footer - Minimal editorial */}
       <footer className="py-20 lg:py-32">

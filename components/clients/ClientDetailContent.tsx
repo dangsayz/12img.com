@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useState, useTransition, useRef } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -26,15 +26,18 @@ import {
   X,
   Heart,
   Camera,
-  Sparkles,
+  Zap,
   Clock,
   CheckCircle2,
   AlertCircle,
+  Pencil,
+  Loader2,
+  StickyNote,
 } from 'lucide-react'
 import { type ClientProfile, type ContractWithDetails, type Milestone, type DeliveryProgress, CONTRACT_STATUS_CONFIG, EVENT_TYPE_LABELS } from '@/lib/contracts/types'
 import { type Message } from '@/server/actions/message.actions'
-import { generatePortalToken, getPortalUrl, type PortalToken } from '@/server/actions/portal.actions'
-import { archiveClientProfile } from '@/server/actions/client.actions'
+import { generatePortalToken, type PortalToken } from '@/server/actions/portal.actions'
+import { archiveClientProfile, updateClientProfile } from '@/server/actions/client.actions'
 import { MessageModal } from '@/components/messages/MessageModal'
 import { EditClientModal } from '@/components/clients/EditClientModal'
 import { CreateContractModal } from '@/components/contracts/CreateContractModal'
@@ -42,6 +45,7 @@ import { EventCountdown } from '@/components/clients/EventCountdown'
 import { MilestoneTimeline, MilestoneTimelineCompact } from '@/components/milestones'
 import { DeliveryCountdown } from '@/components/milestones'
 import { ContractStatusBadge } from '@/components/contracts/ContractStatusBadge'
+import { DownloadOverview } from '@/components/ui/DownloadOverview'
 
 interface ClientDetailContentProps {
   client: ClientProfile
@@ -69,13 +73,15 @@ export function ClientDetailContent({
   const [showEditModal, setShowEditModal] = useState(false)
   const [showArchiveConfirm, setShowArchiveConfirm] = useState(false)
   const [showCreateContractModal, setShowCreateContractModal] = useState(false)
+  const overviewRef = useRef<HTMLDivElement>(null)
 
   const activeToken = portalTokens.find(t => !t.isRevoked && new Date(t.expiresAt) > new Date())
   const latestContract = contracts[0]
 
   const handleCopyPortalLink = async () => {
     if (!activeToken) return
-    const url = await getPortalUrl(activeToken.token)
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || window.location.origin
+    const url = `${baseUrl}/portal/${activeToken.token}`
     await navigator.clipboard.writeText(url)
     setCopiedLink(true)
     setTimeout(() => setCopiedLink(false), 2000)
@@ -95,18 +101,22 @@ export function ClientDetailContent({
 
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      {/* Hero Header */}
-      <div className="mb-8">
-        <Link
-          href="/dashboard/clients"
-          className="inline-flex items-center gap-2 text-sm text-stone-400 hover:text-stone-600 transition-colors mb-6 group"
-        >
-          <ArrowLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" />
-          Back to Clients
-        </Link>
+      {/* Back Link - excluded from capture */}
+      <Link
+        href="/dashboard/clients"
+        className="inline-flex items-center gap-2 text-sm text-stone-400 hover:text-stone-600 transition-colors mb-6 group"
+        data-html2canvas-ignore
+      >
+        <ArrowLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" />
+        Back to Clients
+      </Link>
 
-        {/* Main Header Card */}
-        <div className="relative bg-gradient-to-br from-stone-50 via-white to-stone-50 rounded-2xl border border-stone-200/60 shadow-sm">
+      {/* Capturable Overview Section */}
+      <div ref={overviewRef} className="bg-white">
+        {/* Hero Header */}
+        <div className="mb-8">
+          {/* Main Header Card */}
+          <div className="relative bg-gradient-to-br from-stone-50 via-white to-stone-50 rounded-2xl border border-stone-200/60 shadow-sm">
           {/* Subtle pattern overlay */}
           <div className="absolute inset-0 opacity-[0.015]" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="none" fill-rule="evenodd"%3E%3Cg fill="%23000000" fill-opacity="1"%3E%3Cpath d="M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")' }} />
           
@@ -160,7 +170,7 @@ export function ClientDetailContent({
                     )}
                     {client.eventType === 'event' && (
                       <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-blue-50 text-blue-600 rounded-full text-xs font-medium">
-                        <Sparkles className="w-3 h-3" />
+                        <Calendar className="w-3 h-3" />
                         Event
                       </span>
                     )}
@@ -199,7 +209,12 @@ export function ClientDetailContent({
               )}
 
               {/* Actions */}
-              <div className="flex items-center gap-2 lg:ml-6">
+              <div className="flex items-center gap-2 lg:ml-6" data-html2canvas-ignore>
+                <DownloadOverview 
+                  targetRef={overviewRef}
+                  clientName={`${client.firstName} ${client.lastName}`}
+                  variant="icon"
+                />
                 {activeToken ? (
                   <button
                     onClick={handleCopyPortalLink}
@@ -534,7 +549,7 @@ export function ClientDetailContent({
             <div className="bg-white rounded-2xl border border-stone-200/60 shadow-sm overflow-hidden">
               <div className="px-6 py-4 border-b border-stone-100 bg-stone-50/50">
                 <h2 className="text-sm font-semibold text-stone-900 flex items-center gap-2">
-                  <Sparkles className="w-4 h-4 text-stone-400" />
+                  <Zap className="w-4 h-4 text-stone-400" />
                   Quick Actions
                 </h2>
               </div>
@@ -664,6 +679,8 @@ export function ClientDetailContent({
           )}
         </div>
       )}
+      </div>
+      {/* End of capturable section */}
 
       {/* Message Modal */}
       <MessageModal

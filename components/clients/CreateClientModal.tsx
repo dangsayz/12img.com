@@ -508,13 +508,19 @@ export function CreateClientModal({ isOpen, onClose }: CreateClientModalProps) {
                           Total Price ($)
                         </label>
                         <input
-                          type="number"
+                          type="text"
                           value={formData.packagePrice}
-                          onChange={e => updateField('packagePrice', e.target.value)}
+                          onChange={e => {
+                            const value = e.target.value.replace(/[^0-9]/g, '').slice(0, 7)
+                            const num = parseInt(value)
+                            if (value === '' || (num >= 0 && num <= 999999)) {
+                              updateField('packagePrice', value)
+                            }
+                          }}
                           className="w-full px-4 py-3 text-base border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-stone-900/10 focus:border-stone-400"
                           placeholder="3500"
-                          min="0"
-                          inputMode="decimal"
+                          maxLength={7}
+                          inputMode="numeric"
                           enterKeyHint="next"
                         />
                       </div>
@@ -523,13 +529,18 @@ export function CreateClientModal({ isOpen, onClose }: CreateClientModalProps) {
                           Hours
                         </label>
                         <input
-                          type="number"
+                          type="text"
                           value={formData.packageHours}
-                          onChange={e => updateField('packageHours', e.target.value)}
+                          onChange={e => {
+                            const value = e.target.value.replace(/[^0-9]/g, '').slice(0, 2)
+                            const num = parseInt(value)
+                            if (value === '' || (num >= 1 && num <= 99)) {
+                              updateField('packageHours', value)
+                            }
+                          }}
                           className="w-full px-4 py-3 text-base border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-stone-900/10 focus:border-stone-400"
                           placeholder="8"
-                          min="1"
-                          max="24"
+                          maxLength={2}
                           inputMode="numeric"
                           enterKeyHint="next"
                         />
@@ -547,14 +558,20 @@ export function CreateClientModal({ isOpen, onClose }: CreateClientModalProps) {
                             Deposit ($)
                           </label>
                           <input
-                            type="number"
+                            type="text"
                             value={formData.retainerFee}
-                            onChange={e => updateField('retainerFee', e.target.value)}
+                            onChange={e => {
+                              const value = e.target.value.replace(/[^0-9]/g, '').slice(0, 7)
+                              const num = parseInt(value)
+                              const maxDeposit = formData.packagePrice ? parseInt(formData.packagePrice) : 999999
+                              if (value === '' || (num >= 0 && num <= Math.min(maxDeposit, 999999))) {
+                                updateField('retainerFee', value)
+                              }
+                            }}
                             className="w-full px-4 py-3 text-base border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-stone-900/10 focus:border-stone-400"
                             placeholder="1000"
-                            min="0"
-                            max="99999"
-                            inputMode="decimal"
+                            maxLength={7}
+                            inputMode="numeric"
                             enterKeyHint="next"
                           />
                         </div>

@@ -17,6 +17,7 @@ import {
 } from 'lucide-react'
 import { type ClientWithStats, CONTRACT_STATUS_CONFIG, EVENT_TYPE_LABELS } from '@/lib/contracts/types'
 import { CreateClientModal } from './CreateClientModal'
+import { OnboardingHint } from '@/components/onboarding'
 
 interface ClientsPageContentProps {
   clients: ClientWithStats[]
@@ -74,8 +75,11 @@ export function ClientsPageContent({ clients }: ClientsPageContentProps) {
 
   return (
     <>
+      {/* Onboarding Tour */}
+      <OnboardingHint section="clients" />
+
       {/* Header */}
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex items-center justify-between mb-8" data-onboarding="clients-header">
         <div className="flex items-center gap-3">
           <Link
             href="/dashboard"
@@ -88,6 +92,7 @@ export function ClientsPageContent({ clients }: ClientsPageContentProps) {
         <button
           onClick={() => setShowCreateModal(true)}
           className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm bg-stone-900 text-white rounded-lg hover:bg-stone-800 transition-colors"
+          data-onboarding="clients-add"
         >
           <Plus className="w-4 h-4" />
           <span className="hidden sm:inline">Add Client</span>
@@ -95,7 +100,7 @@ export function ClientsPageContent({ clients }: ClientsPageContentProps) {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-3 gap-4 mb-6">
+      <div className="grid grid-cols-3 gap-4 mb-6" data-onboarding="clients-stats">
         <button
           onClick={() => setFilter('all')}
           className={`p-4 rounded-lg border transition-colors text-left ${
@@ -151,7 +156,7 @@ export function ClientsPageContent({ clients }: ClientsPageContentProps) {
       </div>
 
       {/* Search */}
-      <div className="relative mb-6">
+      <div className="relative mb-6" data-onboarding="clients-search">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400" />
         <input
           type="text"
@@ -163,7 +168,7 @@ export function ClientsPageContent({ clients }: ClientsPageContentProps) {
       </div>
 
       {/* Client List */}
-      <div className="bg-white rounded-xl border border-stone-200 overflow-hidden">
+      <div className="bg-white rounded-xl border border-stone-200 overflow-hidden" data-onboarding="clients-list">
         {filteredClients.length === 0 ? (
           <div className="p-12 text-center">
             <Users className="w-12 h-12 text-stone-300 mx-auto mb-4" />

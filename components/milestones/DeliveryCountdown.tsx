@@ -2,7 +2,7 @@
 
 import { useMemo } from 'react'
 import { motion } from 'framer-motion'
-import { Clock, CheckCircle, AlertTriangle, Calendar, Sparkles } from 'lucide-react'
+import { Clock, CheckCircle, AlertTriangle, Calendar, Zap } from 'lucide-react'
 import { type DeliveryProgress } from '@/lib/contracts/types'
 
 interface DeliveryCountdownProps {
@@ -71,7 +71,7 @@ export function DeliveryCountdown({
         text: 'text-blue-700',
         accent: 'text-blue-600',
         progress: 'bg-blue-500',
-        icon: Sparkles,
+        icon: Zap,
       }
     }
     return {

@@ -2,7 +2,7 @@
 
 import { motion } from 'framer-motion'
 import Link from 'next/link'
-import { Check, MessageCircle, TrendingUp, Users, Sparkles, ArrowRight } from 'lucide-react'
+import { Check, MessageCircle, TrendingUp, Users, Gift, ArrowRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { PLANS, PRICING, formatPrice } from '@/lib/config/pricing'
 
@@ -116,7 +116,7 @@ export function PhotographerSection() {
               {/* Free Tier Badge */}
               <div className="absolute top-4 right-4">
                 <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200">
-                  <Sparkles className="w-3 h-3 text-emerald-600" />
+                  <Gift className="w-3 h-3 text-emerald-600" />
                   <span className="text-xs font-medium text-emerald-700">Free tier available</span>
                 </div>
               </div>

@@ -11,7 +11,7 @@ import {
   MapPin,
   Palette,
   Type,
-  Sparkles,
+  MessageSquare,
   Check,
   ChevronDown,
   X,
@@ -139,7 +139,7 @@ export function PresentationSettings({
     { id: 'location', label: 'Location', icon: MapPin },
     { id: 'cover', label: 'Cover Image', icon: ImageIcon },
     { id: 'style', label: 'Visual Style', icon: Palette },
-    { id: 'message', label: 'Personal Message', icon: Sparkles },
+    { id: 'message', label: 'Personal Message', icon: MessageSquare },
   ]
 
   const content = (
@@ -457,7 +457,7 @@ export function PresentationSettings({
       <CollapsibleSection
         id="message"
         label="Personal Message"
-        icon={Sparkles}
+        icon={MessageSquare}
         isOpen={activeSection === 'message'}
         onToggle={() => setActiveSection(activeSection === 'message' ? null : 'message')}
       >

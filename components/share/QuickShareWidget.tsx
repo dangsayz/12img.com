@@ -10,7 +10,6 @@ import {
   Copy, 
   ExternalLink, 
   RotateCcw,
-  Sparkles,
   Mail,
   MessageSquare
 } from 'lucide-react'
@@ -369,7 +368,7 @@ export function QuickShareWidget({ className }: QuickShareWidgetProps) {
                         {/* Features badges */}
                         <div className="flex items-center justify-center gap-3 mt-4 text-xs text-gray-400">
                           <span className="flex items-center gap-1">
-                            <Sparkles className="w-3 h-3" />
+                            <Zap className="w-3 h-3" />
                             No sign-up
                           </span>
                           <span>•</span>

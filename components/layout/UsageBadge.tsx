@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { getPlan, normalizePlanId, getStorageLimitBytes, type LegacyPlanId } from '@/lib/config/pricing'
 import { cn } from '@/lib/utils/cn'
-import { Crown, Sparkles, Star, Zap, User } from 'lucide-react'
+import { Crown, Gem, Star, Zap, User } from 'lucide-react'
 
 interface UsageBadgeProps {
   plan: LegacyPlanId | string
@@ -17,7 +17,7 @@ const PLAN_ICONS: Record<string, React.ReactNode> = {
   free: <User className="w-3 h-3" />,
   essential: <Zap className="w-3 h-3" />,
   pro: <Star className="w-3 h-3" />,
-  studio: <Sparkles className="w-3 h-3" />,
+  studio: <Gem className="w-3 h-3" />,
   elite: <Crown className="w-3 h-3" />,
 }
 

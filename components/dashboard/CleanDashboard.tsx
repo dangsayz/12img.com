@@ -7,7 +7,6 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { 
   Search, 
   Lock,
-  Eye,
   MoreHorizontal,
   Trash2,
   Copy,
@@ -21,13 +20,13 @@ import {
   Users,
   FileText,
   MessageSquare,
-  X,
-  Sparkles
+  X
 } from 'lucide-react'
 import { deleteGallery, toggleGalleryVisibility } from '@/server/actions/gallery.actions'
 import { updateProfileVisibility } from '@/server/actions/profile.actions'
 import { VisibilityBadgeOverlay } from '@/components/ui/VisibilityBadge'
 import type { ProfileVisibilityMode } from '@/types/database'
+import { OnboardingHint } from '@/components/onboarding'
 
 interface Gallery {
   id: string
@@ -41,6 +40,23 @@ interface Gallery {
   updatedAt: string
   category?: string
   isPublic: boolean
+}
+
+// Format relative time like "2 days ago", "3 weeks ago"
+function formatRelativeTime(dateString: string): string {
+  const date = new Date(dateString)
+  const now = new Date()
+  const diffMs = now.getTime() - date.getTime()
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24))
+  
+  if (diffDays === 0) return 'Today'
+  if (diffDays === 1) return 'Yesterday'
+  if (diffDays < 7) return `${diffDays} days ago`
+  if (diffDays < 14) return '1 week ago'
+  if (diffDays < 30) return `${Math.floor(diffDays / 7)} weeks ago`
+  if (diffDays < 60) return '1 month ago'
+  if (diffDays < 365) return `${Math.floor(diffDays / 30)} months ago`
+  return `${Math.floor(diffDays / 365)} year${Math.floor(diffDays / 365) > 1 ? 's' : ''} ago`
 }
 
 interface CleanDashboardProps {
@@ -118,8 +134,11 @@ export function CleanDashboard({ galleries, photographerName, visibilityMode = '
 
   return (
     <div className="min-h-screen bg-white">
+      {/* Onboarding Tour */}
+      <OnboardingHint section="dashboard" />
+
       {/* Hero Header - Apple inspired */}
-      <header className="min-h-[40vh] flex flex-col items-center justify-center px-6">
+      <header className="min-h-[40vh] flex flex-col items-center justify-center px-6" data-onboarding="dashboard-header">
         <motion.h1 
           initial={{ opacity: 0, scale: 0.96 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -317,11 +336,23 @@ export function CleanDashboard({ galleries, photographerName, visibilityMode = '
       </AnimatePresence>
 
       {/* Gallery Grid */}
-      <div className="max-w-7xl mx-auto px-6 py-12">
+      <div className="max-w-7xl mx-auto px-6 py-16" data-onboarding="dashboard-galleries">
         {filteredGalleries.length === 0 ? (
           <EmptyState hasSearch={!!searchQuery} onClearSearch={() => setSearchQuery('')} />
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-10">
+          <motion.div 
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-12"
+            initial="hidden"
+            animate="visible"
+            variants={{
+              hidden: {},
+              visible: {
+                transition: {
+                  staggerChildren: 0.06
+                }
+              }
+            }}
+          >
             {filteredGalleries.map((gallery, index) => (
               <GalleryCard 
                 key={gallery.id} 
@@ -332,7 +363,7 @@ export function CleanDashboard({ galleries, photographerName, visibilityMode = '
                 onLeave={() => setHoveredId(null)}
               />
             ))}
-          </div>
+          </motion.div>
         )}
       </div>
     </div>
@@ -398,24 +429,39 @@ function GalleryCard({
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: index * 0.05, duration: 0.4 }}
+      variants={{
+        hidden: { opacity: 0, y: 24 },
+        visible: { 
+          opacity: 1, 
+          y: 0,
+          transition: { duration: 0.5, ease: [0.25, 0.1, 0.25, 1] }
+        }
+      }}
+      className="group/card"
     >
       <Link 
         href={`/gallery/${gallery.slug}`}
-        className="block group"
+        className="block"
         onMouseEnter={onHover}
         onMouseLeave={() => { onLeave(); setShowMenu(false) }}
       >
         {/* Cover Image */}
-        <div className="relative aspect-[4/5] bg-stone-100 mb-4 overflow-hidden">
+        <motion.div 
+          className="relative aspect-[4/5] bg-stone-100 mb-4 overflow-hidden rounded-sm"
+          whileHover={{ y: -4 }}
+          transition={{ duration: 0.3, ease: [0.25, 0.1, 0.25, 1] }}
+          style={{
+            boxShadow: isHovered 
+              ? '0 25px 50px -12px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(0, 0, 0, 0.02)' 
+              : '0 1px 3px rgba(0, 0, 0, 0.08), 0 0 0 1px rgba(0, 0, 0, 0.02)'
+          }}
+        >
           {gallery.coverImageUrl ? (
             <Image
               src={gallery.coverImageUrl}
               alt={gallery.title}
               fill
-              className="object-cover transition-transform duration-700 group-hover:scale-105"
+              className="object-cover transition-all duration-700 ease-out group-hover/card:scale-[1.03]"
               sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
             />
           ) : (
@@ -509,23 +555,33 @@ function GalleryCard({
             )}
           </AnimatePresence>
 
-          {/* Hover Overlay */}
+          {/* Image Count Badge */}
+          <motion.div 
+            className="absolute bottom-3 right-3 px-2.5 py-1 bg-black/70 backdrop-blur-sm rounded-full text-[11px] text-white font-medium tabular-nums flex items-center gap-1.5"
+            initial={{ opacity: 0.9 }}
+            animate={{ opacity: isHovered ? 1 : 0.9 }}
+          >
+            <span className="w-1 h-1 rounded-full bg-white/60" />
+            {gallery.imageCount}
+          </motion.div>
+
+          {/* Hover Overlay - cinematic gradient */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: isHovered ? 1 : 0 }}
-            className="absolute inset-0 bg-black/10 flex items-center justify-center pointer-events-none"
-          >
-            <div className="w-12 h-12 bg-white/90 flex items-center justify-center">
-              <Eye className="w-5 h-5 text-stone-700" />
-            </div>
-          </motion.div>
-        </div>
+            transition={{ duration: 0.3 }}
+            className="absolute inset-0 bg-gradient-to-t from-black/30 via-black/5 to-transparent pointer-events-none"
+          />
+        </motion.div>
 
-        {/* Gallery Title */}
-        <div className="text-center">
-          <h3 className="text-sm font-light tracking-wide text-stone-900 uppercase">
+        {/* Gallery Info */}
+        <div className="text-center space-y-0.5 pt-3">
+          <h3 className="text-[15px] font-medium text-stone-800 leading-tight tracking-[-0.01em] transition-colors duration-300 group-hover/card:text-stone-600">
             {gallery.title}
           </h3>
+          <p className="text-[12px] text-stone-400/80 font-light tracking-wide transition-all duration-300 group-hover/card:text-stone-400">
+            {formatRelativeTime(gallery.updatedAt)}
+          </p>
         </div>
       </Link>
 

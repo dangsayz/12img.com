@@ -93,6 +93,7 @@ export default async function SettingsPage() {
             profileSlug={profileData?.profileSlug || null}
             displayName={profileData?.displayName || null}
             bio={profileData?.bio || null}
+            coverImageUrl={profileData?.coverImageUrl || null}
           />
 
           {/* Portfolio Wall Section */}

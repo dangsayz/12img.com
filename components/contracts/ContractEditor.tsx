@@ -22,7 +22,6 @@ import {
   Clock,
   CheckCircle2,
   Archive,
-  Sparkles,
   MousePointer2,
   Lightbulb,
   Mail,
@@ -317,7 +316,7 @@ export function ContractEditor({ contract, clientName, clientId }: ContractEdito
                 <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="none" fill-rule="evenodd"%3E%3Cg fill="%23ffffff" fill-opacity="1"%3E%3Cpath d="M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")' }} />
                 <div className="relative">
                   <div className="w-14 h-14 rounded-2xl bg-white/10 backdrop-blur flex items-center justify-center mx-auto mb-4">
-                    <Sparkles className="w-7 h-7 text-white" />
+                    <FileText className="w-7 h-7 text-white" />
                   </div>
                   <h2 className="text-xl font-semibold text-white mb-1">Welcome to Contract Editor</h2>
                   <p className="text-stone-300 text-sm">Here's how to get started</p>
@@ -366,101 +365,191 @@ export function ContractEditor({ contract, clientName, clientId }: ContractEdito
         )}
       </AnimatePresence>
 
-      {/* Top Header Bar */}
-      <header className="flex-shrink-0 bg-white border-b border-stone-200 px-4 py-3">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          {/* Left: Back + Title */}
-          <div className="flex items-center gap-4">
-            <Link
-              href={`/dashboard/clients/${clientId}`}
-              className="inline-flex items-center gap-2 text-sm text-stone-500 hover:text-stone-900 transition-colors group"
-            >
-              <ArrowLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" />
-              <span className="hidden sm:inline">Back to {clientName}</span>
-            </Link>
-            
-            <div className="hidden sm:block w-px h-6 bg-stone-200" />
-            
-            <div className="flex items-center gap-3">
-              <h1 className="text-lg font-medium text-stone-900">
-                Contract <span className="text-stone-400 font-normal">#{contract.id.slice(0, 8).toUpperCase()}</span>
-              </h1>
-              <span
-                className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium ${statusConfig.bgColor} ${statusConfig.color}`}
+      {/* Top Header Bar - Mobile Optimized */}
+      <header className="flex-shrink-0 bg-white border-b border-stone-200">
+        {/* Main Header Row */}
+        <div className="px-4 py-3">
+          <div className="max-w-7xl mx-auto flex items-center justify-between gap-3">
+            {/* Left: Back + Title */}
+            <div className="flex items-center gap-3 min-w-0">
+              <Link
+                href={`/dashboard/clients/${clientId}`}
+                className="p-2 -ml-2 hover:bg-stone-100 rounded-lg transition-colors flex-shrink-0"
               >
-                <FileText className="w-3 h-3" />
-                {statusConfig.label}
-              </span>
+                <ArrowLeft className="w-5 h-5 text-stone-500" />
+              </Link>
+              
+              <div className="min-w-0">
+                <h1 className="text-base font-semibold text-stone-900 truncate">
+                  Contract
+                </h1>
+                <div className="flex items-center gap-2">
+                  <span
+                    className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium ${statusConfig.bgColor} ${statusConfig.color}`}
+                  >
+                    <FileText className="w-3 h-3" />
+                    {statusConfig.label}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Desktop Action Buttons - Hidden on mobile */}
+            <div className="hidden sm:flex items-center gap-2">
+              {isDraft && !isEditing && (
+                <>
+                  <button
+                    onClick={() => setIsEditing(true)}
+                    className="inline-flex items-center gap-2 px-3 py-2 border border-stone-200 rounded-lg hover:bg-stone-50 transition-colors text-sm"
+                  >
+                    <Edit3 className="w-4 h-4" />
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => setShowDeleteConfirm(true)}
+                    className="inline-flex items-center gap-2 px-3 py-2 border border-red-200 text-red-600 rounded-lg hover:bg-red-50 transition-colors text-sm"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                    Delete
+                  </button>
+                  <button
+                    onClick={() => setShowSendConfirm(true)}
+                    disabled={isPending}
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-stone-900 text-white text-sm rounded-lg hover:bg-stone-800 transition-colors disabled:opacity-50"
+                  >
+                    {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                    Send to Client
+                  </button>
+                </>
+              )}
+              {isDraft && isEditing && (
+                <>
+                  <button
+                    onClick={() => {
+                      setEditableClauses(contract.clausesSnapshot || [])
+                      setIsEditing(false)
+                    }}
+                    className="px-3 py-2 text-sm text-stone-600 hover:text-stone-900 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleSaveChanges}
+                    disabled={isPending}
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-stone-900 text-white text-sm rounded-lg hover:bg-stone-800 transition-colors disabled:opacity-50"
+                  >
+                    {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+                    Save
+                  </button>
+                </>
+              )}
+              {isSent && (
+                <>
+                  <button
+                    onClick={handleDuplicate}
+                    disabled={isPending}
+                    className="inline-flex items-center gap-2 px-3 py-2 border border-stone-300 text-stone-700 rounded-lg hover:bg-stone-100 transition-colors text-sm"
+                  >
+                    <Copy className="w-4 h-4" />
+                    Duplicate
+                  </button>
+                  <button
+                    onClick={handleResendContract}
+                    disabled={isPending}
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-amber-500 text-white text-sm rounded-lg hover:bg-amber-600 transition-colors disabled:opacity-50"
+                  >
+                    {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
+                    Resend
+                  </button>
+                </>
+              )}
+              {isSigned && !isArchived && (
+                <>
+                  <button
+                    onClick={handleDuplicate}
+                    disabled={isPending}
+                    className="inline-flex items-center gap-2 px-3 py-2 border border-stone-300 text-stone-700 rounded-lg hover:bg-stone-100 transition-colors text-sm"
+                  >
+                    <Copy className="w-4 h-4" />
+                    Duplicate
+                  </button>
+                  <button
+                    onClick={handleSendCopy}
+                    disabled={isPending}
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors text-sm disabled:opacity-50"
+                  >
+                    {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                    Send Copy
+                  </button>
+                  <button
+                    onClick={handleArchive}
+                    disabled={isPending}
+                    className="inline-flex items-center gap-2 px-3 py-2 border border-stone-300 text-stone-700 rounded-lg hover:bg-stone-100 transition-colors text-sm"
+                  >
+                    <Archive className="w-4 h-4" />
+                    Archive
+                  </button>
+                </>
+              )}
             </div>
           </div>
+        </div>
 
-          {/* Action Buttons */}
-          <div className="flex items-center gap-2 flex-wrap">
-            {isDraft && (
+        {/* Mobile Action Bar - Sticky bottom on mobile */}
+        <div className="sm:hidden border-t border-stone-100 px-4 py-3 bg-stone-50">
+          <div className="flex items-center gap-2">
+            {isDraft && !isEditing && (
               <>
-                {isEditing ? (
-                  <>
-                    <button
-                      onClick={() => {
-                        setEditableClauses(contract.clausesSnapshot || [])
-                        setIsEditing(false)
-                      }}
-                      className="px-3 py-2 text-sm text-stone-600 hover:text-stone-900 transition-colors"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      onClick={handleSaveChanges}
-                      disabled={isPending}
-                      className="inline-flex items-center gap-2 px-4 py-2 bg-stone-900 text-white text-sm rounded-lg hover:bg-stone-800 transition-colors disabled:opacity-50"
-                    >
-                      {isPending ? (
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                      ) : (
-                        <Check className="w-4 h-4" />
-                      )}
-                      Save Changes
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    <button
-                      onClick={() => setIsEditing(true)}
-                      className="inline-flex items-center gap-2 px-3 py-2 border border-stone-200 rounded-lg hover:bg-stone-50 transition-colors text-sm"
-                    >
-                      <Edit3 className="w-4 h-4" />
-                      Edit
-                    </button>
-                    <button
-                      onClick={() => setShowDeleteConfirm(true)}
-                      className="inline-flex items-center gap-2 px-3 py-2 border border-red-200 text-red-600 rounded-lg hover:bg-red-50 transition-colors text-sm"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                      Delete
-                    </button>
-                    <button
-                      onClick={() => setShowSendConfirm(true)}
-                      disabled={isPending}
-                      className="inline-flex items-center gap-2 px-4 py-2 bg-stone-900 text-white text-sm rounded-lg hover:bg-stone-800 transition-colors disabled:opacity-50"
-                    >
-                      {isPending ? (
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                      ) : (
-                        <Send className="w-4 h-4" />
-                      )}
-                      Send to Client
-                    </button>
-                  </>
-                )}
+                <button
+                  onClick={() => setIsEditing(true)}
+                  className="flex-1 inline-flex items-center justify-center gap-2 px-3 py-2.5 border border-stone-200 rounded-xl hover:bg-white transition-colors text-sm font-medium"
+                >
+                  <Edit3 className="w-4 h-4" />
+                  Edit
+                </button>
+                <button
+                  onClick={() => setShowDeleteConfirm(true)}
+                  className="p-2.5 border border-red-200 text-red-600 rounded-xl hover:bg-red-50 transition-colors"
+                >
+                  <Trash2 className="w-5 h-5" />
+                </button>
+                <button
+                  onClick={() => setShowSendConfirm(true)}
+                  disabled={isPending}
+                  className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-stone-900 text-white text-sm font-medium rounded-xl hover:bg-stone-800 transition-colors disabled:opacity-50"
+                >
+                  {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                  Send
+                </button>
               </>
             )}
-
+            {isDraft && isEditing && (
+              <>
+                <button
+                  onClick={() => {
+                    setEditableClauses(contract.clausesSnapshot || [])
+                    setIsEditing(false)
+                  }}
+                  className="flex-1 px-3 py-2.5 text-sm font-medium text-stone-600 border border-stone-200 rounded-xl hover:bg-white transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSaveChanges}
+                  disabled={isPending}
+                  className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-stone-900 text-white text-sm font-medium rounded-xl hover:bg-stone-800 transition-colors disabled:opacity-50"
+                >
+                  {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+                  Save
+                </button>
+              </>
+            )}
             {isSent && (
               <>
                 <button
                   onClick={handleDuplicate}
                   disabled={isPending}
-                  className="inline-flex items-center gap-2 px-3 py-2 border border-stone-300 text-stone-700 rounded-lg hover:bg-stone-100 transition-colors text-sm font-medium"
+                  className="flex-1 inline-flex items-center justify-center gap-2 px-3 py-2.5 border border-stone-200 rounded-xl hover:bg-white transition-colors text-sm font-medium"
                 >
                   <Copy className="w-4 h-4" />
                   Duplicate
@@ -468,47 +557,36 @@ export function ContractEditor({ contract, clientName, clientId }: ContractEdito
                 <button
                   onClick={handleResendContract}
                   disabled={isPending}
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-amber-500 text-white text-sm rounded-lg hover:bg-amber-600 transition-colors disabled:opacity-50 font-medium"
+                  className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-amber-500 text-white text-sm font-medium rounded-xl hover:bg-amber-600 transition-colors disabled:opacity-50"
                 >
-                  {isPending ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                  ) : (
-                    <RefreshCw className="w-4 h-4" />
-                  )}
+                  {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
                   Resend
                 </button>
               </>
             )}
-
             {isSigned && !isArchived && (
               <>
                 <button
                   onClick={handleDuplicate}
                   disabled={isPending}
-                  className="inline-flex items-center gap-2 px-3 py-2 border border-stone-300 text-stone-700 rounded-lg hover:bg-stone-100 transition-colors text-sm font-medium"
+                  className="p-2.5 border border-stone-200 rounded-xl hover:bg-white transition-colors"
                 >
-                  <Copy className="w-4 h-4" />
-                  Duplicate
+                  <Copy className="w-5 h-5 text-stone-600" />
                 </button>
                 <button
                   onClick={handleSendCopy}
                   disabled={isPending}
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors text-sm font-medium disabled:opacity-50"
+                  className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-600 text-white text-sm font-medium rounded-xl hover:bg-emerald-700 transition-colors disabled:opacity-50"
                 >
-                  {isPending ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                  ) : (
-                    <Send className="w-4 h-4" />
-                  )}
+                  {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
                   Send Copy
                 </button>
                 <button
                   onClick={handleArchive}
                   disabled={isPending}
-                  className="inline-flex items-center gap-2 px-3 py-2 border border-stone-300 text-stone-700 rounded-lg hover:bg-stone-100 transition-colors text-sm font-medium"
+                  className="p-2.5 border border-stone-200 rounded-xl hover:bg-white transition-colors"
                 >
-                  <Archive className="w-4 h-4" />
-                  Archive
+                  <Archive className="w-5 h-5 text-stone-600" />
                 </button>
               </>
             )}

@@ -230,7 +230,7 @@ export function EditClientModal({ isOpen, onClose, client }: EditClientModalProp
             animate="visible"
             exit="exit"
             onClick={e => e.stopPropagation()}
-            className="fixed inset-x-0 bottom-0 z-50 bg-white rounded-t-[20px] sm:rounded-2xl sm:inset-auto sm:left-1/2 sm:top-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 sm:max-w-lg sm:w-[calc(100%-2rem)] max-h-[92vh] sm:max-h-[85vh] flex flex-col shadow-2xl"
+            className="fixed inset-x-0 bottom-0 z-50 bg-white rounded-t-[20px] sm:rounded-2xl sm:inset-x-auto sm:bottom-auto sm:left-1/2 sm:top-[5vh] sm:-translate-x-1/2 sm:max-w-lg sm:w-[calc(100%-2rem)] max-h-[92vh] sm:max-h-[90vh] flex flex-col shadow-2xl"
             style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
           >
             {/* Drag Handle - Mobile only */}

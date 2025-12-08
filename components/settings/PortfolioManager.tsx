@@ -10,8 +10,7 @@ import {
   Image as ImageIcon,
   Check,
   Loader2,
-  ChevronDown,
-  Sparkles
+  ChevronDown
 } from 'lucide-react'
 import {
   getPortfolioImages,
@@ -198,7 +197,7 @@ export function PortfolioManager() {
       {portfolioImages.length === 0 ? (
         <div className="border-2 border-dashed border-stone-200 rounded-xl p-12 text-center">
           <div className="w-16 h-16 bg-stone-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Sparkles className="w-8 h-8 text-stone-400" />
+            <ImageIcon className="w-8 h-8 text-stone-400" />
           </div>
           <h4 className="text-lg font-medium text-stone-900 mb-2">Curate your best work</h4>
           <p className="text-sm text-stone-500 mb-6 max-w-md mx-auto">

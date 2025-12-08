@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { useState } from 'react'
-import { Menu, X, ArrowRight, Upload, Lock, Shield, Zap, Check, Instagram, Quote, Star, Play, Image as ImageIcon, Palette, Clock, Mail, LayoutDashboard, FileText, MessageCircle, Users, PenTool, Target, Film, Calendar, TrendingUp, Sparkles, Globe, Camera } from 'lucide-react'
+import { Menu, X, ArrowRight, Upload, Lock, Shield, Zap, Check, Instagram, Quote, Star, Play, Image as ImageIcon, Palette, Clock, Mail, LayoutDashboard, FileText, MessageCircle, Users, PenTool, Target, Film, Calendar, TrendingUp, Layers, Globe, Camera } from 'lucide-react'
 import { DemoCardGenerator } from './DemoCardGenerator'
 import { PricingMatrix } from '@/components/pricing/PricingMatrix'
 import { useAuthModal } from '@/components/auth/AuthModal'
@@ -1107,7 +1107,7 @@ export function LandingPage() {
           {/* Section Header */}
           <div className="text-center mb-16 lg:mb-24">
             <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-stone-50 to-stone-100 border border-stone-200/50 rounded-full mb-6">
-              <Sparkles className="w-4 h-4 text-stone-600" />
+              <Layers className="w-4 h-4 text-stone-600" />
               <span className="text-sm font-medium text-stone-700">Everything You Need</span>
             </div>
             <h2 className="font-serif text-3xl sm:text-4xl lg:text-[56px] mb-6 leading-tight">

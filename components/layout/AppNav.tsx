@@ -16,8 +16,9 @@ import {
   Shield,
   ChevronRight,
   Users,
-  UserCircle,
-  FileSignature
+  ChevronDown,
+  FolderPlus,
+  UserPlus
 } from 'lucide-react'
 
 export type UserRole = 'user' | 'support' | 'admin' | 'super_admin'
@@ -44,6 +45,7 @@ export function AppNav({
 }: AppNavProps) {
   const pathname = usePathname()
   const [mobileOpen, setMobileOpen] = useState(false)
+  const [newMenuOpen, setNewMenuOpen] = useState(false)
   
   // Format storage display
   const formatStorage = (bytes: number) => {
@@ -127,47 +129,61 @@ export function AppNav({
               </div>
             </div>
             
-            {/* Divider */}
-            <div className="w-px h-5 bg-stone-200 hidden lg:block" />
-            
-            {/* Clients Link */}
-            <Link 
-              href="/dashboard/clients"
-              className={`
-                p-2 rounded-full transition-colors
-                ${pathname.startsWith('/dashboard/clients')
-                  ? 'bg-stone-100 text-stone-900'
-                  : 'text-stone-500 hover:text-stone-900 hover:bg-stone-50'
-                }
-              `}
-              title="Clients"
-            >
-              <UserCircle className="w-4 h-4" />
-            </Link>
-            
-            {/* Contracts/Portal Link */}
-            <Link 
-              href="/dashboard/clients"
-              className={`
-                p-2 rounded-full transition-colors
-                ${pathname.includes('/contracts') || pathname.includes('/portal')
-                  ? 'bg-stone-100 text-stone-900'
-                  : 'text-stone-500 hover:text-stone-900 hover:bg-stone-50'
-                }
-              `}
-              title="Contracts & Portal"
-            >
-              <FileSignature className="w-4 h-4" />
-            </Link>
-            
-            {/* New Gallery Button */}
-            <Link 
-              href="/gallery/create"
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-stone-900 hover:bg-stone-800 text-white text-sm font-medium rounded-full transition-colors"
-            >
-              <Plus className="w-4 h-4" />
-              <span className="hidden sm:inline">New</span>
-            </Link>
+            {/* New Button with Dropdown */}
+            <div className="relative">
+              <button
+                onClick={() => setNewMenuOpen(!newMenuOpen)}
+                onBlur={() => setTimeout(() => setNewMenuOpen(false), 150)}
+                className="flex items-center gap-1 px-3 py-1.5 bg-stone-900 hover:bg-stone-800 text-white text-sm font-medium rounded-full transition-colors"
+              >
+                <Plus className="w-4 h-4" />
+                <span className="hidden sm:inline">Create</span>
+                <ChevronDown className={`w-3 h-3 transition-transform ${newMenuOpen ? 'rotate-180' : ''}`} />
+              </button>
+              
+              {/* Dropdown Menu */}
+              <AnimatePresence>
+                {newMenuOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -4, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: -4, scale: 0.95 }}
+                    transition={{ duration: 0.15 }}
+                    className="absolute right-0 top-full mt-2 w-48 bg-white rounded-xl border border-stone-200 shadow-lg shadow-stone-900/10 overflow-hidden z-50"
+                  >
+                    <div className="p-1">
+                      <Link
+                        href="/gallery/create"
+                        onClick={() => setNewMenuOpen(false)}
+                        className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-stone-700 hover:bg-stone-50 transition-colors"
+                      >
+                        <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center">
+                          <FolderPlus className="w-4 h-4 text-blue-600" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium">New Gallery</p>
+                          <p className="text-xs text-stone-400">Upload photos</p>
+                        </div>
+                      </Link>
+                      
+                      <Link
+                        href="/dashboard/clients?new=true"
+                        onClick={() => setNewMenuOpen(false)}
+                        className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-stone-700 hover:bg-stone-50 transition-colors"
+                      >
+                        <div className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center">
+                          <UserPlus className="w-4 h-4 text-emerald-600" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium">New Contract</p>
+                          <p className="text-xs text-stone-400">Add client & send contract</p>
+                        </div>
+                      </Link>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
             
             {/* Admin Link */}
             {isAdmin && (
@@ -254,33 +270,6 @@ export function AppNav({
                     )
                   })}
                   
-                  {/* Clients */}
-                  <Link
-                    href="/dashboard/clients"
-                    onClick={() => setMobileOpen(false)}
-                    className={`
-                      flex items-center gap-3 px-4 py-3 rounded-xl transition-all
-                      ${pathname.startsWith('/dashboard/clients')
-                        ? 'bg-stone-100 text-stone-900' 
-                        : 'text-stone-600 hover:bg-stone-50'
-                      }
-                    `}
-                  >
-                    <UserCircle className="w-5 h-5" />
-                    <span className="font-medium">Clients</span>
-                    {pathname.startsWith('/dashboard/clients') && <ChevronRight className="w-4 h-4 ml-auto text-stone-400" />}
-                  </Link>
-                  
-                  {/* Contracts & Portal */}
-                  <Link
-                    href="/dashboard/clients"
-                    onClick={() => setMobileOpen(false)}
-                    className="flex items-center gap-3 px-4 py-3 rounded-xl text-stone-600 hover:bg-stone-50 transition-all"
-                  >
-                    <FileSignature className="w-5 h-5" />
-                    <span className="font-medium">Contracts & Portal</span>
-                  </Link>
-                  
                   <Link
                     href="/help"
                     onClick={() => setMobileOpen(false)}
@@ -300,6 +289,37 @@ export function AppNav({
                       <span className="font-medium">Admin</span>
                     </Link>
                   )}
+                </div>
+                
+                {/* Quick Create Actions */}
+                <div className="border-t border-stone-100 p-2">
+                  <p className="px-4 py-2 text-xs font-medium text-stone-400 uppercase tracking-wider">Quick Create</p>
+                  <Link
+                    href="/gallery/create"
+                    onClick={() => setMobileOpen(false)}
+                    className="flex items-center gap-3 px-4 py-3 rounded-xl text-stone-600 hover:bg-blue-50 transition-all"
+                  >
+                    <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center">
+                      <FolderPlus className="w-4 h-4 text-blue-600" />
+                    </div>
+                    <div>
+                      <span className="font-medium text-stone-900">New Gallery</span>
+                      <p className="text-xs text-stone-400">Upload photos for clients</p>
+                    </div>
+                  </Link>
+                  <Link
+                    href="/dashboard/clients?new=true"
+                    onClick={() => setMobileOpen(false)}
+                    className="flex items-center gap-3 px-4 py-3 rounded-xl text-stone-600 hover:bg-emerald-50 transition-all"
+                  >
+                    <div className="w-8 h-8 rounded-lg bg-emerald-100 flex items-center justify-center">
+                      <UserPlus className="w-4 h-4 text-emerald-600" />
+                    </div>
+                    <div>
+                      <span className="font-medium text-stone-900">New Contract</span>
+                      <p className="text-xs text-stone-400">Add client & send contract</p>
+                    </div>
+                  </Link>
                 </div>
                 
                 {/* Storage + Account */}

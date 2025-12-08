@@ -270,10 +270,8 @@ export async function sendSignatureConfirmationEmail(options: SendSignatureConfi
     </head>
     <body style="font-family: system-ui, -apple-system, sans-serif; line-height: 1.6; color: #1c1917; max-width: 600px; margin: 0 auto; padding: 20px;">
       <div style="text-align: center; margin-bottom: 32px;">
-        <div style="width: 64px; height: 64px; background: #dcfce7; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 16px;">
-          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="20 6 9 17 4 12"></polyline>
-          </svg>
+        <div style="width: 64px; height: 64px; background: #2D2D2D; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 16px;">
+          <span style="font-family: system-ui, -apple-system, sans-serif; font-size: 24px; font-weight: 600; color: white;">12</span>
         </div>
         <h1 style="font-size: 24px; font-weight: 500; margin: 0; color: #166534;">Contract Signed</h1>
       </div>
@@ -501,6 +499,250 @@ export async function sendContractExpiryReminder(options: {
     return { success: true }
   } catch (e) {
     console.error('[sendContractExpiryReminder] Exception:', e)
+    return { success: false }
+  }
+}
+
+/**
+ * Send notification to client when contract has expired
+ */
+export async function sendContractExpiredToClient(options: {
+  clientEmail: string
+  clientName: string
+  photographerName: string
+  photographerEmail: string
+  eventType: string
+  expiredAt: string
+}) {
+  const {
+    clientEmail,
+    clientName,
+    photographerName,
+    photographerEmail,
+    eventType,
+    expiredAt,
+  } = options
+
+  const expiredDate = new Date(expiredAt).toLocaleDateString('en-US', {
+    weekday: 'long',
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric',
+  })
+
+  const subject = `Your ${eventType} Contract Has Expired`
+
+  const html = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    </head>
+    <body style="font-family: system-ui, -apple-system, sans-serif; line-height: 1.6; color: #1c1917; max-width: 600px; margin: 0 auto; padding: 0; background: #fafaf9;">
+      <!-- Header -->
+      <div style="background: #1c1917; padding: 32px 24px; text-align: center;">
+        <h1 style="font-size: 24px; font-weight: 300; margin: 0; color: white; letter-spacing: -0.5px;">${photographerName}</h1>
+      </div>
+      
+      <!-- Main content -->
+      <div style="padding: 32px 24px; background: white;">
+        <p style="margin: 0 0 20px; font-size: 18px;">Hi ${clientName},</p>
+        
+        <p style="margin: 0 0 20px; color: #44403c;">
+          We wanted to let you know that your photography contract has expired as of ${expiredDate}.
+        </p>
+        
+        <!-- Notice Banner -->
+        <div style="background: #fef2f2; border-radius: 0; padding: 16px; margin-bottom: 24px; border-left: 2px solid #dc2626;">
+          <p style="margin: 0; font-weight: 600; color: #dc2626; font-size: 15px;">
+            Contract Expired
+          </p>
+          <p style="margin: 4px 0 0; font-size: 14px; color: #78716c;">
+            The contract is no longer available for signing
+          </p>
+        </div>
+        
+        <p style="margin: 0 0 20px; color: #44403c;">
+          If you're still interested in booking photography services, please reach out to ${photographerName} directly to discuss next steps and potentially receive a new contract.
+        </p>
+        
+        <!-- Contact Info -->
+        <div style="background: #fafaf9; border-radius: 0; padding: 16px; margin-bottom: 24px; border-left: 2px solid #1c1917;">
+          <p style="margin: 0; font-weight: 600; color: #1c1917; font-size: 15px;">
+            Get in Touch
+          </p>
+          <p style="margin: 8px 0 0; font-size: 14px; color: #44403c;">
+            <a href="mailto:${photographerEmail}" style="color: #1c1917; text-decoration: underline;">${photographerEmail}</a>
+          </p>
+        </div>
+        
+        <p style="font-size: 14px; color: #78716c; text-align: center;">
+          We hope to work with you soon!
+        </p>
+      </div>
+      
+      <!-- Footer -->
+      <div style="padding: 24px; text-align: center; border-top: 1px solid #e7e5e4;">
+        <p style="font-size: 12px; color: #a8a29e; margin: 0;">
+          ${photographerEmail}
+        </p>
+        <p style="font-size: 11px; color: #d6d3d1; margin: 12px 0 0;">
+          Sent via <a href="https://12img.com" style="color: #a8a29e;">12IMG</a>
+        </p>
+      </div>
+    </body>
+    </html>
+  `
+
+  try {
+    await resend.emails.send({
+      from: `${photographerName} <contracts@12img.com>`,
+      replyTo: photographerEmail,
+      to: clientEmail,
+      subject,
+      html,
+    })
+
+    return { success: true }
+  } catch (e) {
+    console.error('[sendContractExpiredToClient] Exception:', e)
+    return { success: false }
+  }
+}
+
+/**
+ * Send notification to photographer when contract has expired
+ */
+export async function sendContractExpiredToPhotographer(options: {
+  photographerEmail: string
+  photographerName: string
+  clientName: string
+  clientEmail: string
+  eventType: string
+  eventDate: string | null
+  expiredAt: string
+  contractId: string
+}) {
+  const {
+    photographerEmail,
+    photographerName,
+    clientName,
+    clientEmail,
+    eventType,
+    eventDate,
+    expiredAt,
+    contractId,
+  } = options
+
+  const expiredDate = new Date(expiredAt).toLocaleDateString('en-US', {
+    weekday: 'long',
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric',
+  })
+
+  const eventDateFormatted = eventDate
+    ? new Date(eventDate).toLocaleDateString('en-US', {
+        weekday: 'long',
+        month: 'long',
+        day: 'numeric',
+        year: 'numeric',
+      })
+    : null
+
+  const subject = `Contract Expired: ${clientName} - ${eventType}`
+
+  const dashboardUrl = `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/clients`
+
+  const html = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    </head>
+    <body style="font-family: system-ui, -apple-system, sans-serif; line-height: 1.6; color: #1c1917; max-width: 600px; margin: 0 auto; padding: 0; background: #fafaf9;">
+      <!-- Header -->
+      <div style="background: #1c1917; padding: 32px 24px; text-align: center;">
+        <h1 style="font-size: 24px; font-weight: 300; margin: 0; color: white; letter-spacing: -0.5px;">Contract Expired</h1>
+      </div>
+      
+      <!-- Main content -->
+      <div style="padding: 32px 24px; background: white;">
+        <p style="margin: 0 0 20px; font-size: 18px;">Hi ${photographerName},</p>
+        
+        <p style="margin: 0 0 20px; color: #44403c;">
+          A contract has expired without being signed. The client has been notified.
+        </p>
+        
+        <!-- Contract Details -->
+        <div style="background: #fafaf9; border-radius: 0; padding: 20px; margin-bottom: 24px; border: 1px solid #e7e5e4;">
+          <p style="margin: 0 0 16px; font-size: 11px; text-transform: uppercase; letter-spacing: 2px; color: #78716c; font-weight: 600;">Contract Details</p>
+          
+          <div style="margin-bottom: 12px;">
+            <p style="margin: 0; font-size: 13px; color: #78716c;">Client</p>
+            <p style="margin: 2px 0 0; font-weight: 600; color: #1c1917;">${clientName}</p>
+            <p style="margin: 2px 0 0; font-size: 14px; color: #44403c;">${clientEmail}</p>
+          </div>
+          
+          <div style="margin-bottom: 12px;">
+            <p style="margin: 0; font-size: 13px; color: #78716c;">Event Type</p>
+            <p style="margin: 2px 0 0; font-weight: 500; color: #1c1917;">${eventType}</p>
+          </div>
+          
+          ${eventDateFormatted ? `
+          <div style="margin-bottom: 12px;">
+            <p style="margin: 0; font-size: 13px; color: #78716c;">Event Date</p>
+            <p style="margin: 2px 0 0; font-weight: 500; color: #1c1917;">${eventDateFormatted}</p>
+          </div>
+          ` : ''}
+          
+          <div>
+            <p style="margin: 0; font-size: 13px; color: #78716c;">Expired On</p>
+            <p style="margin: 2px 0 0; font-weight: 500; color: #dc2626;">${expiredDate}</p>
+          </div>
+        </div>
+        
+        <!-- Action Suggestion -->
+        <div style="background: #fffbeb; border-radius: 0; padding: 16px; margin-bottom: 24px; border-left: 2px solid #f59e0b;">
+          <p style="margin: 0; font-weight: 600; color: #92400e; font-size: 15px;">
+            What to do next
+          </p>
+          <p style="margin: 8px 0 0; font-size: 14px; color: #78716c;">
+            If the client is still interested, you can create and send a new contract from your dashboard.
+          </p>
+        </div>
+        
+        <!-- CTA Button -->
+        <div style="text-align: center; margin: 32px 0;">
+          <a href="${dashboardUrl}" style="display: inline-block; background: #1c1917; color: white; padding: 16px 32px; border-radius: 0; text-decoration: none; font-weight: 600; font-size: 15px; letter-spacing: 0.5px;">
+            View Dashboard →
+          </a>
+        </div>
+      </div>
+      
+      <!-- Footer -->
+      <div style="padding: 24px; text-align: center; border-top: 1px solid #e7e5e4;">
+        <p style="font-size: 11px; color: #d6d3d1; margin: 0;">
+          Sent via <a href="https://12img.com" style="color: #a8a29e;">12IMG</a>
+        </p>
+      </div>
+    </body>
+    </html>
+  `
+
+  try {
+    await resend.emails.send({
+      from: '12IMG <notifications@12img.com>',
+      to: photographerEmail,
+      subject,
+      html,
+    })
+
+    return { success: true }
+  } catch (e) {
+    console.error('[sendContractExpiredToPhotographer] Exception:', e)
     return { success: false }
   }
 }

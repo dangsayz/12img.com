@@ -11,7 +11,7 @@ import {
   ChevronUp,
   AlertCircle,
   Loader2,
-  Sparkles,
+  Wand2,
   Calendar,
   MapPin,
   Building2,
@@ -51,7 +51,7 @@ const HINTS = [
     description: 'Client info and package details are pulled from their profile.',
   },
   {
-    icon: Sparkles,
+    icon: Wand2,
     title: 'Smart Defaults',
     description: 'Clauses are pre-configured based on the event type.',
   },
@@ -66,7 +66,7 @@ const EVENT_TYPE_CONFIG: Record<string, { icon: typeof Heart; color: string; bg:
   newborn: { icon: Heart, color: 'text-sky-600', bg: 'bg-sky-50' },
   maternity: { icon: Heart, color: 'text-purple-600', bg: 'bg-purple-50' },
   corporate: { icon: Camera, color: 'text-slate-600', bg: 'bg-slate-50' },
-  event: { icon: Sparkles, color: 'text-emerald-600', bg: 'bg-emerald-50' },
+  event: { icon: Calendar, color: 'text-emerald-600', bg: 'bg-emerald-50' },
   other: { icon: Camera, color: 'text-stone-600', bg: 'bg-stone-50' },
 }
 
@@ -344,8 +344,8 @@ export function CreateContractModal({ isOpen, onClose, client }: CreateContractM
                   <EventIcon className={`w-4.5 h-4.5 ${eventConfig.color}`} />
                 </div>
                 <div>
-                  <h1 className="text-lg font-semibold text-stone-900">New Contract</h1>
-                  <p className="text-xs text-stone-500 hidden sm:block">{clientName}</p>
+                  <p className="text-[10px] uppercase tracking-widest text-stone-400 mb-0.5">Overview</p>
+                  <h1 className="text-lg font-semibold text-stone-900">{clientName}</h1>
                 </div>
               </div>
             </div>
@@ -363,7 +363,7 @@ export function CreateContractModal({ isOpen, onClose, client }: CreateContractM
                 </>
               ) : (
                 <>
-                  <Sparkles className="w-4 h-4" />
+                  <span className="text-base leading-none">+</span>
                   <span className="hidden sm:inline">Create Contract</span>
                   <span className="sm:hidden">Create</span>
                 </>
@@ -399,31 +399,31 @@ export function CreateContractModal({ isOpen, onClose, client }: CreateContractM
             <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
               {/* Left Column: Client & Event Info */}
               <div className="lg:col-span-2 space-y-6">
-                {/* Client Hero Card */}
+                {/* Client Hero Card - Light Theme */}
                 <motion.div 
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-stone-900 via-stone-800 to-stone-900 p-6 text-white shadow-xl"
+                  className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-white via-stone-50 to-stone-100 p-6 shadow-sm border border-stone-200/60"
                 >
                   {/* Decorative elements */}
-                  <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-br from-white/5 to-transparent rounded-full blur-2xl -translate-y-1/2 translate-x-1/2" />
-                  <div className="absolute bottom-0 left-0 w-32 h-32 bg-gradient-to-tr from-white/5 to-transparent rounded-full blur-xl translate-y-1/2 -translate-x-1/2" />
+                  <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-br from-stone-200/30 to-transparent rounded-full blur-2xl -translate-y-1/2 translate-x-1/2" />
+                  <div className="absolute bottom-0 left-0 w-32 h-32 bg-gradient-to-tr from-stone-200/30 to-transparent rounded-full blur-xl translate-y-1/2 -translate-x-1/2" />
                   
                   <div className="relative">
                     {/* Client name & type */}
                     <div className="flex items-start justify-between mb-6">
                       <div>
                         <p className="text-stone-400 text-xs uppercase tracking-wider mb-1">Client</p>
-                        <h2 className="text-xl font-semibold">{clientName}</h2>
+                        <h2 className="text-xl font-semibold text-stone-900">{clientName}</h2>
                       </div>
-                      <div className={`w-10 h-10 rounded-xl ${eventConfig.bg} flex items-center justify-center`}>
+                      <div className={`w-10 h-10 rounded-xl ${eventConfig.bg} flex items-center justify-center shadow-sm`}>
                         <EventIcon className={`w-5 h-5 ${eventConfig.color}`} />
                       </div>
                     </div>
 
                     {/* Event countdown */}
                     {eventDate && daysUntil !== null && daysUntil > 0 && (
-                      <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-5 mb-5 ring-1 ring-white/10">
+                      <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-5 mb-5 border border-stone-200/60 shadow-sm">
                         <p className="text-stone-400 text-xs uppercase tracking-wider text-center mb-3">Event Countdown</p>
                         <CompactCountdown eventDate={eventDate} />
                         <p className="text-center text-stone-400 text-xs mt-3">
@@ -435,21 +435,21 @@ export function CreateContractModal({ isOpen, onClose, client }: CreateContractM
                     {/* Quick stats */}
                     <div className="grid grid-cols-2 gap-3">
                       {client.packageHours && (
-                        <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3 ring-1 ring-white/10">
+                        <div className="bg-white/80 backdrop-blur-sm rounded-xl p-3 border border-stone-200/60 shadow-sm">
                           <div className="flex items-center gap-2 text-stone-400 text-xs mb-1">
                             <Clock className="w-3.5 h-3.5" />
                             Coverage
                           </div>
-                          <p className="font-semibold">{client.packageHours} hours</p>
+                          <p className="font-semibold text-stone-900">{client.packageHours} hours</p>
                         </div>
                       )}
                       {client.packagePrice && (
-                        <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3 ring-1 ring-white/10">
+                        <div className="bg-white/80 backdrop-blur-sm rounded-xl p-3 border border-stone-200/60 shadow-sm">
                           <div className="flex items-center gap-2 text-stone-400 text-xs mb-1">
                             <DollarSign className="w-3.5 h-3.5" />
                             Package
                           </div>
-                          <p className="font-semibold">${client.packagePrice.toLocaleString()}</p>
+                          <p className="font-semibold text-stone-900">${client.packagePrice.toLocaleString()}</p>
                         </div>
                       )}
                     </div>
@@ -681,7 +681,7 @@ export function CreateContractModal({ isOpen, onClose, client }: CreateContractM
                       </>
                     ) : (
                       <>
-                        <Sparkles className="w-5 h-5" />
+                        <span className="text-lg leading-none">+</span>
                         Create Contract
                       </>
                     )}
