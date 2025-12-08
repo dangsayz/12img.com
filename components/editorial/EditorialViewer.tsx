@@ -1,12 +1,12 @@
 
 'use client'
 
-import React, { useState } from 'react'
-import { motion, useScroll, useSpring, useTransform } from 'framer-motion'
+import React, { useState, useCallback } from 'react'
+import { motion, useScroll, useSpring, useTransform, AnimatePresence } from 'framer-motion'
 import { EditorialSpread } from '@/lib/editorial/types'
 import { Spread } from './Spread'
 import { SpreadOverview } from './SpreadOverview'
-import { ArrowLeft, ChevronDown } from 'lucide-react'
+import { ArrowLeft, ChevronDown, Link2, Check } from 'lucide-react'
 import Link from 'next/link'
 
 interface PreviewImage {
@@ -36,6 +36,7 @@ export function EditorialViewer({
   previewImages = []
 }: Props) {
   const [debug, setDebug] = useState(false)
+  const [copied, setCopied] = useState(false)
   const { scrollYProgress } = useScroll()
   const scaleX = useSpring(scrollYProgress, {
     stiffness: 100,
@@ -45,6 +46,13 @@ export function EditorialViewer({
   
   // Fade out scroll indicator after 5% scroll
   const scrollIndicatorOpacity = useTransform(scrollYProgress, [0, 0.05], [1, 0])
+
+  const handleCopyLink = useCallback(async () => {
+    const url = window.location.href
+    await navigator.clipboard.writeText(url)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }, [])
 
   const scrollToSpread = (id: string) => {
     const element = document.getElementById(id)
@@ -98,6 +106,45 @@ export function EditorialViewer({
           )
         })}
       </main>
+
+      {/* Share Button - Elegant, centered, fades with scroll */}
+      <motion.div 
+        className="fixed bottom-24 left-1/2 -translate-x-1/2 z-40"
+        style={{ opacity: scrollIndicatorOpacity }}
+      >
+        <motion.button
+          onClick={handleCopyLink}
+          className="group relative flex items-center gap-2.5 px-5 py-2.5 bg-white/90 backdrop-blur-sm border border-neutral-200/80 rounded-full shadow-sm hover:shadow-md hover:border-neutral-300 transition-all duration-300"
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+        >
+          <AnimatePresence mode="wait">
+            {copied ? (
+              <motion.div
+                key="check"
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.8 }}
+                className="flex items-center gap-2"
+              >
+                <Check className="w-3.5 h-3.5 text-green-600" />
+                <span className="text-xs font-medium tracking-wide text-green-600">Link Copied</span>
+              </motion.div>
+            ) : (
+              <motion.div
+                key="share"
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.8 }}
+                className="flex items-center gap-2"
+              >
+                <Link2 className="w-3.5 h-3.5 text-neutral-500 group-hover:text-neutral-700 transition-colors" />
+                <span className="text-xs font-medium tracking-wide text-neutral-600 group-hover:text-neutral-800 transition-colors">Share Gallery</span>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </motion.button>
+      </motion.div>
 
       {/* Scroll Indicator - Fades out as user scrolls */}
       <motion.div 
