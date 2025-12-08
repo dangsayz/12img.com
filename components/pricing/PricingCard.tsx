@@ -38,15 +38,15 @@ export function PricingCard({
       viewport={{ once: true, margin: '-50px' }}
       transition={{ duration: 0.5, delay, ease: [0.16, 1, 0.3, 1] }}
       whileHover={{ y: popular ? -12 : -8, transition: { duration: 0.3 } }}
-      className={`relative rounded-2xl p-7 transition-all duration-300 ${
+      className={`relative p-7 transition-all duration-300 ${
         popular
-          ? 'bg-[#1C1917] text-white shadow-2xl shadow-[#1C1917]/30 ring-2 ring-amber-400/20'
-          : 'bg-white border border-[#E8E4DC] hover:border-amber-300 hover:shadow-xl'
+          ? 'bg-[#1C1917] text-white shadow-2xl shadow-[#1C1917]/30'
+          : 'bg-white border border-[#E8E4DC] hover:border-[#141414] hover:shadow-xl'
       }`}
     >
       {popular && (
         <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10">
-          <span className="whitespace-nowrap bg-gradient-to-r from-amber-400 to-orange-400 text-[#1C1917] text-[11px] font-bold px-4 py-1.5 rounded-full shadow-lg uppercase tracking-wider inline-flex items-center gap-1">
+          <span className="whitespace-nowrap bg-[#141414] text-white text-[10px] font-bold px-3 py-1 uppercase tracking-wider inline-flex items-center gap-1">
             <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
               <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
             </svg>
@@ -75,12 +75,12 @@ export function PricingCard({
 
       <PricingButton
         planId={planId}
-        className={`block w-full text-center py-3 rounded-xl font-semibold text-sm transition-all mb-6 cursor-pointer ${
+        className={`block w-full text-center py-3 font-semibold text-sm transition-all mb-6 cursor-pointer border ${
           current
-            ? 'bg-[#E8E4DC] text-[#78716C] cursor-default'
+            ? 'bg-[#E8E4DC] text-[#78716C] border-[#E8E4DC] cursor-default'
             : popular
-            ? 'bg-white text-[#1C1917] hover:bg-amber-50 shadow-lg'
-            : 'bg-stone-100 text-[#1C1917] hover:bg-stone-200'
+            ? 'bg-white text-[#1C1917] border-white hover:bg-gray-100'
+            : 'bg-transparent text-[#1C1917] border-[#1C1917] hover:bg-[#1C1917] hover:text-white'
         }`}
       >
         {cta}

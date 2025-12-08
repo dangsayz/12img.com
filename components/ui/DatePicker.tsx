@@ -146,13 +146,23 @@ export function DatePicker({
         </span>
         <div className="flex items-center gap-2">
           {value && !disabled && (
-            <button
-              type="button"
-              onClick={handleClear}
-              className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+            <span
+              role="button"
+              tabIndex={0}
+              onClick={(e) => {
+                e.stopPropagation()
+                handleClear(e as unknown as React.MouseEvent)
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.stopPropagation()
+                  handleClear(e as unknown as React.MouseEvent)
+                }
+              }}
+              className="p-1 hover:bg-gray-100 rounded-full transition-colors cursor-pointer"
             >
               <X className="w-4 h-4 text-gray-400" />
-            </button>
+            </span>
           )}
           <CalendarDays className="w-5 h-5 text-gray-400" />
         </div>

@@ -15,6 +15,7 @@ import {
 import { getPlan, normalizePlanId } from '@/lib/config/pricing'
 import { sendGalleryInviteEmail } from '@/server/services/email.service'
 import { getSignedUrlsBatch } from '@/lib/storage/signed-urls'
+import type { PresentationData } from '@/lib/types/presentation'
 
 export async function createGallery(formData: FormData) {
   const { userId: clerkId } = await auth()
@@ -57,12 +58,15 @@ export async function createGallery(formData: FormData) {
       ? await hashPassword(validated.password)
       : null
 
+    const template = formData.get('template') as string || 'mosaic'
+
     const insertData = {
       user_id: user.id,
       title: validated.title,
       slug,
       password_hash: passwordHash,
       download_enabled: validated.downloadEnabled,
+      template,
     }
     console.log('createGallery - inserting:', insertData)
 
@@ -161,6 +165,35 @@ export async function updateGallery(galleryId: string, formData: FormData) {
   }
 }
 
+export async function updateGalleryTemplate(galleryId: string, template: string) {
+  const { userId: clerkId } = await auth()
+  if (!clerkId) return { error: 'Unauthorized' }
+
+  const user = await getOrCreateUserByClerkId(clerkId)
+  if (!user) return { error: 'User not found' }
+
+  const gallery = await getGalleryWithOwnershipCheck(galleryId, user.id)
+  if (!gallery) return { error: 'Gallery not found' }
+
+  const validTemplates = ['mosaic', 'clean-grid', 'cinematic', 'editorial']
+  if (!validTemplates.includes(template)) {
+    return { error: 'Invalid template' }
+  }
+
+  const { error } = await supabaseAdmin
+    .from('galleries')
+    .update({ template })
+    .eq('id', galleryId)
+
+  if (error) return { error: 'Failed to update template' }
+
+  revalidatePath(`/gallery/${galleryId}`)
+  revalidatePath(`/view-reel/${galleryId}`)
+  revalidatePath(`/view-live/${galleryId}`)
+
+  return { success: true, template }
+}
+
 export async function setCoverImage(galleryId: string, imageId: string | null) {
   const { userId: clerkId } = await auth()
   if (!clerkId) return { error: 'Unauthorized' }
@@ -235,13 +268,35 @@ export async function deleteGallery(galleryId: string) {
 }
 
 /**
+ * Gallery template type for URL routing
+ */
+type GalleryTemplate = 'mosaic' | 'clean-grid' | 'cinematic' | 'editorial'
+
+/**
+ * Map template to the correct view URL path
+ */
+function getTemplateUrl(galleryId: string, template: GalleryTemplate): string {
+  switch (template) {
+    case 'cinematic':
+      return `/view-reel/${galleryId}`
+    case 'editorial':
+      return `/view-live/${galleryId}`
+    case 'mosaic':
+    case 'clean-grid':
+    default:
+      return `/view-grid/${galleryId}?template=${template}`
+  }
+}
+
+/**
  * Send gallery to a client via email.
  */
 export async function sendGalleryToClient(
   galleryId: string,
   clientEmail: string,
   personalMessage?: string,
-  password?: string  // Include PIN in email if provided
+  password?: string,  // Include PIN in email if provided
+  template: GalleryTemplate = 'mosaic'  // Template for gallery view
 ) {
   const { userId: clerkId } = await auth()
   if (!clerkId) return { error: 'Unauthorized' }
@@ -263,6 +318,10 @@ export async function sendGalleryToClient(
   const photographerName = clerkUser?.fullName || clerkUser?.firstName || undefined
   const photographerEmail = clerkUser?.primaryEmailAddress?.emailAddress || user.email
 
+  // Build gallery URL based on selected template
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://12img.com'
+  const galleryPath = getTemplateUrl(galleryId, template)
+
   try {
     const result = await sendGalleryInviteEmail(
       gallery,
@@ -271,8 +330,9 @@ export async function sendGalleryToClient(
         photographerName,
         photographerEmail,
         personalMessage: personalMessage?.trim() || undefined,
-        baseUrl: process.env.NEXT_PUBLIC_SITE_URL || 'https://12img.com',
+        baseUrl,
         password,  // Include PIN if provided
+        galleryPath,  // Custom path based on template
       }
     )
 
@@ -333,4 +393,152 @@ export async function getOriginalUrl(
     console.error('[getOriginalUrl] Error:', e)
     return { error: 'Failed to get original URL' }
   }
+}
+
+/**
+ * Update focal point for an image
+ * Allows users to set a custom crop center point (0-100% for both X and Y)
+ */
+export async function updateImageFocalPoint(
+  imageId: string,
+  focalX: number | null,
+  focalY: number | null
+): Promise<{ success: boolean; error?: string }> {
+  const { userId: clerkId } = await auth()
+  if (!clerkId) return { success: false, error: 'Unauthorized' }
+
+  const user = await getOrCreateUserByClerkId(clerkId)
+  if (!user) return { success: false, error: 'User not found' }
+
+  // Get image and verify ownership through gallery
+  const { data: image, error: imageError } = await supabaseAdmin
+    .from('images')
+    .select('id, gallery_id')
+    .eq('id', imageId)
+    .single()
+
+  if (imageError || !image) {
+    return { success: false, error: 'Image not found' }
+  }
+
+  // Verify gallery ownership
+  const gallery = await getGalleryWithOwnershipCheck(image.gallery_id, user.id)
+  if (!gallery) {
+    return { success: false, error: 'Not authorized to edit this image' }
+  }
+
+  // Validate focal point values (0-100 or null)
+  const validX = focalX === null || (focalX >= 0 && focalX <= 100)
+  const validY = focalY === null || (focalY >= 0 && focalY <= 100)
+  
+  if (!validX || !validY) {
+    return { success: false, error: 'Focal point must be between 0 and 100' }
+  }
+
+  // Update the image
+  const { error: updateError } = await supabaseAdmin
+    .from('images')
+    .update({
+      focal_x: focalX,
+      focal_y: focalY,
+    })
+    .eq('id', imageId)
+
+  if (updateError) {
+    console.error('[updateImageFocalPoint] Error:', updateError)
+    return { success: false, error: 'Failed to update focal point' }
+  }
+
+  // Revalidate gallery pages
+  revalidatePath(`/gallery/${image.gallery_id}`)
+  revalidatePath(`/view-reel/${image.gallery_id}`)
+  revalidatePath(`/view-live/${image.gallery_id}`)
+
+  return { success: true }
+}
+
+/**
+ * Update gallery presentation metadata
+ * Used for premium gallery delivery customization
+ */
+export async function updateGalleryPresentation(
+  galleryId: string,
+  presentationData: PresentationData
+): Promise<{ success: boolean; error?: string }> {
+  const { userId: clerkId } = await auth()
+  if (!clerkId) return { success: false, error: 'Unauthorized' }
+
+  const user = await getOrCreateUserByClerkId(clerkId)
+  if (!user) return { success: false, error: 'User not found' }
+
+  const gallery = await getGalleryWithOwnershipCheck(galleryId, user.id)
+  if (!gallery) return { success: false, error: 'Gallery not found' }
+
+  // Validate cover image if provided
+  if (presentationData.coverImageId) {
+    const { data: image, error: imageError } = await supabaseAdmin
+      .from('images')
+      .select('id')
+      .eq('id', presentationData.coverImageId)
+      .eq('gallery_id', galleryId)
+      .single()
+
+    if (imageError || !image) {
+      return { success: false, error: 'Cover image not found in this gallery' }
+    }
+  }
+
+  // Update both presentation_data and cover_image_id
+  const updatePayload: Record<string, unknown> = {
+    presentation_data: presentationData,
+  }
+  
+  if (presentationData.coverImageId !== undefined) {
+    updatePayload.cover_image_id = presentationData.coverImageId || null
+  }
+
+  const { error } = await supabaseAdmin
+    .from('galleries')
+    .update(updatePayload)
+    .eq('id', galleryId)
+
+  if (error) {
+    console.error('[updateGalleryPresentation] Error:', error)
+    return { success: false, error: 'Failed to update presentation settings' }
+  }
+
+  // Revalidate all gallery views
+  revalidatePath('/')
+  revalidatePath(`/gallery/${galleryId}`)
+  revalidatePath(`/view-reel/${galleryId}`)
+  revalidatePath(`/view-live/${galleryId}`)
+
+  return { success: true }
+}
+
+/**
+ * Get gallery presentation data
+ */
+export async function getGalleryPresentation(
+  galleryId: string
+): Promise<{ data: PresentationData | null; error?: string }> {
+  const { data, error } = await supabaseAdmin
+    .from('galleries')
+    .select('presentation_data, cover_image_id')
+    .eq('id', galleryId)
+    .single()
+
+  if (error) {
+    console.error('[getGalleryPresentation] Error:', error)
+    return { data: null, error: 'Failed to fetch presentation data' }
+  }
+
+  const presentationData = (data?.presentation_data as PresentationData) || null
+  
+  // Merge cover_image_id into presentation data if it exists
+  if (presentationData && data?.cover_image_id) {
+    presentationData.coverImageId = data.cover_image_id
+  }
+
+  return { data: presentationData }
 }

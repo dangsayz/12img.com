@@ -325,18 +325,18 @@ export function UploadZone({ galleryId, onUploadComplete }: UploadZoneProps) {
         >
           
           <div className="relative z-10 flex flex-col items-center gap-4">
-            <div className="h-10 w-10 rounded-full bg-gray-50 flex items-center justify-center transition-transform duration-300 group-hover:scale-110">
-              <Plus className="w-5 h-5 text-gray-400 group-hover:text-gray-600" />
+            <div className="h-12 w-12 rounded-full bg-stone-100 flex items-center justify-center transition-transform duration-300 group-hover:scale-110">
+              <Plus className="w-6 h-6 text-stone-400 group-hover:text-stone-600" />
             </div>
-            <div className="space-y-1">
-              <h3 className="text-base font-semibold text-gray-900">
+            <div className="space-y-2 text-center">
+              <h3 className="text-lg font-serif text-stone-900">
                 Drag images here to upload
               </h3>
-              <p className="text-sm text-gray-500">
-                or <span className="underline decoration-gray-300 hover:text-gray-800 decoration-1 underline-offset-2 transition-colors">browse files</span>
+              <p className="text-sm text-stone-500">
+                or <span className="underline decoration-stone-300 hover:text-stone-800 decoration-1 underline-offset-2 transition-colors">browse files</span>
               </p>
             </div>
-            <p className="text-[10px] text-gray-400 uppercase tracking-wider font-medium mt-2">
+            <p className="text-[10px] text-stone-400 uppercase tracking-[0.15em] mt-2">
               JPEG, PNG, WEBP
             </p>
           </div>

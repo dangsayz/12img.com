@@ -8,6 +8,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Button } from '@/components/ui/button'
 import { UsageBadge } from './UsageBadge'
 import type { LegacyPlanId } from '@/lib/config/pricing'
+import { useAuthModal } from '@/components/auth/AuthModal'
 
 export type UserRole = 'user' | 'support' | 'admin' | 'super_admin'
 
@@ -22,6 +23,7 @@ interface HeaderProps {
 
 const navLinks = [
   { href: '/', label: 'Galleries' },
+  { href: '/profiles', label: 'Profiles' },
   { href: '/pricing', label: 'Pricing' },
   { href: '/settings', label: 'Settings' },
 ]
@@ -36,6 +38,7 @@ export function Header({
 }: HeaderProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const isAdmin = userRole === 'admin' || userRole === 'super_admin'
+  const { openAuthModal } = useAuthModal()
   
   return (
     <header className="fixed top-0 left-0 right-0 z-50 px-3 sm:px-4 py-2 sm:py-3">
@@ -134,20 +137,22 @@ export function Header({
               <div className="hidden md:block w-px h-5 bg-[#E8E4DC]" />
               
               {/* Sign In - Hidden on mobile */}
-              <Link
-                href="/sign-in"
+              <button
+                onClick={() => openAuthModal('sign-in')}
                 className="hidden md:block px-3 py-1.5 rounded-full text-xs font-bold text-[#1C1917] hover:bg-[#FAF8F3] transition-all"
               >
                 Sign In
-              </Link>
+              </button>
               
               {/* Get Started Button - Hidden on mobile */}
               <div className="hidden md:block">
-                <Link href="/sign-up">
-                  <Button size="sm" className="h-7 rounded-full bg-[#1C1917] px-3 text-xs font-bold text-white hover:bg-[#292524] transition-all">
-                    Get Started
-                  </Button>
-                </Link>
+                <Button 
+                  size="sm" 
+                  onClick={() => openAuthModal('sign-up')}
+                  className="h-7 rounded-full bg-[#1C1917] px-3 text-xs font-bold text-white hover:bg-[#292524] transition-all"
+                >
+                  Get Started
+                </Button>
               </div>
               
               {/* Mobile Menu Button */}
@@ -229,16 +234,19 @@ export function Header({
                   </>
                 ) : (
                   <div className="space-y-2">
-                    <Link href="/sign-in" onClick={() => setMobileMenuOpen(false)} className="block">
-                      <Button variant="outline" className="w-full rounded-xl">
-                        Sign In
-                      </Button>
-                    </Link>
-                    <Link href="/sign-up" onClick={() => setMobileMenuOpen(false)} className="block">
-                      <Button className="w-full rounded-xl">
-                        Get Started
-                      </Button>
-                    </Link>
+                    <Button 
+                      variant="outline" 
+                      onClick={() => { setMobileMenuOpen(false); openAuthModal('sign-in') }}
+                      className="w-full rounded-xl"
+                    >
+                      Sign In
+                    </Button>
+                    <Button 
+                      onClick={() => { setMobileMenuOpen(false); openAuthModal('sign-up') }}
+                      className="w-full rounded-xl"
+                    >
+                      Get Started
+                    </Button>
                   </div>
                 )}
               </div>

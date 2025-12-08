@@ -121,8 +121,8 @@ export function SupportWidget() {
     }
   }
 
-  // Don't render for non-authenticated users or while loading
-  if (!isLoaded || !isSignedIn) return null
+  // Show QuickShareWidget for all users, but chat only for authenticated users
+  const showChatButton = isLoaded && isSignedIn
 
   return (
     <>
@@ -133,21 +133,23 @@ export function SupportWidget() {
         animate={{ opacity: isOpen ? 0 : 1, y: isOpen ? 20 : 0, pointerEvents: isOpen ? 'none' : 'auto' }}
         transition={{ duration: 0.2 }}
       >
-        {/* Quick Share Widget */}
+        {/* Quick Share Widget - Always visible */}
         <QuickShareWidget />
 
-        {/* Support Button */}
-        <motion.button
-          onClick={() => setIsOpen(true)}
-          className="flex items-center justify-center w-14 h-14 rounded-full bg-gradient-to-br from-gray-900 to-gray-800 text-white shadow-lg shadow-gray-900/25 hover:shadow-xl hover:shadow-gray-900/30 transition-shadow"
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-        >
-          <MessageCircle className="w-6 h-6" />
-          {messages.some((m) => m.sender_type === 'admin' && !m.read_at) && (
-            <span className="absolute top-0 right-0 w-3 h-3 bg-blue-500 rounded-full ring-2 ring-white" />
-          )}
-        </motion.button>
+        {/* Support Button - Only for authenticated users */}
+        {showChatButton && (
+          <motion.button
+            onClick={() => setIsOpen(true)}
+            className="flex items-center justify-center w-14 h-14 rounded-full bg-gradient-to-br from-gray-900 to-gray-800 text-white shadow-lg shadow-gray-900/25 hover:shadow-xl hover:shadow-gray-900/30 transition-shadow"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            <MessageCircle className="w-6 h-6" />
+            {messages.some((m) => m.sender_type === 'admin' && !m.read_at) && (
+              <span className="absolute top-0 right-0 w-3 h-3 bg-blue-500 rounded-full ring-2 ring-white" />
+            )}
+          </motion.button>
+        )}
       </motion.div>
 
       {/* Chat Window */}

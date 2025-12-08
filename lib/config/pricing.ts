@@ -5,7 +5,7 @@
  * No video bloat, no hidden fees
  * Just storage for photographers who need it
  * 
- * Beats Pixieset by ~25% at every tier
+ * Up to 40% more affordable than competitors
  */
 
 export type PlanId = 'free' | 'essential' | 'pro' | 'studio' | 'elite'
@@ -98,7 +98,6 @@ export const PLANS: PricingPlan[] = [
       'Up to 1,300 images',
       '3 galleries',
       'JPG uploads',
-      '7-day gallery expiry',
     ],
     cta: 'Start free',
   },
@@ -113,7 +112,6 @@ export const PLANS: PricingPlan[] = [
       '10GB storage',
       'Up to 4,000 images',
       'Unlimited galleries',
-      'Galleries never expire',
     ],
     cta: 'Get Essential',
   },
@@ -128,7 +126,6 @@ export const PLANS: PricingPlan[] = [
       '100GB storage',
       'Up to 31,000 images',
       'Unlimited galleries',
-      'Galleries never expire',
     ],
     cta: 'Get Pro',
     popular: true,
@@ -144,7 +141,6 @@ export const PLANS: PricingPlan[] = [
       '500GB storage',
       'Up to 151,000 images',
       'Unlimited galleries',
-      'Galleries never expire',
     ],
     cta: 'Get Studio',
   },

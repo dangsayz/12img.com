@@ -52,8 +52,8 @@ export function Spread({ spread, debug }: Props) {
         <SpreadElement key={element.id} element={element} />
       ))}
 
-      {/* Page Folio / Number */}
-      {spread.pageNumber && spread.pageNumber > 0 && (
+      {/* Page Folio / Number - Only show for actual content pages (not title/quote spreads) */}
+      {typeof spread.pageNumber === 'number' && spread.pageNumber > 0 && (
         <div className="absolute bottom-8 left-8 md:left-12 text-[10px] font-sans tracking-widest text-neutral-400 uppercase z-20 hidden md:block">
           Page {spread.pageNumber.toString().padStart(2, '0')}
         </div>

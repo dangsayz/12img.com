@@ -3,87 +3,131 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { useState } from 'react'
-import { Menu, X, ChevronDown, ArrowRight, Upload, Lock, Shield, Zap, Check, Instagram } from 'lucide-react'
+import { Menu, X, ArrowRight, Upload, Lock, Shield, Zap, Check, Instagram, Quote, Star, Play, Image as ImageIcon, Palette, Clock, Mail } from 'lucide-react'
+import { DemoCardGenerator } from './DemoCardGenerator'
+import { PricingMatrix } from '@/components/pricing/PricingMatrix'
+import { useAuthModal } from '@/components/auth/AuthModal'
 
 // --- Landing Page Component ---
 
 export function LandingPage() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const { openAuthModal } = useAuthModal()
 
   return (
     <div className="min-h-screen bg-[#F5F5F7] text-[#141414] font-sans selection:bg-black selection:text-white">
       
-      {/* --- Navigation --- */}
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-[#F5F5F7]/95 backdrop-blur-sm border-b border-[#E5E5E5]">
-        <div className="max-w-[1400px] mx-auto px-6 h-[72px] flex items-center justify-between">
+      {/* --- Navigation (Floating Pill - matches AppNav) --- */}
+      <nav className="fixed top-0 left-0 right-0 z-50 px-4 py-3 pointer-events-none">
+        <div className="max-w-screen-xl mx-auto flex items-center justify-between">
           
-          {/* Logo */}
-          <Link href="/" className="flex items-center gap-2 z-50">
-            <div className="w-8 h-8 bg-black flex items-center justify-center text-white font-bold text-xs tracking-tighter">
-              12
-            </div>
-            <span className="font-serif text-xl font-medium tracking-tight">img</span>
-          </Link>
-
-          {/* Desktop Nav Center */}
-          <div className="hidden md:flex items-center gap-8">
-            <div className="group relative cursor-pointer py-6">
-              <span className="text-sm font-medium flex items-center gap-1 opacity-80 hover:opacity-100 transition-opacity">
-                Product <ChevronDown className="w-3 h-3" />
-              </span>
-              {/* Dropdown Placeholder */}
-              <div className="absolute top-full left-1/2 -translate-x-1/2 w-48 bg-white border border-[#E5E5E5] opacity-0 group-hover:opacity-100 invisible group-hover:visible transition-all duration-200 shadow-xl p-2 z-50">
-                <Link href="#" className="block px-4 py-2 text-sm hover:bg-[#F5F5F7]">Client Galleries</Link>
-                <Link href="#" className="block px-4 py-2 text-sm hover:bg-[#F5F5F7]">Zip Backup</Link>
-                <Link href="#" className="block px-4 py-2 text-sm hover:bg-[#F5F5F7] text-gray-400 cursor-not-allowed">AI Culling (Soon)</Link>
+          {/* Left: Logo + Nav Links */}
+          <div className="flex items-center gap-1 bg-white/95 backdrop-blur-xl border border-stone-200/60 rounded-full px-2 py-1.5 shadow-sm shadow-stone-900/5 pointer-events-auto">
+            {/* Logo */}
+            <Link href="/" className="flex items-center gap-1.5 px-2 py-1">
+              <div className="w-7 h-7 rounded-full bg-stone-900 flex items-center justify-center">
+                <span className="text-white font-bold text-[10px] tracking-tight">12</span>
               </div>
-            </div>
-            <div className="group relative cursor-pointer py-6">
-              <span className="text-sm font-medium flex items-center gap-1 opacity-80 hover:opacity-100 transition-opacity">
-                Resources <ChevronDown className="w-3 h-3" />
-              </span>
-              <div className="absolute top-full left-1/2 -translate-x-1/2 w-48 bg-white border border-[#E5E5E5] opacity-0 group-hover:opacity-100 invisible group-hover:visible transition-all duration-200 shadow-xl p-2 z-50">
-                <Link href="#" className="block px-4 py-2 text-sm hover:bg-[#F5F5F7]">Blog</Link>
-                <Link href="#" className="block px-4 py-2 text-sm hover:bg-[#F5F5F7]">Help Center</Link>
-              </div>
-            </div>
-            <Link href="#pricing" className="text-sm font-medium opacity-80 hover:opacity-100 transition-opacity">Pricing</Link>
-            <Link href="/view-reel/demo" className="text-sm font-medium opacity-80 hover:opacity-100 transition-opacity">Sample Galleries</Link>
-          </div>
-
-          {/* Desktop Nav Right */}
-          <div className="hidden md:flex items-center gap-6">
-            <Link href="/sign-in" className="text-sm font-medium hover:underline">Log in</Link>
-            <Link href="/sign-up" className="bg-[#141414] text-white text-sm font-medium px-6 py-2.5 hover:bg-black transition-colors rounded-[2px]">
-              Start free
+              <span className="text-sm font-bold text-stone-900 hidden sm:block">img</span>
             </Link>
-          </div>
-
-          {/* Mobile Menu Toggle */}
-          <button 
-            className="md:hidden z-50 p-2"
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          >
-            {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-          </button>
-        </div>
-
-        {/* Mobile Menu Overlay */}
-        {mobileMenuOpen && (
-          <div className="fixed inset-0 bg-[#F5F5F7] z-40 pt-24 px-6 md:hidden overflow-y-auto">
-            <div className="flex flex-col gap-6 text-xl font-serif">
-              <Link href="#" onClick={() => setMobileMenuOpen(false)} className="border-b border-gray-200 pb-4">Product</Link>
-              <Link href="#" onClick={() => setMobileMenuOpen(false)} className="border-b border-gray-200 pb-4">Resources</Link>
-              <Link href="#pricing" onClick={() => setMobileMenuOpen(false)} className="border-b border-gray-200 pb-4">Pricing</Link>
-              <Link href="/view-reel/demo" onClick={() => setMobileMenuOpen(false)} className="border-b border-gray-200 pb-4">Sample Galleries</Link>
-              <Link href="/sign-in" onClick={() => setMobileMenuOpen(false)} className="pb-4">Log in</Link>
-              <Link href="/sign-up" onClick={() => setMobileMenuOpen(false)} className="bg-[#141414] text-white text-center py-4 mt-4 font-sans font-medium rounded-[2px]">
-                Start free
+            
+            {/* Divider */}
+            <div className="w-px h-5 bg-stone-200 mx-1 hidden md:block" />
+            
+            {/* Nav Links - Desktop */}
+            <div className="hidden md:flex items-center">
+              <Link href="#features" className="px-3 py-1.5 rounded-full text-sm font-medium text-stone-500 hover:text-stone-900 hover:bg-stone-50 transition-all">
+                Features
+              </Link>
+              <Link href="#pricing" className="px-3 py-1.5 rounded-full text-sm font-medium text-stone-500 hover:text-stone-900 hover:bg-stone-50 transition-all">
+                Pricing
+              </Link>
+              <Link href="/profiles" className="px-3 py-1.5 rounded-full text-sm font-medium text-stone-500 hover:text-stone-900 hover:bg-stone-50 transition-all">
+                Profiles
+              </Link>
+              <Link href="/view-reel/demo" className="px-3 py-1.5 rounded-full text-sm font-medium text-stone-500 hover:text-stone-900 hover:bg-stone-50 transition-all">
+                Demo
+              </Link>
+              <Link href="/help" className="px-3 py-1.5 rounded-full text-sm font-medium text-stone-500 hover:text-stone-900 hover:bg-stone-50 transition-all">
+                Help
               </Link>
             </div>
           </div>
-        )}
+          
+          {/* Right: Auth Actions */}
+          <div className="flex items-center gap-2 bg-white/95 backdrop-blur-xl border border-stone-200/60 rounded-full px-2 py-1.5 shadow-sm shadow-stone-900/5 pointer-events-auto">
+            <button 
+              onClick={() => openAuthModal('sign-in')}
+              className="px-3 py-1.5 rounded-full text-sm font-medium text-stone-600 hover:text-stone-900 hover:bg-stone-50 transition-all hidden sm:block"
+            >
+              Log in
+            </button>
+            <button 
+              onClick={() => openAuthModal('sign-up')}
+              className="flex items-center gap-1.5 px-4 py-1.5 bg-stone-900 hover:bg-stone-800 text-white text-sm font-medium rounded-full transition-colors"
+            >
+              Start free
+            </button>
+            
+            {/* Mobile Menu Toggle */}
+            <button 
+              className="md:hidden p-2 rounded-full hover:bg-stone-100 transition-colors"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            >
+              {mobileMenuOpen ? <X className="w-5 h-5 text-stone-600" /> : <Menu className="w-5 h-5 text-stone-600" />}
+            </button>
+          </div>
+        </div>
       </nav>
+      
+      {/* Mobile Menu */}
+      {mobileMenuOpen && (
+        <>
+          {/* Backdrop */}
+          <div 
+            className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40 md:hidden"
+            onClick={() => setMobileMenuOpen(false)}
+          />
+          
+          {/* Menu Panel */}
+          <div className="fixed top-20 left-4 right-4 z-50 md:hidden">
+            <div className="bg-white rounded-2xl border border-stone-200 shadow-xl overflow-hidden">
+              <div className="p-2">
+                <Link href="#features" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 rounded-xl text-stone-600 hover:bg-stone-50 transition-all">
+                  <span className="font-medium">Features</span>
+                </Link>
+                <Link href="#pricing" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 rounded-xl text-stone-600 hover:bg-stone-50 transition-all">
+                  <span className="font-medium">Pricing</span>
+                </Link>
+                <Link href="/profiles" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 rounded-xl text-stone-600 hover:bg-stone-50 transition-all">
+                  <span className="font-medium">Profiles</span>
+                </Link>
+                <Link href="/view-reel/demo" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 rounded-xl text-stone-600 hover:bg-stone-50 transition-all">
+                  <span className="font-medium">Demo Gallery</span>
+                </Link>
+                <Link href="/help" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 rounded-xl text-stone-600 hover:bg-stone-50 transition-all">
+                  <span className="font-medium">Help</span>
+                </Link>
+              </div>
+              
+              <div className="border-t border-stone-100 p-3 space-y-2">
+                <button 
+                  onClick={() => { setMobileMenuOpen(false); openAuthModal('sign-in') }}
+                  className="block w-full px-4 py-2.5 text-center text-sm font-medium text-stone-700 hover:bg-stone-50 rounded-xl transition-colors"
+                >
+                  Log in
+                </button>
+                <button 
+                  onClick={() => { setMobileMenuOpen(false); openAuthModal('sign-up') }}
+                  className="block w-full px-4 py-2.5 text-center text-sm font-medium text-white bg-stone-900 hover:bg-stone-800 rounded-xl transition-colors"
+                >
+                  Start free
+                </button>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
 
       {/* --- 1. Hero Section --- */}
       <section className="pt-28 pb-12 md:pt-32 md:pb-16 lg:pt-48 lg:pb-32 px-4 sm:px-6">
@@ -100,9 +144,12 @@ export function LandingPage() {
               Beautiful delivery, automated backups, and 40% more affordable than the rest.
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
-              <Link href="/sign-up" className="bg-[#141414] text-white px-8 py-4 text-center font-bold hover:bg-black transition-colors rounded-[2px] min-w-[160px]">
+              <button 
+                onClick={() => openAuthModal('sign-up')}
+                className="bg-[#141414] text-white px-8 py-4 text-center font-bold hover:bg-black transition-colors rounded-[2px] min-w-[160px]"
+              >
                 Start free
-              </Link>
+              </button>
               <Link href="/view-reel/demo" className="bg-transparent border border-[#141414] text-[#141414] px-8 py-4 text-center font-bold hover:bg-[#141414] hover:text-white transition-colors rounded-[2px] min-w-[160px]">
                 View sample
               </Link>
@@ -219,7 +266,7 @@ export function LandingPage() {
       </section>
 
       {/* --- 4. Auto Zip & Backups --- */}
-      <section className="py-12 md:py-20 lg:py-32 px-4 sm:px-6 bg-white border-y border-[#E5E5E5]">
+      <section id="backup" className="py-12 md:py-20 lg:py-32 px-4 sm:px-6 bg-white border-y border-[#E5E5E5]">
         <div className="max-w-[1280px] mx-auto grid lg:grid-cols-2 gap-8 lg:gap-32 items-center">
           
           <div>
@@ -254,21 +301,72 @@ export function LandingPage() {
         </div>
       </section>
 
-      {/* --- 5. Slideshows (Future) --- */}
-      <section className="py-12 md:py-20 lg:py-32 px-4 sm:px-6 bg-[#141414] text-white text-center">
-        <div className="max-w-[1280px] mx-auto">
-          <span className="inline-block px-3 py-1 border border-white/30 text-xs font-medium uppercase tracking-wider mb-8">
-            Coming Soon
-          </span>
-          <h2 className="font-serif text-3xl sm:text-4xl lg:text-[42px] mb-8">
-            Cinematic Slideshows
-          </h2>
-          <div className="relative aspect-video max-w-[900px] mx-auto bg-[#222] border border-white/10 flex items-center justify-center">
-             <span className="font-serif italic text-2xl text-white/40">Video Player Placeholder</span>
-             {/* Decorative Elements */}
-             <div className="absolute bottom-8 left-8 right-8 h-1 bg-white/20">
-               <div className="w-1/3 h-full bg-white"></div>
-             </div>
+      {/* --- 5. Email Tracking Feature --- */}
+      <section className="py-12 md:py-20 lg:py-32 px-4 sm:px-6 bg-[#141414] text-white">
+        <div className="max-w-[1280px] mx-auto grid lg:grid-cols-2 gap-8 lg:gap-16 items-center">
+          <div>
+            <span className="inline-block px-3 py-1 border border-white/30 text-xs font-medium uppercase tracking-wider mb-6">
+              Client Insights
+            </span>
+            <h2 className="font-serif text-3xl sm:text-4xl lg:text-[42px] mb-6">
+              Know when clients <br />
+              <span className="italic">view & download.</span>
+            </h2>
+            <p className="text-white/70 text-lg leading-relaxed mb-8">
+              Track every email you send. See when clients open your gallery links, 
+              click through to view, and download their photos. No more wondering 
+              if they received it.
+            </p>
+            <ul className="space-y-4">
+              <li className="flex items-start gap-3">
+                <Check className="w-5 h-5 mt-0.5 text-emerald-400" />
+                <span className="text-white/80">Open tracking for every email</span>
+              </li>
+              <li className="flex items-start gap-3">
+                <Check className="w-5 h-5 mt-0.5 text-emerald-400" />
+                <span className="text-white/80">Click tracking on gallery links</span>
+              </li>
+              <li className="flex items-start gap-3">
+                <Check className="w-5 h-5 mt-0.5 text-emerald-400" />
+                <span className="text-white/80">Download confirmation</span>
+              </li>
+            </ul>
+          </div>
+          <div className="relative">
+            <div className="bg-[#222] border border-white/10 rounded-xl p-6">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center">
+                  <Mail className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <p className="font-medium">Email Activity</p>
+                  <p className="text-sm text-white/50">Smith Wedding Gallery</p>
+                </div>
+              </div>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between p-3 bg-white/5 rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <div className="w-2 h-2 rounded-full bg-emerald-400"></div>
+                    <span className="text-sm">sarah@email.com</span>
+                  </div>
+                  <span className="text-xs text-white/50">Opened · Downloaded</span>
+                </div>
+                <div className="flex items-center justify-between p-3 bg-white/5 rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <div className="w-2 h-2 rounded-full bg-blue-400"></div>
+                    <span className="text-sm">john@email.com</span>
+                  </div>
+                  <span className="text-xs text-white/50">Opened · 2h ago</span>
+                </div>
+                <div className="flex items-center justify-between p-3 bg-white/5 rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <div className="w-2 h-2 rounded-full bg-stone-500"></div>
+                    <span className="text-sm">mom@email.com</span>
+                  </div>
+                  <span className="text-xs text-white/50">Sent · Pending</span>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -295,167 +393,275 @@ export function LandingPage() {
         </div>
       </section>
 
-      {/* --- 7. Social Proof --- */}
+      {/* --- 7. Why 12img --- */}
       <section className="py-12 md:py-20 px-4 sm:px-6 border-t border-[#E5E5E5] bg-white">
         <div className="max-w-[1280px] mx-auto text-center">
-          <p className="text-sm font-medium uppercase tracking-widest text-[#525252] mb-12">Trusted by 10,000+ Photographers</p>
-          <div className="flex flex-wrap justify-center gap-12 lg:gap-24 opacity-40 grayscale">
-            {/* Logo Placeholders */}
-            <div className="h-8 w-32 bg-black/10"></div>
-            <div className="h-8 w-32 bg-black/10"></div>
-            <div className="h-8 w-32 bg-black/10"></div>
-            <div className="h-8 w-32 bg-black/10"></div>
-            <div className="h-8 w-32 bg-black/10"></div>
+          <h2 className="font-serif text-2xl sm:text-3xl lg:text-[36px] mb-4">Built different.</h2>
+          <p className="text-[#525252] text-lg max-w-2xl mx-auto">
+            No bloat. No complexity. Just the features photographers actually need, 
+            at a price that makes sense.
+          </p>
+        </div>
+      </section>
+
+      {/* --- 8. Testimonials --- */}
+      <section className="py-12 md:py-20 lg:py-32 px-4 sm:px-6 bg-[#F5F5F7]">
+        <div className="max-w-[1280px] mx-auto">
+          <div className="text-center mb-12 lg:mb-16">
+            <h2 className="font-serif text-2xl sm:text-3xl lg:text-[42px] mb-4">What photographers are saying</h2>
+            <p className="text-[#525252] text-lg">Real feedback from real creatives.</p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
+            {/* Testimonial 1 */}
+            <div className="bg-white p-6 sm:p-8 border border-[#E5E5E5] relative">
+              <div className="flex gap-1 mb-4">
+                {[...Array(5)].map((_, i) => (
+                  <Star key={i} className="w-4 h-4 fill-[#141414] text-[#141414]" />
+                ))}
+              </div>
+              <Quote className="w-8 h-8 text-[#E5E5E5] absolute top-6 right-6" />
+              <p className="text-[#525252] leading-relaxed mb-6">
+                "Finally, a gallery platform that doesn't feel bloated. My clients love how fast the galleries load on their phones. The automatic ZIP backup is a game-changer."
+              </p>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center text-sm font-bold text-gray-600">
+                  JM
+                </div>
+                <div>
+                  <p className="font-medium text-sm">Jessica Martinez</p>
+                  <p className="text-xs text-[#525252]">Wedding Photographer, Austin TX</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Testimonial 2 */}
+            <div className="bg-white p-6 sm:p-8 border border-[#E5E5E5] relative">
+              <div className="flex gap-1 mb-4">
+                {[...Array(5)].map((_, i) => (
+                  <Star key={i} className="w-4 h-4 fill-[#141414] text-[#141414]" />
+                ))}
+              </div>
+              <Quote className="w-8 h-8 text-[#E5E5E5] absolute top-6 right-6" />
+              <p className="text-[#525252] leading-relaxed mb-6">
+                "I switched from my old gallery platform and cut my costs by 40%. The interface is cleaner, uploads are faster, and my workflow is so much simpler now."
+              </p>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center text-sm font-bold text-gray-600">
+                  DK
+                </div>
+                <div>
+                  <p className="font-medium text-sm">David Kim</p>
+                  <p className="text-xs text-[#525252]">Portrait Photographer, Seattle WA</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Testimonial 3 */}
+            <div className="bg-white p-6 sm:p-8 border border-[#E5E5E5] relative md:col-span-2 lg:col-span-1">
+              <div className="flex gap-1 mb-4">
+                {[...Array(5)].map((_, i) => (
+                  <Star key={i} className="w-4 h-4 fill-[#141414] text-[#141414]" />
+                ))}
+              </div>
+              <Quote className="w-8 h-8 text-[#E5E5E5] absolute top-6 right-6" />
+              <p className="text-[#525252] leading-relaxed mb-6">
+                "The mobile experience is incredible. My clients can browse hundreds of photos without any lag. It's exactly what I needed for destination weddings."
+              </p>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center text-sm font-bold text-gray-600">
+                  SR
+                </div>
+                <div>
+                  <p className="font-medium text-sm">Sarah Rodriguez</p>
+                  <p className="text-xs text-[#525252]">Destination Wedding Photographer</p>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* --- 8. Pricing Preview --- */}
-      <section id="pricing" className="py-12 md:py-20 lg:py-32 px-4 sm:px-6 bg-[#F5F5F7]">
+      {/* --- 9. How It Works --- */}
+      <section id="features" className="py-12 md:py-20 lg:py-32 px-4 sm:px-6 bg-white border-t border-[#E5E5E5]">
         <div className="max-w-[1280px] mx-auto">
-          <div className="text-center mb-8 lg:mb-16">
+          <div className="text-center mb-12 lg:mb-20">
+            <span className="inline-block px-3 py-1 border border-[#141414] text-xs font-medium uppercase tracking-wider mb-6">
+              How It Works
+            </span>
+            <h2 className="font-serif text-2xl sm:text-3xl lg:text-[42px] mb-4">
+              From upload to delivery in minutes
+            </h2>
+            <p className="text-[#525252] text-lg max-w-2xl mx-auto">
+              A streamlined workflow designed for busy photographers. No complexity, just results.
+            </p>
+          </div>
+
+          {/* Step 1: Try It - Interactive Demo */}
+          <div className="grid lg:grid-cols-2 gap-8 lg:gap-16 items-center mb-16 lg:mb-24">
+            <div className="order-2 lg:order-1">
+              <div className="inline-flex items-center gap-2 px-3 py-1 bg-emerald-50 border border-emerald-200 rounded-full text-sm font-medium text-emerald-700 mb-4">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                Try it free
+              </div>
+              <h3 className="font-serif text-2xl lg:text-3xl mb-4">
+                Create a beautiful card
+              </h3>
+              <p className="text-[#525252] text-lg leading-relaxed mb-6">
+                Drop any photo and instantly get a stunning shareable card. No sign-up required—see how beautiful your images can look with 12img.
+              </p>
+              <ul className="space-y-3">
+                <li className="flex items-center gap-3 text-[#525252]">
+                  <Check className="w-5 h-5 text-emerald-600" />
+                  Elegant print-style display
+                </li>
+                <li className="flex items-center gap-3 text-[#525252]">
+                  <Check className="w-5 h-5 text-emerald-600" />
+                  Instant shareable link
+                </li>
+                <li className="flex items-center gap-3 text-[#525252]">
+                  <Check className="w-5 h-5 text-emerald-600" />
+                  Free for 30 days
+                </li>
+              </ul>
+            </div>
+            <div className="order-1 lg:order-2 relative">
+              <DemoCardGenerator />
+            </div>
+          </div>
+
+          {/* Step 2: Customize */}
+          <div className="grid lg:grid-cols-2 gap-8 lg:gap-16 items-center mb-16 lg:mb-24">
+            <div className="relative">
+              <div className="aspect-[4/3] bg-[#F5F5F7] border border-[#E5E5E5] rounded-lg p-6 overflow-hidden">
+                <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-4 h-full">
+                  <div className="flex items-center gap-3 mb-4">
+                    <Palette className="w-5 h-5 text-gray-600" />
+                    <span className="font-medium text-sm">Gallery Settings</span>
+                  </div>
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                      <span className="text-sm text-gray-600">Gallery Title</span>
+                      <span className="text-sm font-medium">Smith Wedding 2024</span>
+                    </div>
+                    <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                      <span className="text-sm text-gray-600">Password</span>
+                      <span className="text-sm font-medium">••••••••</span>
+                    </div>
+                    <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                      <span className="text-sm text-gray-600">Downloads</span>
+                      <span className="text-sm font-medium text-emerald-600">Enabled</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div>
+              <div className="inline-flex items-center gap-2 px-3 py-1 bg-[#F5F5F7] rounded-full text-sm font-medium mb-4">
+                <span className="w-6 h-6 rounded-full bg-[#141414] text-white flex items-center justify-center text-xs font-bold">2</span>
+                Customize
+              </div>
+              <h3 className="font-serif text-2xl lg:text-3xl mb-4">
+                Make it yours.
+              </h3>
+              <p className="text-[#525252] text-lg leading-relaxed mb-6">
+                Add your branding, set a password, and customize the experience. Your gallery, your rules. Clients see your brand, not ours.
+              </p>
+              <ul className="space-y-3">
+                <li className="flex items-center gap-3 text-[#525252]">
+                  <Check className="w-5 h-5 text-emerald-600" />
+                  Custom branding & colors
+                </li>
+                <li className="flex items-center gap-3 text-[#525252]">
+                  <Check className="w-5 h-5 text-emerald-600" />
+                  Password protection
+                </li>
+                <li className="flex items-center gap-3 text-[#525252]">
+                  <Check className="w-5 h-5 text-emerald-600" />
+                  Download controls
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          {/* Step 3: Share */}
+          <div className="grid lg:grid-cols-2 gap-8 lg:gap-16 items-center">
+            <div className="order-2 lg:order-1">
+              <div className="inline-flex items-center gap-2 px-3 py-1 bg-[#F5F5F7] rounded-full text-sm font-medium mb-4">
+                <span className="w-6 h-6 rounded-full bg-[#141414] text-white flex items-center justify-center text-xs font-bold">3</span>
+                Share
+              </div>
+              <h3 className="font-serif text-2xl lg:text-3xl mb-4">
+                One link, instant access.
+              </h3>
+              <p className="text-[#525252] text-lg leading-relaxed mb-6">
+                Share a beautiful link with your clients. They can view, favorite, and download—no account required. Plus, they automatically receive a ZIP backup via email.
+              </p>
+              <ul className="space-y-3">
+                <li className="flex items-center gap-3 text-[#525252]">
+                  <Check className="w-5 h-5 text-emerald-600" />
+                  No client login needed
+                </li>
+                <li className="flex items-center gap-3 text-[#525252]">
+                  <Check className="w-5 h-5 text-emerald-600" />
+                  Automatic ZIP backup email
+                </li>
+                <li className="flex items-center gap-3 text-[#525252]">
+                  <Check className="w-5 h-5 text-emerald-600" />
+                  Mobile-optimized viewing
+                </li>
+              </ul>
+            </div>
+            <div className="order-1 lg:order-2 relative">
+              <div className="aspect-[4/3] bg-[#F5F5F7] border border-[#E5E5E5] rounded-lg p-6 flex items-center justify-center">
+                <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-6 w-full max-w-sm">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-10 h-10 rounded-full bg-[#141414] flex items-center justify-center">
+                      <ImageIcon className="w-5 h-5 text-white" />
+                    </div>
+                    <div>
+                      <p className="font-medium text-sm">Smith Wedding 2024</p>
+                      <p className="text-xs text-gray-500">248 photos</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg mb-4">
+                    <span className="text-sm text-gray-600 truncate flex-1">12img.com/g/smith-wedding</span>
+                    <button className="p-2 hover:bg-gray-200 rounded-lg transition-colors">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                      </svg>
+                    </button>
+                  </div>
+                  <div className="flex gap-2">
+                    <button className="flex-1 py-2 bg-[#141414] text-white text-sm font-medium rounded-lg">
+                      Copy Link
+                    </button>
+                    <button className="px-4 py-2 border border-gray-200 text-sm font-medium rounded-lg">
+                      Email
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* --- 10. Pricing Preview --- */}
+      <section id="pricing" className="py-12 md:py-20 lg:py-32 px-4 sm:px-6 bg-[#F5F5F7]">
+        <div className="max-w-[1400px] mx-auto">
+          <div className="text-center mb-8 lg:mb-12">
             <h2 className="font-serif text-2xl sm:text-3xl lg:text-[42px] mb-4">Simple, honest pricing.</h2>
             <p className="text-[#525252] text-lg">No hidden fees. Change plans anytime.</p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 max-w-6xl mx-auto">
-            {/* Free */}
-            <div className="bg-white p-4 sm:p-6 border border-[#E5E5E5] flex flex-col">
-              <h3 className="font-serif text-xl mb-1">Free</h3>
-              <p className="text-xs text-gray-500 mb-4">Test drive</p>
-              <div className="text-3xl font-bold mb-6">$0<span className="text-sm font-normal text-gray-500">/mo</span></div>
-              
-              <Link href="/sign-up" className="block w-full py-2.5 border border-[#E5E5E5] text-sm font-medium hover:border-[#141414] transition-colors rounded-[2px] text-center mb-6">
-                Start free
-              </Link>
-
-              <ul className="text-left space-y-2 flex-1">
-                <li className="flex items-start gap-2 text-xs text-[#525252]">
-                  <Check className="w-3.5 h-3.5 mt-0.5 shrink-0 text-emerald-600" /> 2GB storage
-                </li>
-                <li className="flex items-start gap-2 text-xs text-[#525252]">
-                  <Check className="w-3.5 h-3.5 mt-0.5 shrink-0 text-emerald-600" /> Up to 1,300 images
-                </li>
-                <li className="flex items-start gap-2 text-xs text-[#525252]">
-                  <Check className="w-3.5 h-3.5 mt-0.5 shrink-0 text-emerald-600" /> 3 galleries
-                </li>
-                <li className="flex items-start gap-2 text-xs text-[#525252]">
-                  <Check className="w-3.5 h-3.5 mt-0.5 shrink-0 text-emerald-600" /> 7-day gallery expiry
-                </li>
-              </ul>
-            </div>
-
-            {/* Essential */}
-            <div className="bg-white p-4 sm:p-6 border border-[#E5E5E5] flex flex-col">
-              <h3 className="font-serif text-xl mb-1">Essential</h3>
-              <p className="text-xs text-gray-500 mb-4">For part-time photographers</p>
-              <div className="text-3xl font-bold mb-6">$6<span className="text-sm font-normal text-gray-500">/mo</span></div>
-              
-              <Link href="/sign-up" className="block w-full py-2.5 border border-[#E5E5E5] text-sm font-medium hover:border-[#141414] transition-colors rounded-[2px] text-center mb-6">
-                Get Essential
-              </Link>
-
-              <ul className="text-left space-y-2 flex-1">
-                <li className="flex items-start gap-2 text-xs text-[#525252]">
-                  <Check className="w-3.5 h-3.5 mt-0.5 shrink-0 text-emerald-600" /> 10GB storage
-                </li>
-                <li className="flex items-start gap-2 text-xs text-[#525252]">
-                  <Check className="w-3.5 h-3.5 mt-0.5 shrink-0 text-emerald-600" /> Up to 4,000 images
-                </li>
-                <li className="flex items-start gap-2 text-xs text-[#525252]">
-                  <Check className="w-3.5 h-3.5 mt-0.5 shrink-0 text-emerald-600" /> Unlimited galleries
-                </li>
-                <li className="flex items-start gap-2 text-xs text-[#525252]">
-                  <Check className="w-3.5 h-3.5 mt-0.5 shrink-0 text-emerald-600" /> Galleries never expire
-                </li>
-              </ul>
-            </div>
-            
-            {/* Pro - Recommended */}
-            <div className="bg-[#141414] text-white p-4 sm:p-6 border border-[#141414] flex flex-col relative">
-              <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-white text-[#141414] text-[10px] font-bold uppercase tracking-wider whitespace-nowrap border border-[#141414]">
-                Most Popular
-              </div>
-              <h3 className="font-serif text-xl mb-1">Pro</h3>
-              <p className="text-xs text-white/60 mb-4">Most popular</p>
-              <div className="text-3xl font-bold mb-6">$12<span className="text-sm font-normal text-white/60">/mo</span></div>
-              
-              <Link href="/sign-up" className="block w-full py-2.5 bg-white text-[#141414] text-sm font-medium hover:bg-gray-100 transition-colors rounded-[2px] text-center mb-6">
-                Get Pro
-              </Link>
-
-              <ul className="text-left space-y-2 flex-1">
-                <li className="flex items-start gap-2 text-xs text-white/80">
-                  <Check className="w-3.5 h-3.5 mt-0.5 shrink-0 text-emerald-400" /> 100GB storage
-                </li>
-                <li className="flex items-start gap-2 text-xs text-white/80">
-                  <Check className="w-3.5 h-3.5 mt-0.5 shrink-0 text-emerald-400" /> Up to 31,000 images
-                </li>
-                <li className="flex items-start gap-2 text-xs text-white/80">
-                  <Check className="w-3.5 h-3.5 mt-0.5 shrink-0 text-emerald-400" /> Unlimited galleries
-                </li>
-                <li className="flex items-start gap-2 text-xs text-white/80">
-                  <Check className="w-3.5 h-3.5 mt-0.5 shrink-0 text-emerald-400" /> Galleries never expire
-                </li>
-              </ul>
-            </div>
-
-            {/* Studio */}
-            <div className="bg-white p-4 sm:p-6 border border-[#E5E5E5] flex flex-col">
-              <h3 className="font-serif text-xl mb-1">Studio</h3>
-              <p className="text-xs text-gray-500 mb-4">For busy studios</p>
-              <div className="text-3xl font-bold mb-6">$18<span className="text-sm font-normal text-gray-500">/mo</span></div>
-              
-              <Link href="/sign-up" className="block w-full py-2.5 border border-[#E5E5E5] text-sm font-medium hover:border-[#141414] transition-colors rounded-[2px] text-center mb-6">
-                Get Studio
-              </Link>
-
-              <ul className="text-left space-y-2 flex-1">
-                <li className="flex items-start gap-2 text-xs text-[#525252]">
-                  <Check className="w-3.5 h-3.5 mt-0.5 shrink-0 text-emerald-600" /> 500GB storage
-                </li>
-                <li className="flex items-start gap-2 text-xs text-[#525252]">
-                  <Check className="w-3.5 h-3.5 mt-0.5 shrink-0 text-emerald-600" /> Up to 151,000 images
-                </li>
-                <li className="flex items-start gap-2 text-xs text-[#525252]">
-                  <Check className="w-3.5 h-3.5 mt-0.5 shrink-0 text-emerald-600" /> Unlimited galleries
-                </li>
-                <li className="flex items-start gap-2 text-xs text-[#525252]">
-                  <Check className="w-3.5 h-3.5 mt-0.5 shrink-0 text-emerald-600" /> Priority Support
-                </li>
-              </ul>
-            </div>
-
-            {/* Elite */}
-            <div className="bg-white p-4 sm:p-6 border border-[#E5E5E5] flex flex-col">
-              <h3 className="font-serif text-xl mb-1">Elite</h3>
-              <p className="text-xs text-gray-500 mb-4">For power users</p>
-              <div className="text-3xl font-bold mb-6">$30<span className="text-sm font-normal text-gray-500">/mo</span></div>
-              
-              <Link href="/sign-up" className="block w-full py-2.5 bg-[#141414] text-white text-sm font-medium hover:bg-black transition-colors rounded-[2px] text-center mb-6">
-                Get Elite
-              </Link>
-
-              <ul className="text-left space-y-2 flex-1">
-                <li className="flex items-start gap-2 text-xs text-[#525252]">
-                  <Check className="w-3.5 h-3.5 mt-0.5 shrink-0 text-emerald-600" /> 2TB storage
-                </li>
-                <li className="flex items-start gap-2 text-xs text-[#525252]">
-                  <Check className="w-3.5 h-3.5 mt-0.5 shrink-0 text-emerald-600" /> Up to 600,000 images
-                </li>
-                <li className="flex items-start gap-2 text-xs text-[#525252]">
-                  <Check className="w-3.5 h-3.5 mt-0.5 shrink-0 text-emerald-600" /> Unlimited galleries
-                </li>
-                <li className="flex items-start gap-2 text-xs text-[#525252]">
-                  <Check className="w-3.5 h-3.5 mt-0.5 shrink-0 text-emerald-600" /> Priority support
-                </li>
-              </ul>
-            </div>
-          </div>
+          {/* Pricing Matrix */}
+          <PricingMatrix showAllFeatures={false} />
           
-          <div className="text-center mt-12">
-            <Link href="/pricing" className="text-sm font-medium border-b border-[#141414] pb-0.5 hover:text-gray-600 transition-colors">
-              View full pricing comparison
+          <div className="text-center mt-10">
+            <Link href="/pricing" className="inline-flex items-center gap-2 text-sm font-medium text-[#141414] hover:text-gray-600 transition-colors">
+              View full feature comparison
+              <ArrowRight className="w-4 h-4" />
             </Link>
           </div>
         </div>

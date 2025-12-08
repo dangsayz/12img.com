@@ -1,10 +1,7 @@
 'use client'
 
 import { useState, useTransition } from 'react'
-import { Lock, Download, Clock, Droplets } from 'lucide-react'
 import { updateUserSettings } from '@/server/actions/settings.actions'
-import { Switch } from '@/components/ui/switch'
-import { Label } from '@/components/ui/label'
 
 interface SettingsFormProps {
   initialSettings: {
@@ -13,6 +10,28 @@ interface SettingsFormProps {
     defaultGalleryExpiryDays: number | null
     defaultWatermarkEnabled: boolean
   }
+}
+
+// Simple toggle switch component
+function Toggle({ checked, onChange, disabled }: { checked: boolean; onChange: () => void; disabled?: boolean }) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      onClick={onChange}
+      disabled={disabled}
+      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+        checked ? 'bg-stone-900' : 'bg-stone-200'
+      } ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+    >
+      <span
+        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+          checked ? 'translate-x-6' : 'translate-x-1'
+        }`}
+      />
+    </button>
+  )
 }
 
 export function SettingsForm({ initialSettings }: SettingsFormProps) {
@@ -53,74 +72,45 @@ export function SettingsForm({ initialSettings }: SettingsFormProps) {
   }
 
   return (
-    <div className="space-y-1">
+    <div className="bg-stone-50 border border-stone-100 divide-y divide-stone-100">
       {/* Password Default Toggle */}
-      <div className="flex items-center justify-between py-4 px-4 hover:bg-gray-50 rounded-lg transition-colors">
-        <div className="flex items-start gap-3">
-          <div className="p-2 bg-amber-50 rounded-lg mt-0.5">
-            <Lock className="w-4 h-4 text-amber-600" />
-          </div>
-          <div>
-            <Label htmlFor="defaultPasswordEnabled" className="font-medium cursor-pointer">
-              Password protect new galleries
-            </Label>
-            <p className="text-sm text-gray-500 mt-0.5">
-              New galleries will require a password by default
-            </p>
-          </div>
+      <div className="flex items-center justify-between p-5">
+        <div>
+          <p className="text-sm font-medium text-stone-900">Password protect new galleries</p>
+          <p className="text-sm text-stone-500 mt-0.5">Require a password by default</p>
         </div>
-        <Switch
-          id="defaultPasswordEnabled"
+        <Toggle
           checked={settings.defaultPasswordEnabled}
-          onCheckedChange={() => handleToggle('defaultPasswordEnabled')}
+          onChange={() => handleToggle('defaultPasswordEnabled')}
           disabled={isPending}
         />
       </div>
 
       {/* Download Default Toggle */}
-      <div className="flex items-center justify-between py-4 px-4 hover:bg-gray-50 rounded-lg transition-colors">
-        <div className="flex items-start gap-3">
-          <div className="p-2 bg-green-50 rounded-lg mt-0.5">
-            <Download className="w-4 h-4 text-green-600" />
-          </div>
-          <div>
-            <Label htmlFor="defaultDownloadEnabled" className="font-medium cursor-pointer">
-              Allow downloads by default
-            </Label>
-            <p className="text-sm text-gray-500 mt-0.5">
-              Clients can download images from new galleries
-            </p>
-          </div>
+      <div className="flex items-center justify-between p-5">
+        <div>
+          <p className="text-sm font-medium text-stone-900">Allow downloads by default</p>
+          <p className="text-sm text-stone-500 mt-0.5">Clients can download images</p>
         </div>
-        <Switch
-          id="defaultDownloadEnabled"
+        <Toggle
           checked={settings.defaultDownloadEnabled}
-          onCheckedChange={() => handleToggle('defaultDownloadEnabled')}
+          onChange={() => handleToggle('defaultDownloadEnabled')}
           disabled={isPending}
         />
       </div>
 
       {/* Gallery Expiry */}
-      <div className="flex items-center justify-between py-4 px-4 hover:bg-gray-50 rounded-lg transition-colors">
-        <div className="flex items-start gap-3">
-          <div className="p-2 bg-blue-50 rounded-lg mt-0.5">
-            <Clock className="w-4 h-4 text-blue-600" />
-          </div>
-          <div>
-            <Label htmlFor="defaultGalleryExpiryDays" className="font-medium cursor-pointer">
-              Default gallery expiration
-            </Label>
-            <p className="text-sm text-gray-500 mt-0.5">
-              Auto-expire galleries after this many days
-            </p>
-          </div>
+      <div className="flex items-center justify-between p-5">
+        <div>
+          <p className="text-sm font-medium text-stone-900">Default gallery expiration</p>
+          <p className="text-sm text-stone-500 mt-0.5">Auto-expire after this many days</p>
         </div>
         <select
           id="defaultGalleryExpiryDays"
           value={settings.defaultGalleryExpiryDays ?? ''}
           onChange={(e) => handleExpiryChange(e.target.value)}
           disabled={isPending}
-          className="w-[140px] h-10 px-3 py-2 text-sm border border-gray-200 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+          className="px-3 py-2 text-sm border border-stone-200 bg-white text-stone-900 focus:outline-none focus:border-stone-400 disabled:opacity-50"
         >
           <option value="">Never</option>
           <option value="7">7 days</option>
@@ -134,36 +124,22 @@ export function SettingsForm({ initialSettings }: SettingsFormProps) {
       </div>
 
       {/* Watermark Toggle */}
-      <div className="flex items-center justify-between py-4 px-4 hover:bg-gray-50 rounded-lg transition-colors">
-        <div className="flex items-start gap-3">
-          <div className="p-2 bg-purple-50 rounded-lg mt-0.5">
-            <Droplets className="w-4 h-4 text-purple-600" />
-          </div>
-          <div>
-            <Label htmlFor="defaultWatermarkEnabled" className="font-medium cursor-pointer">
-              Watermark images by default
-            </Label>
-            <p className="text-sm text-gray-500 mt-0.5">
-              Apply watermark to images in new galleries
-            </p>
-          </div>
+      <div className="flex items-center justify-between p-5">
+        <div>
+          <p className="text-sm font-medium text-stone-900">Watermark images by default</p>
+          <p className="text-sm text-stone-500 mt-0.5">Apply watermark to new galleries</p>
         </div>
-        <Switch
-          id="defaultWatermarkEnabled"
+        <Toggle
           checked={settings.defaultWatermarkEnabled}
-          onCheckedChange={() => handleToggle('defaultWatermarkEnabled')}
+          onChange={() => handleToggle('defaultWatermarkEnabled')}
           disabled={isPending}
         />
       </div>
 
       {/* Save indicator */}
-      <div className="h-6 mt-2 px-4">
-        {isPending && (
-          <p className="text-sm text-gray-500">Saving...</p>
-        )}
-        {saved && !isPending && (
-          <p className="text-sm text-green-600">✓ Saved</p>
-        )}
+      <div className="h-6 p-3">
+        {isPending && <p className="text-sm text-stone-500">Saving...</p>}
+        {saved && !isPending && <p className="text-sm text-stone-600">✓ Saved</p>}
       </div>
     </div>
   )

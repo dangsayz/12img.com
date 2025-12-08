@@ -6,7 +6,7 @@ import { nanoid } from 'nanoid'
 export const maxDuration = 60 // 60 seconds timeout
 export const dynamic = 'force-dynamic'
 
-const MAX_SIZE = 10 * 1024 * 1024 // 10MB
+const MAX_SIZE = 25 * 1024 * 1024 // 25MB
 const BUCKET = 'quick-share'
 
 // Rate limiting: 10 uploads per IP per hour
@@ -77,7 +77,7 @@ export async function POST(request: NextRequest) {
     // Validate file size first (before reading into memory)
     if (file.size > MAX_SIZE) {
       return NextResponse.json(
-        { error: 'File too large. Maximum size is 10MB' },
+        { error: 'File too large. Maximum size is 25MB' },
         { status: 400 }
       )
     }

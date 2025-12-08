@@ -1,10 +1,7 @@
 'use client'
 
 import { useState, useTransition } from 'react'
-import { Bell, Eye, Download, Archive, Clock } from 'lucide-react'
 import { updateNotificationSettings } from '@/server/actions/settings.actions'
-import { Switch } from '@/components/ui/switch'
-import { Label } from '@/components/ui/label'
 
 interface NotificationSectionProps {
   initialSettings: {
@@ -13,6 +10,28 @@ interface NotificationSectionProps {
     notifyArchiveReady: boolean
     emailDigestFrequency: 'immediate' | 'daily' | 'weekly' | 'never'
   }
+}
+
+// Simple toggle switch component
+function Toggle({ checked, onChange, disabled }: { checked: boolean; onChange: (v: boolean) => void; disabled?: boolean }) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      onClick={() => onChange(!checked)}
+      disabled={disabled}
+      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+        checked ? 'bg-stone-900' : 'bg-stone-200'
+      } ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+    >
+      <span
+        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+          checked ? 'translate-x-6' : 'translate-x-1'
+        }`}
+      />
+    </button>
+  )
 }
 
 export function NotificationSection({ initialSettings }: NotificationSectionProps) {
@@ -41,123 +60,74 @@ export function NotificationSection({ initialSettings }: NotificationSectionProp
   }
 
   return (
-    <section className="mb-12">
-      <div className="flex items-center gap-2 mb-2">
-        <Bell className="w-5 h-5 text-gray-700" />
-        <h2 className="text-lg font-medium">Notifications</h2>
-      </div>
-      <p className="text-sm text-gray-500 mb-6">
-        Choose what activity you want to be notified about.
-      </p>
+    <section className="mb-16">
+      <h2 className="text-xs uppercase tracking-[0.2em] text-stone-400 mb-6">Notifications</h2>
 
-      <div className="space-y-1">
+      <div className="bg-stone-50 border border-stone-100 divide-y divide-stone-100">
         {/* Gallery Viewed */}
-        <div className="flex items-center justify-between py-4 px-4 hover:bg-gray-50 rounded-lg transition-colors">
-          <div className="flex items-start gap-3">
-            <div className="p-2 bg-blue-50 rounded-lg mt-0.5">
-              <Eye className="w-4 h-4 text-blue-600" />
-            </div>
-            <div>
-              <Label htmlFor="notifyGalleryViewed" className="font-medium cursor-pointer">
-                Gallery viewed
-              </Label>
-              <p className="text-sm text-gray-500 mt-0.5">
-                Get notified when a client opens your gallery
-              </p>
-            </div>
+        <div className="flex items-center justify-between p-5">
+          <div>
+            <p className="text-sm font-medium text-stone-900">Gallery viewed</p>
+            <p className="text-sm text-stone-500 mt-0.5">When a client opens your gallery</p>
           </div>
-          <Switch
-            id="notifyGalleryViewed"
+          <Toggle
             checked={settings.notifyGalleryViewed}
-            onCheckedChange={(checked) => handleToggle('notifyGalleryViewed', checked)}
+            onChange={(checked) => handleToggle('notifyGalleryViewed', checked)}
             disabled={isPending}
           />
         </div>
 
         {/* Images Downloaded */}
-        <div className="flex items-center justify-between py-4 px-4 hover:bg-gray-50 rounded-lg transition-colors">
-          <div className="flex items-start gap-3">
-            <div className="p-2 bg-green-50 rounded-lg mt-0.5">
-              <Download className="w-4 h-4 text-green-600" />
-            </div>
-            <div>
-              <Label htmlFor="notifyImagesDownloaded" className="font-medium cursor-pointer">
-                Images downloaded
-              </Label>
-              <p className="text-sm text-gray-500 mt-0.5">
-                Get notified when clients download images
-              </p>
-            </div>
+        <div className="flex items-center justify-between p-5">
+          <div>
+            <p className="text-sm font-medium text-stone-900">Images downloaded</p>
+            <p className="text-sm text-stone-500 mt-0.5">When clients download images</p>
           </div>
-          <Switch
-            id="notifyImagesDownloaded"
+          <Toggle
             checked={settings.notifyImagesDownloaded}
-            onCheckedChange={(checked) => handleToggle('notifyImagesDownloaded', checked)}
+            onChange={(checked) => handleToggle('notifyImagesDownloaded', checked)}
             disabled={isPending}
           />
         </div>
 
         {/* Archive Ready */}
-        <div className="flex items-center justify-between py-4 px-4 hover:bg-gray-50 rounded-lg transition-colors">
-          <div className="flex items-start gap-3">
-            <div className="p-2 bg-purple-50 rounded-lg mt-0.5">
-              <Archive className="w-4 h-4 text-purple-600" />
-            </div>
-            <div>
-              <Label htmlFor="notifyArchiveReady" className="font-medium cursor-pointer">
-                Archive ready
-              </Label>
-              <p className="text-sm text-gray-500 mt-0.5">
-                Get notified when a gallery ZIP archive is ready
-              </p>
-            </div>
+        <div className="flex items-center justify-between p-5">
+          <div>
+            <p className="text-sm font-medium text-stone-900">Archive ready</p>
+            <p className="text-sm text-stone-500 mt-0.5">When a gallery ZIP is ready</p>
           </div>
-          <Switch
-            id="notifyArchiveReady"
+          <Toggle
             checked={settings.notifyArchiveReady}
-            onCheckedChange={(checked) => handleToggle('notifyArchiveReady', checked)}
+            onChange={(checked) => handleToggle('notifyArchiveReady', checked)}
             disabled={isPending}
           />
         </div>
 
         {/* Email Digest Frequency */}
-        <div className="flex items-center justify-between py-4 px-4 hover:bg-gray-50 rounded-lg transition-colors">
-          <div className="flex items-start gap-3">
-            <div className="p-2 bg-orange-50 rounded-lg mt-0.5">
-              <Clock className="w-4 h-4 text-orange-600" />
-            </div>
-            <div>
-              <Label htmlFor="emailDigestFrequency" className="font-medium cursor-pointer">
-                Email frequency
-              </Label>
-              <p className="text-sm text-gray-500 mt-0.5">
-                How often to receive notification emails
-              </p>
-            </div>
+        <div className="flex items-center justify-between p-5">
+          <div>
+            <p className="text-sm font-medium text-stone-900">Email frequency</p>
+            <p className="text-sm text-stone-500 mt-0.5">How often to receive emails</p>
           </div>
           <select
             id="emailDigestFrequency"
             value={settings.emailDigestFrequency}
             onChange={(e) => handleToggle('emailDigestFrequency', e.target.value)}
             disabled={isPending}
-            className="w-[140px] h-10 px-3 py-2 text-sm border border-gray-200 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+            className="px-3 py-2 text-sm border border-stone-200 bg-white text-stone-900 focus:outline-none focus:border-stone-400 disabled:opacity-50"
           >
             <option value="immediate">Immediate</option>
-            <option value="daily">Daily digest</option>
-            <option value="weekly">Weekly digest</option>
+            <option value="daily">Daily</option>
+            <option value="weekly">Weekly</option>
             <option value="never">Never</option>
           </select>
         </div>
       </div>
 
       {/* Save indicator */}
-      <div className="h-6 mt-2 px-4">
-        {isPending && (
-          <p className="text-sm text-gray-500">Saving...</p>
-        )}
-        {saved && !isPending && (
-          <p className="text-sm text-green-600">✓ Saved</p>
-        )}
+      <div className="h-6 mt-3">
+        {isPending && <p className="text-sm text-stone-500">Saving...</p>}
+        {saved && !isPending && <p className="text-sm text-stone-600">✓ Saved</p>}
       </div>
     </section>
   )

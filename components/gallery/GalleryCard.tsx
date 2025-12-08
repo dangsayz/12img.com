@@ -77,7 +77,7 @@ export function GalleryCard({ gallery }: GalleryCardProps) {
         href={`/gallery/${gallery.id}`} 
         className={`group block ${isPending ? 'opacity-50 pointer-events-none' : ''}`}
       >
-        <div className="relative aspect-[4/5] rounded-2xl overflow-hidden bg-gray-100">
+        <div className="relative aspect-[4/5] overflow-hidden bg-gray-100">
           {gallery.coverImageUrl ? (
             <img
               src={gallery.coverImageUrl}
@@ -99,7 +99,7 @@ export function GalleryCard({ gallery }: GalleryCardProps) {
               {gallery.title}
             </h3>
             <p className="text-xs text-white/70 flex items-center gap-1.5">
-              <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-400" />
+              <span className="inline-block w-1.5 h-1.5 bg-emerald-400" />
               {gallery.imageCount} {gallery.imageCount === 1 ? 'item' : 'items'}
               <span className="text-white/40">·</span>
               {formattedDate}
@@ -111,7 +111,7 @@ export function GalleryCard({ gallery }: GalleryCardProps) {
             <div className="absolute top-3 right-3 flex gap-1.5">
               <button
                 onClick={handleCopyLink}
-                className={`h-8 px-3 text-xs font-medium rounded-lg backdrop-blur-sm transition-all ${
+                className={`h-8 px-3 text-xs font-medium backdrop-blur-sm transition-all ${
                   copied 
                     ? 'bg-white text-gray-900' 
                     : 'bg-white/20 text-white hover:bg-white/30'
@@ -130,7 +130,7 @@ export function GalleryCard({ gallery }: GalleryCardProps) {
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={(e) => e.stopPropagation()}
-                className="h-8 w-8 flex items-center justify-center rounded-lg bg-white/20 text-white hover:bg-white/30 backdrop-blur-sm transition-all"
+                className="h-8 w-8 flex items-center justify-center bg-white/20 text-white hover:bg-white/30 backdrop-blur-sm transition-all"
               >
                 <ExternalLink className="w-3.5 h-3.5" />
               </a>
@@ -140,7 +140,7 @@ export function GalleryCard({ gallery }: GalleryCardProps) {
                   e.stopPropagation()
                   setShowConfirm(true)
                 }}
-                className="h-8 w-8 flex items-center justify-center rounded-lg bg-white/20 text-white hover:bg-red-500/80 backdrop-blur-sm transition-all"
+                className="h-8 w-8 flex items-center justify-center bg-white/20 text-white hover:bg-red-500/80 backdrop-blur-sm transition-all"
               >
                 <Trash2 className="w-3.5 h-3.5" />
               </button>
@@ -150,7 +150,7 @@ export function GalleryCard({ gallery }: GalleryCardProps) {
           {/* Private badge */}
           {gallery.hasPassword && (
             <div className="absolute top-3 left-3">
-              <div className="h-6 w-6 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center">
+              <div className="h-6 w-6 bg-white/90 backdrop-blur-sm flex items-center justify-center">
                 <svg className="w-3 h-3 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
                 </svg>
@@ -176,7 +176,7 @@ export function GalleryCard({ gallery }: GalleryCardProps) {
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
               onClick={(e) => e.stopPropagation()}
-              className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-xl"
+              className="bg-white p-6 max-w-sm w-full shadow-xl"
             >
               <h3 className="text-base font-medium text-gray-900 mb-2">Delete "{gallery.title}"?</h3>
               <p className="text-sm text-gray-500 mb-6">
@@ -185,14 +185,14 @@ export function GalleryCard({ gallery }: GalleryCardProps) {
               <div className="flex gap-2 justify-end">
                 <button
                   onClick={() => setShowConfirm(false)}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                  className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleDelete}
                   disabled={isPending}
-                  className="px-4 py-2 text-sm font-medium text-white bg-red-500 hover:bg-red-600 rounded-lg transition-colors disabled:opacity-50"
+                  className="px-4 py-2 text-sm font-medium text-white bg-red-500 hover:bg-red-600 transition-colors disabled:opacity-50"
                 >
                   {isPending ? 'Deleting...' : 'Delete'}
                 </button>

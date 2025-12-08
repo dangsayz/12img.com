@@ -8,6 +8,9 @@ export type Json =
 
 export type ArchiveStatus = 'pending' | 'processing' | 'completed' | 'failed'
 export type JobStatus = 'pending' | 'processing' | 'completed' | 'failed'
+export type ProcessingStatus = 'pending' | 'processing' | 'ready' | 'failed'
+export type DerivativeSizeCode = 'xs' | 'sm' | 'md' | 'lg' | 'xl'
+export type ProfileVisibilityMode = 'PRIVATE' | 'PUBLIC' | 'PUBLIC_LOCKED'
 
 export interface Database {
   public: {
@@ -153,6 +156,14 @@ export interface Database {
           clerk_id: string
           email: string
           plan: 'free' | 'basic' | 'pro' | 'studio'
+          // Profile visibility fields
+          visibility_mode: ProfileVisibilityMode
+          profile_slug: string | null
+          profile_pin_hash: string | null
+          display_name: string | null
+          bio: string | null
+          avatar_url: string | null
+          cover_image_url: string | null
           created_at: string
           updated_at: string
         }
@@ -161,6 +172,13 @@ export interface Database {
           clerk_id: string
           email: string
           plan?: 'free' | 'basic' | 'pro' | 'studio'
+          visibility_mode?: ProfileVisibilityMode
+          profile_slug?: string | null
+          profile_pin_hash?: string | null
+          display_name?: string | null
+          bio?: string | null
+          avatar_url?: string | null
+          cover_image_url?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -169,6 +187,13 @@ export interface Database {
           clerk_id?: string
           email?: string
           plan?: 'free' | 'basic' | 'pro' | 'studio'
+          visibility_mode?: ProfileVisibilityMode
+          profile_slug?: string | null
+          profile_pin_hash?: string | null
+          display_name?: string | null
+          bio?: string | null
+          avatar_url?: string | null
+          cover_image_url?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -193,6 +218,13 @@ export interface Database {
           // Gallery defaults
           default_gallery_expiry_days: number | null
           default_watermark_enabled: boolean
+          // Onboarding
+          onboarding_completed: boolean
+          welcome_seen: boolean
+          photography_type: string | null
+          country: string | null
+          state: string | null
+          referral_code: string | null
           created_at: string
           updated_at: string
         }
@@ -212,6 +244,12 @@ export interface Database {
           email_digest_frequency?: 'immediate' | 'daily' | 'weekly' | 'never'
           default_gallery_expiry_days?: number | null
           default_watermark_enabled?: boolean
+          onboarding_completed?: boolean
+          welcome_seen?: boolean
+          photography_type?: string | null
+          country?: string | null
+          state?: string | null
+          referral_code?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -231,6 +269,12 @@ export interface Database {
           email_digest_frequency?: 'immediate' | 'daily' | 'weekly' | 'never'
           default_gallery_expiry_days?: number | null
           default_watermark_enabled?: boolean
+          onboarding_completed?: boolean
+          welcome_seen?: boolean
+          photography_type?: string | null
+          country?: string | null
+          state?: string | null
+          referral_code?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -244,6 +288,10 @@ export interface Database {
           password_hash: string | null
           download_enabled: boolean
           cover_image_id: string | null
+          template: string
+          // Gallery locking fields
+          is_locked: boolean
+          lock_pin_hash: string | null
           created_at: string
           updated_at: string
         }
@@ -255,6 +303,9 @@ export interface Database {
           password_hash?: string | null
           download_enabled?: boolean
           cover_image_id?: string | null
+          is_locked?: boolean
+          lock_pin_hash?: string | null
+          template?: string
           created_at?: string
           updated_at?: string
         }
@@ -266,8 +317,72 @@ export interface Database {
           password_hash?: string | null
           download_enabled?: boolean
           cover_image_id?: string | null
+          template?: string
+          is_locked?: boolean
+          lock_pin_hash?: string | null
           created_at?: string
           updated_at?: string
+        }
+      }
+      gallery_unlock_tokens: {
+        Row: {
+          id: string
+          gallery_id: string
+          token_hash: string
+          client_ip: string | null
+          user_agent: string | null
+          created_at: string
+          expires_at: string
+        }
+        Insert: {
+          id?: string
+          gallery_id: string
+          token_hash: string
+          client_ip?: string | null
+          user_agent?: string | null
+          created_at?: string
+          expires_at?: string
+        }
+        Update: {
+          id?: string
+          gallery_id?: string
+          token_hash?: string
+          client_ip?: string | null
+          user_agent?: string | null
+          created_at?: string
+          expires_at?: string
+        }
+      }
+      name_change_history: {
+        Row: {
+          id: string
+          user_id: string
+          old_name: string | null
+          new_name: string
+          old_slug: string | null
+          new_slug: string | null
+          changed_at: string
+          year: number
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          old_name?: string | null
+          new_name: string
+          old_slug?: string | null
+          new_slug?: string | null
+          changed_at?: string
+          year?: number
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          old_name?: string | null
+          new_name?: string
+          old_slug?: string | null
+          new_slug?: string | null
+          changed_at?: string
+          year?: number
         }
       }
       images: {
@@ -281,6 +396,8 @@ export interface Database {
           width: number | null
           height: number | null
           position: number
+          processing_status: ProcessingStatus
+          processing_version: number
           created_at: string
         }
         Insert: {
@@ -293,6 +410,8 @@ export interface Database {
           width?: number | null
           height?: number | null
           position?: number
+          processing_status?: ProcessingStatus
+          processing_version?: number
           created_at?: string
         }
         Update: {
@@ -305,6 +424,49 @@ export interface Database {
           width?: number | null
           height?: number | null
           position?: number
+          processing_status?: ProcessingStatus
+          processing_version?: number
+          created_at?: string
+        }
+      }
+      photo_derivatives: {
+        Row: {
+          id: string
+          photo_id: string
+          size_code: DerivativeSizeCode
+          storage_path: string
+          width: number
+          height: number | null
+          byte_size: number | null
+          is_watermarked: boolean
+          status: ProcessingStatus
+          error_message: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          photo_id: string
+          size_code: DerivativeSizeCode
+          storage_path: string
+          width: number
+          height?: number | null
+          byte_size?: number | null
+          is_watermarked?: boolean
+          status?: ProcessingStatus
+          error_message?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          photo_id?: string
+          size_code?: DerivativeSizeCode
+          storage_path?: string
+          width?: number
+          height?: number | null
+          byte_size?: number | null
+          is_watermarked?: boolean
+          status?: ProcessingStatus
+          error_message?: string | null
           created_at?: string
         }
       }

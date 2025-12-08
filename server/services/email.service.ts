@@ -56,6 +56,27 @@ interface GalleryInviteEmailData {
   personalMessage?: string
   hasPassword: boolean
   password?: string  // Actual PIN to include in email if user opts in
+  trackingPixelUrl?: string  // For open tracking
+  emailLogId?: string  // For link tracking
+}
+
+interface ArchiveEmailDataWithTracking extends ArchiveEmailData {
+  trackingPixelUrl?: string
+  emailLogId?: string
+}
+
+type EmailType = 'gallery_invite' | 'archive_ready' | 'reminder' | 'welcome' | 'other'
+
+interface EmailLogEntry {
+  id: string
+  user_id: string
+  gallery_id?: string
+  email_type: EmailType
+  recipient_email: string
+  recipient_name?: string
+  subject: string
+  resend_message_id?: string
+  status: string
 }
 
 // Logger
@@ -75,6 +96,106 @@ function formatFileSize(bytes: number): string {
   const sizes = ['Bytes', 'KB', 'MB', 'GB']
   const i = Math.floor(Math.log(bytes) / Math.log(k))
   return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`
+}
+
+/**
+ * Get the base URL for tracking endpoints.
+ */
+function getBaseUrl(): string {
+  return process.env.NEXT_PUBLIC_SITE_URL || 'https://12img.com'
+}
+
+/**
+ * Generate tracking pixel URL for email opens.
+ */
+function getTrackingPixelUrl(emailLogId: string): string {
+  return `${getBaseUrl()}/api/track/open/${emailLogId}`
+}
+
+/**
+ * Wrap a URL with click tracking.
+ */
+function getTrackedLinkUrl(emailLogId: string, targetUrl: string): string {
+  return `${getBaseUrl()}/api/track/click/${emailLogId}?url=${encodeURIComponent(targetUrl)}`
+}
+
+/**
+ * Wrap a download URL with download tracking.
+ */
+function getTrackedDownloadUrl(emailLogId: string, downloadUrl: string): string {
+  return `${getBaseUrl()}/api/track/download/${emailLogId}?url=${encodeURIComponent(downloadUrl)}`
+}
+
+/**
+ * Create an email log entry before sending.
+ */
+async function createEmailLog(
+  userId: string,
+  emailType: EmailType,
+  recipientEmail: string,
+  subject: string,
+  options?: {
+    galleryId?: string
+    recipientName?: string
+    metadata?: Record<string, unknown>
+  }
+): Promise<EmailLogEntry | null> {
+  try {
+    const { data, error } = await supabaseAdmin
+      .from('email_logs')
+      .insert({
+        user_id: userId,
+        gallery_id: options?.galleryId,
+        email_type: emailType,
+        recipient_email: recipientEmail,
+        recipient_name: options?.recipientName,
+        subject,
+        status: 'pending',
+        metadata: options?.metadata || {},
+      })
+      .select()
+      .single()
+
+    if (error) {
+      log.error('Failed to create email log', error)
+      return null
+    }
+
+    return data as EmailLogEntry
+  } catch (err) {
+    log.error('Error creating email log', err)
+    return null
+  }
+}
+
+/**
+ * Update email log after sending.
+ */
+async function updateEmailLog(
+  emailLogId: string,
+  updates: {
+    status?: string
+    resend_message_id?: string
+    error_message?: string
+  }
+): Promise<void> {
+  try {
+    await supabaseAdmin
+      .from('email_logs')
+      .update(updates)
+      .eq('id', emailLogId)
+  } catch (err) {
+    log.error('Error updating email log', err)
+  }
+}
+
+/**
+ * Add tracking pixel to HTML email.
+ */
+function addTrackingPixel(html: string, trackingPixelUrl: string): string {
+  // Insert tracking pixel before closing body tag
+  const pixelHtml = `<img src="${trackingPixelUrl}" width="1" height="1" alt="" style="display:none;width:1px;height:1px;" />`
+  return html.replace('</body>', `${pixelHtml}</body>`)
 }
 
 /**
@@ -179,8 +300,8 @@ function generateArchiveEmailHtml(data: ArchiveEmailData): string {
                 </tr>
               </table>
               <hr style="margin: 20px 0; border: none; border-top: 1px solid #e4e4e7;">
-              <p style="margin: 0; font-size: 12px; color: #a1a1aa; text-align: center;">
-                Powered by 12img • Your images, beautifully delivered
+              <p style="margin: 0; font-size: 12px; color: #a1a1aa; text-align: center; font-family: 'Playfair Display', 'Georgia', serif; font-style: italic;">
+                Delivered with <span style="color: #737373;">12<span style="color: #b45309;">img</span></span>
               </p>
             </td>
           </tr>
@@ -245,7 +366,7 @@ export async function sendArchiveNotificationEmail(
 
   try {
     // Generate download URL with extended expiry for email
-    const downloadUrl = await getArchiveDownloadUrl(
+    const rawDownloadUrl = await getArchiveDownloadUrl(
       archive.storage_path,
       SIGNED_URL_EXPIRY.ARCHIVE_EMAIL
     )
@@ -256,6 +377,26 @@ export async function sendArchiveNotificationEmail(
       .select('email')
       .eq('id', gallery.user_id)
       .single()
+
+    const subject = `Your Gallery "${gallery.title}" is Ready for Download`
+    
+    // Create email log for tracking
+    const emailLog = await createEmailLog(
+      gallery.user_id,
+      'archive_ready',
+      recipientEmail,
+      subject,
+      { 
+        galleryId: gallery.id,
+        recipientName,
+        metadata: { archiveId: archive.id }
+      }
+    )
+
+    // Wrap download URL with tracking if we have a log
+    const downloadUrl = emailLog 
+      ? getTrackedDownloadUrl(emailLog.id, rawDownloadUrl)
+      : rawDownloadUrl
 
     // Prepare email data
     const emailData: ArchiveEmailData = {
@@ -272,12 +413,18 @@ export async function sendArchiveNotificationEmail(
       photographerEmail: photographer?.email,
     }
 
+    // Generate HTML and add tracking pixel
+    let html = generateArchiveEmailHtml(emailData)
+    if (emailLog) {
+      html = addTrackingPixel(html, getTrackingPixelUrl(emailLog.id))
+    }
+
     // Send email via Resend
     const { data, error } = await resend.emails.send({
       from: process.env.EMAIL_FROM || '12img <noreply@12img.com>',
       to: recipientEmail,
-      subject: `Your Gallery "${gallery.title}" is Ready for Download`,
-      html: generateArchiveEmailHtml(emailData),
+      subject,
+      html,
       text: generateArchiveEmailText(emailData),
       tags: [
         { name: 'type', value: 'archive-notification' },
@@ -288,7 +435,16 @@ export async function sendArchiveNotificationEmail(
 
     if (error) {
       log.error('Failed to send email via Resend', error)
+      // Update email log with failure
+      if (emailLog) {
+        await updateEmailLog(emailLog.id, { status: 'failed', error_message: error.message })
+      }
       return { success: false, error: error.message }
+    }
+
+    // Update email log with success
+    if (emailLog) {
+      await updateEmailLog(emailLog.id, { status: 'sent', resend_message_id: data?.id })
     }
 
     // Update archive record with email sent info
@@ -300,7 +456,8 @@ export async function sendArchiveNotificationEmail(
 
     log.info('Email sent successfully', { 
       messageId: data?.id, 
-      recipient: recipientEmail 
+      recipient: recipientEmail,
+      emailLogId: emailLog?.id
     })
 
     return { success: true, messageId: data?.id }
@@ -441,6 +598,7 @@ export async function retryArchiveEmail(
 
 /**
  * Generate HTML email for gallery invitation.
+ * Elegant, minimal design matching 12img brand.
  */
 function generateGalleryInviteEmailHtml(data: GalleryInviteEmailData): string {
   return `
@@ -449,92 +607,109 @@ function generateGalleryInviteEmailHtml(data: GalleryInviteEmailData): string {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Your Gallery is Ready to View</title>
+  <title>${data.galleryTitle}</title>
 </head>
-<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #f4f4f5; line-height: 1.6;">
-  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #f4f4f5;">
+<body style="margin: 0; padding: 0; font-family: 'Georgia', 'Times New Roman', serif; background-color: #fafafa; line-height: 1.7;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #fafafa;">
     <tr>
-      <td align="center" style="padding: 40px 20px;">
-        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width: 600px; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);">
+      <td align="center" style="padding: 60px 20px;">
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width: 560px;">
           
-          <!-- Header -->
+          <!-- Logo -->
           <tr>
-            <td style="background: linear-gradient(135deg, #18181b 0%, #27272a 100%); padding: 40px 40px 30px;">
-              <!-- Logo -->
-              <table role="presentation" cellspacing="0" cellpadding="0" style="margin-bottom: 20px;">
-                <tr>
-                  <td style="background-color: #ffffff; border-radius: 8px; padding: 8px 12px;">
-                    <span style="font-size: 18px; font-weight: 800; color: #18181b; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">12<span style="color: #f59e0b;">img</span></span>
-                  </td>
-                </tr>
-              </table>
-              <h1 style="margin: 0 0 8px; font-size: 28px; font-weight: 700; color: #ffffff;">
-                Your Photos Are Ready
-              </h1>
-              <p style="margin: 0; font-size: 16px; color: #a1a1aa;">
+            <td align="center" style="padding-bottom: 48px;">
+              <span style="font-size: 28px; font-weight: 400; color: #18181b; font-family: 'Playfair Display', 'Georgia', 'Times New Roman', serif; letter-spacing: -0.5px; font-style: italic;">12<span style="color: #b45309;">img</span></span>
+            </td>
+          </tr>
+          
+          <!-- Elegant Divider -->
+          <tr>
+            <td align="center" style="padding-bottom: 40px;">
+              <div style="width: 40px; height: 1px; background-color: #d4d4d4;"></div>
+            </td>
+          </tr>
+          
+          <!-- Main Title -->
+          <tr>
+            <td align="center" style="padding-bottom: 16px;">
+              <h1 style="margin: 0; font-size: 32px; font-weight: 400; color: #18181b; font-family: 'Georgia', serif; letter-spacing: -0.5px;">
                 ${data.galleryTitle}
+              </h1>
+            </td>
+          </tr>
+          
+          <!-- Subtitle -->
+          <tr>
+            <td align="center" style="padding-bottom: 40px;">
+              <p style="margin: 0; font-size: 14px; color: #737373; text-transform: uppercase; letter-spacing: 2px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;">
+                ${data.imageCount} images
               </p>
             </td>
           </tr>
           
-          <!-- Main Content -->
+          ${data.photographerName ? `
+          <!-- From -->
           <tr>
-            <td style="padding: 40px;">
-              ${data.photographerName ? `
-              <p style="margin: 0 0 24px; font-size: 16px; color: #3f3f46;">
-                <strong>${data.photographerName}</strong> has shared a gallery with you containing ${data.imageCount} beautiful images.
+            <td align="center" style="padding-bottom: 32px;">
+              <p style="margin: 0; font-size: 16px; color: #525252;">
+                A collection by <strong style="color: #18181b;">${data.photographerName}</strong>
               </p>
-              ` : `
-              <p style="margin: 0 0 24px; font-size: 16px; color: #3f3f46;">
-                A gallery with ${data.imageCount} images has been shared with you.
+            </td>
+          </tr>
+          ` : ''}
+          
+          ${data.personalMessage ? `
+          <!-- Personal Message -->
+          <tr>
+            <td align="center" style="padding: 0 20px 40px;">
+              <p style="margin: 0; font-size: 17px; color: #525252; font-style: italic; line-height: 1.8;">
+                "${data.personalMessage}"
               </p>
-              `}
-              
-              ${data.personalMessage ? `
-              <div style="margin: 0 0 24px; padding: 20px; background-color: #f4f4f5; border-radius: 8px; border-left: 4px solid #18181b;">
-                <p style="margin: 0; font-size: 15px; color: #3f3f46; font-style: italic;">
-                  "${data.personalMessage}"
-                </p>
-              </div>
-              ` : ''}
-              
-              <!-- View Gallery Button -->
-              <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
+            </td>
+          </tr>
+          ` : ''}
+          
+          <!-- View Gallery Button -->
+          <tr>
+            <td align="center" style="padding-bottom: 40px;">
+              <a href="${data.galleryUrl}" 
+                 style="display: inline-block; padding: 16px 48px; background-color: #18181b; color: #ffffff; font-size: 13px; font-weight: 500; text-decoration: none; text-transform: uppercase; letter-spacing: 1.5px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;">
+                View Gallery
+              </a>
+            </td>
+          </tr>
+          
+          ${data.hasPassword ? `
+          <!-- PIN Notice -->
+          <tr>
+            <td align="center" style="padding-bottom: 40px;">
+              <table role="presentation" cellspacing="0" cellpadding="0" style="background-color: #f5f5f5; border-radius: 4px;">
                 <tr>
-                  <td align="center">
-                    <a href="${data.galleryUrl}" 
-                       style="display: inline-block; padding: 16px 48px; background-color: #18181b; color: #ffffff; font-size: 16px; font-weight: 600; text-decoration: none; border-radius: 8px;">
-                      View Gallery
-                    </a>
+                  <td style="padding: 16px 24px;">
+                    <p style="margin: 0; font-size: 13px; color: #525252; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;">
+                      ${data.password 
+                        ? `PIN: <strong style="font-family: 'SF Mono', Monaco, monospace; letter-spacing: 3px; color: #18181b; font-size: 16px;">${data.password}</strong>` 
+                        : 'This gallery is protected. PIN will be shared separately.'}
+                    </p>
                   </td>
                 </tr>
               </table>
-              
-              ${data.hasPassword ? `
-              <p style="margin: 24px 0 0; padding: 16px; background-color: #fef3c7; border-radius: 8px; font-size: 14px; color: #92400e; text-align: center;">
-                🔒 This gallery is password protected.${data.password ? ` Your PIN: <strong style="font-family: monospace; letter-spacing: 2px;">${data.password}</strong>` : ' The photographer will share the password with you.'}
-              </p>
-              ` : ''}
+            </td>
+          </tr>
+          ` : ''}
+          
+          <!-- Elegant Divider -->
+          <tr>
+            <td align="center" style="padding-bottom: 32px;">
+              <div style="width: 40px; height: 1px; background-color: #d4d4d4;"></div>
             </td>
           </tr>
           
           <!-- Footer -->
           <tr>
-            <td style="padding: 24px 40px; background-color: #f4f4f5; border-top: 1px solid #e4e4e7;">
-              <p style="margin: 0 0 8px; font-size: 14px; color: #71717a;">
-                <strong>Gallery:</strong> ${data.galleryTitle}
-              </p>
-              <p style="margin: 0 0 8px; font-size: 14px; color: #71717a;">
-                <strong>Images:</strong> ${data.imageCount}
-              </p>
-              ${data.photographerEmail ? `
-              <p style="margin: 0; font-size: 14px; color: #71717a;">
-                <strong>From:</strong> ${data.photographerEmail}
-              </p>
-              ` : ''}
-              <hr style="margin: 20px 0; border: none; border-top: 1px solid #e4e4e7;">
-              <p style="margin: 0; font-size: 12px; color: #a1a1aa; text-align: center;">
-                Powered by 12img • Your images, beautifully delivered
+            <td align="center">
+              <p style="margin: 0; font-size: 12px; color: #a3a3a3; font-family: 'Playfair Display', 'Georgia', serif; font-style: italic;">
+                Delivered with <span style="color: #737373;">12<span style="color: #b45309;">img</span></span>
               </p>
             </td>
           </tr>
@@ -574,6 +749,7 @@ Your images, beautifully delivered
 
 /**
  * Send gallery invitation email to a client.
+ * Now includes email tracking for opens, clicks, and downloads.
  */
 export async function sendGalleryInviteEmail(
   gallery: Gallery,
@@ -584,6 +760,7 @@ export async function sendGalleryInviteEmail(
     personalMessage?: string
     baseUrl: string
     password?: string  // Include PIN in email if provided
+    galleryPath?: string  // Custom path for template-based URLs (e.g., /view-grid/[id]?template=mosaic)
   }
 ): Promise<EmailResult> {
   log.info('Sending gallery invite', { 
@@ -603,7 +780,23 @@ export async function sendGalleryInviteEmail(
       .select('*', { count: 'exact', head: true })
       .eq('gallery_id', gallery.id)
 
-    const galleryUrl = `${options.baseUrl}/view-grid/${gallery.id}`
+    const subject = `${options.photographerName || 'Your photographer'} shared "${gallery.title}" with you`
+    
+    // Create email log for tracking
+    const emailLog = await createEmailLog(
+      gallery.user_id,
+      'gallery_invite',
+      recipientEmail,
+      subject,
+      { galleryId: gallery.id }
+    )
+
+    // Build gallery URL - use custom path if provided, otherwise default to view-reel
+    const galleryPathToUse = options.galleryPath || `/view-reel/${gallery.id}`
+    const rawGalleryUrl = `${options.baseUrl}${galleryPathToUse}`
+    const galleryUrl = emailLog 
+      ? getTrackedLinkUrl(emailLog.id, rawGalleryUrl)
+      : rawGalleryUrl
 
     const emailData: GalleryInviteEmailData = {
       galleryTitle: gallery.title,
@@ -614,14 +807,22 @@ export async function sendGalleryInviteEmail(
       personalMessage: options.personalMessage,
       hasPassword: !!gallery.password_hash,
       password: options.password,
+      trackingPixelUrl: emailLog ? getTrackingPixelUrl(emailLog.id) : undefined,
+      emailLogId: emailLog?.id,
+    }
+
+    // Generate HTML and add tracking pixel
+    let html = generateGalleryInviteEmailHtml(emailData)
+    if (emailLog) {
+      html = addTrackingPixel(html, getTrackingPixelUrl(emailLog.id))
     }
 
     // Send email via Resend
     const { data, error } = await resend.emails.send({
       from: process.env.EMAIL_FROM || '12img <noreply@12img.com>',
       to: recipientEmail,
-      subject: `${options.photographerName || 'Your photographer'} shared "${gallery.title}" with you`,
-      html: generateGalleryInviteEmailHtml(emailData),
+      subject,
+      html,
       text: generateGalleryInviteEmailText(emailData),
       replyTo: options.photographerEmail,
       tags: [
@@ -632,6 +833,10 @@ export async function sendGalleryInviteEmail(
 
     if (error) {
       log.error('Failed to send gallery invite via Resend', error)
+      // Update email log with failure
+      if (emailLog) {
+        await updateEmailLog(emailLog.id, { status: 'failed', error_message: error.message })
+      }
       // Provide user-friendly error messages
       if (error.message.includes('only send testing emails')) {
         return { success: false, error: 'Email domain not verified. Please verify your domain at resend.com/domains to send to clients.' }
@@ -639,9 +844,15 @@ export async function sendGalleryInviteEmail(
       return { success: false, error: error.message }
     }
 
+    // Update email log with success
+    if (emailLog) {
+      await updateEmailLog(emailLog.id, { status: 'sent', resend_message_id: data?.id })
+    }
+
     log.info('Gallery invite sent successfully', { 
       messageId: data?.id, 
-      recipient: recipientEmail 
+      recipient: recipientEmail,
+      emailLogId: emailLog?.id
     })
 
     return { success: true, messageId: data?.id }

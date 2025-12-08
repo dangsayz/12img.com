@@ -10,8 +10,9 @@ interface TextProps {
 
 export function EditorialHeading({ children, className, align = 'left' }: TextProps) {
   return (
-    <h2 className={cn(
-      "font-serif text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-light leading-[0.9] tracking-tight text-neutral-900",
+    <h1 className={cn(
+      // Migra serif font - matches landing page
+      "font-serif text-[clamp(2.5rem,8vw,5rem)] font-light leading-[1.1] tracking-tight text-neutral-800",
       {
         'text-left': align === 'left',
         'text-center': align === 'center',
@@ -20,7 +21,7 @@ export function EditorialHeading({ children, className, align = 'left' }: TextPr
       className
     )}>
       {children}
-    </h2>
+    </h1>
   )
 }
 
@@ -98,7 +99,8 @@ export function BigLetter({ children, className }: { children: string, className
 export function Caption({ children, className }: TextProps) {
   return (
     <p className={cn(
-      "font-sans text-[10px] sm:text-xs tracking-[0.15em] uppercase text-neutral-500 mt-3",
+      // Apple-inspired: Light weight, generous letter-spacing
+      "font-sans text-[11px] sm:text-xs font-medium tracking-[0.2em] uppercase text-neutral-400",
       className
     )}>
       {children}

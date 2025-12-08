@@ -1,8 +1,7 @@
 'use client'
 
 import { useState, useTransition } from 'react'
-import { AlertTriangle, Download, Trash2, Loader2 } from 'lucide-react'
-import { Button } from '@/components/ui/button'
+import { Loader2 } from 'lucide-react'
 import { deleteAccount, exportAccountData } from '@/server/actions/settings.actions'
 
 export function DangerZone() {
@@ -16,7 +15,6 @@ export function DangerZone() {
     try {
       const result = await exportAccountData()
       if (result.success && result.data) {
-        // Create and download JSON file
         const blob = new Blob([JSON.stringify(result.data, null, 2)], { type: 'application/json' })
         const url = URL.createObjectURL(blob)
         const a = document.createElement('a')
@@ -42,7 +40,6 @@ export function DangerZone() {
     startTransition(async () => {
       const result = await deleteAccount()
       if (result.success) {
-        // Redirect to home after deletion
         window.location.href = '/'
       } else {
         alert(result.error || 'Failed to delete account')
@@ -53,71 +50,49 @@ export function DangerZone() {
   }
 
   return (
-    <section className="mt-16 pt-8 border-t border-red-200">
-      <div className="flex items-center gap-2 mb-4">
-        <AlertTriangle className="w-5 h-5 text-red-500" />
-        <h2 className="text-lg font-medium text-red-600">Danger Zone</h2>
-      </div>
+    <section className="mt-16 pt-8 border-t border-stone-200">
+      <h2 className="text-xs uppercase tracking-[0.2em] text-stone-400 mb-6">Danger Zone</h2>
       
       <div className="space-y-4">
         {/* Export Data */}
-        <div className="flex items-center justify-between py-4 px-4 border border-gray-200 rounded-lg">
+        <div className="flex items-center justify-between p-5 bg-stone-50 border border-stone-100">
           <div>
-            <p className="font-medium">Export your data</p>
-            <p className="text-sm text-gray-500">
-              Download all your account data as a JSON file
-            </p>
+            <p className="text-sm font-medium text-stone-900">Export your data</p>
+            <p className="text-sm text-stone-500 mt-0.5">Download all your data as JSON</p>
           </div>
-          <Button
-            variant="outline"
-            size="sm"
-            className="gap-2"
+          <button
             onClick={handleExport}
             disabled={exporting}
+            className="px-4 py-2 text-sm text-stone-600 border border-stone-200 hover:border-stone-400 hover:text-stone-900 disabled:opacity-50 transition-colors"
           >
-            {exporting ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
-            ) : (
-              <Download className="w-4 h-4" />
-            )}
             {exporting ? 'Exporting...' : 'Export'}
-          </Button>
+          </button>
         </div>
 
         {/* Delete Account */}
-        <div className="border border-red-200 rounded-lg overflow-hidden">
-          <div className="flex items-center justify-between py-4 px-4 bg-red-50">
+        <div className="border border-red-200 overflow-hidden">
+          <div className="flex items-center justify-between p-5 bg-red-50">
             <div>
-              <p className="font-medium text-red-900">Delete account</p>
-              <p className="text-sm text-red-700">
-                Permanently delete your account and all data. This cannot be undone.
-              </p>
+              <p className="text-sm font-medium text-red-900">Delete account</p>
+              <p className="text-sm text-red-700 mt-0.5">Permanently delete your account and all data</p>
             </div>
             {!showDeleteConfirm && (
-              <Button
-                variant="outline"
-                size="sm"
-                className="gap-2 border-red-300 text-red-600 hover:bg-red-100 hover:text-red-700"
+              <button
                 onClick={() => setShowDeleteConfirm(true)}
+                className="px-4 py-2 text-sm text-red-600 border border-red-200 hover:bg-red-100 transition-colors"
               >
-                <Trash2 className="w-4 h-4" />
                 Delete
-              </Button>
+              </button>
             )}
           </div>
 
           {showDeleteConfirm && (
-            <div className="p-4 bg-red-50 border-t border-red-200">
-              <p className="text-sm text-red-800 mb-3">
-                This will permanently delete:
+            <div className="p-5 bg-red-50 border-t border-red-200">
+              <p className="text-sm text-red-800 mb-4">
+                This will permanently delete all galleries, images, and account data.
               </p>
-              <ul className="text-sm text-red-700 list-disc list-inside mb-4 space-y-1">
-                <li>All your galleries</li>
-                <li>All your uploaded images</li>
-                <li>Your account and settings</li>
-              </ul>
-              <p className="text-sm font-medium text-red-900 mb-2">
-                Type <span className="font-mono bg-red-100 px-1 rounded">DELETE</span> to confirm:
+              <p className="text-sm text-red-900 mb-2">
+                Type <span className="font-mono bg-red-100 px-1">DELETE</span> to confirm:
               </p>
               <div className="flex gap-3">
                 <input
@@ -125,35 +100,27 @@ export function DangerZone() {
                   value={deleteConfirmText}
                   onChange={(e) => setDeleteConfirmText(e.target.value)}
                   placeholder="Type DELETE"
-                  className="flex-1 px-3 py-2 text-sm border border-red-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+                  className="flex-1 px-3 py-2 text-sm border border-red-200 bg-white focus:outline-none focus:border-red-400"
                   autoComplete="off"
                 />
-                <Button
-                  variant="outline"
-                  size="sm"
+                <button
                   onClick={() => {
                     setShowDeleteConfirm(false)
                     setDeleteConfirmText('')
                   }}
                   disabled={isPending}
+                  className="px-4 py-2 text-sm text-stone-600 border border-stone-200 hover:border-stone-400 disabled:opacity-50 transition-colors"
                 >
                   Cancel
-                </Button>
-                <Button
-                  size="sm"
-                  className="bg-red-600 hover:bg-red-700 text-white"
+                </button>
+                <button
                   onClick={handleDelete}
                   disabled={deleteConfirmText !== 'DELETE' || isPending}
+                  className="px-4 py-2 text-sm bg-red-600 text-white hover:bg-red-700 disabled:opacity-50 transition-colors flex items-center gap-2"
                 >
-                  {isPending ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                      Deleting...
-                    </>
-                  ) : (
-                    'Delete Forever'
-                  )}
-                </Button>
+                  {isPending && <Loader2 className="w-4 h-4 animate-spin" />}
+                  {isPending ? 'Deleting...' : 'Delete Forever'}
+                </button>
               </div>
             </div>
           )}

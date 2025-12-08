@@ -1,20 +1,20 @@
-import { Image, Search } from 'lucide-react'
+import { Image } from 'lucide-react'
 
 export default function AdminGalleriesPage() {
   return (
-    <div className="space-y-6">
+    <div className="space-y-8 max-w-[1400px]">
       <div>
-        <h1 className="text-2xl font-semibold text-gray-900">Galleries</h1>
-        <p className="text-sm text-gray-500 mt-1">Browse and manage all galleries</p>
+        <h1 className="font-serif text-3xl lg:text-4xl text-[#141414]">Galleries</h1>
+        <p className="text-[#525252] mt-2">Browse and manage all galleries</p>
       </div>
       
-      <div className="flex items-center justify-center py-20">
+      <div className="bg-white border border-[#E5E5E5] p-16">
         <div className="text-center">
-          <div className="w-16 h-16 rounded-2xl bg-gray-100 flex items-center justify-center mx-auto mb-4">
-            <Image className="w-8 h-8 text-gray-400" />
+          <div className="w-16 h-16 border border-[#E5E5E5] flex items-center justify-center mx-auto mb-6">
+            <Image className="w-8 h-8 text-[#525252]" />
           </div>
-          <h3 className="text-lg font-medium text-gray-900 mb-2">Coming Soon</h3>
-          <p className="text-sm text-gray-500 max-w-sm">
+          <h3 className="font-serif text-2xl text-[#141414] mb-3">Coming Soon</h3>
+          <p className="text-[#525252] max-w-sm mx-auto">
             Gallery browser with search, filters, and bulk actions will be available here.
           </p>
         </div>

@@ -5,6 +5,7 @@ import './globals.css'
 import { Footer } from '@/components/landing/Footer'
 import { OrganizationJsonLd, SoftwareApplicationJsonLd } from '@/components/seo/JsonLd'
 import { SupportWidget } from '@/components/support/SupportWidget'
+import { AuthModalProvider } from '@/components/auth/AuthModal'
 
 const satoshi = Plus_Jakarta_Sans({ 
   subsets: ['latin'],
@@ -174,9 +175,11 @@ export default function RootLayout({
           />
         </head>
         <body className={`${migra.variable} font-sans antialiased`}>
-          {children}
-          <Footer />
-          <SupportWidget />
+          <AuthModalProvider>
+            {children}
+            <Footer />
+            <SupportWidget />
+          </AuthModalProvider>
         </body>
       </html>
     </ClerkProvider>

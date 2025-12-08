@@ -1,8 +1,9 @@
 'use client'
 
-import { useMemo, useState, useEffect, useCallback } from 'react'
+import { useMemo, useState, useEffect, useCallback, useRef } from 'react'
 import Image from 'next/image'
 import { Download, X, ChevronLeft, ChevronRight } from 'lucide-react'
+import { MosaicHero } from './MosaicHero'
 
 interface GridImage {
   id: string
@@ -51,12 +52,17 @@ export function GridPreview({
   downloadEnabled,
   totalFileSizeBytes 
 }: GridPreviewProps) {
+  const galleryRef = useRef<HTMLDivElement>(null)
   const [numCols, setNumCols] = useState(4)
   const [viewerOpen, setViewerOpen] = useState(false)
   const [viewerIndex, setViewerIndex] = useState(0)
   const [isDownloading, setIsDownloading] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
   const [showMobilePrompt, setShowMobilePrompt] = useState(false)
+
+  const scrollToGallery = useCallback(() => {
+    galleryRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [])
 
   // Responsive column count and mobile detection
   useEffect(() => {
@@ -119,8 +125,18 @@ export function GridPreview({
 
   return (
     <div className="min-h-screen bg-white">
+      {/* Mosaic Hero */}
+      {images.length >= 3 && (
+        <MosaicHero
+          images={images}
+          title={title}
+          imageCount={images.length}
+          onScrollToGallery={scrollToGallery}
+        />
+      )}
+
       {/* Header */}
-      <header className="sticky top-0 z-10 bg-white/95 backdrop-blur-sm border-b border-gray-100">
+      <header ref={galleryRef} className="sticky top-0 z-10 bg-white/95 backdrop-blur-sm border-b border-gray-100">
         <div className="max-w-[1800px] mx-auto px-4 py-4 flex items-center justify-between">
           <div>
             <h1 className="text-lg font-medium text-gray-900">{title}</h1>

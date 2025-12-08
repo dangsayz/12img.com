@@ -2,20 +2,32 @@
 'use client'
 
 import React, { useState } from 'react'
-import { motion, useScroll, useSpring } from 'framer-motion'
+import { motion, useScroll, useSpring, useTransform } from 'framer-motion'
 import { EditorialSpread } from '@/lib/editorial/types'
 import { Spread } from './Spread'
 import { SpreadOverview } from './SpreadOverview'
-import { ArrowLeft } from 'lucide-react'
+import { ArrowLeft, ChevronDown } from 'lucide-react'
 import Link from 'next/link'
 
 interface Props {
   spreads: EditorialSpread[]
   title: string
   galleryId: string
+  imageCount?: number
+  photographerName?: string
+  eventDate?: string
+  location?: string
 }
 
-export function EditorialViewer({ spreads, title, galleryId }: Props) {
+export function EditorialViewer({ 
+  spreads, 
+  title, 
+  galleryId,
+  imageCount,
+  photographerName,
+  eventDate,
+  location 
+}: Props) {
   const [debug, setDebug] = useState(false)
   const { scrollYProgress } = useScroll()
   const scaleX = useSpring(scrollYProgress, {
@@ -23,6 +35,9 @@ export function EditorialViewer({ spreads, title, galleryId }: Props) {
     damping: 30,
     restDelta: 0.001
   })
+  
+  // Fade out scroll indicator after 5% scroll
+  const scrollIndicatorOpacity = useTransform(scrollYProgress, [0, 0.05], [1, 0])
 
   const scrollToSpread = (id: string) => {
     const element = document.getElementById(id)
@@ -30,6 +45,9 @@ export function EditorialViewer({ spreads, title, galleryId }: Props) {
       element.scrollIntoView({ behavior: 'smooth' })
     }
   }
+
+  // Count actual content spreads (excluding title)
+  const contentSpreads = spreads.filter(s => s.pageNumber && s.pageNumber > 0)
 
   return (
     <div className="min-h-screen bg-[#FAFAFA] text-neutral-900 font-sans selection:bg-neutral-900 selection:text-white">
@@ -48,6 +66,15 @@ export function EditorialViewer({ spreads, title, galleryId }: Props) {
           <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
           <span className="text-sm font-medium tracking-widest uppercase">Index</span>
         </Link>
+        
+        {/* Right side - Image count */}
+        {imageCount && imageCount > 0 && (
+          <div className="pointer-events-auto opacity-50">
+            <span className="text-sm font-medium tracking-wide">
+              {imageCount} <span className="text-[10px] uppercase tracking-wider opacity-70">images</span>
+            </span>
+          </div>
+        )}
       </nav>
 
       {/* Main Content */}
@@ -58,6 +85,35 @@ export function EditorialViewer({ spreads, title, galleryId }: Props) {
           </div>
         ))}
       </main>
+
+      {/* Scroll Indicator - Fades out as user scrolls */}
+      <motion.div 
+        className="fixed bottom-8 left-1/2 -translate-x-1/2 z-40 flex flex-col items-center gap-2 pointer-events-none"
+        style={{ opacity: scrollIndicatorOpacity }}
+      >
+        <span className="text-[10px] uppercase tracking-[0.2em] text-neutral-400">Scroll</span>
+        <motion.div
+          animate={{ y: [0, 6, 0] }}
+          transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
+        >
+          <ChevronDown className="w-5 h-5 text-neutral-400" />
+        </motion.div>
+      </motion.div>
+
+      {/* Elegant Footer before Index */}
+      <div className="w-full py-24 text-center border-t border-neutral-100 bg-[#FAFAFA]">
+        <p className="text-[10px] uppercase tracking-[0.3em] text-neutral-300 mb-4">Fin.</p>
+        {photographerName && (
+          <p className="text-sm text-neutral-400">
+            Photography by <span className="text-neutral-600">{photographerName}</span>
+          </p>
+        )}
+        {(eventDate || location) && (
+          <p className="text-xs text-neutral-300 mt-2">
+            {[eventDate, location].filter(Boolean).join(' · ')}
+          </p>
+        )}
+      </div>
 
       {/* Index Sheet Footer */}
       <SpreadOverview spreads={spreads} onSpreadClick={scrollToSpread} />

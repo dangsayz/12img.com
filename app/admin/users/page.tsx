@@ -31,12 +31,12 @@ export default async function AdminUsersPage({ searchParams }: Props) {
   })
   
   return (
-    <div className="space-y-6">
+    <div className="space-y-8 max-w-[1400px]">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold text-gray-900">Users</h1>
-          <p className="text-sm text-gray-500 mt-1">
+          <h1 className="font-serif text-3xl lg:text-4xl text-[#141414]">Users</h1>
+          <p className="text-[#525252] mt-2">
             {result.total.toLocaleString()} total users
           </p>
         </div>

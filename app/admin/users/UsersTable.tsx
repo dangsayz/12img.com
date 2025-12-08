@@ -28,18 +28,18 @@ function formatDate(date: string): string {
 }
 
 const ROLE_COLORS: Record<string, string> = {
-  user: 'bg-gray-100 text-gray-600',
-  support: 'bg-blue-100 text-blue-700',
-  admin: 'bg-amber-100 text-amber-700',
-  super_admin: 'bg-red-100 text-red-700',
+  user: 'border border-[#E5E5E5] text-[#525252]',
+  support: 'border border-[#E5E5E5] bg-[#F5F5F7] text-[#525252]',
+  admin: 'border border-[#141414] bg-[#141414] text-white',
+  super_admin: 'border border-[#141414] bg-[#141414] text-white',
 }
 
 const PLAN_COLORS: Record<string, string> = {
-  free: 'bg-gray-100 text-gray-600',
-  essential: 'bg-amber-100 text-amber-700',
-  pro: 'bg-emerald-100 text-emerald-700',
-  studio: 'bg-violet-100 text-violet-700',
-  elite: 'bg-purple-100 text-purple-700',
+  free: 'border border-[#E5E5E5] text-[#525252]',
+  essential: 'border border-[#E5E5E5] bg-[#F5F5F7] text-[#525252]',
+  pro: 'border border-[#141414] text-[#141414]',
+  studio: 'border border-[#141414] bg-[#141414] text-white',
+  elite: 'border border-[#141414] bg-[#141414] text-white',
 }
 
 interface Props {
@@ -62,67 +62,67 @@ export function UsersTable({ users, pagination }: Props) {
   }
   
   return (
-    <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+    <div className="bg-white border border-[#E5E5E5] overflow-hidden">
       {/* Table */}
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
-          <thead className="bg-gray-50 border-b border-gray-200">
+          <thead className="bg-[#F5F5F7] border-b border-[#E5E5E5]">
             <tr>
-              <th className="text-left px-4 py-3 font-medium text-gray-500">User</th>
-              <th className="text-left px-4 py-3 font-medium text-gray-500">Plan</th>
-              <th className="text-left px-4 py-3 font-medium text-gray-500">Role</th>
-              <th className="text-left px-4 py-3 font-medium text-gray-500">Storage</th>
-              <th className="text-left px-4 py-3 font-medium text-gray-500">Galleries</th>
-              <th className="text-left px-4 py-3 font-medium text-gray-500">Status</th>
-              <th className="text-left px-4 py-3 font-medium text-gray-500">Joined</th>
-              <th className="text-right px-4 py-3 font-medium text-gray-500">Actions</th>
+              <th className="text-left px-6 py-4 text-xs font-medium text-[#525252] uppercase tracking-wider">User</th>
+              <th className="text-left px-6 py-4 text-xs font-medium text-[#525252] uppercase tracking-wider">Plan</th>
+              <th className="text-left px-6 py-4 text-xs font-medium text-[#525252] uppercase tracking-wider">Role</th>
+              <th className="text-left px-6 py-4 text-xs font-medium text-[#525252] uppercase tracking-wider">Storage</th>
+              <th className="text-left px-6 py-4 text-xs font-medium text-[#525252] uppercase tracking-wider">Galleries</th>
+              <th className="text-left px-6 py-4 text-xs font-medium text-[#525252] uppercase tracking-wider">Status</th>
+              <th className="text-left px-6 py-4 text-xs font-medium text-[#525252] uppercase tracking-wider">Joined</th>
+              <th className="text-right px-6 py-4 text-xs font-medium text-[#525252] uppercase tracking-wider">Actions</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-100">
+          <tbody className="divide-y divide-[#E5E5E5]">
             {users.map((user) => (
-              <tr key={user.id} className="hover:bg-gray-50">
-                <td className="px-4 py-3">
+              <tr key={user.id} className="hover:bg-[#F5F5F7] transition-colors">
+                <td className="px-6 py-4">
                   <div>
-                    <p className="font-medium text-gray-900">{user.email}</p>
-                    <p className="text-xs text-gray-400 font-mono">{user.id.slice(0, 8)}...</p>
+                    <p className="font-medium text-[#141414]">{user.email}</p>
+                    <p className="text-xs text-[#525252] font-mono mt-0.5">{user.id.slice(0, 8)}...</p>
                   </div>
                 </td>
-                <td className="px-4 py-3">
-                  <span className={`inline-flex px-2 py-0.5 text-xs font-medium rounded-full ${PLAN_COLORS[user.plan] || PLAN_COLORS.free}`}>
+                <td className="px-6 py-4">
+                  <span className={`inline-flex px-2.5 py-1 text-xs font-medium uppercase tracking-wider ${PLAN_COLORS[user.plan] || PLAN_COLORS.free}`}>
                     {user.plan || 'free'}
                   </span>
                 </td>
-                <td className="px-4 py-3">
-                  <span className={`inline-flex px-2 py-0.5 text-xs font-medium rounded-full ${ROLE_COLORS[user.role] || ROLE_COLORS.user}`}>
+                <td className="px-6 py-4">
+                  <span className={`inline-flex px-2.5 py-1 text-xs font-medium uppercase tracking-wider ${ROLE_COLORS[user.role] || ROLE_COLORS.user}`}>
                     {user.role?.replace('_', ' ') || 'user'}
                   </span>
                 </td>
-                <td className="px-4 py-3 text-gray-600">
+                <td className="px-6 py-4 text-[#525252]">
                   {formatBytes(user.usage.totalBytes)}
                 </td>
-                <td className="px-4 py-3 text-gray-600">
+                <td className="px-6 py-4 text-[#525252]">
                   {user.usage.galleryCount}
                 </td>
-                <td className="px-4 py-3">
+                <td className="px-6 py-4">
                   {user.is_suspended ? (
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full bg-red-100 text-red-700">
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium uppercase tracking-wider border border-red-200 bg-red-50 text-red-700">
                       <Ban className="w-3 h-3" />
                       Suspended
                     </span>
                   ) : (
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full bg-emerald-100 text-emerald-700">
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium uppercase tracking-wider border border-emerald-200 bg-emerald-50 text-emerald-700">
                       <CheckCircle className="w-3 h-3" />
                       Active
                     </span>
                   )}
                 </td>
-                <td className="px-4 py-3 text-gray-500">
+                <td className="px-6 py-4 text-[#525252]">
                   {formatDate(user.created_at)}
                 </td>
-                <td className="px-4 py-3 text-right">
+                <td className="px-6 py-4 text-right">
                   <Link
                     href={`/admin/users/${user.id}`}
-                    className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-[#141414] border border-[#E5E5E5] hover:border-[#141414] hover:bg-[#F5F5F7] transition-colors"
                   >
                     <Eye className="w-3 h-3" />
                     View
@@ -135,24 +135,24 @@ export function UsersTable({ users, pagination }: Props) {
       </div>
       
       {/* Pagination */}
-      <div className="flex items-center justify-between px-4 py-3 border-t border-gray-100">
-        <p className="text-sm text-gray-500">
+      <div className="flex items-center justify-between px-6 py-4 border-t border-[#E5E5E5]">
+        <p className="text-sm text-[#525252]">
           Page {pagination.page} of {pagination.totalPages} ({pagination.total} total)
         </p>
         <div className="flex items-center gap-2">
           <button
             onClick={() => goToPage(pagination.page - 1)}
             disabled={pagination.page <= 1}
-            className="p-1 rounded hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="p-2 border border-[#E5E5E5] hover:border-[#141414] hover:bg-[#F5F5F7] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
-            <ChevronLeft className="w-5 h-5" />
+            <ChevronLeft className="w-4 h-4" />
           </button>
           <button
             onClick={() => goToPage(pagination.page + 1)}
             disabled={pagination.page >= pagination.totalPages}
-            className="p-1 rounded hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="p-2 border border-[#E5E5E5] hover:border-[#141414] hover:bg-[#F5F5F7] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
-            <ChevronRight className="w-5 h-5" />
+            <ChevronRight className="w-4 h-4" />
           </button>
         </div>
       </div>

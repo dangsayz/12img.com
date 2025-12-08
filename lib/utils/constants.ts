@@ -31,10 +31,10 @@ export const SIGNED_URL_EXPIRY = {
 // Image size presets for responsive loading
 // Thumbnails load fast, downloads remain full resolution
 export const IMAGE_SIZES = {
-  // Grid thumbnails - small, fast loading
+  // Grid thumbnails - crisp for retina displays
   THUMBNAIL: {
-    width: 400,
-    quality: 75,
+    width: 600,
+    quality: 80,
   },
   // Dashboard cover images - crisp, fewer images so higher quality OK
   COVER: {

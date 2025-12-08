@@ -34,11 +34,11 @@ export function FileItem({ item, onRemove }: FileItemProps) {
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, x: -20 }}
-      className="group relative bg-white rounded-xl border border-gray-100 p-3 hover:shadow-md transition-all duration-200 hover:border-gray-200"
+      className="group relative bg-white rounded-xl border border-stone-100 p-3 hover:shadow-md transition-all duration-200 hover:border-stone-200"
     >
       <div className="flex items-center gap-4">
         {/* Thumbnail */}
-        <div className="relative w-12 h-12 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0 border border-gray-100">
+        <div className="relative w-12 h-12 rounded-lg overflow-hidden bg-stone-100 flex-shrink-0 border border-stone-100">
           {item.previewUrl ? (
             <img 
               src={item.previewUrl} 
@@ -46,7 +46,7 @@ export function FileItem({ item, onRemove }: FileItemProps) {
               className="w-full h-full object-cover"
             />
           ) : (
-            <div className="w-full h-full flex items-center justify-center text-gray-400">
+            <div className="w-full h-full flex items-center justify-center text-stone-400">
               <FileImage className="w-6 h-6" />
             </div>
           )}
@@ -77,24 +77,24 @@ export function FileItem({ item, onRemove }: FileItemProps) {
         {/* Info */}
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between mb-1">
-            <h4 className="text-sm font-medium text-gray-900 truncate pr-2">
+            <h4 className="text-sm font-medium text-stone-900 truncate pr-2">
               {item.file.name}
             </h4>
             <button
               onClick={() => onRemove(item.id)}
-              className="text-gray-400 hover:text-red-500 transition-colors p-1 rounded-full hover:bg-red-50 opacity-0 group-hover:opacity-100"
+              className="text-stone-400 hover:text-red-500 transition-colors p-1 rounded-full hover:bg-red-50 opacity-0 group-hover:opacity-100"
             >
               <X className="w-4 h-4" />
             </button>
           </div>
           
           <div className="space-y-1.5">
-            <div className="flex items-center justify-between text-xs text-gray-500">
+            <div className="flex items-center justify-between text-xs text-stone-500">
               <span>{formatBytes(item.file.size)}</span>
               <span className={`font-medium ${
                 item.status === 'error' ? 'text-red-600' :
                 item.status === 'completed' ? 'text-emerald-600' :
-                'text-gray-600'
+                'text-stone-600'
               }`}>
                 {item.status === 'pending' && 'Ready'}
                 {item.status === 'uploading' && `${Math.round(item.progress)}%`}

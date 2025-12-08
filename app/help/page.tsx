@@ -1,5 +1,9 @@
-import { StaticPageLayout } from '@/components/layout/StaticPageLayout'
+import { auth } from '@clerk/nextjs/server'
+import { AppNav } from '@/components/layout/AppNav'
+import { getUserWithUsage, checkIsAdmin } from '@/server/queries/user.queries'
+import { PLAN_TIERS, type PlanTier } from '@/lib/config/pricing-v2'
 import { Mail, MessageCircle } from 'lucide-react'
+import Link from 'next/link'
 
 export const metadata = {
   title: 'Help Center | 12img',
@@ -33,13 +37,47 @@ const faqs = [
   },
 ]
 
-export default function HelpPage() {
+export default async function HelpPage() {
+  const { userId } = await auth()
+  
+  let userData = null
+  let isAdmin = false
+  
+  if (userId) {
+    [userData, isAdmin] = await Promise.all([
+      getUserWithUsage(userId),
+      checkIsAdmin(userId),
+    ])
+  }
+  
+  const plan = (userData?.plan || 'free') as PlanTier
+  const planConfig = PLAN_TIERS[plan] || PLAN_TIERS.free
+  const storageLimit = planConfig.storageGB * 1024 * 1024 * 1024
+  
   return (
-    <StaticPageLayout
-      title="Help Center"
-      subtitle="Everything you need to know about using 12img"
-    >
-      <div className="space-y-12">
+    <div className="min-h-screen bg-stone-50">
+      {userId && (
+        <AppNav 
+          userPlan={plan}
+          storageUsed={userData?.usage.totalBytes || 0}
+          storageLimit={storageLimit}
+          isAdmin={isAdmin}
+        />
+      )}
+      
+      <main className={userId ? 'pt-8' : 'pt-24'}>
+        <div className="max-w-3xl mx-auto px-6 pb-24">
+          {/* Header */}
+          <header className="mb-12">
+            <h1 className="text-4xl sm:text-5xl font-bold text-stone-900 tracking-tight mb-4">
+              Help Center
+            </h1>
+            <p className="text-lg text-stone-500">
+              Everything you need to know about using 12img
+            </p>
+          </header>
+          
+          <div className="space-y-12">
         {/* FAQ Section */}
         <section>
           <h2 className="text-xl font-semibold text-[#1C1917] mb-6">Frequently Asked Questions</h2>
@@ -85,7 +123,9 @@ export default function HelpPage() {
             </a>
           </div>
         </section>
-      </div>
-    </StaticPageLayout>
+          </div>
+        </div>
+      </main>
+    </div>
   )
 }

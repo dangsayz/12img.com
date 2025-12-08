@@ -41,39 +41,39 @@ export function PricingSection() {
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.1, duration: 0.5 }}
               viewport={{ once: true }}
-              className={`relative rounded-[28px] p-6 transition-all duration-300 flex flex-col ${
+              className={`relative p-6 transition-all duration-300 flex flex-col ${
                 plan.popular
-                  ? 'bg-white shadow-neumorphic-lg border border-white/60 scale-[1.02] z-10'
-                  : 'bg-white/60 shadow-neumorphic-sm border border-white/40 hover:bg-white hover:shadow-neumorphic-md hover:-translate-y-1'
+                  ? 'bg-[#141414] text-white z-10'
+                  : 'bg-white border border-[#E5E5E5] hover:border-[#141414] hover:-translate-y-1'
               }`}
             >
               {plan.popular && (
                 <div className="absolute -top-4 left-1/2 -translate-x-1/2">
-                  <span className="inline-flex items-center rounded-full bg-gray-900 px-4 py-1 text-xs font-bold text-white shadow-lg">
+                  <span className="inline-flex items-center bg-white text-[#141414] px-3 py-1 text-[10px] font-bold uppercase tracking-wider">
                     Most Popular
                   </span>
                 </div>
               )}
 
               <div className="flex items-center justify-between gap-x-4">
-                <h3 className="text-lg font-bold text-gray-900">
+                <h3 className={`text-lg font-bold ${plan.popular ? 'text-white' : 'text-[#141414]'}`}>
                   {plan.name}
                 </h3>
               </div>
 
               <div className="mt-4 flex items-baseline gap-x-1">
-                <span className="text-3xl font-bold tracking-tight text-gray-900">{plan.price}</span>
-                {plan.period && <span className="text-sm font-semibold leading-6 text-gray-500">{plan.period}</span>}
+                <span className={`text-3xl font-bold tracking-tight ${plan.popular ? 'text-white' : 'text-[#141414]'}`}>{plan.price}</span>
+                {plan.period && <span className={`text-sm font-semibold leading-6 ${plan.popular ? 'text-white/60' : 'text-[#525252]'}`}>{plan.period}</span>}
               </div>
 
-              <p className="mt-4 text-sm leading-relaxed text-gray-500 font-medium min-h-[40px]">
+              <p className={`mt-4 text-sm leading-relaxed font-medium min-h-[40px] ${plan.popular ? 'text-white/60' : 'text-[#525252]'}`}>
                 {plan.description}
               </p>
 
-              <ul role="list" className="mt-8 space-y-3 text-sm leading-6 text-gray-600 flex-1">
+              <ul role="list" className={`mt-8 space-y-3 text-sm leading-6 flex-1 ${plan.popular ? 'text-white/80' : 'text-[#525252]'}`}>
                 {plan.features.map((feature) => (
                   <li key={feature} className="flex gap-x-3">
-                    <Check className={`h-5 w-4 flex-none ${plan.popular ? 'text-gray-900' : 'text-gray-400'}`} aria-hidden="true" />
+                    <Check className={`h-5 w-4 flex-none ${plan.popular ? 'text-emerald-400' : 'text-emerald-600'}`} aria-hidden="true" />
                     {feature}
                   </li>
                 ))}
@@ -81,10 +81,10 @@ export function PricingSection() {
 
               <Link
                 href={plan.href}
-                className={`mt-8 block rounded-[16px] px-3 py-3 text-center text-sm font-bold transition-all ${
+                className={`mt-8 block px-3 py-3 text-center text-sm font-bold transition-all border ${
                   plan.popular
-                    ? 'bg-gray-900 text-white shadow-lg hover:bg-gray-800 hover:scale-[1.02]'
-                    : 'bg-soft-bg text-gray-900 hover:bg-gray-200'
+                    ? 'bg-white text-[#141414] border-white hover:bg-gray-100'
+                    : 'bg-transparent text-[#141414] border-[#141414] hover:bg-[#141414] hover:text-white'
                 }`}
               >
                 {plan.cta}

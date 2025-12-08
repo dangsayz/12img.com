@@ -228,3 +228,21 @@ export async function getUserStorageUsage(clerkId: string) {
     galleryCount: galleryCount || 0,
   }
 }
+
+/**
+ * Check if a user is an admin (support, admin, or super_admin role)
+ */
+export async function checkIsAdmin(clerkId: string): Promise<boolean> {
+  const { data: user, error } = await supabaseAdmin
+    .from('users')
+    .select('role')
+    .eq('clerk_id', clerkId)
+    .single()
+
+  if (error || !user) {
+    return false
+  }
+
+  const adminRoles = ['support', 'admin', 'super_admin']
+  return adminRoles.includes(user.role || '')
+}

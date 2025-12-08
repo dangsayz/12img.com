@@ -1,9 +1,13 @@
 import { auth } from '@clerk/nextjs/server'
+import { redirect } from 'next/navigation'
 import { getUserGalleries } from '@/server/queries/gallery.queries'
-import { getUserWithUsage } from '@/server/queries/user.queries'
-import { Header } from '@/components/layout/Header'
-import { Dashboard } from '@/components/dashboard/Dashboard'
+import { getUserWithUsage, getUserSettings, checkIsAdmin } from '@/server/queries/user.queries'
+import { CleanDashboard } from '@/components/dashboard/CleanDashboard'
+import { AppNav } from '@/components/layout/AppNav'
 import { LandingPage } from '@/components/landing/LandingPage'
+import { checkOnboardingStatus, checkWelcomeSeen } from '@/server/actions/onboarding.actions'
+import { PLAN_TIERS, type PlanTier } from '@/lib/config/pricing-v2'
+import { getUserProfile } from '@/server/actions/profile.actions'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -13,24 +17,45 @@ export default async function HomePage() {
 
   // If logged in, show Dashboard
   if (userId) {
-    const [galleries, userData] = await Promise.all([
+    // Check if onboarding is completed
+    const onboardingCompleted = await checkOnboardingStatus()
+    if (!onboardingCompleted) {
+      redirect('/onboarding')
+    }
+
+    // Check if welcome screen has been seen
+    const welcomeSeen = await checkWelcomeSeen()
+    if (!welcomeSeen) {
+      redirect('/welcome')
+    }
+
+    const [galleries, userData, userSettings, isAdmin, profileData] = await Promise.all([
       getUserGalleries(userId),
       getUserWithUsage(userId),
+      getUserSettings(userId),
+      checkIsAdmin(userId),
+      getUserProfile(),
     ])
     
+    const plan = (userData?.plan || 'free') as PlanTier
+    const planConfig = PLAN_TIERS[plan] || PLAN_TIERS.free
+    const storageLimit = planConfig.storageGB * 1024 * 1024 * 1024
+    
     return (
-      <>
-        <Header 
-          userPlan={userData?.plan || 'free'}
-          galleryCount={userData?.usage.galleryCount || 0}
-          imageCount={userData?.usage.imageCount || 0}
+      <div className="min-h-screen bg-stone-50">
+        <AppNav 
+          userPlan={plan}
           storageUsed={userData?.usage.totalBytes || 0}
-          userRole={userData?.role}
+          storageLimit={storageLimit}
+          isAdmin={isAdmin}
         />
-        <main className="container mx-auto px-4 pt-28 pb-12 max-w-6xl">
-          <Dashboard galleries={galleries} />
-        </main>
-      </>
+        <CleanDashboard 
+          galleries={galleries} 
+          photographerName={userSettings?.businessName || undefined}
+          visibilityMode={profileData?.visibilityMode || 'PRIVATE'}
+          profileSlug={profileData?.profileSlug}
+        />
+      </div>
     )
   }
 

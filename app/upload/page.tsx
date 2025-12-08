@@ -1,9 +1,10 @@
 import { auth } from '@clerk/nextjs/server'
 import { redirect } from 'next/navigation'
-import { getUserWithUsage } from '@/server/queries/user.queries'
+import { getUserWithUsage, checkIsAdmin } from '@/server/queries/user.queries'
 import { getPlan } from '@/lib/config/pricing'
-import { Header } from '@/components/layout/Header'
+import { AppNav } from '@/components/layout/AppNav'
 import { CreateGalleryForm } from './CreateGalleryForm'
+import { PLAN_TIERS, type PlanTier } from '@/lib/config/pricing-v2'
 
 export const dynamic = 'force-dynamic'
 
@@ -14,7 +15,11 @@ export default async function CreateGalleryPage() {
     redirect('/sign-in')
   }
 
-  const userData = await getUserWithUsage(userId)
+  const [userData, isAdmin] = await Promise.all([
+    getUserWithUsage(userId),
+    checkIsAdmin(userId),
+  ])
+  
   // Map 'basic' to 'essential' for legacy support
   const planId = userData?.plan === 'basic' ? 'essential' : (userData?.plan || 'free')
   const plan = getPlan(planId as any)
@@ -25,14 +30,18 @@ export default async function CreateGalleryPage() {
   
   const currentCount = userData?.usage.galleryCount || 0
   const isAtLimit = currentCount >= galleryLimit
+  
+  const userPlan = (userData?.plan || 'free') as PlanTier
+  const planConfig = PLAN_TIERS[userPlan] || PLAN_TIERS.free
+  const storageLimit = planConfig.storageGB * 1024 * 1024 * 1024
 
   return (
     <div className="min-h-screen bg-[#FAFAFA]">
-      <Header 
-        userPlan={userData?.plan || 'free'}
-        galleryCount={currentCount}
-        imageCount={userData?.usage.imageCount || 0}
+      <AppNav 
+        userPlan={userPlan}
         storageUsed={userData?.usage.totalBytes || 0}
+        storageLimit={storageLimit}
+        isAdmin={isAdmin}
       />
       
       <CreateGalleryForm 

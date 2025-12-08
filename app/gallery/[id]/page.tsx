@@ -1,17 +1,10 @@
 import { auth } from '@clerk/nextjs/server'
 import { notFound, redirect } from 'next/navigation'
-import Link from 'next/link'
-import { ArrowLeft, Plus } from 'lucide-react'
-import { getOrCreateUserByClerkId, getUserWithUsage } from '@/server/queries/user.queries'
+import { getOrCreateUserByClerkId, getUserWithUsage, getUserSettings } from '@/server/queries/user.queries'
 import { getGalleryWithOwnershipCheck } from '@/server/queries/gallery.queries'
 import { getGalleryImages } from '@/server/queries/image.queries'
 import { getSignedUrlsWithSizes } from '@/lib/storage/signed-urls'
-import { Header } from '@/components/layout/Header'
-import { MasonryGrid } from '@/components/gallery/MasonryGrid'
-import { GalleryControlPanel } from '@/components/gallery/GalleryControlPanel'
-import { EditableTitle } from '@/components/gallery/EditableTitle'
-import { Button } from '@/components/ui/button'
-import { GalleryActions, AddImagesButton } from '@/components/gallery/GalleryActions'
+import { GalleryEditor } from '@/components/gallery/GalleryEditor'
 
 export const dynamic = 'force-dynamic'
 
@@ -27,9 +20,10 @@ export default async function GalleryViewPage({ params }: Props) {
     redirect('/sign-in')
   }
 
-  const [user, userData] = await Promise.all([
+  const [user, userData, userSettings] = await Promise.all([
     getOrCreateUserByClerkId(clerkId),
     getUserWithUsage(clerkId),
+    getUserSettings(clerkId),
   ])
   
   if (!user) {
@@ -43,23 +37,45 @@ export default async function GalleryViewPage({ params }: Props) {
 
   const images = await getGalleryImages(gallery.id)
   
-  // Fetch all URL sizes upfront for crisp fullscreen viewing
+  // Only fetch signed URLs for the first batch (50 images) for fast initial load
+  // The rest will be loaded on-demand via client-side pagination
+  const INITIAL_BATCH_SIZE = 50
+  const initialImages = images.slice(0, INITIAL_BATCH_SIZE)
+  
   const signedUrls =
-    images.length > 0
-      ? await getSignedUrlsWithSizes(images.map((img) => img.storage_path))
+    initialImages.length > 0
+      ? await getSignedUrlsWithSizes(initialImages.map((img) => img.storage_path))
       : new Map()
 
-  const imagesWithUrls = images.map((img) => {
-    const urls = signedUrls.get(img.storage_path)
+  const imagesWithUrls = images.map((img, index) => {
+    // Only include URLs for the first batch
+    if (index < INITIAL_BATCH_SIZE) {
+      const urls = signedUrls.get(img.storage_path)
+      return {
+        id: img.id,
+        storagePath: img.storage_path,
+        thumbnailUrl: urls?.thumbnail || '',
+        previewUrl: urls?.preview || '',
+        originalUrl: urls?.original || '',
+        width: img.width,
+        height: img.height,
+        originalFilename: img.original_filename,
+        focalX: (img as { focal_x?: number | null }).focal_x ?? null,
+        focalY: (img as { focal_y?: number | null }).focal_y ?? null,
+      }
+    }
+    // For remaining images, we'll fetch URLs on-demand
     return {
       id: img.id,
       storagePath: img.storage_path,
-      thumbnailUrl: urls?.thumbnail || '',
-      previewUrl: urls?.preview || '',
-      originalUrl: urls?.original || '',
+      thumbnailUrl: '', // Will be fetched on-demand
+      previewUrl: '',
+      originalUrl: '',
       width: img.width,
       height: img.height,
       originalFilename: img.original_filename,
+      focalX: (img as { focal_x?: number | null }).focal_x ?? null,
+      focalY: (img as { focal_y?: number | null }).focal_y ?? null,
     }
   })
 
@@ -72,82 +88,18 @@ export default async function GalleryViewPage({ params }: Props) {
     slug: gallery.slug,
     password_hash: gallery.password_hash,
     download_enabled: gallery.download_enabled,
+    template: (gallery as { template?: string }).template || 'mosaic',
     created_at: gallery.created_at,
     imageCount: images.length,
+    presentation_data: (gallery as { presentation_data?: unknown }).presentation_data || null,
   }
 
   return (
-    <div className="min-h-screen bg-[#FAFAFA]">
-      <Header 
-        userPlan={userData?.plan || 'free'}
-        galleryCount={userData?.usage.galleryCount || 0}
-        imageCount={userData?.usage.imageCount || 0}
-        storageUsed={userData?.usage.totalBytes || 0}
-        userRole={userData?.role}
-      />
-      
-      <main className="container mx-auto px-4 pt-28 pb-20 max-w-7xl">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center gap-4">
-            <Link 
-              href="/" 
-              className="flex items-center justify-center h-10 w-10 rounded-full bg-white shadow-sm border border-gray-100 hover:bg-gray-50"
-            >
-              <ArrowLeft className="w-5 h-5 text-gray-600" />
-            </Link>
-            <div>
-              <EditableTitle 
-                galleryId={gallery.id} 
-                initialTitle={gallery.title}
-                currentSlug={gallery.slug}
-                className="text-2xl text-gray-900"
-              />
-              <p className="text-sm text-gray-500">{images.length} images</p>
-            </div>
-          </div>
-
-          <GalleryActions 
-            galleryId={gallery.id} 
-            gallerySlug={gallery.slug}
-            images={imagesWithUrls}
-            galleryTitle={gallery.title}
-            totalFileSizeBytes={totalFileSizeBytes}
-          />
-        </div>
-
-        {/* Main Content */}
-        <div className="flex flex-col lg:flex-row gap-8">
-          {/* Gallery Grid */}
-          <div className="flex-1 min-w-0">
-            {images.length > 0 ? (
-              <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-4 md:p-6">
-                <MasonryGrid images={imagesWithUrls} editable galleryId={gallery.id} galleryTitle={gallery.title} />
-              </div>
-            ) : (
-              <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-12 md:p-16">
-                <div className="flex flex-col items-center justify-center text-center">
-                  <div className="h-16 w-16 bg-gray-50 rounded-2xl flex items-center justify-center mb-6 border border-gray-100">
-                    <Plus className="w-8 h-8 text-gray-300" />
-                  </div>
-                  <h2 className="text-xl font-semibold text-gray-900 mb-2">Your gallery is empty</h2>
-                  <p className="text-gray-500 mb-6 max-w-sm">
-                    Start by adding some images to your gallery. They'll appear here beautifully arranged.
-                  </p>
-                  <AddImagesButton galleryId={gallery.id} />
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Control Panel Sidebar */}
-          <div className="lg:w-[360px] flex-shrink-0">
-            <div className="lg:sticky lg:top-28">
-              <GalleryControlPanel gallery={galleryData} />
-            </div>
-          </div>
-        </div>
-      </main>
-    </div>
+    <GalleryEditor 
+      gallery={galleryData}
+      images={imagesWithUrls}
+      photographerName={userSettings?.businessName || undefined}
+      totalFileSizeBytes={totalFileSizeBytes}
+    />
   )
 }

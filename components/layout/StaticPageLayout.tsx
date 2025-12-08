@@ -1,7 +1,6 @@
-'use client'
-
 import Link from 'next/link'
 import { ReactNode } from 'react'
+import { PublicNav } from './PublicNav'
 
 interface StaticPageLayoutProps {
   title: string
@@ -19,37 +18,12 @@ export function StaticPageLayout({
   backHref = '/'
 }: StaticPageLayoutProps) {
   return (
-    <main className="min-h-screen bg-[#FAF8F3]">
-      {/* Nav */}
-      <nav className="fixed top-0 left-0 right-0 z-50 px-6 py-4">
-        <div className="max-w-6xl mx-auto">
-          <div className="flex items-center justify-between bg-white/80 backdrop-blur-2xl border border-[#E8E4DC] rounded-2xl px-6 py-3 shadow-sm">
-            <Link href="/" className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-[#1C1917] flex items-center justify-center text-white text-xs font-bold">
-                12
-              </div>
-              <span className="text-[17px] font-semibold text-[#1C1917]">img</span>
-            </Link>
-            <div className="flex items-center gap-4">
-              <Link 
-                href="/sign-in" 
-                className="text-sm font-medium text-[#78716C] hover:text-[#1C1917] transition-colors hidden sm:block"
-              >
-                Sign in
-              </Link>
-              <Link 
-                href="/sign-up"
-                className="text-sm font-semibold text-white bg-[#1C1917] hover:bg-[#292524] px-5 py-2.5 rounded-xl transition-all hover:scale-105"
-              >
-                Start free
-              </Link>
-            </div>
-          </div>
-        </div>
-      </nav>
+    <main className="min-h-screen bg-[#F5F5F7]">
+      {/* Shared Public Nav */}
+      <PublicNav />
 
       {/* Content */}
-      <div className="pt-32 pb-24 px-6">
+      <div className="pt-24 pb-24 px-4 sm:px-6">
         <div className="max-w-3xl mx-auto">
           {/* Back link */}
           <Link 
@@ -82,15 +56,15 @@ export function StaticPageLayout({
       </div>
 
       {/* Simple Footer */}
-      <footer className="border-t border-[#E8E4DC] py-8 px-6">
+      <footer className="border-t border-stone-200 py-8 px-4 sm:px-6">
         <div className="max-w-3xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
-          <Link href="/" className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded-md bg-[#1C1917] flex items-center justify-center text-white text-[10px] font-bold">
-              12
+          <Link href="/" className="flex items-center gap-1.5">
+            <div className="w-6 h-6 rounded-full bg-stone-900 flex items-center justify-center">
+              <span className="text-white font-bold text-[8px] tracking-tight">12</span>
             </div>
-            <span className="text-sm font-semibold text-[#1C1917]">img</span>
+            <span className="text-sm font-bold text-stone-900">img</span>
           </Link>
-          <p className="text-sm text-[#78716C]">
+          <p className="text-sm text-stone-500">
             © {new Date().getFullYear()} 12img. All rights reserved.
           </p>
         </div>

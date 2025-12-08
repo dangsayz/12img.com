@@ -8,9 +8,12 @@ import {
   TrendingUp,
   UserPlus,
   AlertTriangle,
-  DollarSign,
   Zap,
   ArrowUpRight,
+  Mail,
+  ScrollText,
+  Flag,
+  Check,
 } from 'lucide-react'
 
 function formatBytes(bytes: number): string {
@@ -42,24 +45,24 @@ function StatCard({
   trend?: { value: number; label: string }
 }) {
   return (
-    <div className="bg-white rounded-xl border border-gray-200 p-5">
+    <div className="bg-white border border-[#E5E5E5] p-6 hover:border-[#141414] transition-colors duration-300">
       <div className="flex items-start justify-between">
         <div>
-          <p className="text-sm font-medium text-gray-500">{title}</p>
-          <p className="mt-1 text-2xl font-semibold text-gray-900">{value}</p>
+          <p className="text-sm text-[#525252]">{title}</p>
+          <p className="mt-2 text-3xl font-serif text-[#141414]">{value}</p>
           {subtitle && (
-            <p className="mt-1 text-xs text-gray-400">{subtitle}</p>
+            <p className="mt-1 text-xs text-[#525252]">{subtitle}</p>
           )}
           {trend && (
-            <div className="mt-2 flex items-center gap-1 text-xs">
-              <TrendingUp className="w-3 h-3 text-emerald-500" />
+            <div className="mt-3 flex items-center gap-1.5 text-xs">
+              <TrendingUp className="w-3 h-3 text-emerald-600" />
               <span className="text-emerald-600 font-medium">+{trend.value}</span>
-              <span className="text-gray-400">{trend.label}</span>
+              <span className="text-[#525252]">{trend.label}</span>
             </div>
           )}
         </div>
-        <div className="p-2 bg-gray-50 rounded-lg">
-          <Icon className="w-5 h-5 text-gray-400" />
+        <div className="p-2 border border-[#E5E5E5]">
+          <Icon className="w-5 h-5 text-[#525252]" />
         </div>
       </div>
     </div>
@@ -73,45 +76,48 @@ export default async function AdminDashboardPage() {
   ])
   
   return (
-    <div className="space-y-6">
+    <div className="space-y-8 max-w-[1400px]">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-semibold text-gray-900">Dashboard</h1>
-        <p className="text-sm text-gray-500 mt-1">
+        <h1 className="font-serif text-3xl lg:text-4xl text-[#141414]">Dashboard</h1>
+        <p className="text-[#525252] mt-2">
           Platform overview and key metrics
         </p>
       </div>
       
       {/* Revenue Hero Cards */}
       {revenue && (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-          <div className="lg:col-span-2 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-2xl p-6 text-white">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* MRR Card */}
+          <div className="lg:col-span-2 bg-[#141414] p-8 text-white">
             <div className="flex items-start justify-between">
               <div>
-                <p className="text-emerald-100 text-sm font-medium">Monthly Recurring Revenue</p>
-                <p className="mt-2 text-4xl font-bold">{formatCurrency(revenue.mrr)}</p>
-                <p className="mt-1 text-emerald-200 text-sm">
+                <span className="inline-block px-3 py-1 border border-white/20 text-xs font-medium uppercase tracking-wider mb-4">
+                  Monthly Recurring Revenue
+                </span>
+                <p className="text-5xl font-serif">{formatCurrency(revenue.mrr)}</p>
+                <p className="mt-2 text-white/60 text-sm">
                   {formatCurrency(revenue.arr)} ARR
                 </p>
               </div>
-              <div className="p-3 bg-white/20 rounded-xl">
+              <div className="p-3 border border-white/20">
                 <Zap className="w-6 h-6" />
               </div>
             </div>
-            <div className="mt-6 pt-4 border-t border-emerald-400/30 flex items-center justify-between">
-              <div className="flex gap-6">
+            <div className="mt-8 pt-6 border-t border-white/10 flex items-center justify-between">
+              <div className="flex gap-8">
                 <div>
-                  <p className="text-emerald-200 text-xs">This Month</p>
-                  <p className="text-xl font-semibold">{formatCurrency(revenue.revenueThisMonth)}</p>
+                  <p className="text-white/50 text-xs uppercase tracking-wider">This Month</p>
+                  <p className="text-2xl font-serif mt-1">{formatCurrency(revenue.revenueThisMonth)}</p>
                 </div>
                 <div>
-                  <p className="text-emerald-200 text-xs">Active Subs</p>
-                  <p className="text-xl font-semibold">{revenue.activeSubscriptions}</p>
+                  <p className="text-white/50 text-xs uppercase tracking-wider">Active Subs</p>
+                  <p className="text-2xl font-serif mt-1">{revenue.activeSubscriptions}</p>
                 </div>
               </div>
               <Link 
                 href="/admin/billing"
-                className="inline-flex items-center gap-1 px-3 py-1.5 bg-white/20 hover:bg-white/30 rounded-lg text-sm font-medium transition-colors"
+                className="inline-flex items-center gap-2 px-4 py-2 bg-white text-[#141414] text-sm font-medium hover:bg-white/90 transition-colors"
               >
                 View Details
                 <ArrowUpRight className="w-4 h-4" />
@@ -119,25 +125,28 @@ export default async function AdminDashboardPage() {
             </div>
           </div>
           
-          <div className="bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl p-6 text-white">
+          {/* Conversion Card */}
+          <div className="bg-white border border-[#E5E5E5] p-8">
             <div className="flex items-start justify-between">
               <div>
-                <p className="text-blue-100 text-sm font-medium">Conversion</p>
-                <p className="mt-2 text-4xl font-bold">{revenue.conversionRate}%</p>
-                <p className="mt-1 text-blue-200 text-sm">Free → Paid</p>
+                <span className="inline-block px-3 py-1 border border-[#141414] text-xs font-medium uppercase tracking-wider mb-4 text-[#141414]">
+                  Conversion
+                </span>
+                <p className="text-5xl font-serif text-[#141414]">{revenue.conversionRate}%</p>
+                <p className="mt-2 text-[#525252] text-sm">Free → Paid</p>
               </div>
-              <div className="p-3 bg-white/20 rounded-xl">
-                <ArrowUpRight className="w-6 h-6" />
+              <div className="p-3 border border-[#E5E5E5]">
+                <ArrowUpRight className="w-6 h-6 text-[#525252]" />
               </div>
             </div>
-            <div className="mt-6 pt-4 border-t border-blue-400/30 grid grid-cols-2 gap-4">
+            <div className="mt-8 pt-6 border-t border-[#E5E5E5] grid grid-cols-2 gap-6">
               <div>
-                <p className="text-blue-200 text-xs">Paid</p>
-                <p className="text-xl font-semibold">{revenue.paidUsers}</p>
+                <p className="text-[#525252] text-xs uppercase tracking-wider">Paid</p>
+                <p className="text-2xl font-serif text-[#141414] mt-1">{revenue.paidUsers}</p>
               </div>
               <div>
-                <p className="text-blue-200 text-xs">Free</p>
-                <p className="text-xl font-semibold">{revenue.freeUsers}</p>
+                <p className="text-[#525252] text-xs uppercase tracking-wider">Free</p>
+                <p className="text-2xl font-serif text-[#141414] mt-1">{revenue.freeUsers}</p>
               </div>
             </div>
           </div>
@@ -145,7 +154,7 @@ export default async function AdminDashboardPage() {
       )}
       
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard
           title="Total Users"
           value={stats.totalUsers.toLocaleString()}
@@ -170,7 +179,7 @@ export default async function AdminDashboardPage() {
       </div>
       
       {/* Secondary Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
         <StatCard
           title="New Users Today"
           value={stats.newUsersToday}
@@ -189,50 +198,50 @@ export default async function AdminDashboardPage() {
       </div>
       
       {/* Plan Breakdown */}
-      <div className="bg-white rounded-xl border border-gray-200 p-5">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">Plan Distribution</h2>
+      <div className="bg-white border border-[#E5E5E5] p-8">
+        <h2 className="font-serif text-2xl text-[#141414] mb-6">Plan Distribution</h2>
         <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
           {Object.entries(stats.planBreakdown).map(([plan, count]) => (
-            <div key={plan} className="text-center p-3 bg-gray-50 rounded-lg">
-              <p className="text-2xl font-semibold text-gray-900">{count}</p>
-              <p className="text-xs text-gray-500 capitalize">{plan}</p>
+            <div key={plan} className="text-center p-4 border border-[#E5E5E5] hover:border-[#141414] transition-colors">
+              <p className="text-3xl font-serif text-[#141414]">{count}</p>
+              <p className="text-xs text-[#525252] uppercase tracking-wider mt-2">{plan}</p>
             </div>
           ))}
         </div>
       </div>
       
       {/* Quick Actions */}
-      <div className="bg-white rounded-xl border border-gray-200 p-5">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h2>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          <a 
+      <div className="bg-white border border-[#E5E5E5] p-8">
+        <h2 className="font-serif text-2xl text-[#141414] mb-6">Quick Actions</h2>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          <Link 
             href="/admin/users"
-            className="flex items-center gap-2 p-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors"
+            className="flex items-center gap-3 p-4 border border-[#E5E5E5] hover:border-[#141414] hover:bg-[#F5F5F7] transition-colors"
           >
-            <Users className="w-4 h-4 text-gray-600" />
-            <span className="text-sm font-medium text-gray-700">Manage Users</span>
-          </a>
-          <a 
+            <Users className="w-5 h-5 text-[#141414]" />
+            <span className="text-sm font-medium text-[#141414]">Manage Users</span>
+          </Link>
+          <Link 
             href="/admin/emails"
-            className="flex items-center gap-2 p-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors"
+            className="flex items-center gap-3 p-4 border border-[#E5E5E5] hover:border-[#141414] hover:bg-[#F5F5F7] transition-colors"
           >
-            <Users className="w-4 h-4 text-gray-600" />
-            <span className="text-sm font-medium text-gray-700">Send Email</span>
-          </a>
-          <a 
+            <Mail className="w-5 h-5 text-[#141414]" />
+            <span className="text-sm font-medium text-[#141414]">Send Email</span>
+          </Link>
+          <Link 
             href="/admin/logs"
-            className="flex items-center gap-2 p-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors"
+            className="flex items-center gap-3 p-4 border border-[#E5E5E5] hover:border-[#141414] hover:bg-[#F5F5F7] transition-colors"
           >
-            <Users className="w-4 h-4 text-gray-600" />
-            <span className="text-sm font-medium text-gray-700">View Logs</span>
-          </a>
-          <a 
+            <ScrollText className="w-5 h-5 text-[#141414]" />
+            <span className="text-sm font-medium text-[#141414]">View Logs</span>
+          </Link>
+          <Link 
             href="/admin/flags"
-            className="flex items-center gap-2 p-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors"
+            className="flex items-center gap-3 p-4 border border-[#E5E5E5] hover:border-[#141414] hover:bg-[#F5F5F7] transition-colors"
           >
-            <Users className="w-4 h-4 text-gray-600" />
-            <span className="text-sm font-medium text-gray-700">Feature Flags</span>
-          </a>
+            <Flag className="w-5 h-5 text-[#141414]" />
+            <span className="text-sm font-medium text-[#141414]">Feature Flags</span>
+          </Link>
         </div>
       </div>
     </div>

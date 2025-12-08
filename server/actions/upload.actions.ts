@@ -161,6 +161,13 @@ export async function confirmUploads(request: {
       .eq('id', request.galleryId)
   }
 
+  // Queue images for derivative processing (async, non-blocking)
+  queueImagesForProcessing(
+    imageIds,
+    request.galleryId,
+    request.uploads.map(u => u.storagePath)
+  )
+
   // Revalidate paths
   if (gallery) {
     revalidatePath(`/view-reel/${gallery.id}`)
@@ -169,4 +176,36 @@ export async function confirmUploads(request: {
   revalidatePath('/')
 
   return { imageIds }
+}
+
+/**
+ * Queue images for derivative processing
+ * Fires and forgets - doesn't block upload confirmation
+ */
+async function queueImagesForProcessing(
+  imageIds: string[],
+  galleryId: string,
+  storagePaths: string[]
+): Promise<void> {
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+  const secret = process.env.PROCESSING_API_SECRET || 'dev-secret'
+
+  // Process each image asynchronously
+  for (let i = 0; i < imageIds.length; i++) {
+    // Don't await - fire and forget
+    fetch(`${baseUrl}/api/process-image`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${secret}`,
+      },
+      body: JSON.stringify({
+        imageId: imageIds[i],
+        galleryId,
+        storagePath: storagePaths[i],
+      }),
+    }).catch(err => {
+      console.error('[Upload] Failed to queue processing for image:', imageIds[i], err)
+    })
+  }
 }

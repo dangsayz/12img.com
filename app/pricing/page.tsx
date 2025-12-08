@@ -1,9 +1,9 @@
 import type { Metadata } from 'next'
 import { auth } from '@clerk/nextjs/server'
-import { Header } from '@/components/layout/Header'
-import { PLANS } from '@/lib/config/pricing'
-import { PricingCard } from '@/components/pricing/PricingCard'
-import { getUserWithUsage } from '@/server/queries/user.queries'
+import { AppNav } from '@/components/layout/AppNav'
+import { PricingMatrix } from '@/components/pricing/PricingMatrix'
+import { getUserWithUsage, checkIsAdmin } from '@/server/queries/user.queries'
+import { PLAN_TIERS, type PlanTier } from '@/lib/config/pricing-v2'
 
 export const metadata: Metadata = {
   title: 'Pricing',
@@ -16,50 +16,93 @@ export const metadata: Metadata = {
 
 export default async function PricingPage() {
   const { userId } = await auth()
-  const userData = userId ? await getUserWithUsage(userId) : null
+  
+  let userData = null
+  let isAdmin = false
+  
+  if (userId) {
+    [userData, isAdmin] = await Promise.all([
+      getUserWithUsage(userId),
+      checkIsAdmin(userId),
+    ])
+  }
+  
+  const plan = (userData?.plan || 'free') as PlanTier
+  const planConfig = PLAN_TIERS[plan] || PLAN_TIERS.free
+  const storageLimit = planConfig.storageGB * 1024 * 1024 * 1024
   
   return (
-    <>
-      <Header 
-        userPlan={userData?.plan || 'free'}
-        galleryCount={userData?.usage.galleryCount || 0}
-        imageCount={userData?.usage.imageCount || 0}
-        storageUsed={userData?.usage.totalBytes || 0}
-        isAuthenticated={!!userId}
-        userRole={userData?.role}
-      />
-      <main className="min-h-screen bg-[#FAF8F3]">
-        <div className="container mx-auto px-4 pt-28 pb-16 max-w-7xl">
+    <div className="min-h-screen bg-[#F5F5F7]">
+      {userId && (
+        <AppNav 
+          userPlan={plan}
+          storageUsed={userData?.usage.totalBytes || 0}
+          storageLimit={storageLimit}
+          isAdmin={isAdmin}
+        />
+      )}
+      <main>
+        <div className={`container mx-auto px-4 pb-16 max-w-7xl ${userId ? 'pt-8' : 'pt-28'}`}>
+          {/* Hero */}
           <div className="text-center mb-12">
-            <h1 className="text-4xl font-bold text-[#1C1917] mb-4">Simple, honest pricing</h1>
-            <p className="text-lg text-[#78716C]">
-              Just storage and images. No hidden fees.
+            <h1 className="font-serif text-4xl md:text-5xl font-bold text-[#141414] mb-4">
+              Simple, honest pricing
+            </h1>
+            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+              No hidden fees. No video bloat. Just storage for photographers who need it.
+              <span className="block mt-2 text-emerald-600 font-medium">
+                Save up to 40% compared to competitors.
+              </span>
             </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-            {PLANS.map((plan, index) => (
-              <PricingCard
-                key={plan.id}
-                planId={plan.id}
-                name={plan.name}
-                description={plan.description}
-                price={plan.monthlyPrice}
-                features={plan.features}
-                cta={plan.cta}
-                popular={plan.popular}
-                delay={index * 0.05}
-              />
-            ))}
+          {/* Pricing Matrix */}
+          <PricingMatrix showAllFeatures={true} currentPlan={userId ? plan : null} />
+
+          {/* Trust badges */}
+          <div className="mt-16 pt-12 border-t border-gray-200">
+            <div className="text-center">
+              <p className="text-sm font-medium text-gray-500 uppercase tracking-wider mb-6">
+                Trusted by photographers worldwide
+              </p>
+              <div className="flex flex-wrap justify-center gap-8 text-gray-400">
+                <div className="flex items-center gap-2">
+                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                  </svg>
+                  <span className="text-sm">Secure Storage</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                  </svg>
+                  <span className="text-sm">Cancel Anytime</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M2 10.5a1.5 1.5 0 113 0v6a1.5 1.5 0 01-3 0v-6zM6 10.333v5.43a2 2 0 001.106 1.79l.05.025A4 4 0 008.943 18h5.416a2 2 0 001.962-1.608l1.2-6A2 2 0 0015.56 8H12V4a2 2 0 00-2-2 1 1 0 00-1 1v.667a4 4 0 01-.8 2.4L6.8 7.933a4 4 0 00-.8 2.4z" />
+                  </svg>
+                  <span className="text-sm">No Credit Card Required</span>
+                </div>
+              </div>
+            </div>
           </div>
 
-          <div className="mt-12 text-center">
-            <p className="text-sm text-[#78716C]">
-              All plans include password protection, download options, and mobile-optimized galleries.
+          {/* FAQ Teaser */}
+          <div className="mt-16 text-center">
+            <p className="text-gray-600">
+              Questions? Check our{' '}
+              <a href="#" className="text-[#141414] font-medium underline underline-offset-4 hover:text-gray-600">
+                FAQ
+              </a>{' '}
+              or{' '}
+              <a href="mailto:support@12img.com" className="text-[#141414] font-medium underline underline-offset-4 hover:text-gray-600">
+                contact support
+              </a>
             </p>
           </div>
         </div>
       </main>
-    </>
+    </div>
   )
 }

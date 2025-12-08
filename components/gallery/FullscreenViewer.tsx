@@ -5,13 +5,17 @@ import { createPortal } from 'react-dom'
 import { X, ChevronLeft, ChevronRight, Download, Loader2, Share2, Check } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { getPreviewUrls, getOriginalUrl } from '@/server/actions/gallery.actions'
+import type { ProcessingStatus } from '@/types/database'
+import type { ImageDerivatives } from '@/lib/storage/signed-urls'
 
 interface Image {
   id: string
-  storagePath?: string  // For on-demand URL fetching
-  thumbnailUrl: string  // 400px for grid thumbnails
-  previewUrl: string    // 1920px for fullscreen viewing (loaded on-demand)
-  originalUrl: string   // Full resolution for downloads only (loaded on-demand)
+  storagePath?: string
+  thumbnailUrl: string
+  previewUrl: string
+  originalUrl: string
+  processingStatus?: ProcessingStatus
+  derivatives?: ImageDerivatives
 }
 
 interface FullscreenViewerProps {
@@ -43,12 +47,18 @@ export function FullscreenViewer({
   const controlsTimeout = useRef<NodeJS.Timeout | null>(null)
   const currentImage = images[currentIndex]
   
-  // Get full quality URL for crisp viewing - prefer original, fall back to preview
+  // Get full quality URL for crisp viewing
+  // Priority: derivatives.lg > derivatives.xl > previewUrl > originalUrl > cached > thumbnail
   const currentPreviewUrl = 
-    currentImage.originalUrl ||
+    currentImage.derivatives?.lg ||
+    currentImage.derivatives?.xl ||
     currentImage.previewUrl || 
+    currentImage.originalUrl ||
     (currentImage.storagePath && previewUrlCache[currentImage.storagePath]) ||
     currentImage.thumbnailUrl
+  
+  // Check if image is still processing
+  const isProcessing = currentImage.processingStatus === 'pending' || currentImage.processingStatus === 'processing'
 
   // Share individual image
   const handleShare = useCallback(async () => {
@@ -407,13 +417,20 @@ export function FullscreenViewer({
             className="relative max-w-full max-h-full"
             onClick={(e) => e.stopPropagation()}
           >
+            {/* Processing indicator */}
+            {isProcessing && (
+              <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-black/50 rounded-lg">
+                <div className="w-10 h-10 border-2 border-white/30 border-t-white/80 rounded-full animate-spin" />
+                <span className="text-white/70 text-sm">Processing image...</span>
+              </div>
+            )}
             {/* Loading skeleton */}
-            {!imageLoaded && (
+            {!imageLoaded && !isProcessing && (
               <div className="absolute inset-0 flex items-center justify-center">
                 <div className="w-12 h-12 border-2 border-white/20 border-t-white/80 rounded-full animate-spin" />
               </div>
             )}
-            {currentPreviewUrl && (
+            {currentPreviewUrl && !isProcessing && (
               <img
                 src={currentPreviewUrl}
                 alt=""

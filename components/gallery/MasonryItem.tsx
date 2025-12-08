@@ -2,17 +2,20 @@
 
 import { useState, useCallback, useTransition, useEffect } from 'react'
 import { Trash2, Loader2, RefreshCw } from 'lucide-react'
-import { deleteImage } from '@/server/actions/image.actions'
-import { getThumbnailUrl } from '@/server/actions/image.actions'
+import { deleteImage, getThumbnailUrl } from '@/server/actions/image.actions'
+import type { ProcessingStatus } from '@/types/database'
+import type { ImageDerivatives } from '@/lib/storage/signed-urls'
 
 interface Image {
   id: string
-  storagePath?: string  // For on-demand URL fetching
-  thumbnailUrl: string  // 400px for grid display
-  previewUrl: string    // 1920px for fullscreen viewing
-  originalUrl: string   // Full resolution for downloads only
+  storagePath?: string
+  thumbnailUrl: string
+  previewUrl: string
+  originalUrl: string
   width?: number | null
   height?: number | null
+  processingStatus?: ProcessingStatus
+  derivatives?: ImageDerivatives
 }
 
 interface MasonryItemProps {
@@ -137,7 +140,17 @@ export function MasonryItem({
         }}
         className="cursor-pointer relative w-full h-full p-3 flex items-center justify-center"
       >
-        {(hasError && retryCount >= 3) || (!currentUrl && !isRetrying) ? (
+        {/* Processing indicator */}
+        {(image.processingStatus === 'pending' || image.processingStatus === 'processing') ? (
+          <div className="absolute inset-0 bg-zinc-50 flex flex-col items-center justify-center gap-2">
+            <div className="w-5 h-5 border-2 border-zinc-300 border-t-zinc-500 rounded-full animate-spin" />
+            <span className="text-zinc-400 text-[10px] uppercase tracking-wide">Processing</span>
+          </div>
+        ) : image.processingStatus === 'failed' ? (
+          <div className="absolute inset-0 bg-zinc-100 flex items-center justify-center">
+            <span className="text-zinc-400 text-xs">Processing failed</span>
+          </div>
+        ) : (hasError && retryCount >= 3) || (!currentUrl && !isRetrying) ? (
           <div className="absolute inset-0 bg-zinc-100 flex items-center justify-center">
             <span className="text-zinc-400 text-xs">Failed to load</span>
           </div>

@@ -17,7 +17,7 @@ const testimonials = [
     name: 'Marcus Williams',
     studio: 'M.W. Wedding Films',
     location: 'Atlanta, GA',
-    quote: "Switched from Pixieset last year. My clients love the mobile experience, and I'm saving $200+ annually.",
+    quote: "Switched from my previous gallery service last year. My clients love the mobile experience, and I'm saving $200+ annually.",
     rating: 5,
     initials: 'MW',
     gradient: 'from-amber-400 to-orange-500',

@@ -48,10 +48,10 @@ export function RealtimeIndicator({ refreshInterval = 30 }: RealtimeIndicatorPro
       {/* Live toggle */}
       <button
         onClick={() => setIsLive(!isLive)}
-        className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium transition-colors ${
+        className={`flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium uppercase tracking-wider transition-colors ${
           isLive 
-            ? 'bg-emerald-100 text-emerald-700' 
-            : 'bg-gray-100 text-gray-500'
+            ? 'border border-emerald-200 bg-emerald-50 text-emerald-700' 
+            : 'border border-[#E5E5E5] bg-[#F5F5F7] text-[#525252]'
         }`}
       >
         {isLive ? (
@@ -72,7 +72,7 @@ export function RealtimeIndicator({ refreshInterval = 30 }: RealtimeIndicatorPro
 
       {/* Countdown */}
       {isLive && (
-        <span className="text-xs text-gray-400">
+        <span className="text-xs text-[#525252]">
           {countdown}s
         </span>
       )}
@@ -81,7 +81,7 @@ export function RealtimeIndicator({ refreshInterval = 30 }: RealtimeIndicatorPro
       <button
         onClick={handleManualRefresh}
         disabled={isRefreshing}
-        className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors disabled:opacity-50"
+        className="p-1.5 text-[#525252] hover:text-[#141414] border border-[#E5E5E5] hover:border-[#141414] transition-colors disabled:opacity-50"
         title="Refresh now"
       >
         <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />

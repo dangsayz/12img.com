@@ -11,6 +11,206 @@ import {
 } from '@/lib/validation/settings.schema'
 import { getOrCreateUserByClerkId, getUserByClerkId } from '@/server/queries/user.queries'
 
+// ============================================
+// NAME CHANGE TRACKING
+// ============================================
+
+const MAX_NAME_CHANGES_PER_YEAR = 2
+
+export async function getNameChangeInfo() {
+  const { userId: clerkId } = await auth()
+  if (!clerkId) return { error: 'Unauthorized' }
+
+  const user = await getOrCreateUserByClerkId(clerkId)
+  if (!user) return { error: 'User not found' }
+
+  try {
+    // Get current year's name changes
+    const currentYear = new Date().getFullYear()
+    const { data: changes, error } = await supabaseAdmin
+      .from('name_change_history')
+      .select('*')
+      .eq('user_id', user.id)
+      .eq('year', currentYear)
+      .order('changed_at', { ascending: false })
+
+    if (error) {
+      console.error('Get name change info error:', error)
+      return { error: 'Failed to get name change info' }
+    }
+
+    const usedChanges = changes?.length || 0
+    const remainingChanges = Math.max(0, MAX_NAME_CHANGES_PER_YEAR - usedChanges)
+
+    return {
+      success: true,
+      usedChanges,
+      remainingChanges,
+      maxChanges: MAX_NAME_CHANGES_PER_YEAR,
+      history: changes || [],
+    }
+  } catch (e) {
+    console.error('Get name change info error:', e)
+    return { error: 'An error occurred' }
+  }
+}
+
+export async function changeCompanyName(newName: string) {
+  const { userId: clerkId } = await auth()
+  if (!clerkId) return { error: 'Unauthorized' }
+
+  const user = await getOrCreateUserByClerkId(clerkId)
+  if (!user) return { error: 'User not found' }
+
+  // Validate new name
+  const trimmedName = newName.trim()
+  if (!trimmedName) {
+    return { error: 'Company name cannot be empty' }
+  }
+  if (trimmedName.length < 2) {
+    return { error: 'Company name must be at least 2 characters' }
+  }
+  if (trimmedName.length > 100) {
+    return { error: 'Company name must be less than 100 characters' }
+  }
+
+  try {
+    // Get current settings
+    const { data: settings } = await supabaseAdmin
+      .from('user_settings')
+      .select('business_name')
+      .eq('user_id', user.id)
+      .single()
+
+    const oldName = settings?.business_name || null
+
+    // Check if name is actually different
+    if (oldName === trimmedName) {
+      return { error: 'New name is the same as current name' }
+    }
+
+    // Check remaining changes
+    const currentYear = new Date().getFullYear()
+    const { count } = await supabaseAdmin
+      .from('name_change_history')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', user.id)
+      .eq('year', currentYear)
+
+    const usedChanges = count || 0
+    if (usedChanges >= MAX_NAME_CHANGES_PER_YEAR) {
+      return { 
+        error: `You have used all ${MAX_NAME_CHANGES_PER_YEAR} name changes for this year. You can change your name again in ${currentYear + 1}.` 
+      }
+    }
+
+    // Generate new slug from new name
+    const oldSlug = user.profile_slug
+    const newSlug = trimmedName
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-|-$/g, '')
+      .substring(0, 50)
+
+    // Check if new slug is available
+    if (newSlug !== oldSlug) {
+      const { data: existingSlug } = await supabaseAdmin
+        .from('users')
+        .select('id')
+        .eq('profile_slug', newSlug)
+        .neq('id', user.id)
+        .single()
+
+      if (existingSlug) {
+        // Append a number to make it unique
+        let uniqueSlug = newSlug
+        let counter = 1
+        while (true) {
+          uniqueSlug = `${newSlug}-${counter}`
+          const { data: check } = await supabaseAdmin
+            .from('users')
+            .select('id')
+            .eq('profile_slug', uniqueSlug)
+            .neq('id', user.id)
+            .single()
+          if (!check) break
+          counter++
+        }
+      }
+    }
+
+    // Record the name change
+    const { error: historyError } = await supabaseAdmin
+      .from('name_change_history')
+      .insert({
+        user_id: user.id,
+        old_name: oldName,
+        new_name: trimmedName,
+        old_slug: oldSlug,
+        new_slug: newSlug !== oldSlug ? newSlug : oldSlug,
+        year: currentYear,
+      })
+
+    if (historyError) {
+      console.error('Record name change error:', historyError)
+      return { error: 'Failed to record name change' }
+    }
+
+    // Update business_name in user_settings
+    const { error: settingsError } = await supabaseAdmin
+      .from('user_settings')
+      .update({ business_name: trimmedName })
+      .eq('user_id', user.id)
+
+    if (settingsError) {
+      console.error('Update settings error:', settingsError)
+      return { error: 'Failed to update company name' }
+    }
+
+    // Update display_name in users table
+    const { error: userError } = await supabaseAdmin
+      .from('users')
+      .update({ 
+        display_name: trimmedName,
+        profile_slug: newSlug !== oldSlug ? newSlug : oldSlug,
+      })
+      .eq('id', user.id)
+
+    if (userError) {
+      console.error('Update user error:', userError)
+      return { error: 'Failed to update profile' }
+    }
+
+    // If slug changed, save old slug to history for redirects
+    if (oldSlug && newSlug !== oldSlug) {
+      await supabaseAdmin
+        .from('profile_slug_history')
+        .insert({
+          user_id: user.id,
+          old_slug: oldSlug,
+          new_slug: newSlug,
+        })
+    }
+
+    // Revalidate all relevant paths
+    revalidatePath('/')
+    revalidatePath('/settings')
+    revalidatePath('/profiles')
+    if (oldSlug) revalidatePath(`/profile/${oldSlug}`)
+    if (newSlug) revalidatePath(`/profile/${newSlug}`)
+
+    return { 
+      success: true, 
+      newName: trimmedName,
+      newSlug,
+      remainingChanges: MAX_NAME_CHANGES_PER_YEAR - usedChanges - 1,
+    }
+  } catch (e) {
+    console.error('Change company name error:', e)
+    return { error: 'An error occurred' }
+  }
+}
+
 export async function updateUserSettings(formData: FormData) {
   const { userId: clerkId } = await auth()
   if (!clerkId) return { error: 'Unauthorized' }

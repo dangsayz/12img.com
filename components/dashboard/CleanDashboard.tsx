@@ -1,0 +1,524 @@
+'use client'
+
+import { useState, useMemo, useEffect, useTransition } from 'react'
+import Link from 'next/link'
+import Image from 'next/image'
+import { motion, AnimatePresence } from 'framer-motion'
+import { 
+  Search, 
+  Lock,
+  Eye,
+  MoreHorizontal,
+  Trash2,
+  Copy,
+  Check,
+  ExternalLink,
+  Plus,
+  Globe,
+  EyeOff,
+  Shield,
+  ChevronDown
+} from 'lucide-react'
+import { deleteGallery } from '@/server/actions/gallery.actions'
+import { updateProfileVisibility } from '@/server/actions/profile.actions'
+import type { ProfileVisibilityMode } from '@/types/database'
+
+interface Gallery {
+  id: string
+  title: string
+  slug: string
+  hasPassword: boolean
+  downloadEnabled: boolean
+  coverImageUrl: string | null
+  imageCount: number
+  createdAt: string
+  updatedAt: string
+  category?: string
+}
+
+interface CleanDashboardProps {
+  galleries: Gallery[]
+  photographerName?: string
+  visibilityMode?: ProfileVisibilityMode
+  profileSlug?: string | null
+}
+
+const CATEGORIES = ['ALL', 'WEDDING', 'FAMILY', 'PORTRAITS', 'LIFESTYLE', 'EVENTS']
+
+export function CleanDashboard({ galleries, photographerName, visibilityMode = 'PRIVATE', profileSlug }: CleanDashboardProps) {
+  const [activeCategory, setActiveCategory] = useState('ALL')
+  const [searchQuery, setSearchQuery] = useState('')
+  const [hoveredId, setHoveredId] = useState<string | null>(null)
+  const [showVisibilityMenu, setShowVisibilityMenu] = useState(false)
+  const [currentVisibility, setCurrentVisibility] = useState<ProfileVisibilityMode>(visibilityMode)
+  const [isPending, startTransition] = useTransition()
+
+  const filteredGalleries = useMemo(() => {
+    return galleries.filter(gallery => {
+      const matchesCategory = activeCategory === 'ALL' || gallery.category === activeCategory
+      const matchesSearch = gallery.title.toLowerCase().includes(searchQuery.toLowerCase())
+      return matchesCategory && matchesSearch
+    })
+  }, [galleries, activeCategory, searchQuery])
+
+  const totalImages = galleries.reduce((acc, g) => acc + g.imageCount, 0)
+
+  const handleVisibilityChange = (mode: ProfileVisibilityMode) => {
+    if (mode === currentVisibility) {
+      setShowVisibilityMenu(false)
+      return
+    }
+    
+    // For PUBLIC_LOCKED, redirect to settings to set PIN
+    if (mode === 'PUBLIC_LOCKED') {
+      window.location.href = '/settings#profile-visibility'
+      return
+    }
+
+    startTransition(async () => {
+      const result = await updateProfileVisibility({ mode })
+      if (!result.error) {
+        setCurrentVisibility(mode)
+      }
+      setShowVisibilityMenu(false)
+    })
+  }
+
+  const visibilityConfig = {
+    PRIVATE: { icon: EyeOff, label: 'Private', color: 'text-stone-500', bg: 'bg-stone-100' },
+    PUBLIC: { icon: Globe, label: 'Public', color: 'text-emerald-600', bg: 'bg-emerald-50' },
+    PUBLIC_LOCKED: { icon: Shield, label: 'PIN Protected', color: 'text-amber-600', bg: 'bg-amber-50' },
+  }
+
+  const currentConfig = visibilityConfig[currentVisibility]
+  const CurrentIcon = currentConfig.icon
+
+  const profileUrl = profileSlug 
+    ? `${typeof window !== 'undefined' ? window.location.origin : ''}/profile/${profileSlug}`
+    : null
+
+  return (
+    <div className="min-h-screen bg-white">
+      {/* Hero Header - Apple inspired */}
+      <header className="min-h-[40vh] flex flex-col items-center justify-center px-6">
+        <motion.h1 
+          initial={{ opacity: 0, scale: 0.96 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ 
+            duration: 1, 
+            ease: [0.25, 0.1, 0.25, 1],
+          }}
+          className="font-sans text-[clamp(2rem,8vw,5rem)] font-medium tracking-[-0.02em] text-stone-900 text-center leading-[1.1]"
+        >
+          {photographerName || 'My Galleries'}
+        </motion.h1>
+        <motion.p 
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.3, ease: [0.25, 0.1, 0.25, 1] }}
+          className="text-base text-stone-400 mt-6"
+        >
+          {galleries.length} galleries · {totalImages} images
+        </motion.p>
+
+        {/* Visibility Toggle */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.4, ease: [0.25, 0.1, 0.25, 1] }}
+          className="relative mt-6 flex items-center gap-3"
+        >
+          <button
+            onClick={() => setShowVisibilityMenu(!showVisibilityMenu)}
+            disabled={isPending}
+            className={`flex items-center gap-2 px-4 py-2 rounded-full border transition-all ${currentConfig.bg} ${currentConfig.color} border-current/20 hover:border-current/40`}
+          >
+            <CurrentIcon className="w-4 h-4" />
+            <span className="text-sm font-medium">{currentConfig.label}</span>
+            <ChevronDown className={`w-4 h-4 transition-transform ${showVisibilityMenu ? 'rotate-180' : ''}`} />
+          </button>
+          
+          {/* View Profile Link */}
+          {currentVisibility !== 'PRIVATE' && profileSlug && (
+            <a
+              href={`/profile/${profileSlug}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1.5 px-3 py-2 text-sm text-stone-500 hover:text-stone-700 transition-colors"
+            >
+              <ExternalLink className="w-4 h-4" />
+              <span>View Profile</span>
+            </a>
+          )}
+
+          {/* Dropdown Menu */}
+          <AnimatePresence>
+            {showVisibilityMenu && (
+              <motion.div
+                initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                className="absolute top-full left-1/2 -translate-x-1/2 mt-2 bg-white rounded-xl shadow-xl border border-stone-200 py-2 min-w-[200px] z-50"
+              >
+                {(Object.entries(visibilityConfig) as [ProfileVisibilityMode, typeof currentConfig][]).map(([mode, config]) => {
+                  const Icon = config.icon
+                  const isActive = mode === currentVisibility
+                  return (
+                    <button
+                      key={mode}
+                      onClick={() => handleVisibilityChange(mode)}
+                      className={`w-full px-4 py-2.5 flex items-center gap-3 hover:bg-stone-50 transition-colors ${isActive ? 'bg-stone-50' : ''}`}
+                    >
+                      <div className={`w-8 h-8 rounded-full ${config.bg} flex items-center justify-center`}>
+                        <Icon className={`w-4 h-4 ${config.color}`} />
+                      </div>
+                      <div className="text-left flex-1">
+                        <div className={`text-sm font-medium ${isActive ? 'text-stone-900' : 'text-stone-700'}`}>
+                          {config.label}
+                        </div>
+                        <div className="text-xs text-stone-400">
+                          {mode === 'PRIVATE' && 'Only you can see'}
+                          {mode === 'PUBLIC' && 'Anyone can view'}
+                          {mode === 'PUBLIC_LOCKED' && 'PIN for galleries'}
+                        </div>
+                      </div>
+                      {isActive && <Check className="w-4 h-4 text-emerald-500" />}
+                    </button>
+                  )
+                })}
+                
+                {/* View Profile Link */}
+                {currentVisibility !== 'PRIVATE' && profileSlug && (
+                  <>
+                    <div className="border-t border-stone-100 my-2" />
+                    <a
+                      href={profileUrl || '#'}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-full px-4 py-2.5 flex items-center gap-3 hover:bg-stone-50 transition-colors text-stone-600"
+                    >
+                      <ExternalLink className="w-4 h-4" />
+                      <span className="text-sm">View Public Profile</span>
+                    </a>
+                  </>
+                )}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </motion.div>
+      </header>
+
+      {/* Category Filters */}
+      <nav className="sticky top-0 z-40 bg-white/95 backdrop-blur-sm border-b border-stone-100">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="flex items-center justify-center gap-8 h-12 overflow-x-auto">
+            {CATEGORIES.map((category) => (
+              <button
+                key={category}
+                onClick={() => setActiveCategory(category)}
+                className={`
+                  text-[11px] tracking-[0.2em] transition-colors relative whitespace-nowrap
+                  ${activeCategory === category 
+                    ? 'text-stone-900' 
+                    : 'text-stone-400 hover:text-stone-600'
+                  }
+                `}
+              >
+                {category}
+                {activeCategory === category && (
+                  <motion.div
+                    layoutId="activeCategoryDash"
+                    className="absolute -bottom-[13px] left-0 right-0 h-px bg-stone-900"
+                  />
+                )}
+              </button>
+            ))}
+            
+            {/* Search */}
+            <div className="relative ml-4">
+              <Search className="w-4 h-4 text-stone-400" />
+            </div>
+          </div>
+        </div>
+      </nav>
+
+      {/* Search Input (subtle) */}
+      {searchQuery && (
+        <div className="max-w-7xl mx-auto px-6 py-4">
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search..."
+            className="w-full max-w-xs mx-auto block text-center text-sm border-0 border-b border-stone-200 focus:border-stone-400 focus:ring-0 bg-transparent placeholder:text-stone-300 pb-2"
+            autoFocus
+          />
+        </div>
+      )}
+
+      {/* Gallery Grid */}
+      <div className="max-w-7xl mx-auto px-6 py-12">
+        {filteredGalleries.length === 0 ? (
+          <EmptyState hasSearch={!!searchQuery} onClearSearch={() => setSearchQuery('')} />
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-10">
+            {filteredGalleries.map((gallery, index) => (
+              <GalleryCard 
+                key={gallery.id} 
+                gallery={gallery} 
+                index={index}
+                isHovered={hoveredId === gallery.id}
+                onHover={() => setHoveredId(gallery.id)}
+                onLeave={() => setHoveredId(null)}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+function GalleryCard({ 
+  gallery, 
+  index,
+  isHovered,
+  onHover,
+  onLeave
+}: { 
+  gallery: Gallery
+  index: number
+  isHovered: boolean
+  onHover: () => void
+  onLeave: () => void
+}) {
+  const [showMenu, setShowMenu] = useState(false)
+  const [copied, setCopied] = useState(false)
+  const [isPending, startTransition] = useTransition()
+  const [isDeleted, setIsDeleted] = useState(false)
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+
+  const relativePath = `/view-reel/${gallery.id}`
+  const [shareUrl, setShareUrl] = useState(relativePath)
+  
+  useEffect(() => {
+    setShareUrl(`${window.location.origin}${relativePath}`)
+  }, [relativePath])
+
+  const handleCopy = async (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    await navigator.clipboard.writeText(shareUrl)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
+
+  const handleDelete = () => {
+    setIsDeleted(true)
+    setShowDeleteModal(false)
+    startTransition(async () => {
+      const result = await deleteGallery(gallery.id)
+      if (result.error) setIsDeleted(false)
+    })
+  }
+
+  if (isDeleted) return null
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: index * 0.05, duration: 0.4 }}
+    >
+      <Link 
+        href={`/gallery/${gallery.slug}`}
+        className="block group"
+        onMouseEnter={onHover}
+        onMouseLeave={() => { onLeave(); setShowMenu(false) }}
+      >
+        {/* Cover Image */}
+        <div className="relative aspect-[4/5] bg-stone-100 mb-4 overflow-hidden">
+          {gallery.coverImageUrl ? (
+            <Image
+              src={gallery.coverImageUrl}
+              alt={gallery.title}
+              fill
+              className="object-cover transition-transform duration-700 group-hover:scale-105"
+              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+            />
+          ) : (
+            <div className="absolute inset-0 flex items-center justify-center bg-stone-50">
+              <span className="text-stone-300 text-xs tracking-wider">NO COVER</span>
+            </div>
+          )}
+
+          {/* Badges */}
+          <div className="absolute top-3 left-3 flex flex-col gap-2">
+            {gallery.hasPassword && (
+              <div className="px-2.5 py-1 bg-stone-900/80 backdrop-blur-sm text-white text-[10px] uppercase tracking-[0.15em] flex items-center gap-1.5">
+                <Lock className="w-3 h-3" />
+                LOGIN
+              </div>
+            )}
+          </div>
+
+          {/* Menu Button */}
+          <motion.button
+            initial={{ opacity: 0 }}
+            animate={{ opacity: isHovered ? 1 : 0 }}
+            onClick={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
+              setShowMenu(!showMenu)
+            }}
+            className="absolute top-3 right-3 h-8 w-8 bg-white/90 backdrop-blur-sm flex items-center justify-center shadow-sm hover:bg-white transition-colors"
+          >
+            <MoreHorizontal className="w-4 h-4 text-stone-600" />
+          </motion.button>
+
+          {/* Dropdown Menu */}
+          <AnimatePresence>
+            {showMenu && (
+              <motion.div
+                initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                className="absolute top-14 right-3 bg-white shadow-xl border border-stone-100 py-1.5 min-w-[140px] z-10"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <button
+                  onClick={handleCopy}
+                  className="w-full px-4 py-2 text-left text-sm text-stone-700 hover:bg-stone-50 flex items-center gap-2"
+                >
+                  {copied ? <Check className="w-4 h-4 text-emerald-500" /> : <Copy className="w-4 h-4" />}
+                  {copied ? 'Copied!' : 'Copy Link'}
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.preventDefault()
+                    e.stopPropagation()
+                    window.open(relativePath, '_blank')
+                  }}
+                  className="w-full px-4 py-2 text-left text-sm text-stone-700 hover:bg-stone-50 flex items-center gap-2"
+                >
+                  <ExternalLink className="w-4 h-4" />
+                  Preview
+                </button>
+                <div className="border-t border-stone-100 my-1" />
+                <button
+                  onClick={(e) => {
+                    e.preventDefault()
+                    e.stopPropagation()
+                    setShowMenu(false)
+                    setShowDeleteModal(true)
+                  }}
+                  className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  Delete
+                </button>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Hover Overlay */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: isHovered ? 1 : 0 }}
+            className="absolute inset-0 bg-black/10 flex items-center justify-center pointer-events-none"
+          >
+            <div className="w-12 h-12 bg-white/90 flex items-center justify-center">
+              <Eye className="w-5 h-5 text-stone-700" />
+            </div>
+          </motion.div>
+        </div>
+
+        {/* Gallery Title */}
+        <div className="text-center">
+          <h3 className="text-sm font-light tracking-wide text-stone-900 uppercase">
+            {gallery.title}
+          </h3>
+        </div>
+      </Link>
+
+      {/* Delete Modal */}
+      <AnimatePresence>
+        {showDeleteModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
+            onClick={() => setShowDeleteModal(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+              className="bg-white p-6 max-w-sm w-full shadow-2xl"
+            >
+              <div className="w-12 h-12 bg-red-50 flex items-center justify-center mb-4 mx-auto">
+                <Trash2 className="w-5 h-5 text-red-500" />
+              </div>
+              <h3 className="text-lg font-medium text-stone-900 text-center mb-2">
+                Delete Gallery?
+              </h3>
+              <p className="text-sm text-stone-500 text-center mb-6">
+                "{gallery.title}" and all {gallery.imageCount} images will be permanently deleted.
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowDeleteModal(false)}
+                  className="flex-1 px-4 py-2.5 text-sm font-medium text-stone-700 bg-stone-100 hover:bg-stone-200 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleDelete}
+                  disabled={isPending}
+                  className="flex-1 px-4 py-2.5 text-sm font-medium text-white bg-red-500 hover:bg-red-600 transition-colors disabled:opacity-50"
+                >
+                  {isPending ? 'Deleting...' : 'Delete'}
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.div>
+  )
+}
+
+function EmptyState({ hasSearch, onClearSearch }: { hasSearch: boolean; onClearSearch: () => void }) {
+  return (
+    <div className="text-center py-24">
+      {hasSearch ? (
+        <>
+          <p className="text-stone-400 mb-4">No galleries match your search</p>
+          <button 
+            onClick={onClearSearch}
+            className="text-sm text-stone-900 underline underline-offset-4"
+          >
+            Clear search
+          </button>
+        </>
+      ) : (
+        <>
+          <div className="w-20 h-20 bg-stone-50 flex items-center justify-center mx-auto mb-6">
+            <Plus className="w-8 h-8 text-stone-300" />
+          </div>
+          <h3 className="text-xl font-light text-stone-900 mb-2">No galleries yet</h3>
+          <p className="text-stone-400 mb-8">Create your first gallery to get started</p>
+          <Link
+            href="/gallery/create"
+            className="inline-flex items-center gap-2 px-6 py-3 bg-stone-900 hover:bg-stone-800 text-white text-sm font-medium transition-colors"
+          >
+            <Plus className="w-4 h-4" />
+            Create Gallery
+          </Link>
+        </>
+      )}
+    </div>
+  )
+}

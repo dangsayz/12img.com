@@ -4,19 +4,55 @@ import { useState, useCallback, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { MasonryItem } from './MasonryItem'
 import { FullscreenViewer } from './FullscreenViewer'
+import type { ProcessingStatus } from '@/types/database'
+import type { ImageDerivatives } from '@/lib/storage/signed-urls'
 
-interface Image {
+// Legacy interface for backward compatibility
+interface LegacyImage {
   id: string
-  storagePath?: string  // For on-demand URL fetching
-  thumbnailUrl: string  // 400px for grid display
-  previewUrl: string    // 1920px for fullscreen viewing
-  originalUrl: string   // Full resolution for downloads only
+  storagePath?: string
+  thumbnailUrl: string
+  previewUrl: string
+  originalUrl: string
   width?: number | null
   height?: number | null
 }
 
+// New interface with derivatives support
+export interface GalleryImage {
+  id: string
+  storagePath?: string
+  width?: number | null
+  height?: number | null
+  processingStatus?: ProcessingStatus
+  // New derivative-based URLs
+  derivatives?: ImageDerivatives
+  // Legacy URLs (for backward compatibility)
+  thumbnailUrl?: string
+  previewUrl?: string
+  originalUrl?: string
+}
+
+// Normalize image to ensure we have the URLs we need
+function normalizeImage(image: GalleryImage): GalleryImage & { thumbnailUrl: string; previewUrl: string; originalUrl: string } {
+  if (image.derivatives) {
+    return {
+      ...image,
+      thumbnailUrl: image.derivatives.sm || image.derivatives.xs || image.derivatives.original,
+      previewUrl: image.derivatives.lg || image.derivatives.md || image.derivatives.original,
+      originalUrl: image.derivatives.original,
+    }
+  }
+  return {
+    ...image,
+    thumbnailUrl: image.thumbnailUrl || '',
+    previewUrl: image.previewUrl || '',
+    originalUrl: image.originalUrl || '',
+  }
+}
+
 interface MasonryGridProps {
-  images: Image[]
+  images: GalleryImage[]
   editable?: boolean
   galleryId?: string
   galleryTitle?: string
@@ -28,9 +64,11 @@ export function MasonryGrid({ images: initialImages, editable = false, galleryId
   const [viewerIndex, setViewerIndex] = useState(0)
   const [deletedIds, setDeletedIds] = useState<Set<string>>(new Set())
 
-  // Filter out deleted images from props (avoids full state sync flicker)
+  // Filter out deleted images and normalize for consistent URL access
   const images = useMemo(() => 
-    initialImages.filter(img => !deletedIds.has(img.id)),
+    initialImages
+      .filter(img => !deletedIds.has(img.id))
+      .map(normalizeImage),
     [initialImages, deletedIds]
   )
 

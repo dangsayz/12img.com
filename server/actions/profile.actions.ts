@@ -1,0 +1,638 @@
+'use server'
+
+import { auth } from '@clerk/nextjs/server'
+import { revalidatePath } from 'next/cache'
+import { cookies } from 'next/headers'
+import { createHmac, randomBytes } from 'crypto'
+import { supabaseAdmin } from '@/lib/supabase/admin'
+import { hashPassword, verifyPassword } from '@/lib/utils/password'
+import { getOrCreateUserByClerkId } from '@/server/queries/user.queries'
+import type { ProfileVisibilityMode } from '@/types/database'
+
+// ============================================
+// PROFILE VISIBILITY ACTIONS
+// ============================================
+
+interface UpdateProfileVisibilityInput {
+  mode: ProfileVisibilityMode
+  pin?: string // Required if mode is PUBLIC_LOCKED
+  displayName?: string
+  bio?: string
+}
+
+export async function updateProfileVisibility(input: UpdateProfileVisibilityInput) {
+  const { userId: clerkId } = await auth()
+  if (!clerkId) return { error: 'Unauthorized' }
+
+  const user = await getOrCreateUserByClerkId(clerkId)
+  if (!user) return { error: 'User not found' }
+
+  try {
+    // Validate PIN if PUBLIC_LOCKED mode
+    if (input.mode === 'PUBLIC_LOCKED') {
+      if (!input.pin || input.pin.length < 4 || input.pin.length > 6) {
+        return { error: 'PIN must be 4-6 digits for locked profiles' }
+      }
+      if (!/^\d+$/.test(input.pin)) {
+        return { error: 'PIN must contain only numbers' }
+      }
+    }
+
+    // Generate profile slug if going public and doesn't have one
+    let profileSlug = user.profile_slug
+    if ((input.mode === 'PUBLIC' || input.mode === 'PUBLIC_LOCKED') && !profileSlug) {
+      const { data: slugData } = await supabaseAdmin
+        .rpc('generate_profile_slug', { p_user_id: user.id })
+      profileSlug = slugData
+    }
+
+    // Hash PIN if provided
+    const pinHash = input.mode === 'PUBLIC_LOCKED' && input.pin
+      ? await hashPassword(input.pin)
+      : null
+
+    // Update user profile
+    const updateData: Record<string, unknown> = {
+      visibility_mode: input.mode,
+      profile_slug: profileSlug,
+      profile_pin_hash: pinHash,
+    }
+
+    if (input.displayName !== undefined) {
+      updateData.display_name = input.displayName
+    }
+    if (input.bio !== undefined) {
+      updateData.bio = input.bio
+    }
+
+    const { error } = await supabaseAdmin
+      .from('users')
+      .update(updateData)
+      .eq('id', user.id)
+
+    if (error) {
+      console.error('Profile visibility update error:', error)
+      return { error: 'Failed to update profile visibility' }
+    }
+
+    revalidatePath('/settings')
+    revalidatePath('/profiles')
+    if (profileSlug) {
+      revalidatePath(`/profile/${profileSlug}`)
+    }
+
+    return { 
+      success: true, 
+      profileSlug,
+      mode: input.mode 
+    }
+  } catch (e) {
+    console.error('Profile visibility error:', e)
+    return { error: 'An error occurred' }
+  }
+}
+
+export async function updateProfileDetails(input: {
+  displayName?: string
+  bio?: string
+  profileSlug?: string
+}) {
+  const { userId: clerkId } = await auth()
+  if (!clerkId) return { error: 'Unauthorized' }
+
+  const user = await getOrCreateUserByClerkId(clerkId)
+  if (!user) return { error: 'User not found' }
+
+  try {
+    const oldSlug = user.profile_slug
+
+    // Validate slug if provided
+    if (input.profileSlug && input.profileSlug !== oldSlug) {
+      if (!/^[a-z0-9-]+$/.test(input.profileSlug)) {
+        return { error: 'Profile URL can only contain lowercase letters, numbers, and hyphens' }
+      }
+      if (input.profileSlug.length < 3 || input.profileSlug.length > 50) {
+        return { error: 'Profile URL must be 3-50 characters' }
+      }
+
+      // Check if slug is taken (including in history)
+      const { data: existing } = await supabaseAdmin
+        .from('users')
+        .select('id')
+        .eq('profile_slug', input.profileSlug)
+        .neq('id', user.id)
+        .single()
+
+      if (existing) {
+        return { error: 'This profile URL is already taken' }
+      }
+
+      // Check slug history for active redirects
+      const { data: historyConflict } = await supabaseAdmin
+        .from('profile_slug_history')
+        .select('id')
+        .eq('old_slug', input.profileSlug)
+        .gt('expires_at', new Date().toISOString())
+        .single()
+
+      if (historyConflict) {
+        return { error: 'This profile URL is temporarily reserved' }
+      }
+
+      // If changing slug, save old one to history for redirects
+      if (oldSlug) {
+        await supabaseAdmin
+          .from('profile_slug_history')
+          .insert({
+            user_id: user.id,
+            old_slug: oldSlug,
+            new_slug: input.profileSlug,
+          })
+      }
+    }
+
+    const updateData: Record<string, unknown> = {}
+    if (input.displayName !== undefined) updateData.display_name = input.displayName
+    if (input.bio !== undefined) updateData.bio = input.bio
+    if (input.profileSlug !== undefined) updateData.profile_slug = input.profileSlug
+
+    // Also update business_name in settings if displayName changed
+    if (input.displayName !== undefined) {
+      await supabaseAdmin
+        .from('user_settings')
+        .update({ business_name: input.displayName })
+        .eq('user_id', user.id)
+    }
+
+    const { error } = await supabaseAdmin
+      .from('users')
+      .update(updateData)
+      .eq('id', user.id)
+
+    if (error) {
+      console.error('Profile update error:', error)
+      return { error: 'Failed to update profile' }
+    }
+
+    revalidatePath('/')
+    revalidatePath('/settings')
+    if (oldSlug) revalidatePath(`/profile/${oldSlug}`)
+    if (input.profileSlug) revalidatePath(`/profile/${input.profileSlug}`)
+
+    return { success: true, newSlug: input.profileSlug }
+  } catch (e) {
+    console.error('Profile update error:', e)
+    return { error: 'An error occurred' }
+  }
+}
+
+// ============================================
+// GALLERY LOCKING ACTIONS
+// ============================================
+
+export async function updateGalleryLock(galleryId: string, isLocked: boolean, pin?: string) {
+  const { userId: clerkId } = await auth()
+  if (!clerkId) return { error: 'Unauthorized' }
+
+  const user = await getOrCreateUserByClerkId(clerkId)
+  if (!user) return { error: 'User not found' }
+
+  try {
+    // Verify gallery ownership
+    const { data: gallery } = await supabaseAdmin
+      .from('galleries')
+      .select('id, user_id')
+      .eq('id', galleryId)
+      .single()
+
+    if (!gallery || gallery.user_id !== user.id) {
+      return { error: 'Gallery not found or unauthorized' }
+    }
+
+    // Validate PIN if locking
+    if (isLocked) {
+      if (!pin || pin.length < 4 || pin.length > 6) {
+        return { error: 'PIN must be 4-6 digits' }
+      }
+      if (!/^\d+$/.test(pin)) {
+        return { error: 'PIN must contain only numbers' }
+      }
+    }
+
+    const pinHash = isLocked && pin ? await hashPassword(pin) : null
+
+    const { error } = await supabaseAdmin
+      .from('galleries')
+      .update({
+        is_locked: isLocked,
+        lock_pin_hash: pinHash,
+      })
+      .eq('id', galleryId)
+
+    if (error) {
+      console.error('Gallery lock update error:', error)
+      return { error: 'Failed to update gallery lock' }
+    }
+
+    revalidatePath('/')
+    revalidatePath('/settings')
+
+    return { success: true }
+  } catch (e) {
+    console.error('Gallery lock error:', e)
+    return { error: 'An error occurred' }
+  }
+}
+
+// ============================================
+// PIN VERIFICATION / UNLOCK ACTIONS
+// ============================================
+
+const UNLOCK_TOKEN_SECRET = process.env.GALLERY_TOKEN_SECRET || 'default-secret-change-me'
+const UNLOCK_COOKIE_MAX_AGE = 12 * 60 * 60 // 12 hours in seconds
+
+function generateUnlockCookieToken(galleryId: string): string {
+  const timestamp = Date.now()
+  const nonce = randomBytes(16).toString('hex')
+  const payload = `${galleryId}:${timestamp}:${nonce}`
+  const signature = createHmac('sha256', UNLOCK_TOKEN_SECRET).update(payload).digest('hex')
+  return `${payload}:${signature}`
+}
+
+function verifyUnlockCookieToken(token: string, galleryId: string): boolean {
+  try {
+    const parts = token.split(':')
+    if (parts.length !== 4) return false
+
+    const [tokenGalleryId, timestamp, nonce, signature] = parts
+
+    // Verify gallery ID matches
+    if (tokenGalleryId !== galleryId) return false
+
+    // Verify not expired (12 hours)
+    const tokenTime = parseInt(timestamp, 10)
+    if (Date.now() - tokenTime > UNLOCK_COOKIE_MAX_AGE * 1000) return false
+
+    // Verify signature
+    const payload = `${tokenGalleryId}:${timestamp}:${nonce}`
+    const expectedSignature = createHmac('sha256', UNLOCK_TOKEN_SECRET)
+      .update(payload)
+      .digest('hex')
+
+    return signature === expectedSignature
+  } catch {
+    return false
+  }
+}
+
+export async function unlockGalleryWithPin(galleryId: string, pin: string) {
+  try {
+    // Fetch gallery with lock info
+    const { data: gallery } = await supabaseAdmin
+      .from('galleries')
+      .select('id, is_locked, lock_pin_hash, user_id')
+      .eq('id', galleryId)
+      .single()
+
+    if (!gallery) {
+      return { error: 'Gallery not found' }
+    }
+
+    if (!gallery.is_locked || !gallery.lock_pin_hash) {
+      return { error: 'Gallery is not locked' }
+    }
+
+    // Verify PIN
+    const isValid = await verifyPassword(pin, gallery.lock_pin_hash)
+    if (!isValid) {
+      return { error: 'Invalid PIN' }
+    }
+
+    // Generate unlock token and set cookie
+    const token = generateUnlockCookieToken(galleryId)
+    
+    const cookieStore = await cookies()
+    cookieStore.set(`gallery_unlock_${galleryId}`, token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: UNLOCK_COOKIE_MAX_AGE,
+      path: '/',
+    })
+
+    // Also store in database for server-side verification
+    await supabaseAdmin
+      .from('gallery_unlock_tokens')
+      .insert({
+        gallery_id: galleryId,
+        token_hash: createHmac('sha256', UNLOCK_TOKEN_SECRET).update(token).digest('hex'),
+      })
+
+    return { success: true }
+  } catch (e) {
+    console.error('Gallery unlock error:', e)
+    return { error: 'An error occurred' }
+  }
+}
+
+export async function checkGalleryUnlocked(galleryId: string): Promise<boolean> {
+  try {
+    const cookieStore = await cookies()
+    const token = cookieStore.get(`gallery_unlock_${galleryId}`)?.value
+
+    if (!token) return false
+
+    return verifyUnlockCookieToken(token, galleryId)
+  } catch {
+    return false
+  }
+}
+
+// ============================================
+// PUBLIC PROFILE QUERIES
+// ============================================
+
+export async function getPublicProfiles(limit = 50, offset = 0) {
+  try {
+    const { data, error, count } = await supabaseAdmin
+      .from('users')
+      .select(`
+        id,
+        display_name,
+        profile_slug,
+        avatar_url,
+        visibility_mode,
+        created_at
+      `, { count: 'exact' })
+      .in('visibility_mode', ['PUBLIC', 'PUBLIC_LOCKED'])
+      .not('profile_slug', 'is', null)
+      .order('created_at', { ascending: false })
+      .range(offset, offset + limit - 1)
+
+    if (error) {
+      console.error('Get public profiles error:', error)
+      return { profiles: [], total: 0 }
+    }
+
+    // Get gallery counts and settings (for business_name fallback) for each profile
+    const profileIds = data?.map(p => p.id) || []
+    
+    if (profileIds.length === 0) {
+      return { profiles: [], total: 0 }
+    }
+    
+    const [{ data: galleryCounts }, { data: userSettings }] = await Promise.all([
+      supabaseAdmin
+        .from('galleries')
+        .select('user_id, id')
+        .in('user_id', profileIds),
+      supabaseAdmin
+        .from('user_settings')
+        .select('user_id, business_name')
+        .in('user_id', profileIds),
+    ])
+
+    // Get gallery IDs for fetching images
+    const galleryIds = galleryCounts?.map(g => g.id) || []
+    
+    // Get first image from each user's galleries for cover
+    const { data: allImages } = galleryIds.length > 0 
+      ? await supabaseAdmin
+          .from('images')
+          .select('id, storage_path, gallery_id')
+          .in('gallery_id', galleryIds)
+          .order('created_at', { ascending: true })
+          .limit(100)
+      : { data: [] }
+    
+    // Map gallery_id to user_id
+    const galleryToUser = new Map<string, string>()
+    galleryCounts?.forEach(g => galleryToUser.set(g.id, g.user_id))
+
+    const countMap = new Map<string, number>()
+    galleryCounts?.forEach(g => {
+      countMap.set(g.user_id, (countMap.get(g.user_id) || 0) + 1)
+    })
+
+    const settingsMap = new Map<string, string>()
+    userSettings?.forEach(s => {
+      if (s.business_name) settingsMap.set(s.user_id, s.business_name)
+    })
+
+    // Get cover image for each profile (first image from their galleries)
+    const coverMap = new Map<string, string>()
+    allImages?.forEach((img: any) => {
+      const userId = galleryToUser.get(img.gallery_id)
+      if (userId && !coverMap.has(userId) && img.storage_path) {
+        coverMap.set(userId, img.storage_path)
+      }
+    })
+
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
+    
+    const profiles = data?.map(p => {
+      const coverPath = coverMap.get(p.id)
+      return {
+        ...p,
+        display_name: p.display_name || settingsMap.get(p.id) || null,
+        galleryCount: countMap.get(p.id) || 0,
+        coverImagePath: coverPath || null,
+        coverImageUrl: coverPath 
+          ? `${supabaseUrl}/storage/v1/object/public/gallery-images/${coverPath}`
+          : null,
+      }
+    }) || []
+
+    return { profiles, total: count || 0 }
+  } catch (e) {
+    console.error('Get public profiles error:', e)
+    return { profiles: [], total: 0 }
+  }
+}
+
+export async function getPublicProfileBySlug(slug: string) {
+  try {
+    // First check if this is an old slug that needs redirect
+    const { data: redirectSlug } = await supabaseAdmin
+      .rpc('get_redirect_slug', { p_old_slug: slug })
+    
+    if (redirectSlug) {
+      return { redirect: redirectSlug }
+    }
+
+    // First, check if profile exists at all (regardless of visibility)
+    const { data: anyProfile } = await supabaseAdmin
+      .from('users')
+      .select('id, display_name, visibility_mode')
+      .eq('profile_slug', slug)
+      .single()
+
+    // If profile exists but is private, return private status
+    if (anyProfile && anyProfile.visibility_mode === 'PRIVATE') {
+      return { 
+        status: 'private' as const,
+        photographerName: anyProfile.display_name || undefined,
+      }
+    }
+
+    const { data: profile, error } = await supabaseAdmin
+      .from('users')
+      .select(`
+        id,
+        display_name,
+        bio,
+        profile_slug,
+        avatar_url,
+        cover_image_url,
+        visibility_mode,
+        created_at
+      `)
+      .eq('profile_slug', slug)
+      .in('visibility_mode', ['PUBLIC', 'PUBLIC_LOCKED'])
+      .single()
+
+    if (error || !profile) {
+      return { status: 'not_found' as const }
+    }
+
+    // Get user settings for contact info and business name fallback
+    const { data: settings } = await supabaseAdmin
+      .from('user_settings')
+      .select('business_name, contact_email, website_url')
+      .eq('user_id', profile.id)
+      .single()
+
+    // Get galleries for this profile
+    const { data: galleries } = await supabaseAdmin
+      .from('galleries')
+      .select(`
+        id,
+        title,
+        slug,
+        is_locked,
+        cover_image_id,
+        created_at
+      `)
+      .eq('user_id', profile.id)
+      .order('created_at', { ascending: false })
+
+    // Get image counts and cover images
+    const galleryIds = galleries?.map(g => g.id) || []
+    
+    const { data: imageCounts } = await supabaseAdmin
+      .from('images')
+      .select('gallery_id')
+      .in('gallery_id', galleryIds)
+
+    const countMap = new Map<string, number>()
+    imageCounts?.forEach(i => {
+      countMap.set(i.gallery_id, (countMap.get(i.gallery_id) || 0) + 1)
+    })
+
+    // Get cover images (by cover_image_id or first image in gallery)
+    const coverImageIds = galleries?.filter(g => g.cover_image_id).map(g => g.cover_image_id) || []
+    
+    let coverMap = new Map<string, string>()
+    
+    if (coverImageIds.length > 0) {
+      const { data: coverImages } = await supabaseAdmin
+        .from('images')
+        .select('id, storage_path')
+        .in('id', coverImageIds)
+      
+      coverImages?.forEach(img => {
+        coverMap.set(img.id, img.storage_path)
+      })
+    }
+
+    // Get portfolio images (all images from galleries, limited)
+    let portfolioImages: any[] = []
+    
+    if (galleryIds.length > 0) {
+      const { data } = await supabaseAdmin
+        .from('images')
+        .select(`
+          id,
+          storage_path,
+          gallery_id,
+          width,
+          height,
+          focal_x,
+          focal_y
+        `)
+        .in('gallery_id', galleryIds)
+        .order('created_at', { ascending: false })
+        .limit(20)
+      
+      portfolioImages = data || []
+      
+      // If no explicit cover images, use first image from each gallery
+      if (coverMap.size === 0 && portfolioImages.length > 0) {
+        const seenGalleries = new Set<string>()
+        portfolioImages.forEach(img => {
+          if (!seenGalleries.has(img.gallery_id)) {
+            seenGalleries.add(img.gallery_id)
+            // Find the gallery and set its cover
+            const gallery = galleries?.find(g => g.id === img.gallery_id)
+            if (gallery) {
+              coverMap.set(gallery.id, img.storage_path)
+            }
+          }
+        })
+      }
+    }
+
+    const galleriesWithCounts = galleries?.map(g => ({
+      ...g,
+      imageCount: countMap.get(g.id) || 0,
+      coverImagePath: g.cover_image_id 
+        ? coverMap.get(g.cover_image_id) 
+        : coverMap.get(g.id) || null, // Fallback to auto-detected cover
+    })) || []
+
+    // Format portfolio images with gallery titles
+    const galleryTitleMap = new Map<string, string>()
+    galleries?.forEach(g => galleryTitleMap.set(g.id, g.title))
+    
+    const formattedPortfolioImages = portfolioImages?.map((img: any) => ({
+      id: img.id,
+      storage_path: img.storage_path,
+      gallery_id: img.gallery_id,
+      gallery_title: galleryTitleMap.get(img.gallery_id) || '',
+      width: img.width,
+      height: img.height,
+      focal_x: img.focal_x,
+      focal_y: img.focal_y,
+    })) || []
+
+    return {
+      ...profile,
+      display_name: profile.display_name || settings?.business_name || null,
+      contactEmail: settings?.contact_email || null,
+      websiteUrl: settings?.website_url || null,
+      galleries: galleriesWithCounts,
+      portfolioImages: formattedPortfolioImages,
+    }
+  } catch (e) {
+    console.error('Get public profile error:', e)
+    return null
+  }
+}
+
+export async function getUserProfile() {
+  const { userId: clerkId } = await auth()
+  if (!clerkId) return null
+
+  const user = await getOrCreateUserByClerkId(clerkId)
+  if (!user) return null
+
+  return {
+    id: user.id,
+    displayName: user.display_name,
+    bio: user.bio,
+    profileSlug: user.profile_slug,
+    avatarUrl: user.avatar_url,
+    coverImageUrl: user.cover_image_url,
+    visibilityMode: user.visibility_mode,
+  }
+}

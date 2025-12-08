@@ -94,7 +94,7 @@ export function Dashboard({ galleries }: DashboardProps) {
             placeholder="Search collections..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full h-11 pl-11 pr-4 text-sm bg-white border border-neutral-200 rounded-full focus:outline-none focus:ring-2 focus:ring-neutral-900/5 focus:border-neutral-300 transition-all"
+            className="w-full h-11 pl-11 pr-4 text-sm bg-white border border-neutral-200 focus:outline-none focus:ring-2 focus:ring-neutral-900/5 focus:border-neutral-300 transition-all"
           />
         </div>
 
@@ -103,7 +103,7 @@ export function Dashboard({ galleries }: DashboardProps) {
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value as SortOption)}
-            className="h-11 px-4 text-sm bg-white border border-neutral-200 rounded-full focus:outline-none focus:ring-2 focus:ring-neutral-900/5 transition-all appearance-none cursor-pointer pr-10 text-neutral-700"
+            className="h-11 px-4 text-sm bg-white border border-neutral-200 focus:outline-none focus:ring-2 focus:ring-neutral-900/5 transition-all appearance-none cursor-pointer pr-10 text-neutral-700"
             style={{ 
               backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23737373'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`, 
               backgroundRepeat: 'no-repeat', 
@@ -118,10 +118,10 @@ export function Dashboard({ galleries }: DashboardProps) {
           </select>
 
           {/* View Toggle */}
-          <div className="flex bg-white border border-neutral-200 rounded-full p-1">
+          <div className="flex bg-white border border-neutral-200 p-1">
             <button
               onClick={() => setViewMode('grid')}
-              className={`p-2.5 rounded-full transition-all ${
+              className={`p-2.5 transition-all ${
                 viewMode === 'grid' 
                   ? 'bg-neutral-900 text-white' 
                   : 'text-neutral-400 hover:text-neutral-600'
@@ -131,7 +131,7 @@ export function Dashboard({ galleries }: DashboardProps) {
             </button>
             <button
               onClick={() => setViewMode('list')}
-              className={`p-2.5 rounded-full transition-all ${
+              className={`p-2.5 transition-all ${
                 viewMode === 'list' 
                   ? 'bg-neutral-900 text-white' 
                   : 'text-neutral-400 hover:text-neutral-600'
@@ -155,7 +155,7 @@ export function Dashboard({ galleries }: DashboardProps) {
           >
             {searchQuery ? (
               <>
-                <div className="h-16 w-16 rounded-full bg-neutral-100 flex items-center justify-center mb-6">
+                <div className="h-16 w-16 bg-neutral-100 flex items-center justify-center mb-6">
                   <Search className="w-7 h-7 text-neutral-300" />
                 </div>
                 <p className="text-neutral-500 mb-2">No collections match "{searchQuery}"</p>
@@ -171,7 +171,7 @@ export function Dashboard({ galleries }: DashboardProps) {
                 {/* Hero illustration */}
                 <div className="relative mb-8">
                   {/* Decorative elements */}
-                  <div className="absolute -top-4 left-1/2 -translate-x-1/2 w-72 h-72 bg-gradient-to-br from-amber-100/40 via-rose-100/30 to-violet-100/40 rounded-full blur-3xl" />
+                  <div className="absolute -top-4 left-1/2 -translate-x-1/2 w-72 h-72 bg-gradient-to-br from-amber-100/40 via-rose-100/30 to-violet-100/40 blur-3xl" />
                   
                   {/* Stacked gallery preview cards */}
                   <div className="relative flex justify-center items-end gap-3 h-48">
@@ -180,9 +180,9 @@ export function Dashboard({ galleries }: DashboardProps) {
                       initial={{ opacity: 0, y: 20, rotate: -6 }}
                       animate={{ opacity: 1, y: 0, rotate: -6 }}
                       transition={{ delay: 0.1 }}
-                      className="w-32 h-40 rounded-2xl bg-gradient-to-br from-stone-200 to-stone-300 shadow-lg transform -rotate-6 border border-white/50"
+                      className="w-32 h-40 bg-gradient-to-br from-stone-200 to-stone-300 shadow-lg transform -rotate-6 border border-white/50"
                     >
-                      <div className="w-full h-full rounded-2xl bg-gradient-to-br from-amber-100 to-orange-200 flex items-center justify-center">
+                      <div className="w-full h-full bg-gradient-to-br from-amber-100 to-orange-200 flex items-center justify-center">
                         <ImageIcon className="w-8 h-8 text-amber-400/60" />
                       </div>
                     </motion.div>
@@ -192,12 +192,12 @@ export function Dashboard({ galleries }: DashboardProps) {
                       initial={{ opacity: 0, y: 20, scale: 0.9 }}
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       transition={{ delay: 0.2 }}
-                      className="w-40 h-48 rounded-2xl bg-white shadow-2xl border border-neutral-100 z-10 overflow-hidden"
+                      className="w-40 h-48 bg-white shadow-2xl border border-neutral-100 z-10 overflow-hidden"
                     >
                       <div className="w-full h-32 bg-gradient-to-br from-violet-100 via-purple-100 to-fuchsia-100" />
                       <div className="p-3">
-                        <div className="h-2 w-20 bg-neutral-200 rounded-full mb-2" />
-                        <div className="h-2 w-12 bg-neutral-100 rounded-full" />
+                        <div className="h-2 w-20 bg-neutral-200 mb-2" />
+                        <div className="h-2 w-12 bg-neutral-100" />
                       </div>
                     </motion.div>
                     
@@ -206,7 +206,7 @@ export function Dashboard({ galleries }: DashboardProps) {
                       initial={{ opacity: 0, y: 20, rotate: 6 }}
                       animate={{ opacity: 1, y: 0, rotate: 6 }}
                       transition={{ delay: 0.3 }}
-                      className="w-32 h-40 rounded-2xl bg-gradient-to-br from-emerald-100 to-teal-200 shadow-lg transform rotate-6 border border-white/50 flex items-center justify-center"
+                      className="w-32 h-40 bg-gradient-to-br from-emerald-100 to-teal-200 shadow-lg transform rotate-6 border border-white/50 flex items-center justify-center"
                     >
                       <ImageIcon className="w-8 h-8 text-emerald-400/60" />
                     </motion.div>
@@ -228,7 +228,7 @@ export function Dashboard({ galleries }: DashboardProps) {
                   </p>
                   
                   <Link href="/upload">
-                    <Button className="h-12 rounded-full bg-[#1C1917] px-8 text-base font-medium text-white hover:bg-[#292524] hover:scale-105 transition-all shadow-lg shadow-neutral-900/10">
+                    <Button className="h-12 bg-[#1C1917] px-8 text-base font-medium text-white hover:bg-[#292524] hover:scale-105 transition-all shadow-lg shadow-neutral-900/10">
                       <Plus className="h-5 w-5 mr-2" />
                       Create Your First Gallery
                     </Button>
@@ -377,7 +377,7 @@ function GalleryCardGrid({ gallery, index }: { gallery: Gallery; index: number }
               {gallery.title}
             </h3>
             <div className="flex items-center gap-2 text-sm text-white/70">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+              <span className="w-1.5 h-1.5 bg-emerald-400" />
               <span>{gallery.imageCount} {gallery.imageCount === 1 ? 'item' : 'items'}</span>
               <span className="text-white/40">·</span>
               <span>{formattedDate}</span>
@@ -387,7 +387,7 @@ function GalleryCardGrid({ gallery, index }: { gallery: Gallery; index: number }
           {/* Top Actions */}
           <div className="absolute top-3 right-3 flex gap-2">
             {gallery.hasPassword && (
-              <div className="h-8 w-8 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center shadow-sm">
+              <div className="h-8 w-8 bg-white/90 backdrop-blur-sm flex items-center justify-center shadow-sm">
                 <Lock className="w-3.5 h-3.5 text-neutral-600" />
               </div>
             )}
@@ -401,7 +401,7 @@ function GalleryCardGrid({ gallery, index }: { gallery: Gallery; index: number }
                 e.stopPropagation()
                 setShowMenu(!showMenu)
               }}
-              className="h-8 w-8 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center shadow-sm hover:bg-white transition-colors"
+              className="h-8 w-8 bg-white/90 backdrop-blur-sm flex items-center justify-center shadow-sm hover:bg-white transition-colors"
             >
               <MoreHorizontal className="w-4 h-4 text-neutral-600" />
             </motion.button>
@@ -414,7 +414,7 @@ function GalleryCardGrid({ gallery, index }: { gallery: Gallery; index: number }
                 initial={{ opacity: 0, y: -10, scale: 0.95 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, y: -10, scale: 0.95 }}
-                className="absolute top-14 right-3 bg-white rounded-xl shadow-xl border border-neutral-100 py-1.5 min-w-[160px] z-10"
+                className="absolute top-14 right-3 bg-white shadow-xl border border-neutral-100 py-1.5 min-w-[160px] z-10"
                 onClick={(e) => e.stopPropagation()}
               >
                 <button
@@ -461,7 +461,7 @@ function GalleryCardGrid({ gallery, index }: { gallery: Gallery; index: number }
                 e.stopPropagation()
                 window.open(relativePath, '_blank')
               }}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-white/95 backdrop-blur-sm rounded-full text-sm font-medium text-neutral-900 hover:bg-white transition-colors shadow-lg"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-white/95 backdrop-blur-sm text-sm font-medium text-neutral-900 hover:bg-white transition-colors shadow-lg"
             >
               <ExternalLink className="w-3.5 h-3.5" />
               View Gallery
@@ -487,10 +487,10 @@ function GalleryCardGrid({ gallery, index }: { gallery: Gallery; index: number }
               exit={{ scale: 0.95, opacity: 0, y: 10 }}
               transition={{ type: 'spring', duration: 0.3 }}
               onClick={(e) => e.stopPropagation()}
-              className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-2xl border border-neutral-100"
+              className="bg-white p-6 max-w-sm w-full shadow-2xl border border-neutral-100"
             >
               {/* Icon */}
-              <div className="w-12 h-12 rounded-full bg-red-50 flex items-center justify-center mb-4 mx-auto">
+              <div className="w-12 h-12 bg-red-50 flex items-center justify-center mb-4 mx-auto">
                 <Trash2 className="w-5 h-5 text-red-500" />
               </div>
               
@@ -504,14 +504,14 @@ function GalleryCardGrid({ gallery, index }: { gallery: Gallery; index: number }
               <div className="flex gap-3">
                 <button
                   onClick={() => setShowDeleteModal(false)}
-                  className="flex-1 px-4 py-2.5 text-sm font-medium text-neutral-700 bg-neutral-100 hover:bg-neutral-200 rounded-xl transition-colors"
+                  className="flex-1 px-4 py-2.5 text-sm font-medium text-neutral-700 bg-neutral-100 hover:bg-neutral-200 transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleDelete}
                   disabled={isPending}
-                  className="flex-1 px-4 py-2.5 text-sm font-medium text-white bg-red-500 hover:bg-red-600 rounded-xl transition-colors disabled:opacity-50"
+                  className="flex-1 px-4 py-2.5 text-sm font-medium text-white bg-red-500 hover:bg-red-600 transition-colors disabled:opacity-50"
                 >
                   {isPending ? 'Deleting...' : 'Delete'}
                 </button>
@@ -558,10 +558,10 @@ function GalleryCardList({ gallery, index }: { gallery: Gallery; index: number }
     >
       <Link 
         href={`/gallery/${gallery.slug}`}
-        className="flex items-center gap-5 p-4 bg-white rounded-2xl border border-neutral-100 hover:border-neutral-200 hover:shadow-md transition-all group"
+        className="flex items-center gap-5 p-4 bg-white border border-neutral-100 hover:border-neutral-200 hover:shadow-md transition-all group"
       >
         {/* Thumbnail */}
-        <div className="w-20 h-20 rounded-xl bg-neutral-100 overflow-hidden flex-shrink-0">
+        <div className="w-20 h-20 bg-neutral-100 overflow-hidden flex-shrink-0">
           {gallery.coverImageUrl ? (
             <img 
               src={gallery.coverImageUrl} 
@@ -582,7 +582,7 @@ function GalleryCardList({ gallery, index }: { gallery: Gallery; index: number }
           </h3>
           <div className="flex items-center gap-3 mt-1 text-sm">
             <span className="flex items-center gap-1.5 text-neutral-500">
-              <span className="w-2 h-2 rounded-full bg-emerald-400" />
+              <span className="w-2 h-2 bg-emerald-400" />
               {gallery.imageCount} items
             </span>
             <span className="flex items-center gap-1.5 text-neutral-400">
@@ -602,7 +602,7 @@ function GalleryCardList({ gallery, index }: { gallery: Gallery; index: number }
         <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
           <button
             onClick={handleCopy}
-            className="h-9 px-4 text-sm font-medium text-neutral-600 bg-neutral-100 hover:bg-neutral-200 rounded-full transition-colors flex items-center gap-2"
+            className="h-9 px-4 text-sm font-medium text-neutral-600 bg-neutral-100 hover:bg-neutral-200 transition-colors flex items-center gap-2"
           >
             {copied ? <Check className="w-3.5 h-3.5 text-green-500" /> : <Copy className="w-3.5 h-3.5" />}
             {copied ? 'Copied' : 'Copy'}
@@ -612,7 +612,7 @@ function GalleryCardList({ gallery, index }: { gallery: Gallery; index: number }
             target="_blank"
             rel="noopener noreferrer"
             onClick={(e) => e.stopPropagation()}
-            className="h-9 w-9 flex items-center justify-center text-neutral-600 bg-neutral-100 hover:bg-neutral-200 rounded-full transition-colors"
+            className="h-9 w-9 flex items-center justify-center text-neutral-600 bg-neutral-100 hover:bg-neutral-200 transition-colors"
           >
             <ExternalLink className="w-4 h-4" />
           </a>

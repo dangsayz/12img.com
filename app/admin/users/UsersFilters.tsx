@@ -33,18 +33,18 @@ export function UsersFilters() {
   const hasFilters = searchParams.toString().length > 0
   
   return (
-    <div className="bg-white rounded-xl border border-gray-200 p-4">
+    <div className="bg-white border border-[#E5E5E5] p-6">
       <div className="flex flex-wrap items-center gap-4">
         {/* Search */}
         <form onSubmit={handleSearch} className="flex-1 min-w-[200px]">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#525252]" />
             <input
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search by email or ID..."
-              className="w-full pl-9 pr-4 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900/10"
+              className="w-full pl-9 pr-4 py-2.5 text-sm border border-[#E5E5E5] bg-[#F5F5F7] focus:outline-none focus:border-[#141414] transition-colors"
             />
           </div>
         </form>
@@ -53,7 +53,7 @@ export function UsersFilters() {
         <select
           value={searchParams.get('plan') || ''}
           onChange={(e) => updateFilter('plan', e.target.value || null)}
-          className="px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900/10"
+          className="px-4 py-2.5 text-sm border border-[#E5E5E5] bg-[#F5F5F7] focus:outline-none focus:border-[#141414] transition-colors"
         >
           <option value="">All Plans</option>
           <option value="free">Free</option>
@@ -67,7 +67,7 @@ export function UsersFilters() {
         <select
           value={searchParams.get('role') || ''}
           onChange={(e) => updateFilter('role', e.target.value || null)}
-          className="px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900/10"
+          className="px-4 py-2.5 text-sm border border-[#E5E5E5] bg-[#F5F5F7] focus:outline-none focus:border-[#141414] transition-colors"
         >
           <option value="">All Roles</option>
           <option value="user">User</option>
@@ -80,7 +80,7 @@ export function UsersFilters() {
         <select
           value={searchParams.get('suspended') || ''}
           onChange={(e) => updateFilter('suspended', e.target.value || null)}
-          className="px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900/10"
+          className="px-4 py-2.5 text-sm border border-[#E5E5E5] bg-[#F5F5F7] focus:outline-none focus:border-[#141414] transition-colors"
         >
           <option value="">All Status</option>
           <option value="false">Active</option>
@@ -91,7 +91,7 @@ export function UsersFilters() {
         {hasFilters && (
           <button
             onClick={clearFilters}
-            className="flex items-center gap-1 px-3 py-2 text-sm text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+            className="flex items-center gap-1 px-4 py-2.5 text-sm text-[#525252] hover:text-[#141414] border border-[#E5E5E5] hover:border-[#141414] transition-colors"
           >
             <X className="w-4 h-4" />
             Clear

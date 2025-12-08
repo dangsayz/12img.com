@@ -1,23 +1,35 @@
 import { auth } from '@clerk/nextjs/server'
+import { redirect } from 'next/navigation'
 import { UserProfile } from '@clerk/nextjs'
-import { Header } from '@/components/layout/Header'
-import { getUserWithUsage } from '@/server/queries/user.queries'
+import { AppNav } from '@/components/layout/AppNav'
+import { getUserWithUsage, checkIsAdmin } from '@/server/queries/user.queries'
+import { PLAN_TIERS, type PlanTier } from '@/lib/config/pricing-v2'
 
 export default async function AccountPage() {
   const { userId } = await auth()
-  const userData = userId ? await getUserWithUsage(userId) : null
+  
+  if (!userId) {
+    redirect('/sign-in')
+  }
+  
+  const [userData, isAdmin] = await Promise.all([
+    getUserWithUsage(userId),
+    checkIsAdmin(userId),
+  ])
+  
+  const plan = (userData?.plan || 'free') as PlanTier
+  const planConfig = PLAN_TIERS[plan] || PLAN_TIERS.free
+  const storageLimit = planConfig.storageGB * 1024 * 1024 * 1024
   
   return (
-    <>
-      <Header 
-        userPlan={userData?.plan || 'free'}
-        galleryCount={userData?.usage.galleryCount || 0}
-        imageCount={userData?.usage.imageCount || 0}
+    <div className="min-h-screen bg-stone-50">
+      <AppNav 
+        userPlan={plan}
         storageUsed={userData?.usage.totalBytes || 0}
-        isAuthenticated={!!userId}
-        userRole={userData?.role}
+        storageLimit={storageLimit}
+        isAdmin={isAdmin}
       />
-      <main className="container mx-auto px-4 pt-28 pb-16">
+      <main className="container mx-auto px-4 pt-8 pb-16">
         <UserProfile 
           appearance={{
             elements: {
@@ -27,6 +39,6 @@ export default async function AccountPage() {
           }}
         />
       </main>
-    </>
+    </div>
   )
 }
