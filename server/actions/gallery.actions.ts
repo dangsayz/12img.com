@@ -193,6 +193,69 @@ export async function toggleGalleryVisibility(galleryId: string, isPublic: boole
   return { success: true, isPublic }
 }
 
+/**
+ * Toggle gallery downloads enabled/disabled
+ */
+export async function toggleGalleryDownloads(galleryId: string, enabled: boolean) {
+  const { userId: clerkId } = await auth()
+  if (!clerkId) return { error: 'Unauthorized' }
+
+  const user = await getOrCreateUserByClerkId(clerkId)
+  if (!user) return { error: 'User not found' }
+
+  const gallery = await getGalleryWithOwnershipCheck(galleryId, user.id)
+  if (!gallery) return { error: 'Gallery not found' }
+
+  const { error } = await supabaseAdmin
+    .from('galleries')
+    .update({ download_enabled: enabled })
+    .eq('id', galleryId)
+
+  if (error) return { error: 'Failed to update download settings' }
+
+  revalidatePath('/')
+  revalidatePath(`/gallery/${galleryId}`)
+  revalidatePath(`/view-reel/${gallery.slug}`)
+  revalidatePath(`/view-live/${gallery.slug}`)
+
+  return { success: true, downloadEnabled: enabled }
+}
+
+/**
+ * Update or remove gallery password
+ */
+export async function updateGalleryPassword(galleryId: string, password: string | null) {
+  const { userId: clerkId } = await auth()
+  if (!clerkId) return { error: 'Unauthorized' }
+
+  const user = await getOrCreateUserByClerkId(clerkId)
+  if (!user) return { error: 'User not found' }
+
+  const gallery = await getGalleryWithOwnershipCheck(galleryId, user.id)
+  if (!gallery) return { error: 'Gallery not found' }
+
+  // Hash the new password or set to null to remove
+  const passwordHash = password ? await hashPassword(password) : null
+  const isLocked = !!password
+
+  const { error } = await supabaseAdmin
+    .from('galleries')
+    .update({ 
+      password_hash: passwordHash,
+      is_locked: isLocked
+    })
+    .eq('id', galleryId)
+
+  if (error) return { error: 'Failed to update password' }
+
+  revalidatePath('/')
+  revalidatePath(`/gallery/${galleryId}`)
+  revalidatePath(`/view-reel/${gallery.slug}`)
+  revalidatePath(`/view-live/${gallery.slug}`)
+
+  return { success: true, isLocked }
+}
+
 export async function updateGalleryTemplate(galleryId: string, template: string) {
   const { userId: clerkId } = await auth()
   if (!clerkId) return { error: 'Unauthorized' }

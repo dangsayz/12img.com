@@ -1,7 +1,7 @@
 'use server'
 
 import { cookies } from 'next/headers'
-import { verifyPassword, generateUnlockToken } from '@/lib/utils/password'
+import { verifyPassword } from '@/lib/utils/password'
 import { getGalleryById } from '@/server/queries/gallery.queries'
 
 export async function validateGalleryPassword(
@@ -34,11 +34,9 @@ export async function validateGalleryPassword(
     return { success: false, error: 'Incorrect password' }
   }
 
-  // Generate unlock token and set cookie
-  const token = generateUnlockToken(galleryId)
-
+  // Set access cookie (matches what view pages check for)
   const cookieStore = await cookies()
-  cookieStore.set(`gallery_unlock_${galleryId}`, token, {
+  cookieStore.set(`gallery_access_${galleryId}`, 'granted', {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',

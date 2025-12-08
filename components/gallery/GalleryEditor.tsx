@@ -5,7 +5,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
-import { updateGalleryTemplate, updateGallery, toggleGalleryVisibility } from '@/server/actions/gallery.actions'
+import { updateGalleryTemplate, updateGallery, toggleGalleryVisibility, toggleGalleryDownloads, updateGalleryPassword } from '@/server/actions/gallery.actions'
 import { 
   ArrowLeft,
   ArrowDownToLine,
@@ -244,6 +244,13 @@ export function GalleryEditor({
   const titleInputRef = useRef<HTMLInputElement>(null)
   const [isPublic, setIsPublic] = useState(gallery.is_public)
   const [isTogglingVisibility, setIsTogglingVisibility] = useState(false)
+  const [downloadsEnabled, setDownloadsEnabled] = useState(gallery.download_enabled)
+  const [isTogglingDownloads, setIsTogglingDownloads] = useState(false)
+  const [isLocked, setIsLocked] = useState(gallery.is_locked)
+  const [currentPassword, setCurrentPassword] = useState<string | null>(null) // Stored when user sets it
+  const [showPasswordModal, setShowPasswordModal] = useState(false)
+  const [newPassword, setNewPassword] = useState('')
+  const [isSavingPassword, setIsSavingPassword] = useState(false)
 
   useEffect(() => {
     setShareUrl(`${window.location.origin}/view-reel/${gallery.id}`)
@@ -270,6 +277,69 @@ export function GalleryEditor({
       console.error('Failed to toggle visibility:', error)
     } finally {
       setIsTogglingVisibility(false)
+    }
+  }
+
+  // Handle downloads toggle
+  const handleDownloadsToggle = async () => {
+    const newValue = !downloadsEnabled
+    setIsTogglingDownloads(true)
+    setDownloadsEnabled(newValue) // Optimistic update
+    
+    try {
+      const result = await toggleGalleryDownloads(gallery.id, newValue)
+      if (result.error) {
+        setDownloadsEnabled(!newValue)
+        console.error('Failed to toggle downloads:', result.error)
+      } else {
+        router.refresh()
+      }
+    } catch (error) {
+      setDownloadsEnabled(!newValue)
+      console.error('Failed to toggle downloads:', error)
+    } finally {
+      setIsTogglingDownloads(false)
+    }
+  }
+
+  // Handle password update
+  const handlePasswordSave = async () => {
+    setIsSavingPassword(true)
+    try {
+      const result = await updateGalleryPassword(gallery.id, newPassword || null)
+      if (result.error) {
+        console.error('Failed to update password:', result.error)
+      } else {
+        setIsLocked(result.isLocked ?? false)
+        setCurrentPassword(newPassword || null) // Store for display
+        setShowPasswordModal(false)
+        setNewPassword('')
+        router.refresh()
+      }
+    } catch (error) {
+      console.error('Failed to update password:', error)
+    } finally {
+      setIsSavingPassword(false)
+    }
+  }
+
+  // Handle password removal
+  const handleRemovePassword = async () => {
+    setIsSavingPassword(true)
+    try {
+      const result = await updateGalleryPassword(gallery.id, null)
+      if (result.error) {
+        console.error('Failed to remove password:', result.error)
+      } else {
+        setIsLocked(false)
+        setCurrentPassword(null)
+        setShowPasswordModal(false)
+        router.refresh()
+      }
+    } catch (error) {
+      console.error('Failed to remove password:', error)
+    } finally {
+      setIsSavingPassword(false)
     }
   }
 
@@ -651,20 +721,70 @@ export function GalleryEditor({
                     </button>
                   </div>
 
-                  {/* PIN Protection Status (only show if public) */}
-                  {isPublic && gallery.is_locked && (
-                    <div className="flex items-center gap-2 py-2 px-3 bg-amber-50 rounded-lg text-xs text-amber-700">
-                      <Shield className="w-3.5 h-3.5" />
-                      <span>PIN protected</span>
+                  {/* Downloads Toggle */}
+                  <div className="flex items-center justify-between py-3 border-t border-stone-100">
+                    <div className="flex items-center gap-3">
+                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${downloadsEnabled ? 'bg-blue-100' : 'bg-stone-100'}`}>
+                        <ArrowDownToLine className={`w-4 h-4 ${downloadsEnabled ? 'text-blue-600' : 'text-stone-400'}`} />
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-stone-700">
+                          Downloads
+                        </p>
+                        <p className="text-xs text-stone-500">
+                          {downloadsEnabled 
+                            ? 'Clients can download images' 
+                            : 'Downloads are disabled'
+                          }
+                        </p>
+                      </div>
                     </div>
-                  )}
+                    <button
+                      onClick={handleDownloadsToggle}
+                      disabled={isTogglingDownloads}
+                      className={`relative w-11 h-6 rounded-full transition-colors ${
+                        downloadsEnabled ? 'bg-blue-500' : 'bg-stone-300'
+                      } ${isTogglingDownloads ? 'opacity-50' : ''}`}
+                    >
+                      <span
+                        className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${
+                          downloadsEnabled ? 'translate-x-5' : 'translate-x-0'
+                        }`}
+                      />
+                    </button>
+                  </div>
 
-                  {/* Downloads Status */}
-                  <div className="flex items-center gap-3 text-xs text-stone-400 pt-2">
-                    <span className={`inline-flex items-center gap-1.5 ${gallery.download_enabled ? '' : 'opacity-50'}`}>
-                      <ArrowDownToLine className="w-3.5 h-3.5" />
-                      {gallery.download_enabled ? 'Downloads enabled' : 'Downloads disabled'}
-                    </span>
+                  {/* Password Protection */}
+                  <div className="flex items-center justify-between py-3 border-t border-stone-100">
+                    <div className="flex items-center gap-3">
+                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${isLocked ? 'bg-stone-900' : 'bg-stone-100'}`}>
+                        {isLocked ? (
+                          <Lock className="w-4 h-4 text-white" />
+                        ) : (
+                          <Unlock className="w-4 h-4 text-stone-400" />
+                        )}
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-stone-700">
+                          Password
+                        </p>
+                        {isLocked && currentPassword ? (
+                          <p className="text-xs text-stone-900 font-mono tracking-wider">
+                            {currentPassword}
+                          </p>
+                        ) : (
+                          <p className="text-xs text-stone-400">
+                            {isLocked ? 'Protected' : 'Not set'}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => setShowPasswordModal(true)}
+                      className="text-xs font-medium text-stone-900 hover:text-black px-3 py-1.5 rounded-lg hover:bg-stone-100 transition-colors"
+                    >
+                      {isLocked ? 'Change' : 'Add'}
+                    </button>
                   </div>
 
                   {/* Email Activity Toggle */}
@@ -1009,6 +1129,84 @@ export function GalleryEditor({
           }}
         />
       )}
+
+      {/* Password Modal */}
+      <AnimatePresence>
+        {showPasswordModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
+            onClick={() => setShowPasswordModal(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-10 h-10 rounded-xl bg-stone-900 flex items-center justify-center">
+                  <Lock className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-stone-900">
+                    {isLocked ? 'Update Password' : 'Add Password'}
+                  </h3>
+                  <p className="text-xs text-stone-500">Protect this gallery with a PIN</p>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="text-xs font-medium text-stone-500 uppercase tracking-wider mb-2 block">
+                    {isLocked ? 'New Password' : 'Password'}
+                  </label>
+                  <input
+                    type="text"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    placeholder="e.g. 1234"
+                    className="w-full px-4 py-3 rounded-xl border border-stone-200 focus:border-stone-900 focus:ring-0 text-center font-mono text-lg tracking-[0.3em]"
+                    autoFocus
+                  />
+                  <p className="text-xs text-stone-400 mt-2 text-center">
+                    Something simple your client can remember
+                  </p>
+                </div>
+
+                <div className="flex gap-2 pt-2">
+                  {isLocked && (
+                    <button
+                      onClick={handleRemovePassword}
+                      disabled={isSavingPassword}
+                      className="flex-1 py-3 rounded-xl border border-stone-200 text-stone-600 text-sm font-medium hover:bg-stone-50 transition-colors disabled:opacity-50"
+                    >
+                      Remove
+                    </button>
+                  )}
+                  <button
+                    onClick={handlePasswordSave}
+                    disabled={isSavingPassword || !newPassword.trim()}
+                    className="flex-1 py-3 rounded-xl bg-stone-900 text-white text-sm font-medium hover:bg-black transition-colors disabled:opacity-50"
+                  >
+                    {isSavingPassword ? 'Saving...' : 'Save'}
+                  </button>
+                </div>
+
+                <button
+                  onClick={() => setShowPasswordModal(false)}
+                  className="w-full py-2 text-xs text-stone-400 hover:text-stone-600"
+                >
+                  Cancel
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Presentation Settings Modal */}
       <AnimatePresence>
