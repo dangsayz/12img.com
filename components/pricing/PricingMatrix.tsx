@@ -64,7 +64,8 @@ export function PricingMatrix({ showAllFeatures = true, className = '', currentP
 
   return (
     <div className={`w-full ${className}`}>
-      {/* Billing Toggle - Minimal */}
+      {/* Billing Toggle - Hidden until annual plans are available */}
+      {/* TODO: Uncomment when annual billing is ready
       <div className="flex justify-center mb-12">
         <div className="inline-flex items-center gap-1 p-1 bg-gray-100">
           <button
@@ -90,6 +91,7 @@ export function PricingMatrix({ showAllFeatures = true, className = '', currentP
           </button>
         </div>
       </div>
+      */}
 
       {/* Mobile: Stacked Cards */}
       <div className="md:hidden space-y-4">
@@ -153,11 +155,13 @@ export function PricingMatrix({ showAllFeatures = true, className = '', currentP
                         /mo
                       </span>
                     </div>
+                    {/* Annual price - hidden until annual billing ready
                     {billingPeriod === 'annual' && plan.monthlyPrice > 0 && (
                       <div className="text-xs text-[#525252] mt-1">
                         ${plan.annualPrice}/year
                       </div>
                     )}
+                    */}
                     <div className="mt-5">
                       {getButtonState(plan.id) === 'current' ? (
                         <div className="w-full px-4 py-2.5 text-sm font-medium text-[#525252] cursor-default">
@@ -356,9 +360,11 @@ function MobilePlanCard({
           <div className="text-right">
             <span className="font-serif text-3xl text-[#141414]">${price}</span>
             <span className="text-sm text-[#525252]">/mo</span>
+{/* Annual price - hidden until annual billing ready
             {billingPeriod === 'annual' && plan.monthlyPrice > 0 && (
               <div className="text-xs text-[#525252]">${plan.annualPrice}/yr</div>
             )}
+            */}
           </div>
         </div>
 
