@@ -296,15 +296,15 @@ export default function AdminSupportPage() {
   }
 
   return (
-    <div className="h-[calc(100vh-140px)] flex flex-col max-w-[1400px]">
-      {/* Header */}
-      <div className="mb-4 flex-shrink-0">
-        <h1 className="font-serif text-2xl lg:text-3xl text-[#141414]">Support Messages</h1>
-        <p className="text-[#525252] text-sm mt-1">Manage user conversations and feedback</p>
+    <div className="h-[calc(100vh-80px)] lg:h-[calc(100vh-140px)] flex flex-col max-w-[1400px]">
+      {/* Header - Hidden on mobile when conversation selected */}
+      <div className={`mb-2 lg:mb-4 flex-shrink-0 ${selectedConversation ? 'hidden lg:block' : ''}`}>
+        <h1 className="font-serif text-xl lg:text-3xl text-[#141414]">Support Messages</h1>
+        <p className="text-[#525252] text-xs lg:text-sm mt-1 hidden sm:block">Manage user conversations and feedback</p>
       </div>
 
       {/* Main Content - Takes remaining height */}
-      <div className="flex-1 flex bg-white border border-[#E5E5E5] overflow-hidden min-h-[600px]">
+      <div className="flex-1 flex bg-white border border-[#E5E5E5] overflow-hidden min-h-0 lg:min-h-[600px]">
         {/* Conversations List */}
         <div
           className={`w-full md:w-96 border-r border-[#E5E5E5] flex flex-col ${
@@ -563,49 +563,49 @@ export default function AdminSupportPage() {
           {selectedConversation ? (
             <>
               {/* Conversation Header */}
-              <div className="p-4 border-b border-[#E5E5E5]">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-3">
+              <div className="p-3 lg:p-4 border-b border-[#E5E5E5]">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2 lg:gap-3 min-w-0 flex-1">
                     <button
                       onClick={() => setSelectedConversation(null)}
-                      className="md:hidden p-1 hover:bg-[#F5F5F7] transition-colors"
+                      className="lg:hidden p-2 -ml-1 hover:bg-[#F5F5F7] active:bg-[#E5E5E5] rounded-lg transition-colors flex-shrink-0"
                     >
                       <ArrowLeft className="w-5 h-5" />
                     </button>
-                    <div className="w-10 h-10 border border-[#E5E5E5] flex items-center justify-center">
+                    <div className="hidden sm:flex w-10 h-10 border border-[#E5E5E5] items-center justify-center flex-shrink-0">
                       <User className="w-5 h-5 text-[#525252]" />
                     </div>
-                    <div>
-                      <h3 className="font-medium text-[#141414]">
+                    <div className="min-w-0 flex-1">
+                      <h3 className="font-medium text-[#141414] text-sm lg:text-base truncate">
                         {selectedConversation.user_business_name || selectedConversation.user_email}
                       </h3>
                       {selectedConversation.user_business_name && (
-                        <p className="text-sm text-[#525252]">{selectedConversation.user_email}</p>
+                        <p className="text-xs lg:text-sm text-[#525252] truncate">{selectedConversation.user_email}</p>
                       )}
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1 lg:gap-2 flex-shrink-0">
                     {selectedConversation.status !== 'archived' && (
                       <button
                         onClick={() => handleArchive(selectedConversation.id)}
                         disabled={isArchiving}
-                        className="p-2 text-[#737373] hover:text-[#141414] hover:bg-[#F5F5F7] transition-colors disabled:opacity-50"
+                        className="p-2.5 text-[#737373] hover:text-[#141414] hover:bg-[#F5F5F7] active:bg-[#E5E5E5] rounded-lg transition-colors disabled:opacity-50"
                         title="Archive conversation"
                       >
                         {isArchiving ? (
-                          <Loader2 className="w-4 h-4 animate-spin" />
+                          <Loader2 className="w-5 h-5 lg:w-4 lg:h-4 animate-spin" />
                         ) : (
-                          <Archive className="w-4 h-4" />
+                          <Archive className="w-5 h-5 lg:w-4 lg:h-4" />
                         )}
                       </button>
                     )}
                     {selectedConversation.status === 'archived' ? (
                       <button
                         onClick={() => handleUnarchive(selectedConversation.id)}
-                        className="px-3 py-1.5 text-sm font-medium border border-[#E5E5E5] bg-white text-[#525252] hover:bg-[#F5F5F7] transition-colors flex items-center gap-1.5"
+                        className="px-3 py-2 lg:py-1.5 text-xs lg:text-sm font-medium border border-[#E5E5E5] bg-white text-[#525252] hover:bg-[#F5F5F7] active:bg-[#E5E5E5] rounded-lg lg:rounded-none transition-colors flex items-center gap-1.5"
                       >
                         <ArchiveRestore className="w-4 h-4" />
-                        Unarchive
+                        <span className="hidden sm:inline">Unarchive</span>
                       </button>
                     ) : (
                       <button
@@ -614,20 +614,20 @@ export default function AdminSupportPage() {
                             selectedConversation.status === 'open' ? 'resolved' : 'open'
                           )
                         }
-                        className={`px-3 py-1.5 text-sm font-medium transition-colors ${
+                        className={`px-3 py-2 lg:py-1.5 text-xs lg:text-sm font-medium rounded-lg lg:rounded-none transition-colors ${
                           selectedConversation.status === 'open'
-                            ? 'border border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100'
-                            : 'border border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100'
+                            ? 'border border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 active:bg-emerald-200'
+                            : 'border border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100 active:bg-amber-200'
                         }`}
                       >
-                        {selectedConversation.status === 'open' ? 'Mark Resolved' : 'Reopen'}
+                        {selectedConversation.status === 'open' ? 'Resolve' : 'Reopen'}
                       </button>
                     )}
                   </div>
                 </div>
                 
-                {/* User Details Bar */}
-                <div className="flex flex-wrap items-center gap-4 text-xs text-[#525252] pt-2 border-t border-[#E5E5E5]">
+                {/* User Details Bar - Collapsible on mobile */}
+                <div className="hidden lg:flex flex-wrap items-center gap-4 text-xs text-[#525252] pt-3 mt-3 border-t border-[#E5E5E5]">
                   {selectedConversation.user_plan && (
                     <div className="flex items-center gap-1.5">
                       <CreditCard className="w-3.5 h-3.5" />
@@ -663,7 +663,7 @@ export default function AdminSupportPage() {
               </div>
 
               {/* Messages */}
-              <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-[#F5F5F7]">
+              <div className="flex-1 overflow-y-auto p-3 lg:p-4 space-y-3 bg-[#F5F5F7]">
                 {isLoadingConversation ? (
                   <div className="flex items-center justify-center h-full">
                     <Loader2 className="w-6 h-6 animate-spin text-[#525252]" />
@@ -680,10 +680,10 @@ export default function AdminSupportPage() {
                         }`}
                       >
                         <div
-                          className={`max-w-[70%] px-4 py-2.5 text-sm ${
+                          className={`max-w-[85%] lg:max-w-[70%] px-3 lg:px-4 py-2.5 text-sm rounded-2xl lg:rounded-none ${
                             msg.sender_type === 'admin'
-                              ? 'bg-[#141414] text-white'
-                              : 'bg-white text-[#141414] border border-[#E5E5E5]'
+                              ? 'bg-[#141414] text-white rounded-br-md lg:rounded-none'
+                              : 'bg-white text-[#141414] border border-[#E5E5E5] rounded-bl-md lg:rounded-none'
                           }`}
                         >
                           <p className="whitespace-pre-wrap break-words">{msg.message}</p>
@@ -707,8 +707,8 @@ export default function AdminSupportPage() {
                 )}
               </div>
 
-              {/* Reply Input */}
-              <div className="p-4 border-t border-[#E5E5E5] bg-white">
+              {/* Reply Input - Fixed at bottom on mobile */}
+              <div className="p-3 lg:p-4 border-t border-[#E5E5E5] bg-white safe-area-bottom">
                 <div className="flex items-end gap-2">
                   <textarea
                     value={input}
@@ -716,15 +716,14 @@ export default function AdminSupportPage() {
                     onKeyDown={handleKeyDown}
                     placeholder="Type your reply..."
                     rows={1}
-                    className="flex-1 resize-none border border-[#E5E5E5] px-4 py-3 text-sm focus:outline-none focus:border-[#141414] transition-colors max-h-32"
-                    style={{ minHeight: '46px' }}
+                    className="flex-1 resize-none border border-[#E5E5E5] px-3 lg:px-4 py-3 text-base lg:text-sm focus:outline-none focus:border-[#141414] transition-colors max-h-32 rounded-xl lg:rounded-none"
+                    style={{ minHeight: '48px' }}
                   />
                   <motion.button
                     onClick={handleSendReply}
                     disabled={!input.trim() || isSending}
-                    className="flex items-center justify-center w-11 h-11 bg-[#141414] text-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-black transition-colors"
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
+                    className="flex items-center justify-center w-12 h-12 lg:w-11 lg:h-11 bg-[#141414] text-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-black active:bg-gray-800 transition-colors rounded-xl lg:rounded-none"
+                    whileTap={{ scale: 0.95 }}
                   >
                     {isSending ? (
                       <Loader2 className="w-5 h-5 animate-spin" />
