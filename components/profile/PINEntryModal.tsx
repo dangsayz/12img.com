@@ -153,7 +153,7 @@ export function PINEntryModal({
             <motion.div
               animate={shake ? { x: [-10, 10, -10, 10, 0] } : {}}
               transition={{ duration: 0.4 }}
-              className="bg-white rounded-2xl shadow-2xl w-full max-w-sm pointer-events-auto overflow-hidden"
+              className="bg-white rounded-2xl shadow-2xl w-full max-w-sm max-h-[90vh] pointer-events-auto overflow-y-auto"
               onClick={e => e.stopPropagation()}
             >
               {/* Header */}

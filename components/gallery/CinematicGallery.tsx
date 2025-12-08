@@ -149,10 +149,10 @@ export function CinematicGallery({
     setLightboxImage(images[newIndex])
   }
 
-  // Warm brown color palette
-  const bgColor = 'bg-[#2a2118]' // Warm dark brown
-  const textColor = 'text-[#d4c4b0]' // Warm cream
-  const accentColor = 'text-[#c9a87c]' // Gold accent
+  // Pure black editorial palette
+  const bgColor = 'bg-black'
+  const textColor = 'text-white'
+  const accentColor = 'text-white'
 
   return (
     <div className={`min-h-screen ${bgColor}`}>
@@ -184,62 +184,89 @@ export function CinematicGallery({
         </div>
       </header>
 
-      {/* Hero Section - Split layout like reference */}
+      {/* Hero Section - Editorial split layout */}
       <section className="min-h-screen flex items-center justify-center px-8 pt-20 pb-16">
-        <div className="max-w-6xl w-full grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
-          {/* Cover Image */}
-          {coverImage && (
+        <div className="max-w-6xl w-full grid lg:grid-cols-2 gap-12 lg:gap-24 items-center">
+          {/* Cover Image with vertical text */}
+          <div className="relative">
+            {/* Vertical photographer credit - editorial style */}
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8 }}
-              className="relative cursor-pointer"
-              onClick={() => openLightbox(coverImage)}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 1, delay: 0.5 }}
+              className="absolute -left-12 top-1/2 -translate-y-1/2 hidden lg:block"
             >
-              <div className={`relative ${getAspectClass(coverImage)} max-h-[70vh]`}>
-                <Image
-                  src={coverImage.previewUrl || coverImage.thumbnailUrl}
-                  alt=""
-                  fill
-                  className="object-cover"
-                  style={{ objectPosition: `${coverImage.focalX ?? 50}% ${coverImage.focalY ?? 50}%` }}
-                  priority
-                  sizes="50vw"
-                />
-              </div>
+              <span className="text-[10px] text-white/30 uppercase tracking-[0.3em] whitespace-nowrap transform -rotate-90 block origin-center">
+                Photos by 12img
+              </span>
             </motion.div>
-          )}
+            
+            {coverImage && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8 }}
+                className="relative cursor-pointer"
+                onClick={() => openLightbox(coverImage)}
+              >
+                <div className={`relative ${getAspectClass(coverImage)} max-h-[75vh]`}>
+                  <Image
+                    src={coverImage.previewUrl || coverImage.thumbnailUrl}
+                    alt=""
+                    fill
+                    className="object-cover"
+                    style={{ objectPosition: `${coverImage.focalX ?? 50}% ${coverImage.focalY ?? 50}%` }}
+                    priority
+                    sizes="50vw"
+                  />
+                </div>
+              </motion.div>
+            )}
+          </div>
           
-          {/* Title & Info */}
+          {/* Title & Info - Editorial typography */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.2 }}
             className="lg:pl-8"
           >
-            <h1 className={`font-serif text-4xl sm:text-5xl lg:text-6xl ${accentColor} tracking-wide mb-6 leading-tight`}>
+            {/* Large serif title */}
+            <h1 className="font-serif text-4xl sm:text-5xl lg:text-6xl text-white tracking-tight mb-8 leading-[1.1]">
               {displayTitle}
             </h1>
             
-            {presentation?.subtitle && (
-              <p className={`${textColor} opacity-70 mb-4 leading-relaxed`}>
-                {presentation.subtitle.split(' ').map((word: string, i: number) => (
-                  <span key={i} className="block">{word}</span>
-                ))}
-              </p>
-            )}
+            {/* Thin divider line */}
+            <div className="w-16 h-px bg-white/20 mb-8" />
             
-            <div className={`w-12 h-px ${bgColor} border-t border-[#c9a87c]/30 my-6`} />
-            
-            <p className={`text-sm ${textColor} opacity-50`}>
-              {images.length} images in the gallery
-            </p>
-            
+            {/* Event date - elegant small caps */}
             {presentation?.eventDate && (
-              <p className={`text-sm ${textColor} opacity-40 mt-2`}>
+              <p className="text-sm text-white/50 tracking-widest uppercase mb-6">
                 {formatDate(presentation.eventDate)}
               </p>
             )}
+            
+            {/* Subtitle / Location */}
+            {presentation?.subtitle && (
+              <p className="text-white/40 text-sm tracking-wide mb-8">
+                {presentation.subtitle}
+              </p>
+            )}
+            
+            {/* Image count - minimal */}
+            <p className="text-xs text-white/30 tracking-[0.2em] uppercase">
+              {images.length} photographs
+            </p>
+            
+            {/* Scroll indicator */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 1.2 }}
+              className="mt-16 hidden lg:block"
+            >
+              <ChevronDown className="w-5 h-5 text-white/20 animate-bounce" />
+            </motion.div>
           </motion.div>
         </div>
       </section>
@@ -256,29 +283,40 @@ export function CinematicGallery({
         ))}
       </section>
 
-      {/* Footer */}
-      <footer className={`py-20 px-6 border-t border-white/5`}>
+      {/* Footer - Editorial minimal */}
+      <footer className="py-32 px-6 border-t border-white/5">
         <div className="max-w-4xl mx-auto text-center">
+          {/* Custom message in elegant italic */}
           {presentation?.customMessage && (
-            <p className={`text-lg ${textColor} opacity-60 mb-12 italic max-w-xl mx-auto`}>
-              {presentation.customMessage}
+            <p className="text-xl text-white/50 mb-16 italic font-serif max-w-xl mx-auto leading-relaxed">
+              "{presentation.customMessage}"
             </p>
           )}
           
+          {/* Download CTA - minimal elegant */}
           {downloadEnabled && (
             <button
               onClick={handleDownload}
-              className={`inline-flex items-center gap-3 px-8 py-4 text-sm font-medium border border-[#c9a87c]/30 ${accentColor} hover:bg-[#c9a87c]/10 transition-colors`}
+              className="inline-flex items-center gap-3 px-10 py-4 text-sm font-light tracking-widest uppercase border border-white/20 text-white/80 hover:bg-white hover:text-black transition-all duration-300"
             >
               <Download className="w-4 h-4" />
-              Download All {images.length} Photos
+              Download All
               {totalFileSizeBytes && (
-                <span className="opacity-60">({formatFileSize(totalFileSizeBytes)})</span>
+                <span className="opacity-50 ml-2">({formatFileSize(totalFileSizeBytes)})</span>
               )}
             </button>
           )}
           
-          <p className={`text-xs ${textColor} opacity-20 mt-16 uppercase tracking-[0.3em]`}>
+          {/* Fin marker - editorial style */}
+          <div className="mt-24 flex flex-col items-center gap-4">
+            <div className="w-px h-12 bg-white/10" />
+            <p className="text-[10px] text-white/20 uppercase tracking-[0.4em]">
+              Fin
+            </p>
+          </div>
+          
+          {/* Branding - ultra subtle */}
+          <p className="text-[9px] text-white/10 mt-16 uppercase tracking-[0.3em]">
             Crafted with 12img
           </p>
         </div>

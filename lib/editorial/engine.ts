@@ -141,7 +141,7 @@ export class LayoutEngine {
           }
         ]
       }
-      // 1. Quad Grid (4 images)
+      // 1. Quad Grid (4 images) - use contain to show full images
       // Good for details or uniform aspect ratios
       else if (remaining >= 4 && 
           (current.orientation === next.orientation) && // First two match
@@ -153,25 +153,29 @@ export class LayoutEngine {
             id: `img-${current.id}`,
             type: 'image',
             content: current,
-            span: { colStart: 3, colSpan: 4, rowStart: 1, rowSpan: 1 }
+            span: { colStart: 3, colSpan: 4, rowStart: 1, rowSpan: 1 },
+            style: { fit: 'contain' }
           },
           {
             id: `img-${next.id}`,
             type: 'image',
             content: next,
-            span: { colStart: 7, colSpan: 4, rowStart: 1, rowSpan: 1 }
+            span: { colStart: 7, colSpan: 4, rowStart: 1, rowSpan: 1 },
+            style: { fit: 'contain' }
           },
           {
             id: `img-${next2.id}`,
             type: 'image',
             content: next2,
-            span: { colStart: 3, colSpan: 4, rowStart: 2, rowSpan: 1 }
+            span: { colStart: 3, colSpan: 4, rowStart: 2, rowSpan: 1 },
+            style: { fit: 'contain' }
           },
           {
             id: `img-${next3.id}`,
             type: 'image',
             content: next3,
-            span: { colStart: 7, colSpan: 4, rowStart: 2, rowSpan: 1 }
+            span: { colStart: 7, colSpan: 4, rowStart: 2, rowSpan: 1 },
+            style: { fit: 'contain' }
           }
         ]
       }
@@ -207,7 +211,7 @@ export class LayoutEngine {
           }
         ]
       }
-      // 3. Trio Balance (3 Portraits or Squares)
+      // 3. Trio Balance (3 Portraits or Squares) - use contain to show full images
       else if (remaining >= 3 && 
                current.orientation === 'portrait' && 
                next?.orientation === 'portrait' && 
@@ -219,19 +223,22 @@ export class LayoutEngine {
             id: `img-${current.id}`,
             type: 'image',
             content: current,
-            span: { colStart: 1, colSpan: 4 }
+            span: { colStart: 1, colSpan: 4 },
+            style: { fit: 'contain' }
           },
           {
             id: `img-${next.id}`,
             type: 'image',
             content: next,
-            span: { colStart: 5, colSpan: 4 }
+            span: { colStart: 5, colSpan: 4 },
+            style: { fit: 'contain' }
           },
           {
             id: `img-${next2.id}`,
             type: 'image',
             content: next2,
-            span: { colStart: 9, colSpan: 4 }
+            span: { colStart: 9, colSpan: 4 },
+            style: { fit: 'contain' }
           }
         ]
       }

@@ -6,28 +6,13 @@ import { nanoid } from 'nanoid'
 export const maxDuration = 60
 export const dynamic = 'force-dynamic'
 
-const MAX_SIZE = 25 * 1024 * 1024 // 25MB
 const BUCKET = 'demo-cards'
+const MAX_SIZE = 50 * 1024 * 1024 // 50MB max
 
 // Rate limiting: 5 cards per IP per hour
 const RATE_LIMIT = 5
 const RATE_WINDOW = 60 * 60 * 1000 // 1 hour
 const uploadCounts = new Map<string, { count: number; resetAt: number }>()
-
-// Magic bytes for image validation
-const IMAGE_SIGNATURES: Record<string, { bytes: number[]; offset: number; ext: string }> = {
-  jpeg: { bytes: [0xFF, 0xD8, 0xFF], offset: 0, ext: 'jpg' },
-  png: { bytes: [0x89, 0x50, 0x4E, 0x47], offset: 0, ext: 'png' },
-  webp: { bytes: [0x57, 0x45, 0x42, 0x50], offset: 8, ext: 'webp' },
-}
-
-function detectImageType(buffer: Buffer): string | null {
-  for (const [type, sig] of Object.entries(IMAGE_SIGNATURES)) {
-    const matches = sig.bytes.every((byte, i) => buffer[sig.offset + i] === byte)
-    if (matches) return type
-  }
-  return null
-}
 
 function getClientIP(request: NextRequest): string {
   return request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() 
@@ -52,9 +37,9 @@ function checkRateLimit(ip: string): boolean {
   return true
 }
 
-export async function POST(request: NextRequest) {
+// GET: Get a signed upload URL (bypasses Vercel body size limit)
+export async function GET(request: NextRequest) {
   try {
-    // Rate limiting
     const clientIP = getClientIP(request)
     if (!checkRateLimit(clientIP)) {
       return NextResponse.json(
@@ -63,59 +48,84 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const formData = await request.formData()
-    const file = formData.get('file') as File | null
-    const title = formData.get('title') as string | null
-    const subtitle = formData.get('subtitle') as string | null
-    const photographerName = formData.get('photographerName') as string | null
-
-    if (!file) {
-      return NextResponse.json(
-        { error: 'No file provided' },
-        { status: 400 }
-      )
-    }
+    const { searchParams } = new URL(request.url)
+    const filename = searchParams.get('filename') || 'image.jpg'
+    const contentType = searchParams.get('contentType') || 'image/jpeg'
+    const fileSize = parseInt(searchParams.get('fileSize') || '0', 10)
 
     // Validate file size
-    if (file.size > MAX_SIZE) {
+    if (fileSize > MAX_SIZE) {
       return NextResponse.json(
-        { error: 'File too large. Maximum size is 25MB' },
+        { error: 'File too large. Maximum size is 50MB' },
         { status: 400 }
       )
     }
 
-    // Convert file to buffer
-    const buffer = Buffer.from(await file.arrayBuffer())
-
-    // Validate actual file type via magic bytes
-    const detectedType = detectImageType(buffer)
-    if (!detectedType) {
+    // Validate content type
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp']
+    if (!allowedTypes.includes(contentType)) {
       return NextResponse.json(
-        { error: 'Invalid image file. Allowed: JPG, PNG, WebP' },
+        { error: 'Invalid file type. Allowed: JPG, PNG, WebP' },
         { status: 400 }
       )
     }
 
-    // Generate unique ID
+    // Generate unique ID and path
     const id = nanoid(12)
-    const ext = IMAGE_SIGNATURES[detectedType].ext
+    const ext = contentType === 'image/jpeg' ? 'jpg' : contentType.split('/')[1]
     const storagePath = `${id}.${ext}`
-    const contentType = detectedType === 'jpeg' ? 'image/jpeg' : `image/${detectedType}`
 
-    // Upload to Supabase Storage
-    const { error: uploadError } = await supabaseAdmin.storage
+    // Create signed upload URL (valid for 5 minutes)
+    const { data, error } = await supabaseAdmin.storage
       .from(BUCKET)
-      .upload(storagePath, buffer, {
-        contentType,
-        cacheControl: '2592000', // 30 days cache
-        upsert: false,
-      })
+      .createSignedUploadUrl(storagePath)
 
-    if (uploadError) {
-      console.error('[DemoCard] Upload error:', uploadError)
+    if (error) {
+      console.error('[DemoCard] Signed URL error:', error)
       return NextResponse.json(
-        { error: 'Upload failed. Please try again.' },
+        { error: 'Failed to prepare upload. Please try again.' },
         { status: 500 }
+      )
+    }
+
+    return NextResponse.json({
+      id,
+      storagePath,
+      signedUrl: data.signedUrl,
+      token: data.token,
+    })
+  } catch (error) {
+    console.error('[DemoCard] GET error:', error)
+    return NextResponse.json(
+      { error: 'Something went wrong. Please try again.' },
+      { status: 500 }
+    )
+  }
+}
+
+// POST: Confirm upload and create database record
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.json()
+    const { id, storagePath, filename, fileSize, contentType } = body
+
+    if (!id || !storagePath) {
+      return NextResponse.json(
+        { error: 'Missing required fields' },
+        { status: 400 }
+      )
+    }
+
+    // Verify the file exists in storage
+    const { data: fileData, error: checkError } = await supabaseAdmin.storage
+      .from(BUCKET)
+      .list('', { search: storagePath })
+
+    const fileExists = fileData?.some(f => f.name === storagePath)
+    if (checkError || !fileExists) {
+      return NextResponse.json(
+        { error: 'Upload not found. Please try again.' },
+        { status: 400 }
       )
     }
 
@@ -125,12 +135,12 @@ export async function POST(request: NextRequest) {
       .insert({
         id,
         storage_path: storagePath,
-        original_filename: file.name,
-        file_size: file.size,
-        mime_type: contentType,
-        title: title?.slice(0, 100) || null,
-        subtitle: subtitle?.slice(0, 200) || null,
-        photographer_name: photographerName?.slice(0, 100) || null,
+        original_filename: filename || 'image.jpg',
+        file_size: fileSize || 0,
+        mime_type: contentType || 'image/jpeg',
+        title: null,
+        subtitle: null,
+        photographer_name: null,
       })
       .select()
       .single()
@@ -155,7 +165,7 @@ export async function POST(request: NextRequest) {
       card,
     })
   } catch (error) {
-    console.error('[DemoCard] Error:', error)
+    console.error('[DemoCard] POST error:', error)
     return NextResponse.json(
       { error: 'Something went wrong. Please try again.' },
       { status: 500 }

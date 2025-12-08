@@ -5,9 +5,6 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { Lock, Image as ImageIcon, Calendar } from 'lucide-react'
 
-// Default showcase image for profiles without uploaded images
-const DEFAULT_COVER = '/images/showcase/default-portfolio.jpg'
-
 interface ProfileCardProps {
   profile: {
     id: string
@@ -20,11 +17,36 @@ interface ProfileCardProps {
   }
 }
 
+// Generate a consistent gradient based on profile id
+function getGradientColors(id: string): [string, string] {
+  const gradients: [string, string][] = [
+    ['from-stone-600', 'to-stone-800'],
+    ['from-slate-600', 'to-slate-800'],
+    ['from-zinc-600', 'to-zinc-800'],
+    ['from-neutral-600', 'to-neutral-800'],
+    ['from-stone-500', 'to-stone-700'],
+    ['from-slate-500', 'to-slate-700'],
+  ]
+  // Use first char of id to pick a gradient consistently
+  const index = id.charCodeAt(0) % gradients.length
+  return gradients[index]
+}
+
+function getInitials(name: string | null): string {
+  if (!name) return '?'
+  return name
+    .split(' ')
+    .map(n => n[0])
+    .join('')
+    .toUpperCase()
+    .slice(0, 2)
+}
+
 export function ProfileCard({ profile }: ProfileCardProps) {
   const [imageError, setImageError] = useState(false)
   
-  // Use actual cover image, or fallback to default showcase image
-  const imageUrl = (!profile.coverImageUrl || imageError) ? DEFAULT_COVER : profile.coverImageUrl
+  const hasImage = profile.coverImageUrl && !imageError
+  const [gradientFrom, gradientTo] = getGradientColors(profile.id)
 
   return (
     <Link
@@ -33,18 +55,30 @@ export function ProfileCard({ profile }: ProfileCardProps) {
     >
       {/* Tall Cover Image */}
       <div className="relative aspect-[3/4] bg-stone-100 overflow-hidden">
-        <Image
-          src={imageUrl}
-          alt={profile.display_name || 'Photographer'}
-          fill
-          className="object-cover transition-transform duration-700 group-hover:scale-105"
-          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-          unoptimized={imageUrl !== DEFAULT_COVER}
-          onError={() => setImageError(true)}
-        />
-        
-        {/* Gradient Overlay */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/0 to-black/0" />
+        {hasImage ? (
+          <>
+            <Image
+              src={profile.coverImageUrl!}
+              alt={profile.display_name || 'Photographer'}
+              fill
+              className="object-cover transition-transform duration-700 group-hover:scale-105"
+              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+              unoptimized
+              onError={() => setImageError(true)}
+            />
+            {/* Gradient Overlay for images */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/0 to-black/0" />
+          </>
+        ) : (
+          /* Placeholder for profiles without images */
+          <div className={`absolute inset-0 bg-gradient-to-br ${gradientFrom} ${gradientTo} flex flex-col items-center justify-center transition-all duration-500 group-hover:scale-105`}>
+            <div className="w-24 h-24 rounded-full bg-white/10 flex items-center justify-center backdrop-blur-sm border border-white/10">
+              <span className="text-4xl font-serif text-white/80">
+                {getInitials(profile.display_name)}
+              </span>
+            </div>
+          </div>
+        )}
         
         {/* Visibility Badge */}
         {profile.visibility_mode === 'PUBLIC_LOCKED' && (
@@ -54,26 +88,46 @@ export function ProfileCard({ profile }: ProfileCardProps) {
           </div>
         )}
         
-        {/* Content Overlay */}
-        <div className="absolute bottom-0 left-0 right-0 p-5">
-          <h3 className="text-lg font-medium text-white mb-1">
-            {profile.display_name || 'Photographer'}
-          </h3>
-          
-          <div className="flex items-center gap-3 text-xs text-white/70">
-            <span className="flex items-center gap-1">
-              <ImageIcon className="w-3.5 h-3.5" />
-              {profile.galleryCount} {profile.galleryCount === 1 ? 'gallery' : 'galleries'}
-            </span>
-            <span className="flex items-center gap-1">
-              <Calendar className="w-3.5 h-3.5" />
-              {new Date(profile.created_at).toLocaleDateString('en-US', {
-                month: 'short',
-                year: 'numeric',
-              })}
-            </span>
+        {/* Content Overlay - only show for cards with images */}
+        {hasImage && (
+          <div className="absolute bottom-0 left-0 right-0 p-5">
+            <h3 className="text-lg font-medium text-white mb-1">
+              {profile.display_name || 'Photographer'}
+            </h3>
+            
+            <div className="flex items-center gap-3 text-xs text-white/70">
+              <span className="flex items-center gap-1">
+                <ImageIcon className="w-3.5 h-3.5" />
+                {profile.galleryCount} {profile.galleryCount === 1 ? 'gallery' : 'galleries'}
+              </span>
+              <span className="flex items-center gap-1">
+                <Calendar className="w-3.5 h-3.5" />
+                {new Date(profile.created_at).toLocaleDateString('en-US', {
+                  month: 'short',
+                  year: 'numeric',
+                })}
+              </span>
+            </div>
           </div>
-        </div>
+        )}
+        
+        {/* Content for placeholder cards - at bottom */}
+        {!hasImage && (
+          <div className="absolute bottom-0 left-0 right-0 p-5 text-center">
+            <h3 className="text-lg font-medium text-white mb-1">
+              {profile.display_name || 'Photographer'}
+            </h3>
+            <div className="flex items-center justify-center gap-3 text-xs text-white/50">
+              <span className="flex items-center gap-1">
+                <Calendar className="w-3.5 h-3.5" />
+                Joined {new Date(profile.created_at).toLocaleDateString('en-US', {
+                  month: 'short',
+                  year: 'numeric',
+                })}
+              </span>
+            </div>
+          </div>
+        )}
       </div>
     </Link>
   )

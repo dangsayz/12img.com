@@ -15,7 +15,8 @@ import {
   HelpCircle,
   Shield,
   ChevronRight,
-  Users
+  Users,
+  UserCircle
 } from 'lucide-react'
 
 export type UserRole = 'user' | 'support' | 'admin' | 'super_admin'
@@ -127,6 +128,21 @@ export function AppNav({
             
             {/* Divider */}
             <div className="w-px h-5 bg-stone-200 hidden lg:block" />
+            
+            {/* Clients Link */}
+            <Link 
+              href="/dashboard/clients"
+              className={`
+                flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-full transition-colors
+                ${pathname.startsWith('/dashboard/clients')
+                  ? 'bg-stone-100 text-stone-900'
+                  : 'text-stone-500 hover:text-stone-900 hover:bg-stone-50'
+                }
+              `}
+            >
+              <UserCircle className="w-4 h-4" />
+              <span className="hidden sm:inline">Clients</span>
+            </Link>
             
             {/* New Gallery Button */}
             <Link 

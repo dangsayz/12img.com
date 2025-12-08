@@ -58,11 +58,11 @@ CREATE TABLE IF NOT EXISTS public.email_subscribers (
     )
 );
 
-CREATE INDEX idx_email_subscribers_email ON public.email_subscribers(email);
-CREATE INDEX idx_email_subscribers_status ON public.email_subscribers(status);
-CREATE INDEX idx_email_subscribers_user_id ON public.email_subscribers(user_id);
-CREATE INDEX idx_email_subscribers_tags ON public.email_subscribers USING GIN(tags);
-CREATE INDEX idx_email_subscribers_created_at ON public.email_subscribers(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_email_subscribers_email ON public.email_subscribers(email);
+CREATE INDEX IF NOT EXISTS idx_email_subscribers_status ON public.email_subscribers(status);
+CREATE INDEX IF NOT EXISTS idx_email_subscribers_user_id ON public.email_subscribers(user_id);
+CREATE INDEX IF NOT EXISTS idx_email_subscribers_tags ON public.email_subscribers USING GIN(tags);
+CREATE INDEX IF NOT EXISTS idx_email_subscribers_created_at ON public.email_subscribers(created_at DESC);
 
 -- --------------------------------------------
 -- email_campaigns
@@ -113,8 +113,8 @@ CREATE TABLE IF NOT EXISTS public.email_campaigns (
     )
 );
 
-CREATE INDEX idx_email_campaigns_status ON public.email_campaigns(status);
-CREATE INDEX idx_email_campaigns_created_at ON public.email_campaigns(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_email_campaigns_status ON public.email_campaigns(status);
+CREATE INDEX IF NOT EXISTS idx_email_campaigns_created_at ON public.email_campaigns(created_at DESC);
 
 -- --------------------------------------------
 -- email_campaign_sends
@@ -150,9 +150,9 @@ CREATE TABLE IF NOT EXISTS public.email_campaign_sends (
     CONSTRAINT email_campaign_sends_unique UNIQUE (campaign_id, subscriber_id)
 );
 
-CREATE INDEX idx_email_campaign_sends_campaign ON public.email_campaign_sends(campaign_id);
-CREATE INDEX idx_email_campaign_sends_subscriber ON public.email_campaign_sends(subscriber_id);
-CREATE INDEX idx_email_campaign_sends_status ON public.email_campaign_sends(status);
+CREATE INDEX IF NOT EXISTS idx_email_campaign_sends_campaign ON public.email_campaign_sends(campaign_id);
+CREATE INDEX IF NOT EXISTS idx_email_campaign_sends_subscriber ON public.email_campaign_sends(subscriber_id);
+CREATE INDEX IF NOT EXISTS idx_email_campaign_sends_status ON public.email_campaign_sends(status);
 
 -- --------------------------------------------
 -- email_templates
@@ -187,8 +187,8 @@ CREATE TABLE IF NOT EXISTS public.email_templates (
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE INDEX idx_email_templates_category ON public.email_templates(category);
-CREATE INDEX idx_email_templates_active ON public.email_templates(is_active);
+CREATE INDEX IF NOT EXISTS idx_email_templates_category ON public.email_templates(category);
+CREATE INDEX IF NOT EXISTS idx_email_templates_active ON public.email_templates(is_active);
 
 -- ============================================
 -- TRIGGERS
@@ -203,6 +203,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS trigger_email_subscribers_updated_at ON public.email_subscribers;
 CREATE TRIGGER trigger_email_subscribers_updated_at
     BEFORE UPDATE ON public.email_subscribers
     FOR EACH ROW
@@ -217,6 +218,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS trigger_email_campaigns_updated_at ON public.email_campaigns;
 CREATE TRIGGER trigger_email_campaigns_updated_at
     BEFORE UPDATE ON public.email_campaigns
     FOR EACH ROW
@@ -231,6 +233,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS trigger_email_templates_updated_at ON public.email_templates;
 CREATE TRIGGER trigger_email_templates_updated_at
     BEFORE UPDATE ON public.email_templates
     FOR EACH ROW
@@ -265,6 +268,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS trigger_sync_user_to_subscriber ON public.users;
 CREATE TRIGGER trigger_sync_user_to_subscriber
     AFTER INSERT OR UPDATE ON public.users
     FOR EACH ROW

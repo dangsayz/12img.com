@@ -22,14 +22,15 @@ export function DemoCardGenerator() {
 
   const handleFile = useCallback(async (file: File) => {
     // Validate file type
-    if (!file.type.startsWith('image/')) {
-      setError('Please upload an image file')
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp']
+    if (!allowedTypes.includes(file.type)) {
+      setError('Please upload a JPG, PNG, or WebP image')
       return
     }
 
-    // Validate file size (25MB max)
-    if (file.size > 25 * 1024 * 1024) {
-      setError('Image must be under 25MB')
+    // Validate file size (50MB max)
+    if (file.size > 50 * 1024 * 1024) {
+      setError('Image must be under 50MB')
       return
     }
 
@@ -41,26 +42,60 @@ export function DemoCardGenerator() {
     setIsUploading(true)
 
     try {
-      const formData = new FormData()
-      formData.append('file', file)
+      // Step 1: Get signed upload URL from our API
+      const params = new URLSearchParams({
+        filename: file.name,
+        contentType: file.type,
+        fileSize: file.size.toString(),
+      })
+      
+      const prepareRes = await fetch(`/api/demo-card?${params}`)
+      const prepareData = await prepareRes.json()
+      
+      if (!prepareRes.ok) {
+        throw new Error(prepareData.error || 'Failed to prepare upload')
+      }
 
-      const response = await fetch('/api/demo-card', {
-        method: 'POST',
-        body: formData,
+      const { id, storagePath, signedUrl } = prepareData
+
+      // Step 2: Upload directly to Supabase Storage (bypasses Vercel limit)
+      const uploadRes = await fetch(signedUrl, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': file.type,
+        },
+        body: file,
       })
 
-      const data = await response.json()
+      if (!uploadRes.ok) {
+        throw new Error('Upload failed. Please try again.')
+      }
 
-      if (!response.ok) {
-        throw new Error(data.error || 'Upload failed')
+      // Step 3: Confirm upload and create database record
+      const confirmRes = await fetch('/api/demo-card', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id,
+          storagePath,
+          filename: file.name,
+          fileSize: file.size,
+          contentType: file.type,
+        }),
+      })
+
+      const confirmData = await confirmRes.json()
+
+      if (!confirmRes.ok) {
+        throw new Error(confirmData.error || 'Failed to create card')
       }
 
       // Get public URL for the image
-      const imageUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/demo-cards/${data.card.storage_path}`
+      const imageUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/demo-cards/${storagePath}`
       
       setCardData({
-        id: data.id,
-        url: data.url,
+        id: confirmData.id,
+        url: confirmData.url,
         imageUrl,
       })
     } catch (err) {

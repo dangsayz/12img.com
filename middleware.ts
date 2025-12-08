@@ -17,11 +17,13 @@ const isPublicRoute = createRouteMatcher([
   '/profiles',
   '/profile/(.*)',
   '/gallery/(.*)',
+  '/portal/(.*)', // Client portal routes
   '/api/share/(.*)',
   '/api/demo-card',
   '/api/webhook/clerk',
   '/api/gallery/unlock',
   '/api/track/(.*)',
+  '/api/portal/(.*)', // Portal API routes
 ])
 
 export default clerkMiddleware(async (auth, request) => {

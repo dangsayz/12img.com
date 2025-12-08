@@ -300,9 +300,25 @@ function generateArchiveEmailHtml(data: ArchiveEmailData): string {
                 </tr>
               </table>
               <hr style="margin: 20px 0; border: none; border-top: 1px solid #e4e4e7;">
-              <p style="margin: 0; font-size: 12px; color: #a1a1aa; text-align: center; font-family: 'Playfair Display', 'Georgia', serif; font-style: italic;">
-                Delivered with <span style="color: #737373;">12<span style="color: #b45309;">img</span></span>
-              </p>
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
+                <tr>
+                  <td align="center">
+                    <table role="presentation" cellspacing="0" cellpadding="0">
+                      <tr>
+                        <td style="padding-right: 8px;">
+                          <span style="font-size: 12px; color: #a1a1aa;">Delivered with</span>
+                        </td>
+                        <td style="width: 20px; height: 20px; background-color: #18181b; border-radius: 50%; text-align: center; vertical-align: middle;">
+                          <span style="color: #ffffff; font-size: 7px; font-weight: 700;">12</span>
+                        </td>
+                        <td style="padding-left: 4px;">
+                          <span style="font-size: 12px; font-weight: 600; color: #737373;">img</span>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
             </td>
           </tr>
           
@@ -598,7 +614,7 @@ export async function retryArchiveEmail(
 
 /**
  * Generate HTML email for gallery invitation.
- * Elegant, minimal design matching 12img brand.
+ * Warm, personal, elegant design matching 12img brand.
  */
 function generateGalleryInviteEmailHtml(data: GalleryInviteEmailData): string {
   return `
@@ -618,7 +634,16 @@ function generateGalleryInviteEmailHtml(data: GalleryInviteEmailData): string {
           <!-- Logo -->
           <tr>
             <td align="center" style="padding-bottom: 48px;">
-              <span style="font-size: 28px; font-weight: 400; color: #18181b; font-family: 'Playfair Display', 'Georgia', 'Times New Roman', serif; letter-spacing: -0.5px; font-style: italic;">12<span style="color: #b45309;">img</span></span>
+              <table role="presentation" cellspacing="0" cellpadding="0">
+                <tr>
+                  <td style="width: 32px; height: 32px; background-color: #18181b; border-radius: 50%; text-align: center; vertical-align: middle;">
+                    <span style="color: #ffffff; font-size: 11px; font-weight: 700; letter-spacing: -0.5px;">12</span>
+                  </td>
+                  <td style="padding-left: 6px;">
+                    <span style="font-size: 18px; font-weight: 700; color: #18181b; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;">img</span>
+                  </td>
+                </tr>
+              </table>
             </td>
           </tr>
           
@@ -638,7 +663,16 @@ function generateGalleryInviteEmailHtml(data: GalleryInviteEmailData): string {
             </td>
           </tr>
           
-          <!-- Subtitle -->
+          <!-- Ready Message -->
+          <tr>
+            <td align="center" style="padding-bottom: 12px;">
+              <p style="margin: 0; font-size: 18px; color: #525252; font-family: 'Georgia', serif;">
+                is now ready for you
+              </p>
+            </td>
+          </tr>
+          
+          <!-- Image Count -->
           <tr>
             <td align="center" style="padding-bottom: 40px;">
               <p style="margin: 0; font-size: 14px; color: #737373; text-transform: uppercase; letter-spacing: 2px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;">
@@ -648,11 +682,11 @@ function generateGalleryInviteEmailHtml(data: GalleryInviteEmailData): string {
           </tr>
           
           ${data.photographerName ? `
-          <!-- From -->
+          <!-- Thank You Message -->
           <tr>
             <td align="center" style="padding-bottom: 32px;">
-              <p style="margin: 0; font-size: 16px; color: #525252;">
-                A collection by <strong style="color: #18181b;">${data.photographerName}</strong>
+              <p style="margin: 0; font-size: 16px; color: #525252; line-height: 1.8;">
+                Thank you for trusting <strong style="color: #18181b;">${data.photographerName}</strong> to capture these moments.
               </p>
             </td>
           </tr>
@@ -674,7 +708,7 @@ function generateGalleryInviteEmailHtml(data: GalleryInviteEmailData): string {
             <td align="center" style="padding-bottom: 40px;">
               <a href="${data.galleryUrl}" 
                  style="display: inline-block; padding: 16px 48px; background-color: #18181b; color: #ffffff; font-size: 13px; font-weight: 500; text-decoration: none; text-transform: uppercase; letter-spacing: 1.5px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;">
-                View Gallery
+                View Your Gallery
               </a>
             </td>
           </tr>
@@ -705,12 +739,32 @@ function generateGalleryInviteEmailHtml(data: GalleryInviteEmailData): string {
             </td>
           </tr>
           
+          <!-- Free Offer -->
+          <tr>
+            <td align="center" style="padding-bottom: 32px;">
+              <p style="margin: 0; font-size: 14px; color: #737373; line-height: 1.7;">
+                Love how your photos look? Create your own galleries for free.<br/>
+                <a href="https://12img.com" style="color: #b45309; text-decoration: none;">Start with 3 free albums →</a>
+              </p>
+            </td>
+          </tr>
+          
           <!-- Footer -->
           <tr>
             <td align="center">
-              <p style="margin: 0; font-size: 12px; color: #a3a3a3; font-family: 'Playfair Display', 'Georgia', serif; font-style: italic;">
-                Delivered with <span style="color: #737373;">12<span style="color: #b45309;">img</span></span>
-              </p>
+              <table role="presentation" cellspacing="0" cellpadding="0">
+                <tr>
+                  <td style="padding-right: 8px;">
+                    <span style="font-size: 12px; color: #a3a3a3;">Delivered with</span>
+                  </td>
+                  <td style="width: 20px; height: 20px; background-color: #18181b; border-radius: 50%; text-align: center; vertical-align: middle;">
+                    <span style="color: #ffffff; font-size: 7px; font-weight: 700;">12</span>
+                  </td>
+                  <td style="padding-left: 4px;">
+                    <span style="font-size: 12px; font-weight: 600; color: #737373;">img</span>
+                  </td>
+                </tr>
+              </table>
             </td>
           </tr>
           
@@ -728,22 +782,23 @@ function generateGalleryInviteEmailHtml(data: GalleryInviteEmailData): string {
  */
 function generateGalleryInviteEmailText(data: GalleryInviteEmailData): string {
   return `
-Your Photos Are Ready
+${data.galleryTitle} is now ready for you
 
-Gallery: ${data.galleryTitle}
-Images: ${data.imageCount}
-${data.photographerName ? `From: ${data.photographerName}` : ''}
-${data.photographerEmail ? `Contact: ${data.photographerEmail}` : ''}
+${data.imageCount} images waiting to be explored.
 
-${data.personalMessage ? `Message from the photographer:\n"${data.personalMessage}"\n` : ''}
-View your gallery here:
+${data.photographerName ? `Thank you for trusting ${data.photographerName} to capture these moments.\n` : ''}
+${data.personalMessage ? `"${data.personalMessage}"\n` : ''}
+View your gallery:
 ${data.galleryUrl}
 
-${data.hasPassword ? `🔒 This gallery is password protected.${data.password ? ` Your PIN: ${data.password}` : ' The photographer will share the password with you.'}` : ''}
+${data.hasPassword ? `This gallery is protected.${data.password ? ` Your PIN: ${data.password}` : ' The PIN will be shared separately.'}\n` : ''}
+---
+
+Love how your photos look? Create your own galleries for free.
+Start with 3 free albums at 12img.com
 
 ---
-Powered by 12img
-Your images, beautifully delivered
+Delivered with 12img
 `.trim()
 }
 
@@ -780,7 +835,7 @@ export async function sendGalleryInviteEmail(
       .select('*', { count: 'exact', head: true })
       .eq('gallery_id', gallery.id)
 
-    const subject = `${options.photographerName || 'Your photographer'} shared "${gallery.title}" with you`
+    const subject = `${gallery.title} is ready for you`
     
     // Create email log for tracking
     const emailLog = await createEmailLog(

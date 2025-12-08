@@ -46,6 +46,13 @@ CREATE TABLE IF NOT EXISTS public.galleries (
     password_hash TEXT,
     download_enabled BOOLEAN NOT NULL DEFAULT TRUE,
     cover_image_id UUID,
+    -- Template and visibility
+    template TEXT NOT NULL DEFAULT 'mosaic',
+    is_public BOOLEAN NOT NULL DEFAULT TRUE,
+    is_locked BOOLEAN NOT NULL DEFAULT FALSE,
+    lock_pin_hash TEXT,
+    -- Presentation data (JSON)
+    presentation_data JSONB,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     
@@ -57,6 +64,7 @@ CREATE TABLE IF NOT EXISTS public.galleries (
 CREATE UNIQUE INDEX IF NOT EXISTS idx_galleries_slug ON public.galleries(slug);
 CREATE INDEX IF NOT EXISTS idx_galleries_user_id ON public.galleries(user_id);
 CREATE INDEX IF NOT EXISTS idx_galleries_created_at ON public.galleries(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_galleries_is_public ON public.galleries(is_public);
 
 -- Images table
 CREATE TABLE IF NOT EXISTS public.images (

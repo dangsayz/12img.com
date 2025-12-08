@@ -6,8 +6,14 @@ import { motion, useScroll, useSpring, useTransform } from 'framer-motion'
 import { EditorialSpread } from '@/lib/editorial/types'
 import { Spread } from './Spread'
 import { SpreadOverview } from './SpreadOverview'
-import { ArrowLeft, ChevronDown } from 'lucide-react'
+import { ArrowLeft, ChevronDown, Share2 } from 'lucide-react'
 import Link from 'next/link'
+import { ShareCardModal } from './ShareCardModal'
+
+interface PreviewImage {
+  id: string
+  url: string
+}
 
 interface Props {
   spreads: EditorialSpread[]
@@ -17,6 +23,7 @@ interface Props {
   photographerName?: string
   eventDate?: string
   location?: string
+  previewImages?: PreviewImage[]
 }
 
 export function EditorialViewer({ 
@@ -26,9 +33,16 @@ export function EditorialViewer({
   imageCount,
   photographerName,
   eventDate,
-  location 
+  location,
+  previewImages = []
 }: Props) {
   const [debug, setDebug] = useState(false)
+  const [showShareModal, setShowShareModal] = useState(false)
+  
+  // Build gallery URL
+  const galleryUrl = typeof window !== 'undefined' 
+    ? `${window.location.origin}/view-live/${galleryId}`
+    : `https://12img.com/view-live/${galleryId}`
   const { scrollYProgress } = useScroll()
   const scaleX = useSpring(scrollYProgress, {
     stiffness: 100,
@@ -67,23 +81,36 @@ export function EditorialViewer({
           <span className="text-xs font-medium tracking-wide text-stone-600 uppercase hidden sm:inline">Back</span>
         </Link>
         
-        {/* Right side - Image count */}
-        {imageCount && imageCount > 0 && (
-          <div className="pointer-events-auto bg-white/80 backdrop-blur-sm px-3 py-2 rounded-full shadow-sm">
-            <span className="text-xs font-medium tracking-wide text-stone-600">
-              {imageCount} <span className="text-[10px] uppercase tracking-wider opacity-70">images</span>
-            </span>
-          </div>
-        )}
+        {/* Right side - Share + Image count */}
+        <div className="pointer-events-auto flex items-center gap-2">
+          <button
+            onClick={() => setShowShareModal(true)}
+            className="flex items-center gap-2 bg-white/80 backdrop-blur-sm px-3 py-2 rounded-full shadow-sm opacity-60 hover:opacity-100 transition-opacity"
+          >
+            <Share2 className="w-4 h-4 text-stone-600" />
+            <span className="text-xs font-medium tracking-wide text-stone-600 uppercase hidden sm:inline">Share</span>
+          </button>
+          {imageCount && imageCount > 0 && (
+            <div className="bg-white/80 backdrop-blur-sm px-3 py-2 rounded-full shadow-sm hidden sm:block">
+              <span className="text-xs font-medium tracking-wide text-stone-600">
+                {imageCount} <span className="text-[10px] uppercase tracking-wider opacity-70">images</span>
+              </span>
+            </div>
+          )}
+        </div>
       </nav>
 
       {/* Main Content */}
       <main className="w-full">
-        {spreads.map((spread) => (
-          <div key={spread.id} id={spread.id}>
-             <Spread spread={spread} debug={debug} />
-          </div>
-        ))}
+        {spreads.map((spread, index) => {
+          // First content spread is the one right after the title (index 1)
+          const isFirstContent = index === 1 && spread.pageNumber === 1
+          return (
+            <div key={spread.id} id={spread.id}>
+              <Spread spread={spread} debug={debug} isFirstContent={isFirstContent} />
+            </div>
+          )
+        })}
       </main>
 
       {/* Scroll Indicator - Fades out as user scrolls */}
@@ -117,6 +144,16 @@ export function EditorialViewer({
 
       {/* Index Sheet Footer */}
       <SpreadOverview spreads={spreads} onSpreadClick={scrollToSpread} />
+
+      {/* Share Card Modal */}
+      <ShareCardModal
+        isOpen={showShareModal}
+        onClose={() => setShowShareModal(false)}
+        title={title}
+        imageCount={imageCount || 0}
+        previewImages={previewImages}
+        galleryUrl={galleryUrl}
+      />
     </div>
   )
 }

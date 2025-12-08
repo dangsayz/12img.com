@@ -8,27 +8,35 @@ import { EditorialHeading, EditorialBody, PullQuote, BigLetter, Caption } from '
 interface Props {
   spread: EditorialSpread
   debug?: boolean
+  isFirstContent?: boolean
 }
 
-export function Spread({ spread, debug }: Props) {
+export function Spread({ spread, debug, isFirstContent }: Props) {
   const isViewportHeight = spread.height === 'viewport'
   
   // Theme configuration - neutral palette only
   const themeStyles = {
     light: 'bg-[#FAFAFA] text-neutral-900',
-    dark: 'bg-[#0F172A] text-white selection:bg-white selection:text-black', // Navy
+    dark: 'bg-neutral-900 text-white selection:bg-white selection:text-black', // True neutral dark
     accent: 'bg-stone-100 text-neutral-900', // Subtle warm gray instead of yellow
   }
   
   const currentTheme = spread.theme || 'light'
   const isDark = currentTheme === 'dark'
 
+  // Reduce top padding for first content spread (right after title)
+  const getPadding = () => {
+    if (isViewportHeight) return "py-0"
+    if (isFirstContent) return "pt-4 pb-12 md:pt-6 md:pb-24" // Minimal top, normal bottom
+    return "py-12 md:py-24"
+  }
+
   return (
     <section 
       className={cn(
         "relative w-full overflow-hidden transition-colors duration-700",
         themeStyles[currentTheme],
-        isViewportHeight ? "min-h-screen py-0" : "py-12 md:py-24",
+        getPadding(),
         // Mobile: Stacked
         // Desktop: Grid
         "flex flex-col md:grid md:grid-cols-12 md:gap-x-5 md:gap-y-5",

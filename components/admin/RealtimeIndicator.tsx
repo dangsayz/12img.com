@@ -15,25 +15,32 @@ export function RealtimeIndicator({ refreshInterval = 30 }: RealtimeIndicatorPro
   const [countdown, setCountdown] = useState(refreshInterval)
   const [isRefreshing, setIsRefreshing] = useState(false)
 
-  // Auto-refresh
+  // Auto-refresh countdown
   useEffect(() => {
     if (!isLive) return
 
     const interval = setInterval(() => {
       setCountdown(prev => {
         if (prev <= 1) {
-          setIsRefreshing(true)
-          router.refresh()
-          setLastUpdate(new Date())
-          setTimeout(() => setIsRefreshing(false), 500)
-          return refreshInterval
+          return 0 // Signal to trigger refresh
         }
         return prev - 1
       })
     }, 1000)
 
     return () => clearInterval(interval)
-  }, [isLive, refreshInterval, router])
+  }, [isLive])
+
+  // Handle refresh when countdown reaches 0
+  useEffect(() => {
+    if (countdown === 0 && isLive) {
+      setIsRefreshing(true)
+      router.refresh()
+      setLastUpdate(new Date())
+      setCountdown(refreshInterval)
+      setTimeout(() => setIsRefreshing(false), 500)
+    }
+  }, [countdown, isLive, refreshInterval, router])
 
   const handleManualRefresh = () => {
     setIsRefreshing(true)

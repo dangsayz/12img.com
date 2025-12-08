@@ -48,16 +48,61 @@ export default async function PricingPage() {
             <h1 className="font-serif text-4xl md:text-5xl font-bold text-[#141414] mb-4">
               Simple, honest pricing
             </h1>
-            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+            <p className="text-lg text-stone-500 max-w-2xl mx-auto">
               No hidden fees. No video bloat. Just storage for photographers who need it.
-              <span className="block mt-2 text-emerald-600 font-medium">
-                Save up to 40% compared to competitors.
-              </span>
             </p>
           </div>
 
           {/* Pricing Matrix */}
           <PricingMatrix showAllFeatures={true} currentPlan={userId ? plan : null} />
+
+          {/* Contracts Feature Callout */}
+          <div className="mt-16 bg-gradient-to-br from-stone-900 to-stone-800 rounded-2xl p-8 md:p-12 text-white">
+            <div className="flex flex-col md:flex-row items-center gap-8">
+              <div className="flex-shrink-0">
+                <div className="w-16 h-16 bg-white/10 rounded-xl flex items-center justify-center">
+                  <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+                  </svg>
+                </div>
+              </div>
+              <div className="flex-1 text-center md:text-left">
+                <h2 className="text-2xl md:text-3xl font-serif font-bold mb-3">
+                  Smart Contracts Included
+                </h2>
+                <p className="text-stone-300 text-lg mb-4">
+                  Professional contracts with e-signatures, client portals, messaging, and milestone tracking. 
+                  Everything you need to manage clients—included with any paid plan.
+                </p>
+                <div className="flex flex-wrap gap-4 justify-center md:justify-start text-sm">
+                  <span className="flex items-center gap-2">
+                    <svg className="w-4 h-4 text-green-400" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                    </svg>
+                    E-Signatures
+                  </span>
+                  <span className="flex items-center gap-2">
+                    <svg className="w-4 h-4 text-green-400" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                    </svg>
+                    Client Portal
+                  </span>
+                  <span className="flex items-center gap-2">
+                    <svg className="w-4 h-4 text-green-400" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                    </svg>
+                    Messaging
+                  </span>
+                  <span className="flex items-center gap-2">
+                    <svg className="w-4 h-4 text-green-400" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                    </svg>
+                    Milestone Tracking
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
 
           {/* Trust badges */}
           <div className="mt-16 pt-12 border-t border-gray-200">

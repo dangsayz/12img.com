@@ -1,5 +1,6 @@
 import { Metadata } from 'next'
 import { notFound, redirect } from 'next/navigation'
+import { auth } from '@clerk/nextjs/server'
 import { getPublicProfileBySlug } from '@/server/actions/profile.actions'
 import { getSignedUrlsBatch } from '@/lib/storage/signed-urls'
 import { ProfilePageClient } from './ProfilePageClient'
@@ -41,7 +42,8 @@ export async function generateMetadata({ params }: ProfilePageProps): Promise<Me
 
 export default async function ProfilePage({ params }: ProfilePageProps) {
   const { slug } = await params
-  const result = await getPublicProfileBySlug(slug)
+  const { userId } = await auth()
+  const result = await getPublicProfileBySlug(slug, userId || undefined)
 
   // Handle redirect for old slugs
   if (result && 'redirect' in result) {

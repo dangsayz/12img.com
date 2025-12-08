@@ -142,7 +142,7 @@ export function PricingMatrix({ showAllFeatures = true, className = '', currentP
                     )}
                     <div className="mt-5">
                       {getButtonState(plan.id) === 'current' ? (
-                        <div className="w-full px-4 py-2.5 text-sm font-semibold border bg-emerald-50 text-emerald-700 border-emerald-200 cursor-default">
+                        <div className="w-full px-4 py-2.5 text-sm font-medium text-[#525252] cursor-default">
                           Current Plan
                         </div>
                       ) : (

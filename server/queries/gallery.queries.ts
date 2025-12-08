@@ -69,6 +69,7 @@ export async function getUserGalleries(clerkId: string) {
       slug,
       password_hash,
       download_enabled,
+      is_public,
       created_at,
       updated_at,
       cover_image_id
@@ -123,6 +124,7 @@ export async function getUserGalleries(clerkId: string) {
     slug: gallery.slug,
     hasPassword: !!gallery.password_hash,
     downloadEnabled: gallery.download_enabled,
+    isPublic: gallery.is_public ?? true,
     createdAt: gallery.created_at,
     updatedAt: gallery.updated_at,
     coverImageUrl: gallery.cover_image_id

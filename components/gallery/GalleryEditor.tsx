@@ -5,7 +5,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
-import { updateGalleryTemplate, updateGallery } from '@/server/actions/gallery.actions'
+import { updateGalleryTemplate, updateGallery, toggleGalleryVisibility } from '@/server/actions/gallery.actions'
 import { 
   ArrowLeft,
   ArrowDownToLine,
@@ -24,6 +24,7 @@ import {
   Mail,
   Smartphone,
   Eye,
+  EyeOff,
   LayoutGrid,
   Layers,
   Film,
@@ -34,7 +35,8 @@ import {
   Link2,
   Send,
   Globe,
-  GripVertical
+  GripVertical,
+  Shield
 } from 'lucide-react'
 import { EmailActivity } from '@/components/gallery/EmailActivity'
 import { ShareModal } from '@/components/gallery/ShareModal'
@@ -190,6 +192,8 @@ interface GalleryData {
   slug: string
   password_hash: string | null
   download_enabled: boolean
+  is_public: boolean
+  is_locked: boolean
   template?: string
   created_at: string
   imageCount: number
@@ -236,10 +240,36 @@ export function GalleryEditor({
   const [isSavingTitle, setIsSavingTitle] = useState(false)
   const [titleSaveSuccess, setTitleSaveSuccess] = useState(false)
   const titleInputRef = useRef<HTMLInputElement>(null)
+  const [isPublic, setIsPublic] = useState(gallery.is_public)
+  const [isTogglingVisibility, setIsTogglingVisibility] = useState(false)
 
   useEffect(() => {
     setShareUrl(`${window.location.origin}/view-reel/${gallery.id}`)
   }, [gallery.id])
+
+  // Handle visibility toggle
+  const handleVisibilityToggle = async () => {
+    const newValue = !isPublic
+    setIsTogglingVisibility(true)
+    setIsPublic(newValue) // Optimistic update
+    
+    try {
+      const result = await toggleGalleryVisibility(gallery.id, newValue)
+      if (result.error) {
+        // Revert on error
+        setIsPublic(!newValue)
+        console.error('Failed to toggle visibility:', result.error)
+      } else {
+        router.refresh()
+      }
+    } catch (error) {
+      // Revert on error
+      setIsPublic(!newValue)
+      console.error('Failed to toggle visibility:', error)
+    } finally {
+      setIsTogglingVisibility(false)
+    }
+  }
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -414,23 +444,8 @@ export function GalleryEditor({
     <div className="min-h-screen bg-[#fafaf9]">
       {/* Hero Section with Cover */}
       <div className="relative">
-        {/* Background - blurred cover or gradient */}
-        <div className="absolute inset-0 h-[60vh] overflow-hidden">
-          {coverImage ? (
-            <>
-              <Image
-                src={coverImage.previewUrl}
-                alt=""
-                fill
-                className="object-cover blur-2xl scale-110 opacity-30"
-                priority
-              />
-              <div className="absolute inset-0 bg-gradient-to-b from-stone-50/50 via-stone-50/80 to-stone-50" />
-            </>
-          ) : (
-            <div className="absolute inset-0 bg-gradient-to-b from-stone-100 to-stone-50" />
-          )}
-        </div>
+        {/* Background - clean solid color */}
+        <div className="absolute inset-0 h-[60vh] bg-[#fafaf9]" />
 
         {/* Header */}
         <header className="relative z-30">
@@ -585,21 +600,58 @@ export function GalleryEditor({
                     </button>
                   </div>
 
-                  {/* Status Row - Minimal */}
-                  <div className="flex items-center gap-4 text-xs text-stone-400">
-                    <span className="flex items-center gap-1.5">
-                      {gallery.password_hash ? (
-                        <><Lock className="w-3.5 h-3.5" /> Protected</>
+                  {/* Visibility Toggle */}
+                  <div className="flex items-center justify-between py-3 border-b border-stone-100">
+                    <div className="flex items-center gap-3">
+                      {isPublic ? (
+                        <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center">
+                          <Globe className="w-4 h-4 text-emerald-600" />
+                        </div>
                       ) : (
-                        <><Globe className="w-3.5 h-3.5" /> Public</>
+                        <div className="w-8 h-8 rounded-full bg-stone-900 flex items-center justify-center">
+                          <EyeOff className="w-4 h-4 text-white" />
+                        </div>
                       )}
-                    </span>
-                    <span className="flex items-center gap-1.5">
-                      {gallery.download_enabled ? (
-                        <><ArrowDownToLine className="w-3.5 h-3.5 text-emerald-500" /> Downloads</>
-                      ) : (
-                        <><ArrowDownToLine className="w-3.5 h-3.5" /> No downloads</>
-                      )}
+                      <div>
+                        <p className="text-sm font-medium text-stone-900">
+                          {isPublic ? 'Public Gallery' : 'Private Gallery'}
+                        </p>
+                        <p className="text-xs text-stone-500">
+                          {isPublic 
+                            ? 'Anyone with the link can view' 
+                            : 'Only you can see this gallery'
+                          }
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={handleVisibilityToggle}
+                      disabled={isTogglingVisibility}
+                      className={`relative w-11 h-6 rounded-full transition-colors ${
+                        isPublic ? 'bg-emerald-500' : 'bg-stone-300'
+                      } ${isTogglingVisibility ? 'opacity-50' : ''}`}
+                    >
+                      <span
+                        className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${
+                          isPublic ? 'translate-x-5' : 'translate-x-0'
+                        }`}
+                      />
+                    </button>
+                  </div>
+
+                  {/* PIN Protection Status (only show if public) */}
+                  {isPublic && gallery.is_locked && (
+                    <div className="flex items-center gap-2 py-2 px-3 bg-amber-50 rounded-lg text-xs text-amber-700">
+                      <Shield className="w-3.5 h-3.5" />
+                      <span>PIN protected</span>
+                    </div>
+                  )}
+
+                  {/* Downloads Status */}
+                  <div className="flex items-center gap-3 text-xs text-stone-400 pt-2">
+                    <span className={`inline-flex items-center gap-1.5 ${gallery.download_enabled ? '' : 'opacity-50'}`}>
+                      <ArrowDownToLine className="w-3.5 h-3.5" />
+                      {gallery.download_enabled ? 'Downloads enabled' : 'Downloads disabled'}
                     </span>
                   </div>
 

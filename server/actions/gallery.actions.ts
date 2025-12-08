@@ -165,6 +165,34 @@ export async function updateGallery(galleryId: string, formData: FormData) {
   }
 }
 
+/**
+ * Toggle gallery public/private visibility
+ */
+export async function toggleGalleryVisibility(galleryId: string, isPublic: boolean) {
+  const { userId: clerkId } = await auth()
+  if (!clerkId) return { error: 'Unauthorized' }
+
+  const user = await getOrCreateUserByClerkId(clerkId)
+  if (!user) return { error: 'User not found' }
+
+  const gallery = await getGalleryWithOwnershipCheck(galleryId, user.id)
+  if (!gallery) return { error: 'Gallery not found' }
+
+  const { error } = await supabaseAdmin
+    .from('galleries')
+    .update({ is_public: isPublic })
+    .eq('id', galleryId)
+
+  if (error) return { error: 'Failed to update visibility' }
+
+  revalidatePath('/')
+  revalidatePath(`/gallery/${galleryId}`)
+  revalidatePath(`/view-reel/${galleryId}`)
+  revalidatePath(`/view-live/${galleryId}`)
+
+  return { success: true, isPublic }
+}
+
 export async function updateGalleryTemplate(galleryId: string, template: string) {
   const { userId: clerkId } = await auth()
   if (!clerkId) return { error: 'Unauthorized' }

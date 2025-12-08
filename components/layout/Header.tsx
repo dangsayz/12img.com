@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { UserButton } from '@clerk/nextjs'
-import { Plus, Shield, Menu, X } from 'lucide-react'
+import { Plus, Shield, Menu, X, Users, MessageSquare } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Button } from '@/components/ui/button'
 import { UsageBadge } from './UsageBadge'
@@ -23,6 +23,7 @@ interface HeaderProps {
 
 const navLinks = [
   { href: '/', label: 'Galleries' },
+  { href: '/dashboard/clients', label: 'Clients' },
   { href: '/profiles', label: 'Profiles' },
   { href: '/pricing', label: 'Pricing' },
   { href: '/settings', label: 'Settings' },

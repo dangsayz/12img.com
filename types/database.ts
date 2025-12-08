@@ -12,6 +12,13 @@ export type ProcessingStatus = 'pending' | 'processing' | 'ready' | 'failed'
 export type DerivativeSizeCode = 'xs' | 'sm' | 'md' | 'lg' | 'xl'
 export type ProfileVisibilityMode = 'PRIVATE' | 'PUBLIC' | 'PUBLIC_LOCKED'
 
+// Client Portal Types
+export type EventType = 'wedding' | 'engagement' | 'portrait' | 'family' | 'newborn' | 'maternity' | 'corporate' | 'event' | 'other'
+export type ContractStatus = 'draft' | 'sent' | 'viewed' | 'signed' | 'archived'
+export type ClauseCategory = 'payment' | 'cancellation' | 'liability' | 'copyright' | 'usage_rights' | 'delivery' | 'scheduling' | 'meals_breaks' | 'travel' | 'equipment' | 'force_majeure' | 'dispute_resolution' | 'custom'
+export type MessageStatus = 'sent' | 'delivered' | 'read'
+export type MessageType = 'text' | 'image' | 'file' | 'system'
+
 export interface Database {
   public: {
     Tables: {
@@ -210,6 +217,8 @@ export interface Database {
           brand_color: string
           contact_email: string | null
           website_url: string | null
+          phone: string | null
+          business_location: string | null
           // Notification preferences
           notify_gallery_viewed: boolean
           notify_images_downloaded: boolean
@@ -238,6 +247,8 @@ export interface Database {
           brand_color?: string
           contact_email?: string | null
           website_url?: string | null
+          phone?: string | null
+          business_location?: string | null
           notify_gallery_viewed?: boolean
           notify_images_downloaded?: boolean
           notify_archive_ready?: boolean
@@ -263,6 +274,8 @@ export interface Database {
           brand_color?: string
           contact_email?: string | null
           website_url?: string | null
+          phone?: string | null
+          business_location?: string | null
           notify_gallery_viewed?: boolean
           notify_images_downloaded?: boolean
           notify_archive_ready?: boolean
@@ -292,6 +305,8 @@ export interface Database {
           // Gallery locking fields
           is_locked: boolean
           lock_pin_hash: string | null
+          // Visibility
+          is_public: boolean
           created_at: string
           updated_at: string
         }
@@ -305,6 +320,7 @@ export interface Database {
           cover_image_id?: string | null
           is_locked?: boolean
           lock_pin_hash?: string | null
+          is_public?: boolean
           template?: string
           created_at?: string
           updated_at?: string
@@ -320,6 +336,7 @@ export interface Database {
           template?: string
           is_locked?: boolean
           lock_pin_hash?: string | null
+          is_public?: boolean
           created_at?: string
           updated_at?: string
         }
@@ -467,6 +484,386 @@ export interface Database {
           is_watermarked?: boolean
           status?: ProcessingStatus
           error_message?: string | null
+          created_at?: string
+        }
+      }
+      // ============================================
+      // CLIENT PORTAL TABLES
+      // ============================================
+      client_profiles: {
+        Row: {
+          id: string
+          photographer_id: string
+          first_name: string
+          last_name: string
+          email: string
+          phone: string | null
+          partner_first_name: string | null
+          partner_last_name: string | null
+          partner_email: string | null
+          partner_phone: string | null
+          event_type: EventType
+          event_date: string | null
+          event_location: string | null
+          event_venue: string | null
+          package_name: string | null
+          package_price: number | null
+          package_hours: number | null
+          package_description: string | null
+          notes: string | null
+          is_archived: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          photographer_id: string
+          first_name: string
+          last_name: string
+          email: string
+          phone?: string | null
+          partner_first_name?: string | null
+          partner_last_name?: string | null
+          partner_email?: string | null
+          partner_phone?: string | null
+          event_type?: EventType
+          event_date?: string | null
+          event_location?: string | null
+          event_venue?: string | null
+          package_name?: string | null
+          package_price?: number | null
+          package_hours?: number | null
+          package_description?: string | null
+          notes?: string | null
+          is_archived?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          photographer_id?: string
+          first_name?: string
+          last_name?: string
+          email?: string
+          phone?: string | null
+          partner_first_name?: string | null
+          partner_last_name?: string | null
+          partner_email?: string | null
+          partner_phone?: string | null
+          event_type?: EventType
+          event_date?: string | null
+          event_location?: string | null
+          event_venue?: string | null
+          package_name?: string | null
+          package_price?: number | null
+          package_hours?: number | null
+          package_description?: string | null
+          notes?: string | null
+          is_archived?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      contract_templates: {
+        Row: {
+          id: string
+          photographer_id: string
+          name: string
+          description: string | null
+          header_content: string
+          footer_content: string
+          is_default: boolean
+          is_active: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          photographer_id: string
+          name: string
+          description?: string | null
+          header_content?: string
+          footer_content?: string
+          is_default?: boolean
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          photographer_id?: string
+          name?: string
+          description?: string | null
+          header_content?: string
+          footer_content?: string
+          is_default?: boolean
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      contract_clauses: {
+        Row: {
+          id: string
+          photographer_id: string | null
+          title: string
+          category: ClauseCategory
+          content: string
+          is_required: boolean
+          is_active: boolean
+          sort_order: number
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          photographer_id?: string | null
+          title: string
+          category?: ClauseCategory
+          content: string
+          is_required?: boolean
+          is_active?: boolean
+          sort_order?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          photographer_id?: string | null
+          title?: string
+          category?: ClauseCategory
+          content?: string
+          is_required?: boolean
+          is_active?: boolean
+          sort_order?: number
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      contracts: {
+        Row: {
+          id: string
+          photographer_id: string
+          client_id: string
+          template_id: string | null
+          status: ContractStatus
+          rendered_html: string | null
+          rendered_text: string | null
+          merge_data: Json
+          clauses_snapshot: Json
+          sent_at: string | null
+          viewed_at: string | null
+          signed_at: string | null
+          archived_at: string | null
+          expires_at: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          photographer_id: string
+          client_id: string
+          template_id?: string | null
+          status?: ContractStatus
+          rendered_html?: string | null
+          rendered_text?: string | null
+          merge_data?: Json
+          clauses_snapshot?: Json
+          sent_at?: string | null
+          viewed_at?: string | null
+          signed_at?: string | null
+          archived_at?: string | null
+          expires_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          photographer_id?: string
+          client_id?: string
+          template_id?: string | null
+          status?: ContractStatus
+          rendered_html?: string | null
+          rendered_text?: string | null
+          merge_data?: Json
+          clauses_snapshot?: Json
+          sent_at?: string | null
+          viewed_at?: string | null
+          signed_at?: string | null
+          archived_at?: string | null
+          expires_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      contract_signatures: {
+        Row: {
+          id: string
+          contract_id: string
+          signer_name: string
+          signer_email: string
+          signer_ip: string | null
+          signer_user_agent: string | null
+          signature_data: string
+          signature_hash: string
+          signed_at: string
+          agreed_to_terms: boolean
+        }
+        Insert: {
+          id?: string
+          contract_id: string
+          signer_name: string
+          signer_email: string
+          signer_ip?: string | null
+          signer_user_agent?: string | null
+          signature_data: string
+          signature_hash: string
+          signed_at?: string
+          agreed_to_terms?: boolean
+        }
+        Update: never // Signatures are immutable
+      }
+      messages: {
+        Row: {
+          id: string
+          client_id: string
+          photographer_id: string
+          is_from_photographer: boolean
+          message_type: MessageType
+          content: string
+          status: MessageStatus
+          created_at: string
+          delivered_at: string | null
+          read_at: string | null
+          deleted_at: string | null
+          deleted_by_photographer: boolean
+          deleted_by_client: boolean
+        }
+        Insert: {
+          id?: string
+          client_id: string
+          photographer_id: string
+          is_from_photographer: boolean
+          message_type?: MessageType
+          content: string
+          status?: MessageStatus
+          created_at?: string
+          delivered_at?: string | null
+          read_at?: string | null
+          deleted_at?: string | null
+          deleted_by_photographer?: boolean
+          deleted_by_client?: boolean
+        }
+        Update: {
+          id?: string
+          client_id?: string
+          photographer_id?: string
+          is_from_photographer?: boolean
+          message_type?: MessageType
+          content?: string
+          status?: MessageStatus
+          created_at?: string
+          delivered_at?: string | null
+          read_at?: string | null
+          deleted_at?: string | null
+          deleted_by_photographer?: boolean
+          deleted_by_client?: boolean
+        }
+      }
+      message_attachments: {
+        Row: {
+          id: string
+          message_id: string
+          file_name: string
+          file_type: string
+          file_size: number
+          storage_path: string
+          width: number | null
+          height: number | null
+          thumbnail_path: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          message_id: string
+          file_name: string
+          file_type: string
+          file_size: number
+          storage_path: string
+          width?: number | null
+          height?: number | null
+          thumbnail_path?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          message_id?: string
+          file_name?: string
+          file_type?: string
+          file_size?: number
+          storage_path?: string
+          width?: number | null
+          height?: number | null
+          thumbnail_path?: string | null
+          created_at?: string
+        }
+      }
+      portal_tokens: {
+        Row: {
+          id: string
+          client_id: string
+          photographer_id: string
+          token: string
+          token_hash: string
+          can_view_contract: boolean
+          can_sign_contract: boolean
+          can_message: boolean
+          can_view_gallery: boolean
+          can_download: boolean
+          expires_at: string
+          is_revoked: boolean
+          revoked_at: string | null
+          revoked_reason: string | null
+          last_used_at: string | null
+          use_count: number
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          client_id: string
+          photographer_id: string
+          token: string
+          token_hash: string
+          can_view_contract?: boolean
+          can_sign_contract?: boolean
+          can_message?: boolean
+          can_view_gallery?: boolean
+          can_download?: boolean
+          expires_at: string
+          is_revoked?: boolean
+          revoked_at?: string | null
+          revoked_reason?: string | null
+          last_used_at?: string | null
+          use_count?: number
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          client_id?: string
+          photographer_id?: string
+          token?: string
+          token_hash?: string
+          can_view_contract?: boolean
+          can_sign_contract?: boolean
+          can_message?: boolean
+          can_view_gallery?: boolean
+          can_download?: boolean
+          expires_at?: string
+          is_revoked?: boolean
+          revoked_at?: string | null
+          revoked_reason?: string | null
+          last_used_at?: string | null
+          use_count?: number
           created_at?: string
         }
       }

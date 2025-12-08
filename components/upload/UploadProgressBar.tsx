@@ -4,7 +4,7 @@ import { motion } from 'framer-motion'
 
 interface UploadProgressBarProps {
   progress: number
-  status: 'pending' | 'uploading' | 'completed' | 'error'
+  status: 'pending' | 'compressing' | 'uploading' | 'completed' | 'error'
 }
 
 export function UploadProgressBar({ progress, status }: UploadProgressBarProps) {
@@ -12,6 +12,7 @@ export function UploadProgressBar({ progress, status }: UploadProgressBarProps) 
     switch (status) {
       case 'error': return 'bg-red-500'
       case 'completed': return 'bg-emerald-500'
+      case 'compressing': return 'bg-amber-500'
       default: return 'bg-indigo-600'
     }
   }

@@ -15,7 +15,8 @@ import {
   Menu,
   X,
   CreditCard,
-  Shield
+  Shield,
+  Users
 } from 'lucide-react'
 
 interface DashboardLayoutProps {
@@ -33,7 +34,14 @@ const navItems = [
     icon: ImageIcon,
     description: 'Manage your collections'
   },
-    { 
+  { 
+    id: 'clients', 
+    label: 'Clients', 
+    href: '/dashboard/clients', 
+    icon: Users,
+    description: 'Manage your clients'
+  },
+  { 
     id: 'settings', 
     label: 'Settings', 
     href: '/settings', 

@@ -88,6 +88,8 @@ export default async function GalleryViewPage({ params }: Props) {
     slug: gallery.slug,
     password_hash: gallery.password_hash,
     download_enabled: gallery.download_enabled,
+    is_public: (gallery as { is_public?: boolean }).is_public ?? true,
+    is_locked: (gallery as { is_locked?: boolean }).is_locked ?? false,
     template: (gallery as { template?: string }).template || 'mosaic',
     created_at: gallery.created_at,
     imageCount: images.length,

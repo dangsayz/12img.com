@@ -7,6 +7,7 @@ import { BrandingSection } from '@/components/settings/BrandingSection'
 import { NotificationSection } from '@/components/settings/NotificationSection'
 import { DangerZone } from '@/components/settings/DangerZone'
 import { ProfileVisibilitySection } from '@/components/settings/ProfileVisibilitySection'
+import { PortfolioManager } from '@/components/settings/PortfolioManager'
 import { AppNav } from '@/components/layout/AppNav'
 import { normalizePlanId } from '@/lib/config/pricing'
 import { PLAN_TIERS, type PlanTier } from '@/lib/config/pricing-v2'
@@ -93,6 +94,12 @@ export default async function SettingsPage() {
             displayName={profileData?.displayName || null}
             bio={profileData?.bio || null}
           />
+
+          {/* Portfolio Wall Section */}
+          <section className="mb-16">
+            <h2 className="text-xs uppercase tracking-[0.2em] text-stone-400 mb-6">Portfolio</h2>
+            <PortfolioManager />
+          </section>
 
           {/* Account & Usage Section */}
           <AccountSection 

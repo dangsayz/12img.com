@@ -17,7 +17,7 @@ export interface FileItemState {
   id: string
   file: File
   previewUrl?: string  // Optional - lazy loaded for memory efficiency
-  status: 'pending' | 'uploading' | 'completed' | 'error'
+  status: 'pending' | 'compressing' | 'uploading' | 'completed' | 'error'
   progress: number
   error?: string
 }
@@ -94,9 +94,11 @@ export function FileItem({ item, onRemove }: FileItemProps) {
               <span className={`font-medium ${
                 item.status === 'error' ? 'text-red-600' :
                 item.status === 'completed' ? 'text-emerald-600' :
+                item.status === 'compressing' ? 'text-amber-600' :
                 'text-stone-600'
               }`}>
                 {item.status === 'pending' && 'Ready'}
+                {item.status === 'compressing' && 'Optimizing...'}
                 {item.status === 'uploading' && `${Math.round(item.progress)}%`}
                 {item.status === 'completed' && 'Done'}
                 {item.status === 'error' && 'Failed'}

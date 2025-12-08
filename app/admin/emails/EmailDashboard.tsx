@@ -27,6 +27,7 @@ import {
   Zap,
 } from 'lucide-react'
 import type { EmailStats, EmailSubscriber, EmailCampaign } from '@/server/admin/emails'
+import { CreateCampaignModal } from './CreateCampaignModal'
 
 interface PaginatedResult<T> {
   data: T[]
@@ -233,6 +234,7 @@ export function EmailDashboard({
   const searchParams = useSearchParams()
   const [search, setSearch] = useState(searchQuery || '')
   const [showFilters, setShowFilters] = useState(false)
+  const [showCreateModal, setShowCreateModal] = useState(false)
   
   const updateParams = (updates: Record<string, string | undefined>) => {
     const params = new URLSearchParams(searchParams.toString())
@@ -384,7 +386,10 @@ export function EmailDashboard({
                 </div>
                 <h3 className="font-medium text-[#141414] mb-2">No campaigns yet</h3>
                 <p className="text-sm text-[#525252] mb-4">Create your first email campaign to engage your subscribers</p>
-                <button className="px-4 py-2 bg-stone-900 text-white text-sm font-medium rounded-lg hover:bg-stone-800 transition-colors">
+                <button 
+                  onClick={() => setShowCreateModal(true)}
+                  className="px-4 py-2 bg-stone-900 text-white text-sm font-medium rounded-lg hover:bg-stone-800 transition-colors"
+                >
                   Create Campaign
                 </button>
               </div>
@@ -592,7 +597,10 @@ export function EmailDashboard({
               </button>
             </div>
             
-            <button className="flex items-center gap-2 px-4 py-2.5 bg-stone-900 text-white text-sm font-medium rounded-lg hover:bg-stone-800 transition-colors">
+            <button 
+              onClick={() => setShowCreateModal(true)}
+              className="flex items-center gap-2 px-4 py-2.5 bg-stone-900 text-white text-sm font-medium rounded-lg hover:bg-stone-800 transition-colors"
+            >
               <Plus className="w-4 h-4" />
               New Campaign
             </button>
@@ -614,13 +622,23 @@ export function EmailDashboard({
               <p className="text-[#525252] max-w-md mx-auto mb-6">
                 Send beautiful emails to your subscribers with special offers, updates, and announcements.
               </p>
-              <button className="px-6 py-3 bg-stone-900 text-white font-medium rounded-lg hover:bg-stone-800 transition-colors">
+              <button 
+                onClick={() => setShowCreateModal(true)}
+                className="px-6 py-3 bg-stone-900 text-white font-medium rounded-lg hover:bg-stone-800 transition-colors"
+              >
                 Create Campaign
               </button>
             </div>
           )}
         </motion.div>
       )}
+      
+      {/* Create Campaign Modal */}
+      <CreateCampaignModal
+        isOpen={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+        subscriberCount={stats.activeSubscribers}
+      />
     </div>
   )
 }

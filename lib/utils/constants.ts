@@ -5,14 +5,20 @@ export const ALLOWED_MIME_TYPES = [
   'image/gif',
 ] as const
 
-export const MAX_FILE_SIZE = 25 * 1024 * 1024 // 25MB
-export const MAX_FILES_PER_UPLOAD = 2000 // Support large wedding galleries
-export const MAX_CONCURRENT_UPLOADS = 10 // Aggressive parallel uploads
-export const SIGNED_URL_BATCH_SIZE = 100 // Generate signed URLs in larger batches
+export const MAX_FILE_SIZE = 50 * 1024 * 1024 // 50MB (photographers use large files)
+export const MAX_FILES_PER_UPLOAD = 5000 // Support massive wedding galleries
+export const MAX_CONCURRENT_UPLOADS = 12 // Aggressive parallel uploads (adaptive will tune)
+export const SIGNED_URL_BATCH_SIZE = 50 // Smaller batches = faster first response
+export const PREFETCH_AHEAD = 30 // Pre-generate this many signed URLs ahead
 
 // Large upload thresholds for UI
 export const LARGE_UPLOAD_THRESHOLD = 20 // Show large upload overlay after 20 files
 export const COFFEE_BREAK_THRESHOLD = 50 // Show coffee break screen after 50 files
+
+// Compression settings (biggest speed win - 5-10x smaller uploads)
+export const COMPRESSION_ENABLED_DEFAULT = true
+export const COMPRESSION_MAX_DIMENSION = 4096 // Max width/height after compression
+export const COMPRESSION_QUALITY = 0.85 // JPEG quality (0.85 = excellent quality, good compression)
 
 export const MIME_TO_EXT: Record<string, string> = {
   'image/jpeg': 'jpg',

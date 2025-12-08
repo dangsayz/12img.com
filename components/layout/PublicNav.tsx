@@ -1,15 +1,28 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
-import { Menu, X, LayoutDashboard } from 'lucide-react'
+import { Menu, X, LayoutDashboard, ChevronDown, Play, Users } from 'lucide-react'
 import { useAuthModal } from '@/components/auth/AuthModal'
 import { useAuth, UserButton } from '@clerk/nextjs'
 
 export function PublicNav() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [demosOpen, setDemosOpen] = useState(false)
+  const demosRef = useRef<HTMLDivElement>(null)
   const { openAuthModal } = useAuthModal()
   const { isSignedIn, isLoaded } = useAuth()
+
+  // Close demos dropdown when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (demosRef.current && !demosRef.current.contains(event.target as Node)) {
+        setDemosOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
 
   return (
     <>
@@ -38,9 +51,47 @@ export function PublicNav() {
               <Link href="/pricing" className="px-3 py-1.5 rounded-full text-sm font-medium text-stone-500 hover:text-stone-900 hover:bg-stone-50 transition-all">
                 Pricing
               </Link>
-              <Link href="/view-reel/demo" className="px-3 py-1.5 rounded-full text-sm font-medium text-stone-500 hover:text-stone-900 hover:bg-stone-50 transition-all">
-                Demo
-              </Link>
+              {/* Demos Dropdown */}
+              <div ref={demosRef} className="relative">
+                <button
+                  onClick={() => setDemosOpen(!demosOpen)}
+                  className="flex items-center gap-1 px-3 py-1.5 rounded-full text-sm font-medium text-stone-500 hover:text-stone-900 hover:bg-stone-50 transition-all"
+                >
+                  Demos
+                  <ChevronDown className={`w-3.5 h-3.5 transition-transform ${demosOpen ? 'rotate-180' : ''}`} />
+                </button>
+                
+                {demosOpen && (
+                  <div className="absolute top-full left-0 mt-2 w-56 bg-white rounded-xl border border-stone-200 shadow-xl py-2 z-[100]">
+                    <Link
+                      href="/view-reel/demo"
+                      onClick={() => setDemosOpen(false)}
+                      className="flex items-center gap-3 px-4 py-2.5 hover:bg-stone-50 transition-colors"
+                    >
+                      <div className="w-8 h-8 rounded-lg bg-purple-100 flex items-center justify-center">
+                        <Play className="w-4 h-4 text-purple-600" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-stone-900">Gallery Reel</p>
+                        <p className="text-xs text-stone-500">Cinematic slideshow</p>
+                      </div>
+                    </Link>
+                    <Link
+                      href="/portal/demo"
+                      onClick={() => setDemosOpen(false)}
+                      className="flex items-center gap-3 px-4 py-2.5 hover:bg-stone-50 transition-colors"
+                    >
+                      <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center">
+                        <Users className="w-4 h-4 text-blue-600" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-stone-900">Client Portal</p>
+                        <p className="text-xs text-stone-500">Contracts & messaging</p>
+                      </div>
+                    </Link>
+                  </div>
+                )}
+              </div>
               <Link href="/help" className="px-3 py-1.5 rounded-full text-sm font-medium text-stone-500 hover:text-stone-900 hover:bg-stone-50 transition-all">
                 Help
               </Link>
@@ -117,9 +168,28 @@ export function PublicNav() {
                 <Link href="/pricing" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 rounded-xl text-stone-600 hover:bg-stone-50 transition-all">
                   <span className="font-medium">Pricing</span>
                 </Link>
-                <Link href="/view-reel/demo" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 rounded-xl text-stone-600 hover:bg-stone-50 transition-all">
-                  <span className="font-medium">Demo Gallery</span>
-                </Link>
+                {/* Demos Section */}
+                <div className="px-4 py-2">
+                  <p className="text-xs font-medium text-stone-400 uppercase tracking-wider mb-2">Demos</p>
+                  <Link href="/view-reel/demo" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-3 py-2 text-stone-600 hover:text-stone-900 transition-all">
+                    <div className="w-8 h-8 rounded-lg bg-purple-100 flex items-center justify-center">
+                      <Play className="w-4 h-4 text-purple-600" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium">Gallery Reel</p>
+                      <p className="text-xs text-stone-500">Cinematic slideshow</p>
+                    </div>
+                  </Link>
+                  <Link href="/portal/demo" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-3 py-2 text-stone-600 hover:text-stone-900 transition-all">
+                    <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center">
+                      <Users className="w-4 h-4 text-blue-600" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium">Client Portal</p>
+                      <p className="text-xs text-stone-500">Contracts & messaging</p>
+                    </div>
+                  </Link>
+                </div>
                 <Link href="/help" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 rounded-xl text-stone-600 hover:bg-stone-50 transition-all">
                   <span className="font-medium">Help</span>
                 </Link>

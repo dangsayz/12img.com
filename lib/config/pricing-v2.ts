@@ -123,6 +123,7 @@ export type FeatureGroupId =
   | 'storage'
   | 'galleries'
   | 'delivery'
+  | 'clients'
   | 'branding'
   | 'automation'
   | 'advanced'
@@ -137,9 +138,10 @@ export const FEATURE_GROUPS: FeatureGroup[] = [
   { id: 'storage', label: 'Storage & Limits', order: 0 },
   { id: 'galleries', label: 'Gallery Features', order: 1 },
   { id: 'delivery', label: 'Client Delivery', order: 2 },
-  { id: 'branding', label: 'Branding & Customization', order: 3 },
-  { id: 'automation', label: 'Automation & Tools', order: 4 },
-  { id: 'advanced', label: 'Advanced Features', order: 5 },
+  { id: 'clients', label: 'Client Management', order: 3 },
+  { id: 'branding', label: 'Branding & Customization', order: 4 },
+  { id: 'automation', label: 'Automation & Tools', order: 5 },
+  { id: 'advanced', label: 'Advanced Features', order: 6 },
 ]
 
 export interface FeatureRow {
@@ -292,6 +294,60 @@ export const FEATURE_ROWS: FeatureRow[] = [
     description: 'Notify clients when gallery is ready',
     availability: {
       free: { status: 'included' },
+      essential: { status: 'included' },
+      pro: { status: 'included' },
+      studio: { status: 'included' },
+      elite: { status: 'included' },
+    },
+  },
+
+  // ─── Client Management ───
+  {
+    id: 'smart_contracts',
+    group: 'clients',
+    label: 'Smart Contracts',
+    description: 'Professional contracts with e-signatures',
+    availability: {
+      free: { status: 'excluded' },
+      essential: { status: 'included' },
+      pro: { status: 'included' },
+      studio: { status: 'included' },
+      elite: { status: 'included' },
+    },
+  },
+  {
+    id: 'client_portal',
+    group: 'clients',
+    label: 'Client Portal',
+    description: 'Dedicated portal for each client',
+    availability: {
+      free: { status: 'excluded' },
+      essential: { status: 'included' },
+      pro: { status: 'included' },
+      studio: { status: 'included' },
+      elite: { status: 'included' },
+    },
+  },
+  {
+    id: 'client_messaging',
+    group: 'clients',
+    label: 'Client Messaging',
+    description: 'Built-in chat with read receipts',
+    availability: {
+      free: { status: 'excluded' },
+      essential: { status: 'included' },
+      pro: { status: 'included' },
+      studio: { status: 'included' },
+      elite: { status: 'included' },
+    },
+  },
+  {
+    id: 'milestone_tracking',
+    group: 'clients',
+    label: 'Milestone Tracking',
+    description: 'Track project progress with delivery countdown',
+    availability: {
+      free: { status: 'excluded' },
       essential: { status: 'included' },
       pro: { status: 'included' },
       studio: { status: 'included' },

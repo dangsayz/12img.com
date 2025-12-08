@@ -17,10 +17,16 @@ import {
   Globe,
   EyeOff,
   Shield,
-  ChevronDown
+  ChevronDown,
+  Users,
+  FileText,
+  MessageSquare,
+  X,
+  Sparkles
 } from 'lucide-react'
-import { deleteGallery } from '@/server/actions/gallery.actions'
+import { deleteGallery, toggleGalleryVisibility } from '@/server/actions/gallery.actions'
 import { updateProfileVisibility } from '@/server/actions/profile.actions'
+import { VisibilityBadgeOverlay } from '@/components/ui/VisibilityBadge'
 import type { ProfileVisibilityMode } from '@/types/database'
 
 interface Gallery {
@@ -34,6 +40,7 @@ interface Gallery {
   createdAt: string
   updatedAt: string
   category?: string
+  isPublic: boolean
 }
 
 interface CleanDashboardProps {
@@ -52,6 +59,18 @@ export function CleanDashboard({ galleries, photographerName, visibilityMode = '
   const [showVisibilityMenu, setShowVisibilityMenu] = useState(false)
   const [currentVisibility, setCurrentVisibility] = useState<ProfileVisibilityMode>(visibilityMode)
   const [isPending, startTransition] = useTransition()
+  const [showFeatureHint, setShowFeatureHint] = useState(true)
+  
+  // Check if feature hint was dismissed
+  useEffect(() => {
+    const dismissed = localStorage.getItem('12img_clients_hint_dismissed')
+    if (dismissed) setShowFeatureHint(false)
+  }, [])
+  
+  const dismissFeatureHint = () => {
+    setShowFeatureHint(false)
+    localStorage.setItem('12img_clients_hint_dismissed', 'true')
+  }
 
   const filteredGalleries = useMemo(() => {
     return galleries.filter(gallery => {
@@ -256,6 +275,47 @@ export function CleanDashboard({ galleries, photographerName, visibilityMode = '
         </div>
       )}
 
+      {/* Feature Hint - Client Portal (Minimal, Apple-inspired) */}
+      <AnimatePresence>
+        {showFeatureHint && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="max-w-7xl mx-auto px-6 pt-6"
+          >
+            <div className="flex items-center justify-between py-3 px-4 bg-stone-50 rounded-full border border-stone-100">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-full bg-stone-900 flex items-center justify-center">
+                  <Users className="w-4 h-4 text-white" />
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-medium text-stone-900">Client Portal</span>
+                  <span className="text-[10px] font-medium text-stone-500 bg-stone-200 px-1.5 py-0.5 rounded uppercase tracking-wide">New</span>
+                </div>
+                <span className="hidden sm:inline text-sm text-stone-500">·</span>
+                <span className="hidden sm:inline text-sm text-stone-500">Contracts, messaging & more</span>
+              </div>
+              
+              <div className="flex items-center gap-2">
+                <Link
+                  href="/dashboard/clients"
+                  className="text-sm font-medium text-stone-900 hover:text-stone-600 transition-colors"
+                >
+                  Get Started →
+                </Link>
+                <button
+                  onClick={dismissFeatureHint}
+                  className="p-1.5 rounded-full hover:bg-stone-200 transition-colors ml-2"
+                >
+                  <X className="w-3.5 h-3.5 text-stone-400" />
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Gallery Grid */}
       <div className="max-w-7xl mx-auto px-6 py-12">
         {filteredGalleries.length === 0 ? (
@@ -297,6 +357,7 @@ function GalleryCard({
   const [isPending, startTransition] = useTransition()
   const [isDeleted, setIsDeleted] = useState(false)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [isPublic, setIsPublic] = useState(gallery.isPublic)
 
   const relativePath = `/view-reel/${gallery.id}`
   const [shareUrl, setShareUrl] = useState(relativePath)
@@ -311,6 +372,17 @@ function GalleryCard({
     await navigator.clipboard.writeText(shareUrl)
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
+  }
+
+  const handleToggleVisibility = (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    const newValue = !isPublic
+    setIsPublic(newValue)
+    startTransition(async () => {
+      const result = await toggleGalleryVisibility(gallery.id, newValue)
+      if (result.error) setIsPublic(!newValue) // Revert on error
+    })
   }
 
   const handleDelete = () => {
@@ -352,15 +424,13 @@ function GalleryCard({
             </div>
           )}
 
-          {/* Badges */}
-          <div className="absolute top-3 left-3 flex flex-col gap-2">
-            {gallery.hasPassword && (
-              <div className="px-2.5 py-1 bg-stone-900/80 backdrop-blur-sm text-white text-[10px] uppercase tracking-[0.15em] flex items-center gap-1.5">
-                <Lock className="w-3 h-3" />
-                LOGIN
-              </div>
-            )}
-          </div>
+          {/* Visibility Badge */}
+          <VisibilityBadgeOverlay 
+            isPublic={isPublic}
+            hasPassword={gallery.hasPassword}
+            position="top-left"
+            size="md"
+          />
 
           {/* Menu Button */}
           <motion.button
@@ -403,6 +473,24 @@ function GalleryCard({
                 >
                   <ExternalLink className="w-4 h-4" />
                   Preview
+                </button>
+                <div className="border-t border-stone-100 my-1" />
+                <button
+                  onClick={handleToggleVisibility}
+                  disabled={isPending}
+                  className="w-full px-4 py-2 text-left text-sm text-stone-700 hover:bg-stone-50 flex items-center gap-2 disabled:opacity-50"
+                >
+                  {isPublic ? (
+                    <>
+                      <EyeOff className="w-4 h-4" />
+                      Make Private
+                    </>
+                  ) : (
+                    <>
+                      <Globe className="w-4 h-4" />
+                      Make Public
+                    </>
+                  )}
                 </button>
                 <div className="border-t border-stone-100 my-1" />
                 <button
