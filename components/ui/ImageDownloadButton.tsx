@@ -35,9 +35,23 @@ export function ImageDownloadButton({
       
       if (isMobile) {
         // Mobile: Open in new tab - user can long-press to save
-        // This triggers the native "Save Image" option on iOS/Android
-        window.open(`/api/image/${imageId}/download`, '_blank')
+        // Show brief instruction toast
         setStatus('done')
+        window.open(`/api/image/${imageId}/download`, '_blank')
+        
+        // Show toast with instruction
+        if (typeof window !== 'undefined') {
+          const toast = document.createElement('div')
+          toast.className = 'fixed bottom-20 left-1/2 -translate-x-1/2 bg-black/90 text-white text-sm px-4 py-2 rounded-full z-[200] animate-fade-in'
+          toast.textContent = 'Long-press image to save'
+          document.body.appendChild(toast)
+          setTimeout(() => {
+            toast.style.opacity = '0'
+            toast.style.transition = 'opacity 0.3s'
+            setTimeout(() => toast.remove(), 300)
+          }, 3000)
+        }
+        
         setTimeout(() => setStatus('idle'), 2000)
         return
       }
