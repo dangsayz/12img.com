@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, Loader2, Copy, Check, Link2, Users, ExternalLink } from 'lucide-react'
+import { X, Loader2, Copy, Check, Link2, Users, ExternalLink, Send } from 'lucide-react'
 import {
   Vendor,
   GalleryVendorShareWithDetails,
@@ -16,6 +16,7 @@ import {
   getGalleryVendorShares,
   shareGalleryWithVendor,
   revokeGalleryVendorShare,
+  resendVendorShareEmail,
 } from '@/server/actions/vendor.actions'
 
 interface VendorShareModalProps {
@@ -92,6 +93,26 @@ export function VendorShareModal({ isOpen, onClose, galleryId, galleryTitle }: V
     await navigator.clipboard.writeText(url)
     setCopiedId(shareId)
     setTimeout(() => setCopiedId(null), 2000)
+  }
+
+  const [resendingId, setResendingId] = useState<string | null>(null)
+  const [resendSuccess, setResendSuccess] = useState<string | null>(null)
+
+  const handleResend = async (shareId: string) => {
+    setResendingId(shareId)
+    try {
+      const result = await resendVendorShareEmail(shareId)
+      if (result.success) {
+        setResendSuccess(shareId)
+        setTimeout(() => setResendSuccess(null), 3000)
+      } else {
+        setError(result.error || 'Failed to send email')
+      }
+    } catch (err) {
+      setError('Failed to send email')
+    } finally {
+      setResendingId(null)
+    }
   }
 
   // Filter out already shared vendors
@@ -256,6 +277,20 @@ export function VendorShareModal({ isOpen, onClose, galleryId, galleryTitle }: V
 
                               {/* Actions */}
                               <div className="flex items-center gap-1">
+                                <button
+                                  onClick={() => handleResend(share.id)}
+                                  disabled={resendingId === share.id}
+                                  className="p-2 rounded-lg text-stone-500 hover:text-stone-900 hover:bg-stone-200 transition-colors disabled:opacity-50"
+                                  title="Resend email"
+                                >
+                                  {resendingId === share.id ? (
+                                    <Loader2 className="w-4 h-4 animate-spin" />
+                                  ) : resendSuccess === share.id ? (
+                                    <Check className="w-4 h-4 text-emerald-600" />
+                                  ) : (
+                                    <Send className="w-4 h-4" />
+                                  )}
+                                </button>
                                 <button
                                   onClick={() => copyLink(share.access_token, share.id)}
                                   className="p-2 rounded-lg text-stone-500 hover:text-stone-900 hover:bg-stone-200 transition-colors"

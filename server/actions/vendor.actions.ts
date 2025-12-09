@@ -662,6 +662,66 @@ export async function revokeGalleryVendorShare(shareId: string): Promise<void> {
   if (error) throw new Error(error.message)
 }
 
+/**
+ * Resend vendor share email
+ */
+export async function resendVendorShareEmail(shareId: string): Promise<{ success: boolean; error?: string }> {
+  const { userId: clerkId } = await auth()
+  if (!clerkId) throw new Error('Unauthorized')
+
+  const user = await getUserByClerkId(clerkId)
+  if (!user) throw new Error('User not found')
+
+  const supabase = supabaseAdmin
+
+  // Get share with vendor and gallery info
+  const { data: share, error } = await supabase
+    .from('gallery_vendor_shares')
+    .select(`
+      access_token,
+      vendor:vendors(business_name, email),
+      gallery:galleries(id, title)
+    `)
+    .eq('id', shareId)
+    .eq('user_id', user.id)
+    .single()
+
+  if (error || !share) {
+    return { success: false, error: 'Share not found' }
+  }
+
+  const vendor = share.vendor as any
+  const gallery = share.gallery as any
+
+  if (!vendor?.email) {
+    return { success: false, error: 'Vendor has no email address' }
+  }
+
+  // Get image count
+  const { count: imageCount } = await supabase
+    .from('images')
+    .select('*', { count: 'exact', head: true })
+    .eq('gallery_id', gallery.id)
+
+  // Get photographer settings
+  const settings = await getUserSettings(clerkId)
+
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://12img.com'
+  const accessUrl = `${baseUrl}/vendor/${share.access_token}`
+
+  const result = await sendVendorShareEmail({
+    vendorName: vendor.business_name,
+    vendorEmail: vendor.email,
+    galleryTitle: gallery.title,
+    photographerName: user.display_name || 'A photographer',
+    photographerBusiness: settings.businessName || undefined,
+    imageCount: imageCount || 0,
+    accessUrl,
+  })
+
+  return result
+}
+
 // ═══════════════════════════════════════════════════════════════
 // VENDOR PORTAL (PUBLIC)
 // ═══════════════════════════════════════════════════════════════
