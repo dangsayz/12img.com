@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { UserButton } from '@clerk/nextjs'
@@ -45,6 +45,12 @@ export function AppNav({
   const pathname = usePathname()
   const [mobileOpen, setMobileOpen] = useState(false)
   const [newMenuOpen, setNewMenuOpen] = useState(false)
+  const [mounted, setMounted] = useState(false)
+
+  // Prevent hydration mismatch with Clerk components
+  useEffect(() => {
+    setMounted(true)
+  }, [])
   
   // Format storage display
   const formatStorage = (bytes: number) => {
@@ -206,14 +212,18 @@ export function AppNav({
                         
             {/* User Button - Desktop */}
             <div className="hidden md:block">
-              <UserButton 
-                afterSignOutUrl="/"
-                appearance={{
-                  elements: {
-                    avatarBox: 'w-7 h-7'
-                  }
-                }}
-              />
+              {mounted ? (
+                <UserButton 
+                  afterSignOutUrl="/"
+                  appearance={{
+                    elements: {
+                      avatarBox: 'w-7 h-7'
+                    }
+                  }}
+                />
+              ) : (
+                <div className="w-7 h-7 rounded-full bg-stone-200 animate-pulse" />
+              )}
             </div>
             
             {/* Mobile Menu Toggle */}
@@ -256,15 +266,19 @@ export function AppNav({
                 {/* Account - At top so dropdown has room */}
                 <div className="p-4 border-b border-stone-100">
                   <div className="flex items-center gap-3">
-                    <UserButton 
-                      afterSignOutUrl="/"
-                      appearance={{
-                        elements: {
-                          avatarBox: 'w-10 h-10',
-                          userButtonPopoverCard: 'left-0 right-auto',
-                        }
-                      }}
-                    />
+                    {mounted ? (
+                      <UserButton 
+                        afterSignOutUrl="/"
+                        appearance={{
+                          elements: {
+                            avatarBox: 'w-10 h-10',
+                            userButtonPopoverCard: 'left-0 right-auto',
+                          }
+                        }}
+                      />
+                    ) : (
+                      <div className="w-10 h-10 rounded-full bg-stone-200 animate-pulse" />
+                    )}
                     <div className="flex-1">
                       <p className="text-sm font-medium text-stone-900">Account</p>
                       <p className="text-xs text-stone-400 capitalize">{userPlan} Plan</p>
