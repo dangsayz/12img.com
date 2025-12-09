@@ -219,9 +219,10 @@ export function LandingPage() {
 
             {/* Feature Pills */}
             <div className="flex flex-wrap justify-center gap-2 sm:gap-3">
-              <div className="flex items-center gap-2 px-4 py-2 bg-white border border-stone-200 rounded-full text-sm text-stone-600 shadow-sm">
+              <div className="flex items-center gap-2 px-4 py-2 bg-white border border-violet-200 rounded-full text-sm text-stone-600 shadow-sm">
                 <Film className="w-4 h-4 text-violet-500" />
                 <span>Cinematic Reels</span>
+                <span className="text-[10px] uppercase tracking-wider text-violet-500 font-medium">Soon</span>
               </div>
               <div className="flex items-center gap-2 px-4 py-2 bg-white border border-stone-200 rounded-full text-sm text-stone-600 shadow-sm">
                 <FileText className="w-4 h-4 text-emerald-500" />
@@ -387,7 +388,7 @@ export function LandingPage() {
         </div>
       </section>
 
-      {/* --- NEW: Reel Player Feature --- */}
+      {/* --- NEW: Reel Player Feature (Coming Soon) --- */}
       <section className="py-16 md:py-24 lg:py-40 px-4 sm:px-6 bg-[#141414] text-white relative overflow-hidden">
         {/* Background gradient */}
         <div className="absolute inset-0 bg-gradient-to-br from-violet-900/20 via-transparent to-purple-900/20" />
@@ -398,16 +399,15 @@ export function LandingPage() {
             <div>
               <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 border border-white/20 rounded-full mb-6 backdrop-blur-sm">
                 <Film className="w-4 h-4 text-violet-400" />
-                <span className="text-sm font-medium text-white/90">Cinematic Experience</span>
+                <span className="text-sm font-medium text-white/90">Coming Soon</span>
               </div>
               <h2 className="font-serif text-3xl sm:text-4xl lg:text-[56px] mb-6 leading-tight">
                 Your galleries, <br />
                 <span className="italic text-violet-300">in motion.</span>
               </h2>
               <p className="text-white/60 text-lg lg:text-xl leading-relaxed mb-8">
-                The Reel Player transforms your galleries into a 30-second cinematic slideshow. 
-                Auto-playing, full-screen, with smooth Ken Burns effects. This is how clients 
-                experience your work.
+                The Cinematic Reel Player will transform your galleries into a 30-second cinematic slideshow. 
+                Auto-playing, full-screen, with smooth Ken Burns effects. Coming soon to 12img.
               </p>
               <ul className="space-y-4 mb-8">
                 <li className="flex items-start gap-3">
@@ -427,13 +427,10 @@ export function LandingPage() {
                   <span className="text-white/80">Works on all devices</span>
                 </li>
               </ul>
-              <Link 
-                href="/view-reel/demo" 
-                className="inline-flex items-center gap-2 px-6 py-3 bg-white text-[#141414] font-medium rounded-full hover:bg-white/90 transition-colors"
-              >
-                <Play className="w-4 h-4" />
-                Watch Demo Reel
-              </Link>
+              <div className="inline-flex items-center gap-2 px-6 py-3 bg-white/10 text-white/70 font-medium rounded-full border border-white/20 cursor-default">
+                <Clock className="w-4 h-4" />
+                Coming Soon
+              </div>
             </div>
 
             {/* Right: Visual */}
@@ -475,8 +472,8 @@ export function LandingPage() {
                 </div>
                 
                 {/* Floating badge */}
-                <div className="absolute -bottom-4 -right-4 px-4 py-2 bg-violet-500 text-white text-sm font-medium rounded-full shadow-lg shadow-violet-500/30">
-                  ✨ Auto-plays
+                <div className="absolute -bottom-4 -right-4 px-4 py-2 bg-violet-500/80 text-white text-sm font-medium rounded-full shadow-lg shadow-violet-500/30 border border-violet-400/50">
+                  Coming Soon
                 </div>
               </div>
             </div>

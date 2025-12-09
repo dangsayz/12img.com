@@ -226,11 +226,11 @@ export const FEATURE_ROWS: FeatureRow[] = [
     label: 'Cinematic Reel',
     description: '30-second auto-playing slideshow',
     availability: {
-      free: { status: 'included' },
-      essential: { status: 'included' },
-      pro: { status: 'included' },
-      studio: { status: 'included' },
-      elite: { status: 'included' },
+      free: { status: 'comingSoon' },
+      essential: { status: 'comingSoon' },
+      pro: { status: 'comingSoon' },
+      studio: { status: 'comingSoon' },
+      elite: { status: 'comingSoon' },
     },
   },
   {

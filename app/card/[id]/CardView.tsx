@@ -67,6 +67,7 @@ export function CardView({ card }: CardViewProps) {
   const [copied, setCopied] = useState(false)
   const [imageLoaded, setImageLoaded] = useState(false)
   const [showSharePanel, setShowSharePanel] = useState(false)
+  const [imageDimensions, setImageDimensions] = useState<{ width: number; height: number } | null>(null)
 
   const shareUrl = typeof window !== 'undefined' ? window.location.href : ''
   const shareTitle = card.title || 'Beautiful Photo'
@@ -198,14 +199,27 @@ export function CardView({ card }: CardViewProps) {
               >
                 {/* White mat border */}
                 <div className="p-4 sm:p-6 md:p-10 lg:p-12">
-                  {/* Image container */}
-                  <div className="relative aspect-[4/3] sm:aspect-[3/2] bg-stone-100 rounded-sm overflow-hidden">
+                  {/* Image container - respects natural aspect ratio */}
+                  <div 
+                    className="relative bg-stone-100 rounded-sm overflow-hidden flex items-center justify-center"
+                    style={{
+                      // Default to 4:3 while loading, then use natural dimensions
+                      aspectRatio: imageDimensions 
+                        ? `${imageDimensions.width} / ${imageDimensions.height}`
+                        : '4 / 3',
+                      maxHeight: '70vh',
+                    }}
+                  >
                     <Image
                       src={card.imageUrl}
                       alt={card.title || 'Photo'}
                       fill
-                      className={`object-cover transition-opacity duration-500 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
-                      onLoad={() => setImageLoaded(true)}
+                      className={`object-contain transition-opacity duration-500 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
+                      onLoad={(e) => {
+                        const img = e.target as HTMLImageElement
+                        setImageDimensions({ width: img.naturalWidth, height: img.naturalHeight })
+                        setImageLoaded(true)
+                      }}
                       priority
                       sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 1000px"
                     />
