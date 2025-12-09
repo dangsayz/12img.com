@@ -248,7 +248,26 @@ export function AppNav({
               transition={{ duration: 0.2 }}
               className="fixed top-20 left-4 right-4 z-50 md:hidden"
             >
-              <div className="bg-white rounded-2xl border border-stone-200 shadow-xl overflow-hidden">
+              <div className="bg-white rounded-2xl border border-stone-200 shadow-xl overflow-hidden max-h-[calc(100vh-6rem)] overflow-y-auto">
+                {/* Account - At top so dropdown has room */}
+                <div className="p-4 border-b border-stone-100">
+                  <div className="flex items-center gap-3">
+                    <UserButton 
+                      afterSignOutUrl="/"
+                      appearance={{
+                        elements: {
+                          avatarBox: 'w-10 h-10',
+                          userButtonPopoverCard: 'left-0 right-auto',
+                        }
+                      }}
+                    />
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-stone-900">Account</p>
+                      <p className="text-xs text-stone-400 capitalize">{userPlan} Plan</p>
+                    </div>
+                  </div>
+                </div>
+                
                 {/* Nav Links */}
                 <div className="p-2">
                   {navItems.map((item) => {
@@ -326,16 +345,15 @@ export function AppNav({
                   </Link>
                 </div>
                 
-                {/* Storage + Account */}
+                {/* Storage */}
                 <div className="border-t border-stone-100 p-4">
-                  {/* Storage Bar */}
-                  <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center justify-between mb-2">
                     <span className="text-sm text-stone-500">Storage</span>
                     <span className="text-sm font-medium text-stone-700">
                       {formatStorage(storageUsed)} / {formatStorage(storageLimit)}
                     </span>
                   </div>
-                  <div className="w-full h-2 bg-stone-100 rounded-full overflow-hidden mb-4">
+                  <div className="w-full h-2 bg-stone-100 rounded-full overflow-hidden">
                     <div 
                       className={`h-full rounded-full transition-all ${
                         storagePercent > 90 ? 'bg-red-500' : 
@@ -350,7 +368,7 @@ export function AppNav({
                     <Link
                       href="/pricing"
                       onClick={() => setMobileOpen(false)}
-                      className="flex items-center justify-between px-4 py-3 mb-4 bg-stone-100 rounded-xl hover:bg-stone-200 transition-colors"
+                      className="flex items-center justify-between px-4 py-3 mt-4 bg-stone-100 rounded-xl hover:bg-stone-200 transition-colors"
                     >
                       <div>
                         <p className="text-sm font-medium text-stone-900">Free Plan</p>
@@ -359,22 +377,6 @@ export function AppNav({
                       <span className="text-stone-400">→</span>
                     </Link>
                   )}
-                  
-                  {/* User */}
-                  <div className="flex items-center gap-3">
-                    <UserButton 
-                      afterSignOutUrl="/"
-                      appearance={{
-                        elements: {
-                          avatarBox: 'w-9 h-9'
-                        }
-                      }}
-                    />
-                    <div>
-                      <p className="text-sm font-medium text-stone-900">Account</p>
-                      <p className="text-xs text-stone-400 capitalize">{userPlan} plan</p>
-                    </div>
-                  </div>
                 </div>
               </div>
             </motion.div>
