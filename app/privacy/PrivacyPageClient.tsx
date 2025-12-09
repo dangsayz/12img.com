@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { PublicNav } from '@/components/layout/PublicNav'
 
 // Apple-style easing
-const ease = [0.22, 1, 0.36, 1]
+const ease: [number, number, number, number] = [0.22, 1, 0.36, 1]
 
 const sections = [
   {
