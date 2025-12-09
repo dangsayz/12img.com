@@ -1,3 +1,28 @@
+/**
+ * ============================================================================
+ * APPLICATION CONSTANTS - Performance & Upload Configuration
+ * ============================================================================
+ * 
+ * This file contains all tunable constants for the 12img platform.
+ * Modify these values to adjust performance characteristics.
+ * 
+ * PERFORMANCE PHILOSOPHY:
+ * - Optimize for PERCEIVED speed (show something fast, load rest lazily)
+ * - Compress on client before upload (5-10x bandwidth savings)
+ * - Use responsive images (never serve full-res for display)
+ * - Parallel operations wherever possible
+ * 
+ * KEY DECISIONS:
+ * 1. MAX_FILE_SIZE: 50MB - Photographers use large RAW exports
+ * 2. COMPRESSION_QUALITY: 0.85 - Excellent quality, good compression
+ * 3. THUMBNAIL: 600px - Crisp on retina, fast to load
+ * 4. PREVIEW: 1920px - Full HD for lightbox, not 4K (overkill)
+ * 
+ * @see lib/storage/signed-urls.ts for URL generation
+ * @see lib/upload/image-compressor.ts for client compression
+ * ============================================================================
+ */
+
 export const ALLOWED_MIME_TYPES = [
   'image/jpeg',
   'image/png',
@@ -34,20 +59,32 @@ export const SIGNED_URL_EXPIRY = {
   ARCHIVE_EMAIL: 7 * 24 * 3600, // 7 days for emailed archive links
 }
 
-// Image size presets for responsive loading
-// Thumbnails load fast, downloads remain full resolution
+/**
+ * IMAGE SIZE PRESETS
+ * 
+ * These control Supabase Storage image transformations.
+ * Never serve ORIGINAL for display - only for downloads.
+ * 
+ * WHY THESE VALUES:
+ * - 600px thumbnail: Crisp on 2x retina (300px CSS), fast to load
+ * - 1920px preview: Full HD is enough for lightbox (4K is overkill)
+ * - 80-85% quality: Imperceptible loss, significant size reduction
+ * 
+ * @see lib/storage/signed-urls.ts for usage
+ * @see lib/PERFORMANCE.md for full documentation
+ */
 export const IMAGE_SIZES = {
-  // Grid thumbnails - crisp for retina displays
+  // Grid thumbnails - 600px is crisp on retina (300px CSS width)
   THUMBNAIL: {
     width: 600,
     quality: 80,
   },
-  // Dashboard cover images - crisp, fewer images so higher quality OK
+  // Dashboard cover images - slightly larger for hero cards
   COVER: {
     width: 800,
     quality: 90,
   },
-  // Fullscreen preview - high quality but optimized
+  // Fullscreen preview - 1920px is Full HD, sufficient for any screen
   PREVIEW: {
     width: 1920,
     quality: 85,
@@ -57,7 +94,8 @@ export const IMAGE_SIZES = {
     width: 2400,
     quality: 92,
   },
-  // Download - no transform, original file
+  // Download - no transform, serves original file
+  // NEVER use this for display, only for actual downloads
   ORIGINAL: null,
 } as const
 

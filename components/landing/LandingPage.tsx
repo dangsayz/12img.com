@@ -3,8 +3,7 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { useState } from 'react'
-import { Menu, X, ArrowRight, Upload, Lock, Shield, Zap, Check, Instagram, Quote, Star, Play, Image as ImageIcon, Palette, Clock, Mail, LayoutDashboard, FileText, MessageCircle, Users, PenTool, Target, Film, Calendar, TrendingUp, Layers, Globe, Camera } from 'lucide-react'
-import { DemoCardGenerator } from './DemoCardGenerator'
+import { Menu, X, ArrowRight, Upload, Lock, Shield, Zap, Check, Instagram, Quote, Star, Image as ImageIcon, Palette, Mail, LayoutDashboard, FileText, MessageCircle, Users, PenTool, Target, Calendar, TrendingUp, Layers, Globe, Camera } from 'lucide-react'
 import { PricingMatrix } from '@/components/pricing/PricingMatrix'
 import { useAuthModal } from '@/components/auth/AuthModal'
 import { useAuth, UserButton } from '@clerk/nextjs'
@@ -49,9 +48,6 @@ export function LandingPage() {
               </Link>
               <Link href="/profiles" className="px-3 py-1.5 rounded-full text-sm font-medium text-stone-500 hover:text-stone-900 hover:bg-stone-50 transition-all">
                 Profiles
-              </Link>
-              <Link href="/view-reel/demo" className="px-3 py-1.5 rounded-full text-sm font-medium text-stone-500 hover:text-stone-900 hover:bg-stone-50 transition-all">
-                Demo
               </Link>
               <Link href="/help" className="px-3 py-1.5 rounded-full text-sm font-medium text-stone-500 hover:text-stone-900 hover:bg-stone-50 transition-all">
                 Help
@@ -135,9 +131,6 @@ export function LandingPage() {
                 <Link href="/profiles" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 rounded-xl text-stone-600 hover:bg-stone-50 transition-all">
                   <span className="font-medium">Profiles</span>
                 </Link>
-                <Link href="/view-reel/demo" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 rounded-xl text-stone-600 hover:bg-stone-50 transition-all">
-                  <span className="font-medium">Demo Gallery</span>
-                </Link>
                 <Link href="/help" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 rounded-xl text-stone-600 hover:bg-stone-50 transition-all">
                   <span className="font-medium">Help</span>
                 </Link>
@@ -202,48 +195,15 @@ export function LandingPage() {
               Galleries. Contracts. Client portals. Email tracking. All in one place—at 40% less than the competition.
             </p>
             
-            {/* CTA Buttons */}
-            <div className="flex flex-col sm:flex-row gap-4 justify-center mb-10">
+            {/* CTA Button - Single, elegant */}
+            <div className="flex justify-center">
               <button 
                 onClick={() => openAuthModal('sign-up')}
-                className="group bg-[#141414] text-white px-8 py-4 text-center font-bold hover:bg-black transition-all rounded-[2px] min-w-[180px] flex items-center justify-center gap-2"
+                className="group bg-[#141414] text-white px-10 py-4 text-center font-medium hover:bg-black transition-all rounded-[2px] flex items-center justify-center gap-3"
               >
                 Start free
                 <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
               </button>
-              <Link href="/view-reel/demo" className="bg-transparent border border-[#141414] text-[#141414] px-8 py-4 text-center font-bold hover:bg-[#141414] hover:text-white transition-colors rounded-[2px] min-w-[180px] flex items-center justify-center gap-2">
-                <Play className="w-4 h-4" />
-                Watch demo
-              </Link>
-            </div>
-
-            {/* Feature Pills */}
-            <div className="flex flex-wrap justify-center gap-2 sm:gap-3">
-              <div className="flex items-center gap-2 px-4 py-2 bg-white border border-violet-200 rounded-full text-sm text-stone-600 shadow-sm">
-                <Film className="w-4 h-4 text-violet-500" />
-                <span>Cinematic Reels</span>
-                <span className="text-[10px] uppercase tracking-wider text-violet-500 font-medium">Soon</span>
-              </div>
-              <div className="flex items-center gap-2 px-4 py-2 bg-white border border-stone-200 rounded-full text-sm text-stone-600 shadow-sm">
-                <FileText className="w-4 h-4 text-emerald-500" />
-                <span>Smart Contracts</span>
-              </div>
-              <div className="flex items-center gap-2 px-4 py-2 bg-white border border-stone-200 rounded-full text-sm text-stone-600 shadow-sm">
-                <Users className="w-4 h-4 text-blue-500" />
-                <span>Client Portals</span>
-              </div>
-              <div className="flex items-center gap-2 px-4 py-2 bg-white border border-stone-200 rounded-full text-sm text-stone-600 shadow-sm">
-                <Mail className="w-4 h-4 text-amber-500" />
-                <span>Email Tracking</span>
-              </div>
-              <div className="flex items-center gap-2 px-4 py-2 bg-white border border-stone-200 rounded-full text-sm text-stone-600 shadow-sm">
-                <Zap className="w-4 h-4 text-pink-500" />
-                <span>Turbo Uploads</span>
-              </div>
-              <div className="flex items-center gap-2 px-4 py-2 bg-white border border-stone-200 rounded-full text-sm text-stone-600 shadow-sm">
-                <Calendar className="w-4 h-4 text-indigo-500" />
-                <span>Delivery Tracking</span>
-              </div>
             </div>
           </div>
 
@@ -295,11 +255,6 @@ export function LandingPage() {
                     fill 
                     className="object-cover"
                   />
-                  <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
-                    <div className="w-8 h-8 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
-                      <Play className="w-3 h-3 text-white ml-0.5" fill="white" />
-                    </div>
-                  </div>
                 </div>
               </div>
             </div>
@@ -388,98 +343,6 @@ export function LandingPage() {
         </div>
       </section>
 
-      {/* --- NEW: Reel Player Feature (Coming Soon) --- */}
-      <section className="py-16 md:py-24 lg:py-40 px-4 sm:px-6 bg-[#141414] text-white relative overflow-hidden">
-        {/* Background gradient */}
-        <div className="absolute inset-0 bg-gradient-to-br from-violet-900/20 via-transparent to-purple-900/20" />
-        
-        <div className="max-w-[1280px] mx-auto relative">
-          <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
-            {/* Left: Copy */}
-            <div>
-              <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 border border-white/20 rounded-full mb-6 backdrop-blur-sm">
-                <Film className="w-4 h-4 text-violet-400" />
-                <span className="text-sm font-medium text-white/90">Coming Soon</span>
-              </div>
-              <h2 className="font-serif text-3xl sm:text-4xl lg:text-[56px] mb-6 leading-tight">
-                Your galleries, <br />
-                <span className="italic text-violet-300">in motion.</span>
-              </h2>
-              <p className="text-white/60 text-lg lg:text-xl leading-relaxed mb-8">
-                The Cinematic Reel Player will transform your galleries into a 30-second cinematic slideshow. 
-                Auto-playing, full-screen, with smooth Ken Burns effects. Coming soon to 12img.
-              </p>
-              <ul className="space-y-4 mb-8">
-                <li className="flex items-start gap-3">
-                  <Check className="w-5 h-5 mt-0.5 text-violet-400" />
-                  <span className="text-white/80">Auto-plays on gallery open</span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <Check className="w-5 h-5 mt-0.5 text-violet-400" />
-                  <span className="text-white/80">Smooth Ken Burns pan & zoom</span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <Check className="w-5 h-5 mt-0.5 text-violet-400" />
-                  <span className="text-white/80">Full-screen immersive experience</span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <Check className="w-5 h-5 mt-0.5 text-violet-400" />
-                  <span className="text-white/80">Works on all devices</span>
-                </li>
-              </ul>
-              <div className="inline-flex items-center gap-2 px-6 py-3 bg-white/10 text-white/70 font-medium rounded-full border border-white/20 cursor-default">
-                <Clock className="w-4 h-4" />
-                Coming Soon
-              </div>
-            </div>
-
-            {/* Right: Visual */}
-            <div className="relative">
-              {/* Glow effect */}
-              <div className="absolute -inset-8 bg-gradient-to-r from-violet-500/30 via-purple-500/20 to-pink-500/30 blur-3xl opacity-60" />
-              
-              {/* Phone mockup */}
-              <div className="relative mx-auto w-[280px] sm:w-[320px]">
-                <div className="relative bg-[#1a1a1a] rounded-[3rem] p-3 shadow-2xl border border-white/10">
-                  {/* Phone notch */}
-                  <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-7 bg-[#1a1a1a] rounded-b-2xl z-10" />
-                  
-                  {/* Screen */}
-                  <div className="relative aspect-[9/19] rounded-[2.5rem] overflow-hidden bg-black">
-                    <Image 
-                      src="/images/showcase/modern-wedding-gallery-01.jpg" 
-                      alt="Reel Player Preview" 
-                      fill 
-                      className="object-cover"
-                    />
-                    {/* Play overlay */}
-                    <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
-                      <div className="w-16 h-16 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center border border-white/30">
-                        <Play className="w-6 h-6 text-white ml-1" fill="white" />
-                      </div>
-                    </div>
-                    {/* Progress bar */}
-                    <div className="absolute bottom-6 left-4 right-4">
-                      <div className="h-1 bg-white/20 rounded-full overflow-hidden">
-                        <div className="h-full w-1/3 bg-white rounded-full" />
-                      </div>
-                      <div className="flex justify-between mt-2 text-[10px] text-white/60">
-                        <span>0:12</span>
-                        <span>0:30</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                
-                {/* Floating badge */}
-                <div className="absolute -bottom-4 -right-4 px-4 py-2 bg-violet-500/80 text-white text-sm font-medium rounded-full shadow-lg shadow-violet-500/30 border border-violet-400/50">
-                  Coming Soon
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
 
       {/* --- 4. Auto Zip & Backups --- */}
       <section id="backup" className="py-12 md:py-20 lg:py-32 px-4 sm:px-6 bg-white border-y border-[#E5E5E5]">
@@ -1128,7 +991,7 @@ export function LandingPage() {
               </div>
               <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6">
                 {[
-                  { icon: Film, title: "Cinematic Reel Player", desc: "30-second cinematic slideshow that auto-plays your best shots. The primary way clients experience your galleries.", badge: "Popular" },
+                  { icon: ImageIcon, title: "Beautiful Galleries", desc: "Stunning, minimal galleries that showcase your work. Designed to impress clients and win referrals." },
                   { icon: Zap, title: "Mobile-First Galleries", desc: "Optimized for speed. Your galleries load instantly on any device with smart image grouping." },
                   { icon: Target, title: "Focal Point Editor", desc: "Set custom crop centers for every image. Perfect framing on any screen size or aspect ratio." },
                   { icon: Upload, title: "Auto ZIP Backups", desc: "Every upload automatically generates a ZIP archive emailed to you. Never lose a gallery." },
@@ -1136,11 +999,6 @@ export function LandingPage() {
                   { icon: Lock, title: "Password Protection", desc: "Secure galleries with passwords. Control who sees your work and when." },
                 ].map((feature, i) => (
                   <div key={i} className="group relative bg-white border border-[#E5E5E5] rounded-xl p-6 hover:border-[#141414] transition-all duration-300 hover:shadow-lg">
-                    {feature.badge && (
-                      <span className="absolute -top-2 -right-2 px-2 py-0.5 bg-violet-500 text-white text-[10px] font-bold uppercase tracking-wider rounded-full">
-                        {feature.badge}
-                      </span>
-                    )}
                     <feature.icon className="w-6 h-6 mb-4 text-violet-600" />
                     <h4 className="font-medium text-lg mb-2">{feature.title}</h4>
                     <p className="text-[#525252] text-sm leading-relaxed">{feature.desc}</p>
@@ -1329,36 +1187,44 @@ export function LandingPage() {
             </p>
           </div>
 
-          {/* Step 1: Try It - Interactive Demo */}
+          {/* Step 1: Upload */}
           <div className="grid lg:grid-cols-2 gap-8 lg:gap-16 items-center mb-16 lg:mb-24">
             <div className="order-2 lg:order-1">
-              <div className="inline-flex items-center gap-2 px-3 py-1 bg-emerald-50 border border-emerald-200 rounded-full text-sm font-medium text-emerald-700 mb-4">
-                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                Try it free
+              <div className="inline-flex items-center gap-2 px-3 py-1 bg-[#F5F5F7] rounded-full text-sm font-medium mb-4">
+                <span className="w-6 h-6 rounded-full bg-[#141414] text-white flex items-center justify-center text-xs font-bold">1</span>
+                Upload
               </div>
               <h3 className="font-serif text-2xl lg:text-3xl mb-4">
-                Create a beautiful card
+                Drop your photos.
               </h3>
               <p className="text-[#525252] text-lg leading-relaxed mb-6">
-                Drop any photo and instantly get a stunning shareable card. No sign-up required—see how beautiful your images can look with 12img.
+                Drag and drop hundreds of images at once. Our turbo upload system handles everything—compression, optimization, and organization.
               </p>
               <ul className="space-y-3">
                 <li className="flex items-center gap-3 text-[#525252]">
                   <Check className="w-5 h-5 text-emerald-600" />
-                  Elegant print-style display
+                  Turbo-fast uploads
                 </li>
                 <li className="flex items-center gap-3 text-[#525252]">
                   <Check className="w-5 h-5 text-emerald-600" />
-                  Instant shareable link
+                  Auto-compression & optimization
                 </li>
                 <li className="flex items-center gap-3 text-[#525252]">
                   <Check className="w-5 h-5 text-emerald-600" />
-                  Free for 30 days
+                  Drag & drop simplicity
                 </li>
               </ul>
             </div>
             <div className="order-1 lg:order-2 relative">
-              <DemoCardGenerator />
+              <div className="aspect-[4/3] bg-[#F5F5F7] border border-[#E5E5E5] rounded-lg p-6 overflow-hidden">
+                <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-6 h-full flex flex-col items-center justify-center">
+                  <div className="w-16 h-16 rounded-full bg-stone-100 flex items-center justify-center mb-4">
+                    <Upload className="w-8 h-8 text-stone-400" />
+                  </div>
+                  <p className="text-stone-600 font-medium mb-1">Drop photos here</p>
+                  <p className="text-stone-400 text-sm">or click to browse</p>
+                </div>
+              </div>
             </div>
           </div>
 

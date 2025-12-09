@@ -6,6 +6,7 @@ import { motion, useInView } from 'framer-motion'
 import { cn } from '@/lib/utils/cn'
 import { EditorialImage as IEditorialImage } from '@/lib/editorial/types'
 import { PinterestShareButton } from '@/components/ui/PinterestShareButton'
+import { ImageDownloadButton } from '@/components/ui/ImageDownloadButton'
 import { getSeoAltText } from '@/lib/seo/image-urls'
 
 interface Props {
@@ -15,9 +16,10 @@ interface Props {
   fit?: 'cover' | 'contain'
   galleryTitle?: string
   imageIndex?: number
+  downloadEnabled?: boolean
 }
 
-export function EditorialImage({ image, priority = false, className, fit = 'cover', galleryTitle, imageIndex }: Props) {
+export function EditorialImage({ image, priority = false, className, fit = 'cover', galleryTitle, imageIndex, downloadEnabled }: Props) {
   const ref = useRef<HTMLDivElement>(null)
   const isInView = useInView(ref, { once: true, margin: '-100px' })
   const [isLoaded, setIsLoaded] = useState(false)
@@ -78,8 +80,11 @@ export function EditorialImage({ image, priority = false, className, fit = 'cove
           {/* Subtle Vignette */}
           <div className="absolute inset-0 bg-radial-gradient from-transparent to-black/5 pointer-events-none" />
           
-          {/* Pinterest share on hover */}
-          <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10">
+          {/* Action buttons on hover */}
+          <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10 flex gap-1.5">
+            {downloadEnabled && image.id && (
+              <ImageDownloadButton imageId={image.id} size="sm" />
+            )}
             <PinterestShareButton
               imageUrl={image.url}
               description={galleryTitle ? `${galleryTitle} | 12img` : '12img'}

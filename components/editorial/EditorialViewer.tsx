@@ -23,6 +23,7 @@ interface Props {
   eventDate?: string
   location?: string
   previewImages?: PreviewImage[]
+  downloadEnabled?: boolean
 }
 
 export function EditorialViewer({ 
@@ -33,7 +34,8 @@ export function EditorialViewer({
   photographerName,
   eventDate,
   location,
-  previewImages = []
+  previewImages = [],
+  downloadEnabled = false,
 }: Props) {
   const [debug, setDebug] = useState(false)
   const [copied, setCopied] = useState(false)
@@ -101,7 +103,7 @@ export function EditorialViewer({
           const isFirstContent = index === 1 && spread.pageNumber === 1
           return (
             <div key={spread.id} id={spread.id}>
-              <Spread spread={spread} debug={debug} isFirstContent={isFirstContent} galleryTitle={title} />
+              <Spread spread={spread} debug={debug} isFirstContent={isFirstContent} galleryTitle={title} downloadEnabled={downloadEnabled} />
             </div>
           )
         })}

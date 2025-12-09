@@ -1,3 +1,41 @@
+/**
+ * ============================================================================
+ * PUBLIC GALLERY VIEW - Performance Optimized for Large Galleries
+ * ============================================================================
+ * 
+ * This component renders public-facing gallery pages with 100s-1000s of images.
+ * 
+ * PERFORMANCE OPTIMIZATIONS:
+ * 
+ * 1. NO PER-ITEM FRAMER MOTION
+ *    - Previous: motion.div with whileInView on each image = 670 intersection observers
+ *    - Current: Pure CSS transitions = 0 intersection observers
+ *    - Impact: Massive reduction in JS overhead and memory usage
+ * 
+ * 2. SKELETON LOADING STATES
+ *    - Shows animated placeholder while image loads
+ *    - Prevents layout shift (CLS = 0)
+ *    - Uses CSS animate-pulse (GPU accelerated)
+ * 
+ * 3. SMART PRIORITY HINTS
+ *    - First 4-6 images: priority={true} (preload in <head>)
+ *    - First 8-12 images: loading="eager" (load immediately)
+ *    - Rest: loading="lazy" (native browser lazy loading)
+ * 
+ * 4. RESPONSIVE IMAGE SIZES
+ *    - Grid: thumbnailUrl (600px) - fast loading
+ *    - Lightbox: previewUrl (1920px) - crisp viewing
+ *    - Download: originalUrl - full resolution
+ * 
+ * TEMPLATES:
+ * - 'mosaic': Pic-Time style varied grid (featured rows, duos, quads)
+ * - 'clean-grid': Uniform 3-column grid
+ * 
+ * @see lib/storage/signed-urls.ts for image URL generation
+ * @see lib/utils/constants.ts for IMAGE_SIZES configuration
+ * ============================================================================
+ */
+
 'use client'
 
 import { useState, useCallback, useMemo } from 'react'
@@ -7,6 +45,7 @@ import { Download, ChevronDown, Share2, Check, Loader2, Heart, X, ArrowLeft } fr
 // Note: Heart used in FullscreenViewer, X used for close button
 import Link from 'next/link'
 import { PinterestShareButton, PinterestShareButtonDark } from '@/components/ui/PinterestShareButton'
+import { ImageDownloadButton, ImageDownloadButtonDark } from '@/components/ui/ImageDownloadButton'
 import { getSeoAltText } from '@/lib/seo/image-urls'
 
 interface GalleryImage {
@@ -104,8 +143,11 @@ function FullscreenViewer({
       exit={{ opacity: 0 }}
       className="fixed inset-0 z-[100] bg-black"
     >
-      {/* Top bar with Pinterest and close */}
+      {/* Top bar with Download, Pinterest and close */}
       <div className="absolute top-4 right-4 z-50 flex items-center gap-2">
+        {downloadEnabled && (
+          <ImageDownloadButtonDark imageId={image.id} size="md" />
+        )}
         {image.previewUrl && (
           <PinterestShareButtonDark
             imageUrl={image.previewUrl}
@@ -176,60 +218,74 @@ function FullscreenViewer({
   )
 }
 
-// Clean Grid Card - For uniform grid layout with Pinterest
+// Clean Grid Card - OPTIMIZED: CSS animations instead of Framer Motion per-item
+// This prevents 670+ intersection observers for large galleries
 function CleanGridCard({
   image,
   index,
   onClick,
   galleryTitle,
+  downloadEnabled,
 }: {
   image: GalleryImage
   index: number
   onClick: () => void
   galleryTitle?: string
+  downloadEnabled?: boolean
 }) {
   const [isHovered, setIsHovered] = useState(false)
+  const [isLoaded, setIsLoaded] = useState(false)
   
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
-      transition={{ duration: 0.5, delay: Math.min(index * 0.05, 0.2) }}
-      className="relative overflow-hidden cursor-pointer group aspect-[4/5]"
+    <div
+      className="relative overflow-hidden cursor-pointer group aspect-[4/5] bg-stone-100"
       onClick={onClick}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
+      {/* Skeleton while loading */}
+      {!isLoaded && (
+        <div className="absolute inset-0 bg-gradient-to-br from-stone-100 to-stone-200 animate-pulse" />
+      )}
       <Image
         src={image.thumbnailUrl}
         alt={getSeoAltText(galleryTitle || 'Photo Gallery', undefined, index + 1)}
         fill
-        className="object-cover transition-transform duration-500 group-hover:scale-[1.02]"
+        className={`object-cover transition-all duration-500 group-hover:scale-[1.02] ${
+          isLoaded ? 'opacity-100' : 'opacity-0'
+        }`}
         style={{ objectPosition: `${image.focalX ?? 50}% ${image.focalY ?? 50}%` }}
         sizes="(max-width: 768px) 50vw, 33vw"
+        onLoad={() => setIsLoaded(true)}
+        loading={index < 12 ? 'eager' : 'lazy'}
+        priority={index < 6}
       />
       {/* Subtle hover */}
       <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-300" />
-      {/* Pinterest share on hover */}
-      {isHovered && image.originalUrl && (
+      {/* Action buttons on hover */}
+      {isHovered && (
         <div 
-          className="absolute top-2 right-2 z-10"
+          className="absolute top-2 right-2 z-10 flex gap-1.5"
           onClick={(e) => e.stopPropagation()}
         >
-          <PinterestShareButton
-            imageUrl={image.originalUrl}
-            description={galleryTitle ? `${galleryTitle} | 12img` : '12img'}
-            variant="icon"
-            size="sm"
-          />
+          {downloadEnabled && (
+            <ImageDownloadButton imageId={image.id} size="sm" />
+          )}
+          {image.originalUrl && (
+            <PinterestShareButton
+              imageUrl={image.originalUrl}
+              description={galleryTitle ? `${galleryTitle} | 12img` : '12img'}
+              variant="icon"
+              size="sm"
+            />
+          )}
         </div>
       )}
-    </motion.div>
+    </div>
   )
 }
 
-// Image Card - Clean, no effects on image
+// Image Card - OPTIMIZED: CSS transitions, skeleton loading, proper priority hints
 function ImageCard({
   image,
   index,
@@ -237,6 +293,7 @@ function ImageCard({
   className = '',
   priority = false,
   galleryTitle,
+  downloadEnabled,
 }: {
   image: GalleryImage
   index: number
@@ -244,44 +301,53 @@ function ImageCard({
   className?: string
   priority?: boolean
   galleryTitle?: string
+  downloadEnabled?: boolean
 }) {
   const [isHovered, setIsHovered] = useState(false)
+  const [isLoaded, setIsLoaded] = useState(false)
   
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      whileInView={{ opacity: 1 }}
-      viewport={{ once: true, margin: '-50px' }}
-      transition={{ duration: 0.4, delay: Math.min(index * 0.03, 0.15) }}
-      className={`relative overflow-hidden cursor-pointer group ${className}`}
+    <div
+      className={`relative overflow-hidden cursor-pointer group bg-stone-100 ${className}`}
       onClick={onClick}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
+      {/* Skeleton while loading */}
+      {!isLoaded && (
+        <div className="absolute inset-0 bg-gradient-to-br from-stone-100 to-stone-200 animate-pulse" />
+      )}
       <Image
         src={image.previewUrl || image.thumbnailUrl}
         alt={getSeoAltText(galleryTitle || 'Photo Gallery', undefined, index + 1)}
         fill
-        className="object-cover"
+        className={`object-cover transition-opacity duration-300 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}
         style={{ objectPosition: `${image.focalX ?? 50}% ${image.focalY ?? 50}%` }}
         sizes="(max-width: 768px) 100vw, 50vw"
-        priority={priority}
+        priority={priority || index < 4}
+        loading={priority || index < 8 ? 'eager' : 'lazy'}
+        onLoad={() => setIsLoaded(true)}
       />
-      {/* Pinterest share on hover */}
-      {isHovered && (image.originalUrl || image.previewUrl || image.thumbnailUrl) && (
+      {/* Action buttons on hover */}
+      {isHovered && (
         <div 
-          className="absolute top-2 right-2 z-10"
+          className="absolute top-2 right-2 z-10 flex gap-1.5"
           onClick={(e) => e.stopPropagation()}
         >
-          <PinterestShareButton
-            imageUrl={image.originalUrl || image.previewUrl || image.thumbnailUrl}
-            description={galleryTitle ? `${galleryTitle} | 12img` : '12img'}
-            variant="icon"
-            size="sm"
-          />
+          {downloadEnabled && (
+            <ImageDownloadButton imageId={image.id} size="sm" />
+          )}
+          {(image.originalUrl || image.previewUrl || image.thumbnailUrl) && (
+            <PinterestShareButton
+              imageUrl={image.originalUrl || image.previewUrl || image.thumbnailUrl}
+              description={galleryTitle ? `${galleryTitle} | 12img` : '12img'}
+              variant="icon"
+              size="sm"
+            />
+          )}
         </div>
       )}
-    </motion.div>
+    </div>
   )
 }
 
@@ -463,6 +529,7 @@ export function PublicGalleryView({
                           className="md:col-span-2 aspect-[4/3] md:aspect-[16/10]"
                           priority={rowIdx === 0}
                           galleryTitle={title}
+                          downloadEnabled={downloadEnabled}
                         />
                         <div className="grid grid-rows-2 gap-3 md:gap-4">
                           {row.images.slice(1).map((img) => (
@@ -473,6 +540,7 @@ export function PublicGalleryView({
                               onClick={() => openViewer(getGlobalIndex(img))}
                               className="aspect-[4/3]"
                               galleryTitle={title}
+                              downloadEnabled={downloadEnabled}
                             />
                           ))}
                         </div>
@@ -492,6 +560,7 @@ export function PublicGalleryView({
                               onClick={() => openViewer(getGlobalIndex(img))}
                               className="aspect-[4/3]"
                               galleryTitle={title}
+                              downloadEnabled={downloadEnabled}
                             />
                           ))}
                         </div>
@@ -501,6 +570,7 @@ export function PublicGalleryView({
                           onClick={() => openViewer(getGlobalIndex(row.images[0]))}
                           className="md:col-span-2 aspect-[4/3] md:aspect-[16/10] order-1 md:order-2"
                           galleryTitle={title}
+                          downloadEnabled={downloadEnabled}
                         />
                       </div>
                     )
@@ -517,6 +587,7 @@ export function PublicGalleryView({
                             onClick={() => openViewer(getGlobalIndex(img))}
                             className={`aspect-[3/4]`}
                             galleryTitle={title}
+                            downloadEnabled={downloadEnabled}
                           />
                         ))}
                       </div>
@@ -539,6 +610,7 @@ export function PublicGalleryView({
                               onClick={() => openViewer(getGlobalIndex(img))}
                               className={aspectClass}
                               galleryTitle={title}
+                              downloadEnabled={downloadEnabled}
                             />
                           )
                         })}
@@ -555,6 +627,7 @@ export function PublicGalleryView({
                           onClick={() => openViewer(getGlobalIndex(row.images[0]))}
                           className="aspect-[16/9]"
                           galleryTitle={title}
+                          downloadEnabled={downloadEnabled}
                         />
                       </div>
                     )
@@ -576,6 +649,7 @@ export function PublicGalleryView({
                   index={idx}
                   onClick={() => openViewer(idx)}
                   galleryTitle={title}
+                  downloadEnabled={downloadEnabled}
                 />
               ))}
             </div>

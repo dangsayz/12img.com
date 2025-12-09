@@ -4,16 +4,15 @@ export { CinematicLayout } from './CinematicLayout'
 
 export type GalleryTemplate = 'mosaic' | 'clean-grid' | 'cinematic' | 'editorial'
 
-// Default template is 'mosaic' - the Pic-Time style collage layout
-export const DEFAULT_TEMPLATE: GalleryTemplate = 'mosaic'
+// Default template is 'editorial' - magazine-style story layout
+export const DEFAULT_TEMPLATE: GalleryTemplate = 'editorial'
 
 export const GALLERY_TEMPLATES = [
   {
     id: 'mosaic' as const,
     name: 'Mosaic',
-    description: 'Dynamic collage layout (default)',
+    description: 'Dynamic collage layout',
     preview: '/images/templates/mosaic.jpg',
-    isDefault: true,
   },
   {
     id: 'clean-grid' as const,
@@ -30,7 +29,8 @@ export const GALLERY_TEMPLATES = [
   {
     id: 'editorial' as const,
     name: 'Editorial',
-    description: 'Magazine-style story layout',
+    description: 'Magazine-style story layout (default)',
     preview: '/images/templates/editorial.jpg',
+    isDefault: true,
   },
 ]

@@ -18,8 +18,11 @@ export function ConditionalFooter() {
     '/view-live',
   ]
   
+  // Also hide on landing page (has its own footer)
+  const isLandingPage = pathname === '/'
+  
   // Check if current path starts with any of the hide routes
-  const shouldHide = hideFooterRoutes.some(route => pathname.startsWith(route))
+  const shouldHide = hideFooterRoutes.some(route => pathname.startsWith(route)) || isLandingPage
   
   if (shouldHide) {
     return null

@@ -58,7 +58,7 @@ export async function createGallery(formData: FormData) {
       ? await hashPassword(validated.password)
       : null
 
-    const template = formData.get('template') as string || 'mosaic'
+    const template = formData.get('template') as string || 'editorial'
 
     const insertData = {
       user_id: user.id,

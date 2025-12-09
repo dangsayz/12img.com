@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Share2, Download, Check, ChevronDown, X } from 'lucide-react'
 import { type PresentationData } from '@/lib/types/presentation'
 import { getSeoAltText } from '@/lib/seo/image-urls'
+import { ImageDownloadButtonDark } from '@/components/ui/ImageDownloadButton'
 
 interface GalleryImage {
   id: string
@@ -334,12 +335,18 @@ export function CinematicGallery({
             className="fixed inset-0 z-[100] bg-black/95 flex items-center justify-center"
             onClick={() => setLightboxImage(null)}
           >
-            <button
-              onClick={() => setLightboxImage(null)}
-              className="absolute top-6 right-6 p-3 text-white/60 hover:text-white transition-colors z-10"
-            >
-              <X className="w-6 h-6" />
-            </button>
+            {/* Top bar with download and close */}
+            <div className="absolute top-6 right-6 flex items-center gap-2 z-10">
+              {downloadEnabled && lightboxImage && (
+                <ImageDownloadButtonDark imageId={lightboxImage.id} size="md" />
+              )}
+              <button
+                onClick={() => setLightboxImage(null)}
+                className="p-3 text-white/60 hover:text-white transition-colors rounded-full bg-white/10 hover:bg-white/20"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
 
             {lightboxIndex > 0 && (
               <button

@@ -262,6 +262,7 @@ export default async function EditorialLiveViewPage({ params }: Props) {
         eventDate={presentationData?.eventDate}
         location={presentationData?.location}
         previewImages={previewImages}
+        downloadEnabled={gallery.download_enabled}
       />
     </>
   )

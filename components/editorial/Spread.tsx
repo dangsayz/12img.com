@@ -10,9 +10,10 @@ interface Props {
   debug?: boolean
   isFirstContent?: boolean
   galleryTitle?: string
+  downloadEnabled?: boolean
 }
 
-export function Spread({ spread, debug, isFirstContent, galleryTitle }: Props) {
+export function Spread({ spread, debug, isFirstContent, galleryTitle, downloadEnabled }: Props) {
   const isViewportHeight = spread.height === 'viewport'
   
   // Theme configuration - neutral palette only
@@ -58,7 +59,7 @@ export function Spread({ spread, debug, isFirstContent, galleryTitle }: Props) {
       )}
 
       {spread.elements.map((element) => (
-        <SpreadElement key={element.id} element={element} galleryTitle={galleryTitle} />
+        <SpreadElement key={element.id} element={element} galleryTitle={galleryTitle} downloadEnabled={downloadEnabled} />
       ))}
 
       {/* Page Folio / Number - Only show for actual content pages (not title/quote spreads) */}
@@ -89,7 +90,7 @@ export function Spread({ spread, debug, isFirstContent, galleryTitle }: Props) {
   )
 }
 
-function SpreadElement({ element, galleryTitle }: { element: LayoutElement; galleryTitle?: string }) {
+function SpreadElement({ element, galleryTitle, downloadEnabled }: { element: LayoutElement; galleryTitle?: string; downloadEnabled?: boolean }) {
   // Compute styles for grid placement
   const gridStyle: React.CSSProperties = {
     gridColumn: `${element.span.colStart} / span ${element.span.colSpan}`,
@@ -118,6 +119,7 @@ function SpreadElement({ element, galleryTitle }: { element: LayoutElement; gall
               fit={element.style?.fit} 
               className={element.style?.className}
               galleryTitle={galleryTitle}
+              downloadEnabled={downloadEnabled}
             />
             {element.content.role === 'hero' && (
               <div className="mt-2 hidden md:block">
