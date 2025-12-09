@@ -24,6 +24,7 @@ import { type PresentationData } from '@/lib/types/presentation'
 import { getSeoAltText } from '@/lib/seo/image-urls'
 import { ImageDownloadButtonDark } from '@/components/ui/ImageDownloadButton'
 import { SocialShareButtonsDark } from '@/components/ui/SocialShareButtons'
+import { DownloadModal } from '@/components/ui/DownloadModal'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // TYPES
@@ -436,6 +437,7 @@ export function CinematicGallery({
   const [showCopied, setShowCopied] = useState(false)
   const [lightboxImage, setLightboxImage] = useState<GalleryImage | null>(null)
   const [lightboxIndex, setLightboxIndex] = useState(0)
+  const [showDownloadModal, setShowDownloadModal] = useState(false)
   
   // Hero image is first, grid images are the rest
   const heroImage = presentation?.coverImageId 
@@ -461,7 +463,7 @@ export function CinematicGallery({
   }
   
   const handleDownload = () => {
-    window.location.href = `/api/gallery/${galleryId}/download`
+    setShowDownloadModal(true)
   }
 
   const openLightbox = useCallback((index: number) => {
@@ -737,6 +739,16 @@ export function CinematicGallery({
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Download Modal */}
+      <DownloadModal
+        isOpen={showDownloadModal}
+        onClose={() => setShowDownloadModal(false)}
+        galleryId={galleryId}
+        galleryTitle={title}
+        imageCount={images.length}
+        totalSizeBytes={totalFileSizeBytes}
+      />
     </div>
   )
 }

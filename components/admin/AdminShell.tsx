@@ -24,6 +24,7 @@ import {
   Menu,
   X,
   Trophy,
+  Lightbulb,
 } from 'lucide-react'
 import { RealtimeIndicator } from './RealtimeIndicator'
 
@@ -73,6 +74,11 @@ const NAV_ITEMS = [
     title: 'Contests',
     href: '/admin/contests',
     icon: Trophy,
+  },
+  {
+    title: 'Feature Requests',
+    href: '/admin/feature-requests',
+    icon: Lightbulb,
   },
   {
     title: 'Audit Logs',

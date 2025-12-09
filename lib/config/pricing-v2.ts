@@ -26,6 +26,8 @@ export interface PlanTierConfig {
   approxPhotos: number
   galleryLimit: number | 'unlimited'
   expiryDays: number | 'unlimited'
+  contractsPerMonth: number | 'unlimited'  // Monthly contract limit
+  clientManagement: boolean                 // Access to client features
   isPopular?: boolean
   badge?: string
 }
@@ -42,6 +44,8 @@ export const PLAN_TIERS: Record<PlanTier, PlanTierConfig> = {
     approxPhotos: 1300,
     galleryLimit: 3,
     expiryDays: 7,
+    contractsPerMonth: 1,        // Trial: 1 contract to test the feature
+    clientManagement: false,     // No client management on free
   },
   essential: {
     id: 'essential',
@@ -54,6 +58,8 @@ export const PLAN_TIERS: Record<PlanTier, PlanTierConfig> = {
     approxPhotos: 4000,
     galleryLimit: 'unlimited',
     expiryDays: 'unlimited',
+    contractsPerMonth: 5,
+    clientManagement: true,
   },
   pro: {
     id: 'pro',
@@ -66,6 +72,8 @@ export const PLAN_TIERS: Record<PlanTier, PlanTierConfig> = {
     approxPhotos: 31000,
     galleryLimit: 'unlimited',
     expiryDays: 'unlimited',
+    contractsPerMonth: 15,
+    clientManagement: true,
     isPopular: true,
     badge: 'Most Popular',
   },
@@ -80,6 +88,8 @@ export const PLAN_TIERS: Record<PlanTier, PlanTierConfig> = {
     approxPhotos: 151000,
     galleryLimit: 'unlimited',
     expiryDays: 'unlimited',
+    contractsPerMonth: 50,
+    clientManagement: true,
   },
   elite: {
     id: 'elite',
@@ -92,6 +102,8 @@ export const PLAN_TIERS: Record<PlanTier, PlanTierConfig> = {
     approxPhotos: 600000,
     galleryLimit: 'unlimited',
     expiryDays: 'unlimited',
+    contractsPerMonth: 'unlimited',
+    clientManagement: true,
   },
 }
 
@@ -436,6 +448,19 @@ export const FEATURE_ROWS: FeatureRow[] = [
       elite: { status: 'comingSoon' },
     },
   },
+  {
+    id: 'automated_workflows',
+    group: 'automation',
+    label: 'Automated Workflows',
+    description: 'Schedule emails based on event dates',
+    availability: {
+      free: { status: 'limited', note: '3 active', tooltip: '3 active automations, pre-built templates only' },
+      essential: { status: 'limited', note: '10 active', tooltip: '10 active automations, 3 custom templates' },
+      pro: { status: 'included', note: 'Unlimited', tooltip: 'Unlimited automations and custom templates' },
+      studio: { status: 'included', note: 'Unlimited', tooltip: 'Unlimited automations and custom templates' },
+      elite: { status: 'included', note: 'Unlimited', tooltip: 'Unlimited automations and custom templates' },
+    },
+  },
 
   // ─── Advanced Features ───
   {
@@ -512,4 +537,27 @@ export function formatStorageDisplay(gb: number): string {
 export function formatApproxPhotos(count: number): string {
   if (count >= 1000) return `~${Math.round(count / 1000)}K`
   return `~${count}`
+}
+
+/**
+ * Check if a plan has client management access
+ */
+export function hasClientManagement(planId: PlanTier): boolean {
+  return PLAN_TIERS[planId]?.clientManagement ?? false
+}
+
+/**
+ * Get contract limit for a plan
+ */
+export function getContractLimit(planId: PlanTier): number | 'unlimited' {
+  return PLAN_TIERS[planId]?.contractsPerMonth ?? 0
+}
+
+/**
+ * Check if user can create more contracts this month
+ */
+export function canCreateContract(planId: PlanTier, contractsThisMonth: number): boolean {
+  const limit = PLAN_TIERS[planId]?.contractsPerMonth
+  if (limit === 'unlimited') return true
+  return contractsThisMonth < limit
 }

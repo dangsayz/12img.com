@@ -105,6 +105,7 @@ export default async function GalleryViewPage({ params }: Props) {
     created_at: gallery.created_at,
     imageCount: images.length,
     presentation_data: (gallery as { presentation_data?: unknown }).presentation_data || null,
+    cover_image_id: (gallery as { cover_image_id?: string | null }).cover_image_id || null,
   }
 
   return (

@@ -3,7 +3,7 @@
 import { useState, useTransition, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, Loader2, Wand2, ChevronLeft, ChevronRight, User, Calendar, Package } from 'lucide-react'
+import { X, Loader2, Wand2, ChevronLeft, ChevronRight, User, Users, Mail, Calendar, MapPin, Package } from 'lucide-react'
 import { updateClientProfile, getClientLocationSuggestions } from '@/server/actions/client.actions'
 import { type EventType } from '@/types/database'
 import { type ClientProfile, EVENT_TYPE_LABELS } from '@/lib/contracts/types'
@@ -14,7 +14,7 @@ interface EditClientModalProps {
   client: ClientProfile
 }
 
-type Step = 'client' | 'event' | 'package'
+type Step = 'names' | 'contact' | 'event' | 'location' | 'package'
 
 const EVENT_TYPES: EventType[] = [
   'wedding',
@@ -29,15 +29,17 @@ const EVENT_TYPES: EventType[] = [
 ]
 
 const STEPS: { key: Step; label: string; icon: typeof User }[] = [
-  { key: 'client', label: 'Contact', icon: User },
+  { key: 'names', label: 'Names', icon: Users },
+  { key: 'contact', label: 'Contact', icon: Mail },
   { key: 'event', label: 'Event', icon: Calendar },
+  { key: 'location', label: 'Location', icon: MapPin },
   { key: 'package', label: 'Package', icon: Package },
 ]
 
 export function EditClientModal({ isOpen, onClose, client }: EditClientModalProps) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
-  const [step, setStep] = useState<Step>('client')
+  const [step, setStep] = useState<Step>('names')
   const [error, setError] = useState<string | null>(null)
   
   // Autocomplete suggestions
@@ -57,6 +59,7 @@ export function EditClientModal({ isOpen, onClose, client }: EditClientModalProp
     partnerPhone: client.partnerPhone || '',
     eventType: client.eventType,
     eventDate: client.eventDate || '',
+    eventTime: client.eventTime || '',
     eventLocation: client.eventLocation || '',
     eventVenue: client.eventVenue || '',
     packageName: client.packageName || '',
@@ -80,6 +83,7 @@ export function EditClientModal({ isOpen, onClose, client }: EditClientModalProp
       partnerPhone: client.partnerPhone || '',
       eventType: client.eventType,
       eventDate: client.eventDate || '',
+      eventTime: client.eventTime || '',
       eventLocation: client.eventLocation || '',
       eventVenue: client.eventVenue || '',
       packageName: client.packageName || '',
@@ -89,7 +93,7 @@ export function EditClientModal({ isOpen, onClose, client }: EditClientModalProp
       packageDescription: client.packageDescription || '',
       notes: client.notes || '',
     })
-    setStep('client')
+    setStep('names')
     setError(null)
   }, [client, isOpen])
 
@@ -147,6 +151,7 @@ export function EditClientModal({ isOpen, onClose, client }: EditClientModalProp
         partnerPhone: formData.partnerPhone || null,
         eventType: formData.eventType,
         eventDate: formData.eventDate || null,
+        eventTime: formData.eventTime || null,
         eventLocation: formData.eventLocation || null,
         eventVenue: formData.eventVenue || null,
         packageName: formData.packageName || null,
@@ -162,14 +167,21 @@ export function EditClientModal({ isOpen, onClose, client }: EditClientModalProp
         return
       }
 
+      // Force a hard refresh to ensure all data is updated
       router.refresh()
-      onClose()
+      // Small delay to ensure revalidation completes
+      setTimeout(() => {
+        onClose()
+      }, 100)
     })
   }
 
   const canProceed = () => {
-    if (step === 'client') {
-      return formData.firstName && formData.lastName && formData.email
+    if (step === 'names') {
+      return formData.firstName && formData.lastName
+    }
+    if (step === 'contact') {
+      return formData.email
     }
     return true
   }
@@ -289,46 +301,77 @@ export function EditClientModal({ isOpen, onClose, client }: EditClientModalProp
               })}
             </div>
 
-            {/* Content - Scrollable */}
-            <div className="flex-1 overflow-y-auto overscroll-contain px-5 py-5">
+            {/* Content - No scroll needed with fewer fields per step */}
+            <div className="flex-1 px-5 py-6">
               <AnimatePresence mode="wait">
-                {step === 'client' && (
+                {/* Step 1: Names - Primary + Partner */}
+                {step === 'names' && (
                   <motion.div
-                    key="client"
+                    key="names"
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: -20 }}
-                    className="space-y-5"
+                    className="space-y-6"
                   >
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-stone-700 mb-2">
-                          First Name *
-                        </label>
+                    <div>
+                      <p className="text-xs font-medium text-stone-400 uppercase tracking-wider mb-3">
+                        Client
+                      </p>
+                      <div className="grid grid-cols-2 gap-3">
                         <input
                           type="text"
                           value={formData.firstName}
                           onChange={e => updateField('firstName', e.target.value.replace(/[^a-zA-ZÀ-ÿ\s'-]/g, ''))}
-                          className="w-full h-12 px-4 text-base border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-stone-900/20 focus:border-stone-400 transition-shadow"
-                          placeholder="Jane"
+                          className="h-12 px-4 text-base border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-stone-900/20 focus:border-stone-400"
+                          placeholder="First name *"
                           maxLength={50}
                         />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-stone-700 mb-2">
-                          Last Name *
-                        </label>
                         <input
                           type="text"
                           value={formData.lastName}
                           onChange={e => updateField('lastName', e.target.value.replace(/[^a-zA-ZÀ-ÿ\s'-]/g, ''))}
-                          className="w-full h-12 px-4 text-base border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-stone-900/20 focus:border-stone-400 transition-shadow"
-                          placeholder="Smith"
+                          className="h-12 px-4 text-base border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-stone-900/20 focus:border-stone-400"
+                          placeholder="Last name *"
                           maxLength={50}
                         />
                       </div>
                     </div>
 
+                    <div>
+                      <p className="text-xs font-medium text-stone-400 uppercase tracking-wider mb-3">
+                        Partner <span className="text-stone-300 font-normal">(optional)</span>
+                      </p>
+                      <div className="grid grid-cols-2 gap-3">
+                        <input
+                          type="text"
+                          value={formData.partnerFirstName}
+                          onChange={e => updateField('partnerFirstName', e.target.value.replace(/[^a-zA-ZÀ-ÿ\s'-]/g, ''))}
+                          className="h-12 px-4 text-base border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-stone-900/20 focus:border-stone-400"
+                          placeholder="First name"
+                          maxLength={50}
+                        />
+                        <input
+                          type="text"
+                          value={formData.partnerLastName}
+                          onChange={e => updateField('partnerLastName', e.target.value.replace(/[^a-zA-ZÀ-ÿ\s'-]/g, ''))}
+                          className="h-12 px-4 text-base border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-stone-900/20 focus:border-stone-400"
+                          placeholder="Last name"
+                          maxLength={50}
+                        />
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+
+                {/* Step 2: Contact - Email + Phone */}
+                {step === 'contact' && (
+                  <motion.div
+                    key="contact"
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
+                    className="space-y-4"
+                  >
                     <div>
                       <label className="block text-sm font-medium text-stone-700 mb-2">
                         Email *
@@ -337,7 +380,7 @@ export function EditClientModal({ isOpen, onClose, client }: EditClientModalProp
                         type="email"
                         value={formData.email}
                         onChange={e => updateField('email', e.target.value)}
-                        className="w-full h-12 px-4 text-base border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-stone-900/20 focus:border-stone-400 transition-shadow"
+                        className="w-full h-12 px-4 text-base border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-stone-900/20 focus:border-stone-400"
                         placeholder="jane@example.com"
                       />
                     </div>
@@ -350,38 +393,15 @@ export function EditClientModal({ isOpen, onClose, client }: EditClientModalProp
                         type="tel"
                         value={formData.phone}
                         onChange={e => updateField('phone', formatPhoneNumber(e.target.value))}
-                        className="w-full h-12 px-4 text-base border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-stone-900/20 focus:border-stone-400 transition-shadow"
+                        className="w-full h-12 px-4 text-base border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-stone-900/20 focus:border-stone-400"
                         placeholder="000-000-0000"
                         maxLength={12}
                       />
                     </div>
-
-                    <div className="pt-4 border-t border-stone-100">
-                      <p className="text-sm font-medium text-stone-700 mb-3">
-                        Partner (optional)
-                      </p>
-                      <div className="grid grid-cols-2 gap-4">
-                        <input
-                          type="text"
-                          value={formData.partnerFirstName}
-                          onChange={e => updateField('partnerFirstName', e.target.value.replace(/[^a-zA-ZÀ-ÿ\s'-]/g, ''))}
-                          className="h-12 px-4 text-base border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-stone-900/20 focus:border-stone-400 transition-shadow"
-                          placeholder="First name"
-                          maxLength={50}
-                        />
-                        <input
-                          type="text"
-                          value={formData.partnerLastName}
-                          onChange={e => updateField('partnerLastName', e.target.value.replace(/[^a-zA-ZÀ-ÿ\s'-]/g, ''))}
-                          className="h-12 px-4 text-base border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-stone-900/20 focus:border-stone-400 transition-shadow"
-                          placeholder="Last name"
-                          maxLength={50}
-                        />
-                      </div>
-                    </div>
                   </motion.div>
                 )}
 
+                {/* Step 3: Event - Type + Date/Time */}
                 {step === 'event' && (
                   <motion.div
                     key="event"
@@ -400,10 +420,10 @@ export function EditClientModal({ isOpen, onClose, client }: EditClientModalProp
                             key={type}
                             type="button"
                             onClick={() => updateField('eventType', type)}
-                            className={`h-11 px-3 text-sm font-medium rounded-xl border transition-all active:scale-[0.98] ${
+                            className={`h-10 px-2 text-sm font-medium rounded-lg border transition-all active:scale-[0.98] ${
                               formData.eventType === type
-                                ? 'border-stone-900 bg-stone-900 text-white shadow-md'
-                                : 'border-stone-200 hover:border-stone-300 active:bg-stone-50'
+                                ? 'border-stone-900 bg-stone-900 text-white'
+                                : 'border-stone-200 hover:border-stone-300'
                             }`}
                           >
                             {EVENT_TYPE_LABELS[type]}
@@ -412,58 +432,42 @@ export function EditClientModal({ isOpen, onClose, client }: EditClientModalProp
                       </div>
                     </div>
 
-                    <div>
-                      <label className="block text-sm font-medium text-stone-700 mb-2">
-                        Event Date
-                      </label>
-                      <input
-                        type="date"
-                        value={formData.eventDate}
-                        onChange={e => updateField('eventDate', e.target.value)}
-                        className="w-full h-12 px-4 text-base border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-stone-900/20 focus:border-stone-400 transition-shadow"
-                      />
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-sm font-medium text-stone-700 mb-2">
+                          Date
+                        </label>
+                        <input
+                          type="date"
+                          value={formData.eventDate}
+                          onChange={e => updateField('eventDate', e.target.value)}
+                          className="w-full h-12 px-4 text-base border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-stone-900/20 focus:border-stone-400"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-stone-700 mb-2">
+                          Arrival Time
+                        </label>
+                        <input
+                          type="time"
+                          value={formData.eventTime}
+                          onChange={e => updateField('eventTime', e.target.value)}
+                          className="w-full h-12 px-4 text-base border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-stone-900/20 focus:border-stone-400"
+                        />
+                      </div>
                     </div>
+                  </motion.div>
+                )}
 
-                    <div className="relative">
-                      <label className="block text-sm font-medium text-stone-700 mb-2">
-                        Location
-                      </label>
-                      <input
-                        type="text"
-                        value={formData.eventLocation}
-                        onChange={e => {
-                          updateField('eventLocation', e.target.value)
-                          setShowLocationSuggestions(true)
-                        }}
-                        onFocus={() => setShowLocationSuggestions(true)}
-                        onBlur={() => setTimeout(() => setShowLocationSuggestions(false), 150)}
-                        className="w-full h-12 px-4 text-base border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-stone-900/20 focus:border-stone-400 transition-shadow"
-                        placeholder="City, State"
-                        maxLength={200}
-                      />
-                      {/* Location Suggestions Dropdown */}
-                      {showLocationSuggestions && filteredLocations.length > 0 && (
-                        <div className="absolute z-10 w-full mt-2 bg-white border border-stone-200 rounded-xl shadow-lg max-h-40 overflow-y-auto">
-                          {filteredLocations.map(loc => (
-                            <button
-                              key={loc}
-                              type="button"
-                              onMouseDown={() => {
-                                updateField('eventLocation', loc)
-                                setShowLocationSuggestions(false)
-                              }}
-                              className="w-full h-12 px-4 text-left text-base hover:bg-stone-50 active:bg-stone-100 flex items-center gap-3 border-b border-stone-100 last:border-0"
-                            >
-                              <span className="w-5 h-5 rounded-full bg-stone-900 flex items-center justify-center text-white text-xs">
-                                ✓
-                              </span>
-                              {loc}
-                            </button>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-
+                {/* Step 4: Location - Venue + City */}
+                {step === 'location' && (
+                  <motion.div
+                    key="location"
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
+                    className="space-y-4"
+                  >
                     <div className="relative">
                       <label className="block text-sm font-medium text-stone-700 mb-2">
                         Venue
@@ -477,14 +481,13 @@ export function EditClientModal({ isOpen, onClose, client }: EditClientModalProp
                         }}
                         onFocus={() => setShowVenueSuggestions(true)}
                         onBlur={() => setTimeout(() => setShowVenueSuggestions(false), 150)}
-                        className="w-full h-12 px-4 text-base border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-stone-900/20 focus:border-stone-400 transition-shadow"
+                        className="w-full h-12 px-4 text-base border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-stone-900/20 focus:border-stone-400"
                         placeholder="Venue name"
                         maxLength={200}
                       />
-                      {/* Venue Suggestions Dropdown */}
                       {showVenueSuggestions && filteredVenues.length > 0 && (
-                        <div className="absolute z-10 w-full mt-2 bg-white border border-stone-200 rounded-xl shadow-lg max-h-40 overflow-y-auto">
-                          {filteredVenues.map(venue => (
+                        <div className="absolute z-10 w-full mt-1 bg-white border border-stone-200 rounded-xl shadow-lg max-h-32 overflow-y-auto">
+                          {filteredVenues.slice(0, 4).map(venue => (
                             <button
                               key={venue}
                               type="button"
@@ -492,12 +495,45 @@ export function EditClientModal({ isOpen, onClose, client }: EditClientModalProp
                                 updateField('eventVenue', venue)
                                 setShowVenueSuggestions(false)
                               }}
-                              className="w-full h-12 px-4 text-left text-base hover:bg-stone-50 active:bg-stone-100 flex items-center gap-3 border-b border-stone-100 last:border-0"
+                              className="w-full h-10 px-4 text-left text-sm hover:bg-stone-50 border-b border-stone-100 last:border-0"
                             >
-                              <span className="w-5 h-5 rounded-full bg-stone-900 flex items-center justify-center text-white text-xs">
-                                ✓
-                              </span>
                               {venue}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="relative">
+                      <label className="block text-sm font-medium text-stone-700 mb-2">
+                        City / Area
+                      </label>
+                      <input
+                        type="text"
+                        value={formData.eventLocation}
+                        onChange={e => {
+                          updateField('eventLocation', e.target.value)
+                          setShowLocationSuggestions(true)
+                        }}
+                        onFocus={() => setShowLocationSuggestions(true)}
+                        onBlur={() => setTimeout(() => setShowLocationSuggestions(false), 150)}
+                        className="w-full h-12 px-4 text-base border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-stone-900/20 focus:border-stone-400"
+                        placeholder="Dallas, TX"
+                        maxLength={200}
+                      />
+                      {showLocationSuggestions && filteredLocations.length > 0 && (
+                        <div className="absolute z-10 w-full mt-1 bg-white border border-stone-200 rounded-xl shadow-lg max-h-32 overflow-y-auto">
+                          {filteredLocations.slice(0, 4).map(loc => (
+                            <button
+                              key={loc}
+                              type="button"
+                              onMouseDown={() => {
+                                updateField('eventLocation', loc)
+                                setShowLocationSuggestions(false)
+                              }}
+                              className="w-full h-10 px-4 text-left text-sm hover:bg-stone-50 border-b border-stone-100 last:border-0"
+                            >
+                              {loc}
                             </button>
                           ))}
                         </div>
@@ -506,13 +542,14 @@ export function EditClientModal({ isOpen, onClose, client }: EditClientModalProp
                   </motion.div>
                 )}
 
+                {/* Step 5: Package - Simplified */}
                 {step === 'package' && (
                   <motion.div
                     key="package"
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: -20 }}
-                    className="space-y-5"
+                    className="space-y-4"
                   >
                     <div>
                       <label className="block text-sm font-medium text-stone-700 mb-2">
@@ -522,25 +559,28 @@ export function EditClientModal({ isOpen, onClose, client }: EditClientModalProp
                         type="text"
                         value={formData.packageName}
                         onChange={e => updateField('packageName', e.target.value)}
-                        className="w-full h-12 px-4 text-base border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-stone-900/20 focus:border-stone-400 transition-shadow"
+                        className="w-full h-12 px-4 text-base border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-stone-900/20 focus:border-stone-400"
                         placeholder="e.g., Full Day Coverage"
                       />
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-3 gap-3">
                       <div>
                         <label className="block text-sm font-medium text-stone-700 mb-2">
-                          Price ($)
+                          Price
                         </label>
-                        <input
-                          type="number"
-                          inputMode="numeric"
-                          value={formData.packagePrice}
-                          onChange={e => updateField('packagePrice', e.target.value)}
-                          className="w-full h-12 px-4 text-base border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-stone-900/20 focus:border-stone-400 transition-shadow"
-                          placeholder="5000"
-                          min="0"
-                        />
+                        <div className="relative">
+                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400">$</span>
+                          <input
+                            type="number"
+                            inputMode="numeric"
+                            value={formData.packagePrice}
+                            onChange={e => updateField('packagePrice', e.target.value)}
+                            className="w-full h-12 pl-7 pr-3 text-base border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-stone-900/20 focus:border-stone-400"
+                            placeholder="5000"
+                            min="0"
+                          />
+                        </div>
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-stone-700 mb-2">
@@ -551,35 +591,32 @@ export function EditClientModal({ isOpen, onClose, client }: EditClientModalProp
                           inputMode="numeric"
                           value={formData.packageHours}
                           onChange={e => updateField('packageHours', e.target.value)}
-                          className="w-full h-12 px-4 text-base border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-stone-900/20 focus:border-stone-400 transition-shadow"
+                          className="w-full h-12 px-3 text-base border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-stone-900/20 focus:border-stone-400"
                           placeholder="8"
                           min="1"
                           max="24"
                         />
                       </div>
-                    </div>
-
-                    {/* Retainer Fee */}
-                    <div>
-                      <label className="block text-sm font-medium text-stone-700 mb-2">
-                        Retainer Fee
-                      </label>
-                      <div className="relative">
-                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-stone-400 text-base">$</span>
-                        <input
-                          type="text"
-                          inputMode="numeric"
-                          value={formData.retainerFee}
-                          onChange={e => {
-                            const value = e.target.value.replace(/\D/g, '').slice(0, 5)
-                            updateField('retainerFee', value)
-                          }}
-                          className="w-full h-12 pl-8 pr-4 text-base border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-stone-900/20 focus:border-stone-400 transition-shadow"
-                          placeholder="1000"
-                          maxLength={5}
-                        />
+                      <div>
+                        <label className="block text-sm font-medium text-stone-700 mb-2">
+                          Deposit
+                        </label>
+                        <div className="relative">
+                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400">$</span>
+                          <input
+                            type="text"
+                            inputMode="numeric"
+                            value={formData.retainerFee}
+                            onChange={e => {
+                              const value = e.target.value.replace(/\D/g, '').slice(0, 5)
+                              updateField('retainerFee', value)
+                            }}
+                            className="w-full h-12 pl-7 pr-3 text-base border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-stone-900/20 focus:border-stone-400"
+                            placeholder="1000"
+                            maxLength={5}
+                          />
+                        </div>
                       </div>
-                      <p className="text-xs text-stone-400 mt-2">Deposit to secure the date</p>
                     </div>
 
                     <div>
@@ -591,45 +628,47 @@ export function EditClientModal({ isOpen, onClose, client }: EditClientModalProp
                           type="button"
                           onClick={() => {
                             const lines: string[] = []
-                            if (formData.packageName) {
-                              lines.push(`📦 ${formData.packageName.toUpperCase()}`)
+                            const clientName = formData.partnerFirstName
+                              ? `${formData.firstName} ${formData.lastName} & ${formData.partnerFirstName} ${formData.partnerLastName || formData.lastName}`
+                              : `${formData.firstName} ${formData.lastName}`
+                            lines.push(`CLIENT: ${clientName}`)
+                            if (formData.email) lines.push(`Email: ${formData.email}`)
+                            if (formData.phone) lines.push(`Phone: ${formData.phone}`)
+                            lines.push('')
+                            lines.push(`EVENT: ${EVENT_TYPE_LABELS[formData.eventType]}`)
+                            if (formData.eventDate) {
+                              const date = new Date(formData.eventDate + 'T00:00:00')
+                              lines.push(`Date: ${date.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}`)
+                            }
+                            if (formData.eventTime) {
+                              const [hours, minutes] = formData.eventTime.split(':').map(Number)
+                              const period = hours >= 12 ? 'PM' : 'AM'
+                              const displayHours = hours % 12 || 12
+                              lines.push(`Arrival: ${displayHours}:${minutes.toString().padStart(2, '0')} ${period}`)
+                            }
+                            if (formData.eventVenue) lines.push(`Venue: ${formData.eventVenue}`)
+                            if (formData.eventLocation) lines.push(`Location: ${formData.eventLocation}`)
+                            if (formData.packageName || formData.packagePrice) {
                               lines.push('')
-                            }
-                            if (formData.packageHours) {
-                              lines.push(`Coverage: ${formData.packageHours} hours`)
-                            }
-                            if (formData.packagePrice) {
-                              const price = parseFloat(formData.packagePrice)
-                              lines.push(`Investment: $${price.toLocaleString()}`)
-                            }
-                            if (formData.retainerFee || formData.packagePrice) {
-                              lines.push('')
-                              lines.push('— Payment Schedule —')
-                              if (formData.retainerFee) {
-                                const retainer = parseFloat(formData.retainerFee)
-                                lines.push(`Retainer: $${retainer.toLocaleString()} (due upon signing)`)
-                              }
-                              if (formData.packagePrice) {
-                                const price = parseFloat(formData.packagePrice)
-                                const retainer = formData.retainerFee ? parseFloat(formData.retainerFee) : 0
-                                const remaining = price - retainer
-                                lines.push(`Balance: $${remaining.toLocaleString()} (due 14 days before event)`)
-                              }
+                              if (formData.packageName) lines.push(`PACKAGE: ${formData.packageName}`)
+                              if (formData.packageHours) lines.push(`Coverage: ${formData.packageHours} hours`)
+                              if (formData.packagePrice) lines.push(`Investment: $${parseFloat(formData.packagePrice).toLocaleString()}`)
+                              if (formData.retainerFee) lines.push(`Deposit: $${parseFloat(formData.retainerFee).toLocaleString()}`)
                             }
                             updateField('notes', lines.join('\n'))
                           }}
-                          className="h-9 inline-flex items-center gap-1.5 px-3 text-sm font-medium text-amber-700 bg-amber-50 hover:bg-amber-100 active:bg-amber-200 rounded-lg transition-colors"
+                          className="h-8 w-8 flex items-center justify-center rounded-lg hover:bg-stone-100 active:bg-stone-200 transition-colors"
+                          title="Generate summary"
                         >
-                          <Wand2 className="w-4 h-4" />
-                          Generate
+                          <Wand2 className="w-4 h-4 text-stone-500" />
                         </button>
                       </div>
                       <textarea
                         value={formData.notes}
                         onChange={e => updateField('notes', e.target.value)}
-                        rows={4}
-                        className="w-full px-4 py-3 text-base border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-stone-900/20 focus:border-stone-400 resize-none transition-shadow"
-                        placeholder="Package summary, payment terms, special requests..."
+                        rows={3}
+                        className="w-full px-4 py-3 text-sm border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-stone-900/20 focus:border-stone-400 resize-none"
+                        placeholder="Special requests, notes..."
                       />
                     </div>
                   </motion.div>

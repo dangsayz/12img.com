@@ -5,7 +5,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
-import { updateGalleryTemplate, updateGallery, toggleGalleryVisibility, toggleGalleryDownloads, updateGalleryPassword } from '@/server/actions/gallery.actions'
+import { updateGalleryTemplate, updateGallery, toggleGalleryVisibility, toggleGalleryDownloads, updateGalleryPassword, setCoverImage } from '@/server/actions/gallery.actions'
 import { 
   ArrowLeft,
   ArrowDownToLine,
@@ -38,7 +38,9 @@ import {
   GripVertical,
   Shield,
   FileText,
-  ArrowDown
+  ArrowDown,
+  ImageIcon,
+  Star
 } from 'lucide-react'
 import { EmailActivity } from '@/components/gallery/EmailActivity'
 import { ShareModal } from '@/components/gallery/ShareModal'
@@ -67,6 +69,9 @@ function MasonryImageItem({
   isSelecting,
   isSelected,
   onSelect,
+  isCover,
+  onSetCover,
+  isSettingCover,
 }: {
   image: GalleryImage
   index: number
@@ -74,6 +79,9 @@ function MasonryImageItem({
   isSelecting: boolean
   isSelected: boolean
   onSelect: () => void
+  isCover: boolean
+  onSetCover: () => void
+  isSettingCover: boolean
 }) {
   const [aspectRatio, setAspectRatio] = useState<number>(
     image.width && image.height ? image.width / image.height : 1
@@ -182,6 +190,18 @@ function MasonryImageItem({
         />
       )}
       
+      {/* Cover image badge - always visible when this is the cover */}
+      {isCover && !isSelecting && (
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="absolute top-2.5 left-2.5 px-2 py-1 bg-stone-900 text-white text-[9px] tracking-[0.15em] uppercase font-medium flex items-center gap-1.5 shadow-sm"
+        >
+          <Star className="w-2.5 h-2.5 fill-current" />
+          Cover
+        </motion.div>
+      )}
+      
       {/* Selection checkbox */}
       {isSelecting && (
         <motion.div 
@@ -211,6 +231,28 @@ function MasonryImageItem({
           }}
           transition={{ duration: 0.2, ease: 'easeOut' }}
         >
+          {/* Set as Cover button - only show if not already cover */}
+          {!isCover && (
+            <motion.button 
+              onClick={(e) => {
+                e.stopPropagation()
+                onSetCover()
+              }}
+              disabled={isSettingCover}
+              className={`w-7 h-7 bg-white/95 backdrop-blur-sm flex items-center justify-center transition-colors shadow-sm ${
+                isSettingCover ? 'opacity-50' : 'hover:bg-amber-50'
+              }`}
+              title="Set as cover image"
+              whileHover={{ scale: isSettingCover ? 1 : 1.05 }}
+              whileTap={{ scale: isSettingCover ? 1 : 0.95 }}
+            >
+              {isSettingCover ? (
+                <div className="w-3 h-3 border-2 border-amber-500 border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <Star className="w-3.5 h-3.5 text-amber-500" />
+              )}
+            </motion.button>
+          )}
           {/* Download button */}
           <motion.button 
             onClick={(e) => {
@@ -257,6 +299,7 @@ interface GalleryData {
   created_at: string
   imageCount: number
   presentation_data?: PresentationData | null
+  cover_image_id?: string | null
 }
 
 interface GalleryEditorProps {
@@ -309,10 +352,30 @@ export function GalleryEditor({
   const [showPasswordModal, setShowPasswordModal] = useState(false)
   const [newPassword, setNewPassword] = useState('')
   const [isSavingPassword, setIsSavingPassword] = useState(false)
+  const [coverImageId, setCoverImageId] = useState<string | null>(gallery.cover_image_id || null)
+  const [settingCoverImageId, setSettingCoverImageId] = useState<string | null>(null)
 
   useEffect(() => {
     setShareUrl(`${window.location.origin}/view-reel/${gallery.id}`)
   }, [gallery.id])
+
+  // Handle setting cover image
+  const handleSetCover = async (imageId: string) => {
+    setSettingCoverImageId(imageId)
+    try {
+      const result = await setCoverImage(gallery.id, imageId)
+      if (result.success) {
+        setCoverImageId(imageId)
+        router.refresh()
+      } else {
+        console.error('Failed to set cover:', result.error)
+      }
+    } catch (error) {
+      console.error('Failed to set cover:', error)
+    } finally {
+      setSettingCoverImageId(null)
+    }
+  }
 
   // Handle visibility toggle
   const handleVisibilityToggle = async () => {
@@ -1080,6 +1143,9 @@ export function GalleryEditor({
                         }
                         setSelectedImages(newSelected)
                       }}
+                      isCover={coverImageId === image.id}
+                      onSetCover={() => handleSetCover(image.id)}
+                      isSettingCover={settingCoverImageId === image.id}
                     />
                   )
                 })}

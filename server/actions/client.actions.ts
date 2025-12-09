@@ -105,6 +105,11 @@ const clientProfileSchema = z.object({
     .optional()
     .nullable()
     .or(z.literal('')),
+  eventTime: z.string()
+    .regex(/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/, 'Invalid time format (HH:MM)')
+    .optional()
+    .nullable()
+    .or(z.literal('')),
   eventLocation: safeTextSchema(200),
   eventVenue: safeTextSchema(200),
   packageName: safeTextSchema(100),
@@ -140,6 +145,7 @@ function mapDbToClient(row: Tables<'client_profiles'>): ClientProfile {
     partnerPhone: row.partner_phone,
     eventType: row.event_type as EventType,
     eventDate: row.event_date,
+    eventTime: (row as any).event_time || null,
     eventLocation: row.event_location,
     eventVenue: row.event_venue,
     packageName: row.package_name,
@@ -199,6 +205,7 @@ export async function createClientProfile(
         partner_phone: data.partnerPhone || null,
         event_type: data.eventType,
         event_date: data.eventDate || null,
+        event_time: data.eventTime || null,
         event_location: data.eventLocation || null,
         event_venue: data.eventVenue || null,
         package_name: data.packageName || null,
@@ -281,6 +288,7 @@ export async function updateClientProfile(
     if (data.partnerPhone !== undefined) updates.partner_phone = data.partnerPhone || null
     if (data.eventType !== undefined) updates.event_type = data.eventType
     if (data.eventDate !== undefined) updates.event_date = data.eventDate || null
+    if (data.eventTime !== undefined) updates.event_time = data.eventTime || null
     if (data.eventLocation !== undefined) updates.event_location = data.eventLocation || null
     if (data.eventVenue !== undefined) updates.event_venue = data.eventVenue || null
     if (data.packageName !== undefined) updates.package_name = data.packageName || null

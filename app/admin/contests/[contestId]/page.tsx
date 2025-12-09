@@ -21,7 +21,7 @@
 
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { createServerClient } from '@/lib/supabase/server'
+import { supabaseAdmin } from '@/lib/supabase/admin'
 import { getSignedUrlsWithSizes } from '@/lib/storage/signed-urls'
 import { ContestEntriesContent } from './ContestEntriesContent'
 import { ArrowLeft } from 'lucide-react'
@@ -33,10 +33,8 @@ export const dynamic = 'force-dynamic'
 // ─────────────────────────────────────────────────────────────────────────────
 
 async function getContestWithEntries(contestId: string) {
-  const supabase = createServerClient()
-  
   // Get contest
-  const { data: contest, error: contestError } = await supabase
+  const { data: contest, error: contestError } = await supabaseAdmin
     .from('contests')
     .select('*')
     .eq('id', contestId)
@@ -47,7 +45,7 @@ async function getContestWithEntries(contestId: string) {
   }
   
   // Get entries with image and user data
-  const { data: entries, error: entriesError } = await supabase
+  const { data: entries, error: entriesError } = await supabaseAdmin
     .from('contest_entries')
     .select(`
       *,
@@ -67,7 +65,7 @@ async function getContestWithEntries(contestId: string) {
     .order('created_at', { ascending: true })
   
   if (entriesError) {
-    console.error('[Admin Contest] Error fetching entries:', entriesError)
+    console.error('[Admin Contest] Error fetching entries:', entriesError.message, entriesError.code)
     return { contest, entries: [] }
   }
   

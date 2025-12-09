@@ -746,3 +746,222 @@ export async function sendContractExpiredToPhotographer(options: {
     return { success: false }
   }
 }
+
+// ============================================
+// CONTRACT CANCELLATION EMAILS
+// ============================================
+
+interface ContractCancellationEmailOptions {
+  clientEmail: string
+  clientName: string
+  photographerName: string
+  photographerEmail: string
+  eventType: string
+  eventDate?: string
+  cancellationReason?: string
+}
+
+/**
+ * Send contract cancellation notification to client
+ */
+export async function sendContractCancellationToClient(options: ContractCancellationEmailOptions) {
+  const {
+    clientEmail,
+    clientName,
+    photographerName,
+    photographerEmail,
+    eventType,
+    eventDate,
+    cancellationReason,
+  } = options
+
+  const eventTypeCapitalized = eventType.charAt(0).toUpperCase() + eventType.slice(1)
+  const eventDateFormatted = eventDate
+    ? new Date(eventDate).toLocaleDateString('en-US', {
+        weekday: 'long',
+        month: 'long',
+        day: 'numeric',
+        year: 'numeric',
+      })
+    : null
+
+  const subject = `Contract Cancelled - ${photographerName}`
+
+  const html = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>${subject}</title>
+    </head>
+    <body style="font-family: system-ui, -apple-system, sans-serif; line-height: 1.6; color: #1c1917; max-width: 600px; margin: 0 auto; padding: 0; background: #fafaf9;">
+      <!-- Header -->
+      <div style="background: #1c1917; padding: 40px 24px; text-align: center;">
+        <h1 style="font-size: 24px; font-weight: 300; margin: 0; color: white; letter-spacing: -0.5px;">${photographerName}</h1>
+        <p style="margin: 8px 0 0; color: rgba(255,255,255,0.7); font-size: 14px;">Photography Services</p>
+      </div>
+      
+      <!-- Main content -->
+      <div style="background: white; padding: 32px 24px;">
+        <p style="font-size: 16px; margin: 0 0 16px;">Hi ${clientName.split(' ')[0]},</p>
+        
+        <p style="font-size: 15px; color: #57534e; margin: 0 0 24px;">
+          We wanted to let you know that your ${eventTypeCapitalized.toLowerCase()} photography contract has been cancelled by ${photographerName}.
+        </p>
+        
+        ${eventDateFormatted ? `
+        <div style="background: #f5f5f4; padding: 16px; margin-bottom: 24px;">
+          <p style="margin: 0; font-size: 13px; color: #78716c;">Event Date</p>
+          <p style="margin: 4px 0 0; font-weight: 500;">${eventDateFormatted}</p>
+        </div>
+        ` : ''}
+        
+        ${cancellationReason ? `
+        <div style="background: #fef3c7; border-left: 3px solid #f59e0b; padding: 16px; margin-bottom: 24px;">
+          <p style="margin: 0; font-size: 13px; color: #92400e; font-weight: 600;">Reason provided:</p>
+          <p style="margin: 8px 0 0; font-size: 14px; color: #78716c;">${cancellationReason}</p>
+        </div>
+        ` : ''}
+        
+        <p style="font-size: 14px; color: #78716c; margin: 24px 0 0;">
+          If you have any questions, please contact ${photographerName} directly at <a href="mailto:${photographerEmail}" style="color: #1c1917;">${photographerEmail}</a>.
+        </p>
+      </div>
+      
+      <!-- Footer -->
+      <div style="padding: 24px; text-align: center; border-top: 1px solid #e7e5e4;">
+        <p style="font-size: 11px; color: #d6d3d1; margin: 0;">
+          Sent via <a href="https://12img.com" style="color: #a8a29e;">12IMG</a>
+        </p>
+      </div>
+    </body>
+    </html>
+  `
+
+  try {
+    await resend.emails.send({
+      from: '12IMG <notifications@12img.com>',
+      to: clientEmail,
+      replyTo: photographerEmail,
+      subject,
+      html,
+    })
+
+    return { success: true }
+  } catch (e) {
+    console.error('[sendContractCancellationToClient] Exception:', e)
+    return { success: false }
+  }
+}
+
+/**
+ * Send contract cancellation confirmation to photographer
+ */
+export async function sendContractCancellationToPhotographer(options: ContractCancellationEmailOptions) {
+  const {
+    clientName,
+    photographerName,
+    photographerEmail,
+    eventType,
+    eventDate,
+    cancellationReason,
+  } = options
+
+  const eventTypeCapitalized = eventType.charAt(0).toUpperCase() + eventType.slice(1)
+  const eventDateFormatted = eventDate
+    ? new Date(eventDate).toLocaleDateString('en-US', {
+        weekday: 'long',
+        month: 'long',
+        day: 'numeric',
+        year: 'numeric',
+      })
+    : null
+
+  const cancelledDate = new Date().toLocaleDateString('en-US', {
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+  })
+
+  const subject = `Contract Cancelled - ${clientName}`
+
+  const html = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>${subject}</title>
+    </head>
+    <body style="font-family: system-ui, -apple-system, sans-serif; line-height: 1.6; color: #1c1917; max-width: 600px; margin: 0 auto; padding: 0; background: #fafaf9;">
+      <!-- Header -->
+      <div style="background: #1c1917; padding: 40px 24px; text-align: center;">
+        <h1 style="font-size: 24px; font-weight: 300; margin: 0; color: white;">Contract Cancelled</h1>
+      </div>
+      
+      <!-- Main content -->
+      <div style="background: white; padding: 32px 24px;">
+        <p style="font-size: 16px; margin: 0 0 16px;">Hi ${photographerName.split(' ')[0]},</p>
+        
+        <p style="font-size: 15px; color: #57534e; margin: 0 0 24px;">
+          This is a confirmation that you have cancelled the ${eventTypeCapitalized.toLowerCase()} photography contract for <strong>${clientName}</strong>.
+        </p>
+        
+        <div style="background: #f5f5f4; padding: 16px; margin-bottom: 24px;">
+          <div style="display: flex; justify-content: space-between;">
+            <div>
+              <p style="margin: 0; font-size: 13px; color: #78716c;">Client</p>
+              <p style="margin: 4px 0 0; font-weight: 500;">${clientName}</p>
+            </div>
+            ${eventDateFormatted ? `
+            <div>
+              <p style="margin: 0; font-size: 13px; color: #78716c;">Event Date</p>
+              <p style="margin: 4px 0 0; font-weight: 500;">${eventDateFormatted}</p>
+            </div>
+            ` : ''}
+          </div>
+          <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #e7e5e4;">
+            <p style="margin: 0; font-size: 13px; color: #78716c;">Cancelled On</p>
+            <p style="margin: 4px 0 0; font-weight: 500; color: #dc2626;">${cancelledDate}</p>
+          </div>
+        </div>
+        
+        ${cancellationReason ? `
+        <div style="background: #f5f5f4; border-left: 3px solid #78716c; padding: 16px; margin-bottom: 24px;">
+          <p style="margin: 0; font-size: 13px; color: #78716c; font-weight: 600;">Your reason:</p>
+          <p style="margin: 8px 0 0; font-size: 14px; color: #57534e;">${cancellationReason}</p>
+        </div>
+        ` : ''}
+        
+        <p style="font-size: 14px; color: #78716c; margin: 24px 0 0;">
+          The client has been notified of this cancellation via email.
+        </p>
+      </div>
+      
+      <!-- Footer -->
+      <div style="padding: 24px; text-align: center; border-top: 1px solid #e7e5e4;">
+        <p style="font-size: 11px; color: #d6d3d1; margin: 0;">
+          Sent via <a href="https://12img.com" style="color: #a8a29e;">12IMG</a>
+        </p>
+      </div>
+    </body>
+    </html>
+  `
+
+  try {
+    await resend.emails.send({
+      from: '12IMG <notifications@12img.com>',
+      to: photographerEmail,
+      subject,
+      html,
+    })
+
+    return { success: true }
+  } catch (e) {
+    console.error('[sendContractCancellationToPhotographer] Exception:', e)
+    return { success: false }
+  }
+}

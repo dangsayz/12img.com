@@ -332,6 +332,26 @@ export async function updateNotificationSettings(formData: FormData) {
   return { success: true }
 }
 
+export async function updateSocialSharingEnabled(enabled: boolean) {
+  const { userId: clerkId } = await auth()
+  if (!clerkId) return { error: 'Unauthorized' }
+
+  const user = await getOrCreateUserByClerkId(clerkId)
+  if (!user) return { error: 'User not found' }
+
+  const { error } = await supabaseAdmin
+    .from('user_settings')
+    .update({ social_sharing_enabled: enabled })
+    .eq('user_id', user.id)
+
+  if (error) return { error: 'Failed to update social sharing setting' }
+
+  revalidatePath('/settings')
+  revalidatePath(`/profile/${user.profile_slug}`)
+
+  return { success: true }
+}
+
 export async function deleteAccount() {
   const { userId: clerkId } = await auth()
   if (!clerkId) return { error: 'Unauthorized' }

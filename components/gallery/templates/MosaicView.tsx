@@ -29,10 +29,12 @@ import {
   X,
   Share2,
   Check,
-  Loader2
+  Loader2,
+  ImageIcon
 } from 'lucide-react'
 import { SocialShareButtons, SocialShareButtonsDark } from '@/components/ui/SocialShareButtons'
 import { ImageDownloadButton, ImageDownloadButtonDark } from '@/components/ui/ImageDownloadButton'
+import { DownloadModal } from '@/components/ui/DownloadModal'
 import { getSeoAltText } from '@/lib/seo/image-urls'
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -41,6 +43,7 @@ import { getSeoAltText } from '@/lib/seo/image-urls'
 
 interface GalleryImage {
   id: string
+  storagePath?: string
   thumbnailUrl: string
   previewUrl: string
   originalUrl: string
@@ -58,6 +61,10 @@ interface MosaicViewProps {
   photographerLogo?: string
   galleryId?: string
   gallerySlug?: string
+  totalImages?: number
+  isOwner?: boolean
+  coverImageId?: string | null
+  onSetCover?: (imageId: string) => Promise<void>
 }
 
 
@@ -178,15 +185,33 @@ function MasonryCard({
   onClick,
   galleryTitle,
   downloadEnabled,
+  isOwner,
+  isCover,
+  onSetCover,
 }: {
   image: GalleryImage
   index: number
   onClick: () => void
   galleryTitle?: string
   downloadEnabled?: boolean
+  isOwner?: boolean
+  isCover?: boolean
+  onSetCover?: (imageId: string) => void
 }) {
   const [isHovered, setIsHovered] = useState(false)
   const [isLoaded, setIsLoaded] = useState(false)
+  const [isSettingCover, setIsSettingCover] = useState(false)
+
+  const handleSetCover = async (e: React.MouseEvent) => {
+    e.stopPropagation()
+    if (!onSetCover || isSettingCover) return
+    setIsSettingCover(true)
+    try {
+      await onSetCover(image.id)
+    } finally {
+      setIsSettingCover(false)
+    }
+  }
 
   return (
     <motion.div
@@ -203,6 +228,14 @@ function MasonryCard({
       onMouseLeave={() => setIsHovered(false)}
       onClick={onClick}
     >
+      {/* Cover badge - always visible if this is the cover */}
+      {isCover && (
+        <div className="absolute top-3 left-3 z-10 px-2 py-1 bg-stone-900/80 backdrop-blur-sm rounded text-[10px] uppercase tracking-wider text-white font-medium flex items-center gap-1">
+          <ImageIcon className="w-3 h-3" />
+          Cover
+        </div>
+      )}
+      
       {/* Skeleton - shows before image loads */}
       {!isLoaded && (
         <div 
@@ -246,6 +279,30 @@ function MasonryCard({
           className="absolute inset-0 bg-black/10"
         />
         
+        {/* Owner actions - top left (only if not already cover) */}
+        {isOwner && !isCover && (
+          <motion.div
+            initial={false}
+            animate={{ opacity: isHovered ? 1 : 0 }}
+            transition={{ duration: 0.2 }}
+            className="pointer-events-auto absolute top-3 left-3"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={handleSetCover}
+              disabled={isSettingCover}
+              className="flex items-center gap-1.5 px-2.5 py-1.5 bg-white/95 hover:bg-white rounded-md text-xs font-medium text-stone-700 hover:text-stone-900 shadow-sm transition-all disabled:opacity-50"
+            >
+              {isSettingCover ? (
+                <Loader2 className="w-3 h-3 animate-spin" />
+              ) : (
+                <ImageIcon className="w-3 h-3" />
+              )}
+              Set as Cover
+            </button>
+          </motion.div>
+        )}
+        
         {/* Download/Share - top right */}
         <motion.div
           initial={false}
@@ -276,20 +333,105 @@ function MasonryCard({
 
 export function MosaicView({
   title,
-  images,
+  images: initialImages,
   downloadEnabled = false,
   photographerName,
   photographerLogo,
   galleryId,
   gallerySlug,
+  totalImages,
+  isOwner = false,
+  coverImageId: initialCoverImageId,
+  onSetCover,
 }: MosaicViewProps) {
   const [viewerOpen, setViewerOpen] = useState(false)
   const [viewerIndex, setViewerIndex] = useState(0)
   const [showCopied, setShowCopied] = useState(false)
-  const [isDownloading, setIsDownloading] = useState(false)
+  const [showDownloadModal, setShowDownloadModal] = useState(false)
   const [headerVisible, setHeaderVisible] = useState(false)
+  const [images, setImages] = useState<GalleryImage[]>(initialImages)
+  const [isLoadingMore, setIsLoadingMore] = useState(false)
+  const [hasLoadedAll, setHasLoadedAll] = useState(false)
+  const [coverImageId, setCoverImageId] = useState<string | null | undefined>(initialCoverImageId)
+  const loadMoreRef = useRef<HTMLDivElement>(null)
+  
+  // Handle setting cover with optimistic update
+  const handleSetCover = useCallback(async (imageId: string) => {
+    const previousCoverId = coverImageId
+    setCoverImageId(imageId) // Optimistic update
+    try {
+      if (onSetCover) {
+        await onSetCover(imageId)
+      }
+    } catch (error) {
+      setCoverImageId(previousCoverId) // Revert on error
+      console.error('Failed to set cover:', error)
+    }
+  }, [coverImageId, onSetCover])
   
   const heroRef = useRef<HTMLDivElement>(null)
+  
+  // Lazy load more images when scrolling near bottom
+  useEffect(() => {
+    if (!galleryId || hasLoadedAll) return
+    
+    const observer = new IntersectionObserver(
+      async (entries) => {
+        if (entries[0].isIntersecting && !isLoadingMore) {
+          // Check if we have images without URLs that need loading
+          const needsLoading = images.some(img => !img.thumbnailUrl)
+          if (!needsLoading) {
+            // All current images have URLs, try to load more
+            const total = totalImages || images.length
+            if (images.length >= total) {
+              setHasLoadedAll(true)
+              return
+            }
+          }
+          
+          setIsLoadingMore(true)
+          try {
+            const offset = images.filter(img => img.thumbnailUrl).length
+            const res = await fetch(`/api/public/gallery/${galleryId}/images?offset=${offset}&limit=24`)
+            if (res.ok) {
+              const data = await res.json()
+              if (data.images && data.images.length > 0) {
+                setImages(prev => {
+                  // Merge new images with existing ones
+                  const newImages = [...prev]
+                  data.images.forEach((newImg: GalleryImage) => {
+                    const existingIndex = newImages.findIndex(img => img.id === newImg.id)
+                    if (existingIndex >= 0) {
+                      // Update existing image with URLs
+                      newImages[existingIndex] = { ...newImages[existingIndex], ...newImg }
+                    } else {
+                      // Add new image
+                      newImages.push(newImg)
+                    }
+                  })
+                  return newImages
+                })
+              }
+              if (!data.hasMore) {
+                setHasLoadedAll(true)
+              }
+            }
+          } catch (error) {
+            console.error('Failed to load more images:', error)
+          } finally {
+            setIsLoadingMore(false)
+          }
+        }
+      },
+      { rootMargin: '400px' }
+    )
+    
+    if (loadMoreRef.current) {
+      observer.observe(loadMoreRef.current)
+    }
+    
+    return () => observer.disconnect()
+  }, [galleryId, images, isLoadingMore, hasLoadedAll, totalImages])
   const { scrollY } = useScroll()
   
   // Show header after scrolling past hero
@@ -318,11 +460,9 @@ export function MosaicView({
     } catch {}
   }, [])
 
-  const handleDownloadAll = useCallback(async () => {
+  const handleDownloadAll = useCallback(() => {
     if (!galleryId) return
-    setIsDownloading(true)
-    window.location.href = `/api/gallery/${galleryId}/download`
-    setTimeout(() => setIsDownloading(false), 3000)
+    setShowDownloadModal(true)
   }, [galleryId])
 
   const openViewer = (imageId: string) => {
@@ -471,23 +611,13 @@ export function MosaicView({
             {downloadEnabled && (
               <motion.button
                 onClick={handleDownloadAll}
-                disabled={isDownloading}
-                className="mt-10 inline-flex items-center gap-2 px-6 py-2.5 text-xs uppercase tracking-[0.2em] text-stone-500 border border-stone-200 hover:border-stone-400 hover:text-stone-700 transition-all disabled:opacity-50"
+                className="mt-10 inline-flex items-center gap-2 px-6 py-2.5 text-xs uppercase tracking-[0.2em] text-stone-500 border border-stone-200 hover:border-stone-400 hover:text-stone-700 transition-all"
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 1.1, duration: 0.6 }}
               >
-                {isDownloading ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    Preparing...
-                  </>
-                ) : (
-                  <>
-                    <Download className="w-4 h-4" />
-                    Download All
-                  </>
-                )}
+                <Download className="w-4 h-4" />
+                Download All
               </motion.button>
             )}
           </motion.div>
@@ -555,14 +685,9 @@ export function MosaicView({
             {downloadEnabled && (
               <button
                 onClick={handleDownloadAll}
-                disabled={isDownloading}
                 className="p-2.5 hover:bg-stone-100 transition-colors rounded-full"
               >
-                {isDownloading ? (
-                  <Loader2 className="w-5 h-5 text-stone-500 animate-spin" />
-                ) : (
-                  <Download className="w-5 h-5 text-stone-500" />
-                )}
+                <Download className="w-5 h-5 text-stone-500" />
               </button>
             )}
           </div>
@@ -577,7 +702,7 @@ export function MosaicView({
           className="max-w-[1800px] mx-auto columns-1 sm:columns-2 lg:columns-3"
           style={{ columnGap: '64px' }}
         >
-          {images.filter(img => img.id !== heroImage?.id).map((image, idx) => {
+          {images.filter(img => img.thumbnailUrl).map((image, idx) => {
             const globalIndex = images.findIndex(img => img.id === image.id)
             return (
               <MasonryCard
@@ -587,10 +712,23 @@ export function MosaicView({
                 onClick={() => openViewer(image.id)}
                 galleryTitle={title}
                 downloadEnabled={downloadEnabled}
+                isOwner={isOwner}
+                isCover={image.id === coverImageId}
+                onSetCover={handleSetCover}
               />
             )
           })}
         </div>
+        
+        {/* Lazy load trigger */}
+        <div ref={loadMoreRef} className="h-4" />
+        
+        {/* Loading indicator */}
+        {isLoadingMore && (
+          <div className="flex justify-center py-8">
+            <div className="w-6 h-6 border-2 border-stone-300 border-t-stone-600 rounded-full animate-spin" />
+          </div>
+        )}
       </section>
 
       {/* ════════════════════════════════════════════════════════════════════
@@ -611,20 +749,10 @@ export function MosaicView({
           {downloadEnabled && (
             <button
               onClick={handleDownloadAll}
-              disabled={isDownloading}
-              className="mt-8 mb-8 inline-flex items-center gap-2 px-8 py-3 text-xs uppercase tracking-[0.2em] text-stone-600 border border-stone-200 hover:border-stone-400 hover:text-stone-800 transition-all disabled:opacity-50"
+              className="mt-8 mb-8 inline-flex items-center gap-2 px-8 py-3 text-xs uppercase tracking-[0.2em] text-stone-600 border border-stone-200 hover:border-stone-400 hover:text-stone-800 transition-all"
             >
-              {isDownloading ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  Preparing...
-                </>
-              ) : (
-                <>
-                  <Download className="w-4 h-4" />
-                  Download All Photos
-                </>
-              )}
+              <Download className="w-4 h-4" />
+              Download All Photos
             </button>
           )}
           
@@ -652,6 +780,17 @@ export function MosaicView({
           />
         )}
       </AnimatePresence>
+
+      {/* Download Modal */}
+      {galleryId && (
+        <DownloadModal
+          isOpen={showDownloadModal}
+          onClose={() => setShowDownloadModal(false)}
+          galleryId={galleryId}
+          galleryTitle={title}
+          imageCount={totalImages || images.length}
+        />
+      )}
     </div>
   )
 }

@@ -7,6 +7,7 @@ import { createHmac, randomBytes } from 'crypto'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 import { hashPassword, verifyPassword } from '@/lib/utils/password'
 import { getOrCreateUserByClerkId } from '@/server/queries/user.queries'
+import { getSignedUrlsBatch } from '@/lib/storage/signed-urls'
 import type { ProfileVisibilityMode } from '@/types/database'
 
 // ============================================
@@ -634,7 +635,7 @@ export async function getPublicProfileBySlug(slug: string, viewerUserId?: string
     // Get user settings for contact info and business name fallback
     const { data: settings } = await supabaseAdmin
       .from('user_settings')
-      .select('business_name, contact_email, website_url, country')
+      .select('business_name, contact_email, website_url, country, social_sharing_enabled')
       .eq('user_id', profile.id)
       .single()
 
@@ -789,6 +790,7 @@ export async function getPublicProfileBySlug(slug: string, viewerUserId?: string
       contactEmail: settings?.contact_email || null,
       websiteUrl: settings?.website_url || null,
       country: settings?.country || null,
+      socialSharingEnabled: settings?.social_sharing_enabled ?? false,
       galleries: galleriesWithCounts,
       portfolioImages: formattedPortfolioImages,
       isOwner: !!isOwner,
@@ -868,6 +870,12 @@ export async function getPortfolioImages(): Promise<{ data?: PortfolioImageData[
       return { error: 'Failed to fetch portfolio images' }
     }
 
+    // Generate signed URLs for thumbnails
+    const storagePaths = (data || []).map((pi: any) => pi.images.storage_path)
+    const signedUrls = storagePaths.length > 0 
+      ? await getSignedUrlsBatch(storagePaths, undefined, 'THUMBNAIL')
+      : new Map<string, string>()
+
     const portfolioImages: PortfolioImageData[] = (data || []).map((pi: any) => ({
       id: pi.id,
       imageId: pi.image_id,
@@ -875,6 +883,7 @@ export async function getPortfolioImages(): Promise<{ data?: PortfolioImageData[
       galleryId: pi.images.gallery_id,
       galleryTitle: pi.images.galleries.title,
       position: pi.position,
+      thumbnailUrl: signedUrls.get(pi.images.storage_path) || '',
     }))
 
     return { data: portfolioImages }
@@ -894,6 +903,7 @@ export async function getAvailableImagesForPortfolio(galleryId?: string): Promis
     galleryId: string
     galleryTitle: string
     isInPortfolio: boolean
+    thumbnailUrl: string
   }>,
   error?: string 
 }> {
@@ -912,40 +922,53 @@ export async function getAvailableImagesForPortfolio(galleryId?: string): Promis
     
     const portfolioImageIds = new Set((portfolioData || []).map(p => p.image_id))
 
-    // Get all images from user's galleries
-    let query = supabaseAdmin
-      .from('images')
-      .select(`
-        id,
-        storage_path,
-        gallery_id,
-        galleries!inner (
-          id,
-          title,
-          user_id
-        )
-      `)
-      .eq('galleries.user_id', user.id)
-      .order('created_at', { ascending: false })
-      .limit(100)
-
-    if (galleryId) {
-      query = query.eq('gallery_id', galleryId)
+    // Get user's gallery IDs first to ensure proper filtering
+    const { data: userGalleries } = await supabaseAdmin
+      .from('galleries')
+      .select('id, title')
+      .eq('user_id', user.id)
+    
+    const userGalleryIds = (userGalleries || []).map(g => g.id)
+    const galleryTitleMap = new Map((userGalleries || []).map(g => [g.id, g.title]))
+    
+    if (userGalleryIds.length === 0) {
+      return { data: [] }
     }
 
-    const { data, error } = await query
+    // Filter to specific gallery or all user galleries
+    const targetGalleryIds = galleryId 
+      ? [galleryId].filter(id => userGalleryIds.includes(id))
+      : userGalleryIds
+
+    if (targetGalleryIds.length === 0) {
+      return { data: [] }
+    }
+
+    const { data, error } = await supabaseAdmin
+      .from('images')
+      .select('id, storage_path, gallery_id')
+      .in('gallery_id', targetGalleryIds)
+      .order('created_at', { ascending: false })
+      .limit(100)
 
     if (error) {
       console.error('Get available images error:', error)
       return { error: 'Failed to fetch images' }
     }
 
+    // Generate signed URLs for thumbnails
+    const storagePaths = (data || []).map((img: any) => img.storage_path)
+    const signedUrls = storagePaths.length > 0 
+      ? await getSignedUrlsBatch(storagePaths, undefined, 'THUMBNAIL')
+      : new Map<string, string>()
+
     const images = (data || []).map((img: any) => ({
       id: img.id,
       storagePath: img.storage_path,
       galleryId: img.gallery_id,
-      galleryTitle: img.galleries.title,
+      galleryTitle: galleryTitleMap.get(img.gallery_id) || '',
       isInPortfolio: portfolioImageIds.has(img.id),
+      thumbnailUrl: signedUrls.get(img.storage_path) || '',
     }))
 
     return { data: images }

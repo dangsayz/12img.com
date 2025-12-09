@@ -228,6 +228,9 @@ export function CreateContractModal({ isOpen, onClose, client }: CreateContractM
         return
       }
 
+      // Refresh the page data first so the client detail page shows the new contract
+      router.refresh()
+      
       // Close modal and navigate to the contract detail page
       onClose()
       router.push(`/dashboard/contracts/${result.data?.id}`)

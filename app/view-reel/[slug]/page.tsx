@@ -1,12 +1,14 @@
 import { notFound, redirect } from 'next/navigation'
 import { cookies } from 'next/headers'
 import { type Metadata } from 'next'
+import { auth } from '@clerk/nextjs/server'
 import { getGalleryById, getGalleryBySlug } from '@/server/queries/gallery.queries'
 import { getGalleryImages } from '@/server/queries/image.queries'
+import { getUserByClerkId } from '@/server/queries/user.queries'
 import { getSignedUrlsWithSizes } from '@/lib/storage/signed-urls'
 import { EditorialGallery } from '@/components/gallery/EditorialGallery'
 import { PublicGalleryView } from '@/components/gallery/PublicGalleryView'
-import { MosaicView } from '@/components/gallery/templates/MosaicView'
+import { MosaicViewWrapper } from '@/components/gallery/templates/MosaicViewWrapper'
 import { CinematicGallery } from '@/components/gallery/CinematicGallery'
 import { PasswordGate } from '@/components/gallery/PasswordGate'
 import { type PresentationData } from '@/lib/types/presentation'
@@ -107,6 +109,14 @@ export default async function PublicViewPage({ params }: Props) {
     notFound()
   }
 
+  // Check if current user is the gallery owner
+  const { userId: clerkId } = await auth()
+  let isOwner = false
+  if (clerkId) {
+    const user = await getUserByClerkId(clerkId)
+    isOwner = user?.id === gallery.user_id
+  }
+
   // Check if gallery is private (not public)
   if (gallery.is_public === false) {
     return (
@@ -190,31 +200,47 @@ export default async function PublicViewPage({ params }: Props) {
     }
   }
 
-  // Get template
+  // Get template (editorial users can access /view-live directly if they want)
   const template = ((gallery as { template?: string }).template || 'mosaic') as GalleryTemplate
 
-  // For editorial template, redirect to view-live (magazine engine)
-  if (template === 'editorial') {
-    redirect(`/view-live/${gallery.slug}`)
-  }
-
   const images = await getGalleryImages(gallery.id)
+  
+  // PERFORMANCE: Only generate signed URLs for first batch of images
+  // Client will lazy-load more as user scrolls
+  const INITIAL_BATCH_SIZE = 24
+  const initialImages = images.slice(0, INITIAL_BATCH_SIZE)
+  
   const signedUrls =
-    images.length > 0
-      ? await getSignedUrlsWithSizes(images.map((img) => img.storage_path))
+    initialImages.length > 0
+      ? await getSignedUrlsWithSizes(initialImages.map((img) => img.storage_path))
       : new Map()
 
   // Calculate total file size in bytes
   const totalFileSizeBytes = images.reduce((acc, img) => acc + (img.file_size_bytes || 0), 0)
 
-  // Map images with signed URLs
-  const galleryImages = images.map((img) => {
-    const urls = signedUrls.get(img.storage_path)
+  // Map ALL images but only first batch has URLs (rest load on-demand)
+  const galleryImages = images.map((img, index) => {
+    if (index < INITIAL_BATCH_SIZE) {
+      const urls = signedUrls.get(img.storage_path)
+      return {
+        id: img.id,
+        storagePath: img.storage_path,
+        thumbnailUrl: urls?.thumbnail || '',
+        previewUrl: urls?.preview || '',
+        originalUrl: urls?.original || '',
+        width: img.width,
+        height: img.height,
+        focalX: (img as { focal_x?: number | null }).focal_x ?? null,
+        focalY: (img as { focal_y?: number | null }).focal_y ?? null,
+      }
+    }
+    // Images beyond initial batch - URLs will be fetched on-demand
     return {
       id: img.id,
-      thumbnailUrl: urls?.thumbnail || '',
-      previewUrl: urls?.preview || '',
-      originalUrl: urls?.original || '',
+      storagePath: img.storage_path,
+      thumbnailUrl: '',
+      previewUrl: '',
+      originalUrl: '',
       width: img.width,
       height: img.height,
       focalX: (img as { focal_x?: number | null }).focal_x ?? null,
@@ -286,13 +312,16 @@ export default async function PublicViewPage({ params }: Props) {
             { name: gallery.title, url: galleryUrl },
           ]}
         />
-        <MosaicView
+        <MosaicViewWrapper
           title={gallery.title}
           images={galleryImages}
           downloadEnabled={gallery.download_enabled}
           photographerName={photographerName}
           galleryId={gallery.id}
           gallerySlug={gallery.slug}
+          totalImages={images.length}
+          isOwner={isOwner}
+          coverImageId={gallery.cover_image_id}
         />
       </>
     )

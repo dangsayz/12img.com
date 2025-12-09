@@ -3,7 +3,7 @@
 import { useState, useTransition, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, Loader2, Wand2 } from 'lucide-react'
+import { X, Loader2, Wand2, ChevronLeft, ChevronRight, Users, Mail, Calendar, MapPin, Package } from 'lucide-react'
 import { createClientProfile, getClientLocationSuggestions } from '@/server/actions/client.actions'
 import { type EventType } from '@/types/database'
 import { EVENT_TYPE_LABELS } from '@/lib/contracts/types'
@@ -13,7 +13,15 @@ interface CreateClientModalProps {
   onClose: () => void
 }
 
-type Step = 'client' | 'event' | 'package'
+type Step = 'names' | 'contact' | 'event' | 'location' | 'package'
+
+const STEPS: { key: Step; label: string; icon: typeof Users }[] = [
+  { key: 'names', label: 'Names', icon: Users },
+  { key: 'contact', label: 'Contact', icon: Mail },
+  { key: 'event', label: 'Event', icon: Calendar },
+  { key: 'location', label: 'Location', icon: MapPin },
+  { key: 'package', label: 'Package', icon: Package },
+]
 
 const EVENT_TYPES: EventType[] = [
   'wedding',
@@ -30,7 +38,7 @@ const EVENT_TYPES: EventType[] = [
 export function CreateClientModal({ isOpen, onClose }: CreateClientModalProps) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
-  const [step, setStep] = useState<Step>('client')
+  const [step, setStep] = useState<Step>('names')
   const [error, setError] = useState<string | null>(null)
   
   // Autocomplete suggestions
@@ -58,6 +66,7 @@ export function CreateClientModal({ isOpen, onClose }: CreateClientModalProps) {
       partnerEmail: '',
       eventType: 'wedding' as EventType,
       eventDate: '',
+      eventTime: '',
       eventLocation: '',
       eventVenue: '',
       packageName: '',
@@ -119,6 +128,7 @@ export function CreateClientModal({ isOpen, onClose }: CreateClientModalProps) {
         partnerEmail: formData.partnerEmail || null,
         eventType: formData.eventType,
         eventDate: formData.eventDate || null,
+        eventTime: formData.eventTime || null,
         eventLocation: formData.eventLocation || null,
         eventVenue: formData.eventVenue || null,
         packageName: formData.packageName || null,
@@ -152,6 +162,7 @@ export function CreateClientModal({ isOpen, onClose }: CreateClientModalProps) {
       partnerEmail: '',
       eventType: 'wedding',
       eventDate: '',
+      eventTime: '',
       eventLocation: '',
       eventVenue: '',
       packageName: '',
@@ -162,17 +173,32 @@ export function CreateClientModal({ isOpen, onClose }: CreateClientModalProps) {
       balanceDueDate: '',
       notes: '',
     })
-    setStep('client')
+    setStep('names')
     setError(null)
     // Clear saved draft
     localStorage.removeItem('create-client-draft')
   }
 
   const canProceed = () => {
-    if (step === 'client') {
-      return formData.firstName && formData.lastName && formData.email
+    if (step === 'names') {
+      return formData.firstName && formData.lastName
+    }
+    if (step === 'contact') {
+      return formData.email
     }
     return true
+  }
+
+  const currentStepIndex = STEPS.findIndex(s => s.key === step)
+  const goNext = () => {
+    if (currentStepIndex < STEPS.length - 1) {
+      setStep(STEPS[currentStepIndex + 1].key)
+    }
+  }
+  const goPrev = () => {
+    if (currentStepIndex > 0) {
+      setStep(STEPS[currentStepIndex - 1].key)
+    }
   }
 
   const handleClose = () => {
@@ -199,15 +225,11 @@ export function CreateClientModal({ isOpen, onClose }: CreateClientModalProps) {
             onClick={e => e.stopPropagation()}
             className="bg-white w-full h-full md:h-auto md:max-h-[90vh] md:w-full md:max-w-md md:rounded-xl md:shadow-2xl flex flex-col"
           >
-            {/* Header - Safe area for notch */}
+            {/* Header */}
             <div className="flex items-center justify-between px-5 pt-[max(1rem,env(safe-area-inset-top))] pb-3 border-b border-stone-100 bg-white sticky top-0 z-10">
               <div>
                 <h2 className="text-lg font-semibold text-stone-900">New Client</h2>
-                <p className="text-sm text-stone-500">
-                  {step === 'client' && 'Contact info'}
-                  {step === 'event' && 'Event details'}
-                  {step === 'package' && 'Package'}
-                </p>
+                <p className="text-sm text-stone-500">{STEPS[currentStepIndex]?.label}</p>
               </div>
               <button
                 onClick={handleClose}
@@ -218,75 +240,110 @@ export function CreateClientModal({ isOpen, onClose }: CreateClientModalProps) {
               </button>
             </div>
 
-            {/* Progress - Tappable navigation */}
-            <div className="flex gap-2 px-5 pt-4">
-              {(['client', 'event', 'package'] as Step[]).map((s, i) => {
-                const currentIndex = ['client', 'event', 'package'].indexOf(step)
-                const isCompleted = i < currentIndex
-                const isCurrent = i === currentIndex
-                const canNavigate = i <= currentIndex // Can go back to completed steps
+            {/* Step Indicators */}
+            <div className="flex gap-1.5 px-5 pt-4">
+              {STEPS.map((s, i) => {
+                const Icon = s.icon
+                const isCompleted = i < currentStepIndex
+                const isCurrent = i === currentStepIndex
+                const canNavigate = i <= currentStepIndex
                 
                 return (
                   <button
-                    key={s}
+                    key={s.key}
                     type="button"
-                    onClick={() => canNavigate && setStep(s)}
+                    onClick={() => canNavigate && setStep(s.key)}
                     disabled={!canNavigate}
-                    className={`h-2 flex-1 rounded-full transition-all ${
-                      isCompleted || isCurrent
-                        ? 'bg-stone-900'
-                        : 'bg-stone-200'
-                    } ${canNavigate ? 'cursor-pointer active:scale-95' : 'cursor-default'}`}
-                    aria-label={`Go to ${s} step`}
-                  />
+                    className={`flex-1 h-10 flex items-center justify-center gap-1.5 rounded-lg text-xs font-medium transition-all ${
+                      isCurrent
+                        ? 'bg-stone-900 text-white'
+                        : isCompleted
+                        ? 'bg-stone-100 text-stone-600'
+                        : 'bg-white text-stone-400 border border-stone-200'
+                    }`}
+                  >
+                    <Icon className="w-4 h-4" />
+                    <span className="hidden xs:inline">{s.label}</span>
+                  </button>
                 )
               })}
             </div>
 
-            {/* Content - Scrollable area with generous padding */}
-            <div className="px-5 py-5 overflow-y-auto flex-1 min-h-0">
+            {/* Content - No scroll needed with fewer fields per step */}
+            <div className="flex-1 px-5 py-6">
               <AnimatePresence mode="wait">
-                {step === 'client' && (
+                {/* Step 1: Names */}
+                {step === 'names' && (
                   <motion.div
-                    key="client"
+                    key="names"
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: -20 }}
-                    className="space-y-5"
+                    className="space-y-6"
                   >
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-stone-700 mb-2">
-                          First Name *
-                        </label>
+                    <div>
+                      <p className="text-xs font-medium text-stone-400 uppercase tracking-wider mb-3">
+                        Client
+                      </p>
+                      <div className="grid grid-cols-2 gap-3">
                         <input
                           type="text"
                           value={formData.firstName}
                           onChange={e => updateField('firstName', e.target.value.replace(/[^a-zA-ZÀ-ÿ\s'-]/g, ''))}
-                          className="w-full px-4 py-3 text-base border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-stone-900/10 focus:border-stone-400"
-                          placeholder="Jane"
+                          className="h-12 px-4 text-base border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-stone-900/20 focus:border-stone-400"
+                          placeholder="First name *"
                           maxLength={50}
                           autoComplete="given-name"
-                          enterKeyHint="next"
                         />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-stone-700 mb-2">
-                          Last Name *
-                        </label>
                         <input
                           type="text"
                           value={formData.lastName}
                           onChange={e => updateField('lastName', e.target.value.replace(/[^a-zA-ZÀ-ÿ\s'-]/g, ''))}
-                          className="w-full px-4 py-3 text-base border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-stone-900/10 focus:border-stone-400"
-                          placeholder="Smith"
+                          className="h-12 px-4 text-base border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-stone-900/20 focus:border-stone-400"
+                          placeholder="Last name *"
                           maxLength={50}
                           autoComplete="family-name"
-                          enterKeyHint="next"
                         />
                       </div>
                     </div>
 
+                    <div>
+                      <p className="text-xs font-medium text-stone-400 uppercase tracking-wider mb-3">
+                        Partner <span className="text-stone-300 font-normal">(optional)</span>
+                      </p>
+                      <div className="grid grid-cols-2 gap-3">
+                        <input
+                          type="text"
+                          value={formData.partnerFirstName}
+                          onChange={e => updateField('partnerFirstName', e.target.value.replace(/[^a-zA-ZÀ-ÿ\s'-]/g, ''))}
+                          className="h-12 px-4 text-base border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-stone-900/20 focus:border-stone-400"
+                          placeholder="First name"
+                          maxLength={50}
+                          autoComplete="off"
+                        />
+                        <input
+                          type="text"
+                          value={formData.partnerLastName}
+                          onChange={e => updateField('partnerLastName', e.target.value.replace(/[^a-zA-ZÀ-ÿ\s'-]/g, ''))}
+                          className="h-12 px-4 text-base border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-stone-900/20 focus:border-stone-400"
+                          placeholder="Last name"
+                          maxLength={50}
+                          autoComplete="off"
+                        />
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+
+                {/* Step 2: Contact */}
+                {step === 'contact' && (
+                  <motion.div
+                    key="contact"
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
+                    className="space-y-4"
+                  >
                     <div>
                       <label className="block text-sm font-medium text-stone-700 mb-2">
                         Email *
@@ -295,11 +352,10 @@ export function CreateClientModal({ isOpen, onClose }: CreateClientModalProps) {
                         type="email"
                         value={formData.email}
                         onChange={e => updateField('email', e.target.value)}
-                        className="w-full px-4 py-3 text-base border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-stone-900/10 focus:border-stone-400"
+                        className="w-full h-12 px-4 text-base border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-stone-900/20 focus:border-stone-400"
                         placeholder="jane@example.com"
                         autoComplete="email"
                         inputMode="email"
-                        enterKeyHint="next"
                       />
                     </div>
 
@@ -311,45 +367,17 @@ export function CreateClientModal({ isOpen, onClose }: CreateClientModalProps) {
                         type="tel"
                         value={formData.phone}
                         onChange={e => updateField('phone', formatPhoneNumber(e.target.value))}
-                        className="w-full px-4 py-3 text-base border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-stone-900/10 focus:border-stone-400"
+                        className="w-full h-12 px-4 text-base border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-stone-900/20 focus:border-stone-400"
                         placeholder="000-000-0000"
                         maxLength={12}
                         autoComplete="tel"
                         inputMode="tel"
-                        enterKeyHint="next"
                       />
-                    </div>
-
-                    <div className="pt-4 border-t border-stone-100">
-                      <p className="text-sm font-medium text-stone-700 mb-3">
-                        Partner (optional)
-                      </p>
-                      <div className="grid grid-cols-2 gap-4">
-                        <input
-                          type="text"
-                          value={formData.partnerFirstName}
-                          onChange={e => updateField('partnerFirstName', e.target.value.replace(/[^a-zA-ZÀ-ÿ\s'-]/g, ''))}
-                          className="px-4 py-3 text-base border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-stone-900/10 focus:border-stone-400"
-                          placeholder="First name"
-                          maxLength={50}
-                          autoComplete="off"
-                          enterKeyHint="next"
-                        />
-                        <input
-                          type="text"
-                          value={formData.partnerLastName}
-                          onChange={e => updateField('partnerLastName', e.target.value.replace(/[^a-zA-ZÀ-ÿ\s'-]/g, ''))}
-                          className="px-4 py-3 text-base border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-stone-900/10 focus:border-stone-400"
-                          placeholder="Last name"
-                          maxLength={50}
-                          autoComplete="off"
-                          enterKeyHint="done"
-                        />
-                      </div>
                     </div>
                   </motion.div>
                 )}
 
+                {/* Step 3: Event */}
                 {step === 'event' && (
                   <motion.div
                     key="event"
@@ -368,10 +396,10 @@ export function CreateClientModal({ isOpen, onClose }: CreateClientModalProps) {
                             key={type}
                             type="button"
                             onClick={() => updateField('eventType', type)}
-                            className={`px-3 py-3 text-sm font-medium rounded-xl border transition-all active:scale-95 ${
+                            className={`h-10 px-2 text-sm font-medium rounded-lg border transition-all active:scale-[0.98] ${
                               formData.eventType === type
-                                ? 'border-stone-900 bg-stone-900 text-white shadow-sm'
-                                : 'border-stone-200 hover:border-stone-300 active:bg-stone-50'
+                                ? 'border-stone-900 bg-stone-900 text-white'
+                                : 'border-stone-200 hover:border-stone-300'
                             }`}
                           >
                             {EVENT_TYPE_LABELS[type]}
@@ -380,61 +408,42 @@ export function CreateClientModal({ isOpen, onClose }: CreateClientModalProps) {
                       </div>
                     </div>
 
-                    <div>
-                      <label className="block text-sm font-medium text-stone-700 mb-2">
-                        Event Date
-                      </label>
-                      <input
-                        type="date"
-                        value={formData.eventDate}
-                        onChange={e => updateField('eventDate', e.target.value)}
-                        className="w-full h-12 px-4 text-base border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-stone-900/10 focus:border-stone-400 bg-white appearance-none"
-                        style={{ colorScheme: 'light' }}
-                      />
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-sm font-medium text-stone-700 mb-2">
+                          Date
+                        </label>
+                        <input
+                          type="date"
+                          value={formData.eventDate}
+                          onChange={e => updateField('eventDate', e.target.value)}
+                          className="w-full h-12 px-4 text-base border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-stone-900/20 focus:border-stone-400"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-stone-700 mb-2">
+                          Arrival Time
+                        </label>
+                        <input
+                          type="time"
+                          value={formData.eventTime}
+                          onChange={e => updateField('eventTime', e.target.value)}
+                          className="w-full h-12 px-4 text-base border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-stone-900/20 focus:border-stone-400"
+                        />
+                      </div>
                     </div>
+                  </motion.div>
+                )}
 
-                    <div className="relative">
-                      <label className="block text-sm font-medium text-stone-700 mb-2">
-                        Location
-                      </label>
-                      <input
-                        type="text"
-                        value={formData.eventLocation}
-                        onChange={e => {
-                          updateField('eventLocation', e.target.value)
-                          setShowLocationSuggestions(true)
-                        }}
-                        onFocus={() => setShowLocationSuggestions(true)}
-                        onBlur={() => setTimeout(() => setShowLocationSuggestions(false), 150)}
-                        className="w-full px-4 py-3 text-base border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-stone-900/10 focus:border-stone-400"
-                        placeholder="City, State"
-                        maxLength={200}
-                        autoComplete="off"
-                        enterKeyHint="next"
-                      />
-                      {/* Location Suggestions Dropdown */}
-                      {showLocationSuggestions && filteredLocations.length > 0 && (
-                        <div className="absolute z-10 w-full mt-1 bg-white border border-stone-200 rounded-xl shadow-lg max-h-40 overflow-y-auto">
-                          {filteredLocations.map(loc => (
-                            <button
-                              key={loc}
-                              type="button"
-                              onMouseDown={() => {
-                                updateField('eventLocation', loc)
-                                setShowLocationSuggestions(false)
-                              }}
-                              className="w-full px-4 py-3 text-left text-base hover:bg-stone-50 active:bg-stone-100 flex items-center gap-3 border-b border-stone-100 last:border-0"
-                            >
-                              <span className="w-5 h-5 rounded-full border border-stone-300 flex items-center justify-center text-emerald-600 text-xs">
-                                ✓
-                              </span>
-                              {loc}
-                            </button>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-
+                {/* Step 4: Location */}
+                {step === 'location' && (
+                  <motion.div
+                    key="location"
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
+                    className="space-y-4"
+                  >
                     <div className="relative">
                       <label className="block text-sm font-medium text-stone-700 mb-2">
                         Venue
@@ -448,16 +457,13 @@ export function CreateClientModal({ isOpen, onClose }: CreateClientModalProps) {
                         }}
                         onFocus={() => setShowVenueSuggestions(true)}
                         onBlur={() => setTimeout(() => setShowVenueSuggestions(false), 150)}
-                        className="w-full px-4 py-3 text-base border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-stone-900/10 focus:border-stone-400"
+                        className="w-full h-12 px-4 text-base border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-stone-900/20 focus:border-stone-400"
                         placeholder="Venue name"
                         maxLength={200}
-                        autoComplete="off"
-                        enterKeyHint="done"
                       />
-                      {/* Venue Suggestions Dropdown */}
                       {showVenueSuggestions && filteredVenues.length > 0 && (
-                        <div className="absolute z-10 w-full mt-1 bg-white border border-stone-200 rounded-xl shadow-lg max-h-40 overflow-y-auto">
-                          {filteredVenues.map(venue => (
+                        <div className="absolute z-10 w-full mt-1 bg-white border border-stone-200 rounded-xl shadow-lg max-h-32 overflow-y-auto">
+                          {filteredVenues.slice(0, 4).map(venue => (
                             <button
                               key={venue}
                               type="button"
@@ -465,12 +471,45 @@ export function CreateClientModal({ isOpen, onClose }: CreateClientModalProps) {
                                 updateField('eventVenue', venue)
                                 setShowVenueSuggestions(false)
                               }}
-                              className="w-full px-4 py-3 text-left text-base hover:bg-stone-50 active:bg-stone-100 flex items-center gap-3 border-b border-stone-100 last:border-0"
+                              className="w-full h-10 px-4 text-left text-sm hover:bg-stone-50 border-b border-stone-100 last:border-0"
                             >
-                              <span className="w-5 h-5 rounded-full border border-stone-300 flex items-center justify-center text-emerald-600 text-xs">
-                                ✓
-                              </span>
                               {venue}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="relative">
+                      <label className="block text-sm font-medium text-stone-700 mb-2">
+                        City / Area
+                      </label>
+                      <input
+                        type="text"
+                        value={formData.eventLocation}
+                        onChange={e => {
+                          updateField('eventLocation', e.target.value)
+                          setShowLocationSuggestions(true)
+                        }}
+                        onFocus={() => setShowLocationSuggestions(true)}
+                        onBlur={() => setTimeout(() => setShowLocationSuggestions(false), 150)}
+                        className="w-full h-12 px-4 text-base border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-stone-900/20 focus:border-stone-400"
+                        placeholder="Dallas, TX"
+                        maxLength={200}
+                      />
+                      {showLocationSuggestions && filteredLocations.length > 0 && (
+                        <div className="absolute z-10 w-full mt-1 bg-white border border-stone-200 rounded-xl shadow-lg max-h-32 overflow-y-auto">
+                          {filteredLocations.slice(0, 4).map(loc => (
+                            <button
+                              key={loc}
+                              type="button"
+                              onMouseDown={() => {
+                                updateField('eventLocation', loc)
+                                setShowLocationSuggestions(false)
+                              }}
+                              className="w-full h-10 px-4 text-left text-sm hover:bg-stone-50 border-b border-stone-100 last:border-0"
+                            >
+                              {loc}
                             </button>
                           ))}
                         </div>
@@ -479,13 +518,14 @@ export function CreateClientModal({ isOpen, onClose }: CreateClientModalProps) {
                   </motion.div>
                 )}
 
+                {/* Step 5: Package */}
                 {step === 'package' && (
                   <motion.div
                     key="package"
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: -20 }}
-                    className="space-y-5"
+                    className="space-y-4"
                   >
                     <div>
                       <label className="block text-sm font-medium text-stone-700 mb-2">
@@ -493,116 +533,62 @@ export function CreateClientModal({ isOpen, onClose }: CreateClientModalProps) {
                       </label>
                       <input
                         type="text"
-                        value={formData.packageName || `${EVENT_TYPE_LABELS[formData.eventType as EventType]} Photography`}
+                        value={formData.packageName}
                         onChange={e => updateField('packageName', e.target.value)}
-                        className="w-full px-4 py-3 text-base border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-stone-900/10 focus:border-stone-400"
-                        placeholder="e.g., Full Day Coverage"
-                        autoComplete="off"
-                        enterKeyHint="next"
+                        className="w-full h-11 px-4 text-sm border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-stone-900/20 focus:border-stone-400"
+                        placeholder={`${EVENT_TYPE_LABELS[formData.eventType as EventType]} Photography`}
                       />
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-3 gap-3">
                       <div>
-                        <label className="block text-sm font-medium text-stone-700 mb-2">
-                          Total Price ($)
-                        </label>
-                        <input
-                          type="text"
-                          value={formData.packagePrice}
-                          onChange={e => {
-                            const value = e.target.value.replace(/[^0-9]/g, '').slice(0, 7)
-                            const num = parseInt(value)
-                            if (value === '' || (num >= 0 && num <= 999999)) {
-                              updateField('packagePrice', value)
-                            }
-                          }}
-                          className="w-full px-4 py-3 text-base border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-stone-900/10 focus:border-stone-400"
-                          placeholder="3500"
-                          maxLength={7}
-                          inputMode="numeric"
-                          enterKeyHint="next"
-                        />
+                        <label className="block text-xs font-medium text-stone-500 mb-1.5">Price</label>
+                        <div className="relative">
+                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400 text-sm">$</span>
+                          <input
+                            type="text"
+                            value={formData.packagePrice}
+                            onChange={e => updateField('packagePrice', e.target.value.replace(/[^0-9]/g, '').slice(0, 6))}
+                            className="w-full h-11 pl-7 pr-3 text-sm border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-stone-900/20 focus:border-stone-400"
+                            placeholder="3500"
+                            inputMode="numeric"
+                          />
+                        </div>
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-stone-700 mb-2">
-                          Hours
-                        </label>
+                        <label className="block text-xs font-medium text-stone-500 mb-1.5">Hours</label>
                         <input
                           type="text"
                           value={formData.packageHours}
-                          onChange={e => {
-                            const value = e.target.value.replace(/[^0-9]/g, '').slice(0, 2)
-                            const num = parseInt(value)
-                            if (value === '' || (num >= 1 && num <= 99)) {
-                              updateField('packageHours', value)
-                            }
-                          }}
-                          className="w-full px-4 py-3 text-base border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-stone-900/10 focus:border-stone-400"
+                          onChange={e => updateField('packageHours', e.target.value.replace(/[^0-9]/g, '').slice(0, 2))}
+                          className="w-full h-11 px-3 text-sm border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-stone-900/20 focus:border-stone-400"
                           placeholder="8"
-                          maxLength={2}
                           inputMode="numeric"
-                          enterKeyHint="next"
                         />
                       </div>
-                    </div>
-
-                    {/* Payment Details */}
-                    <div className="pt-4 border-t border-stone-100">
-                      <p className="text-sm font-medium text-stone-700 mb-3">
-                        Payment Details
-                      </p>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <label className="block text-sm font-medium text-stone-700 mb-2">
-                            Deposit ($)
-                          </label>
+                      <div>
+                        <label className="block text-xs font-medium text-stone-500 mb-1.5">Deposit</label>
+                        <div className="relative">
+                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400 text-sm">$</span>
                           <input
                             type="text"
                             value={formData.retainerFee}
-                            onChange={e => {
-                              const value = e.target.value.replace(/[^0-9]/g, '').slice(0, 7)
-                              const num = parseInt(value)
-                              const maxDeposit = formData.packagePrice ? parseInt(formData.packagePrice) : 999999
-                              if (value === '' || (num >= 0 && num <= Math.min(maxDeposit, 999999))) {
-                                updateField('retainerFee', value)
-                              }
-                            }}
-                            className="w-full px-4 py-3 text-base border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-stone-900/10 focus:border-stone-400"
+                            onChange={e => updateField('retainerFee', e.target.value.replace(/[^0-9]/g, '').slice(0, 6))}
+                            className="w-full h-11 pl-7 pr-3 text-sm border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-stone-900/20 focus:border-stone-400"
                             placeholder="1000"
-                            maxLength={7}
                             inputMode="numeric"
-                            enterKeyHint="next"
                           />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-stone-700 mb-2">
-                            Balance Due
-                          </label>
-                          <div className="h-12 px-4 flex items-center text-base border border-stone-200 rounded-xl bg-stone-50">
-                            <span className="text-stone-600">
-                              {formData.packagePrice && formData.retainerFee
-                                ? `$${(parseFloat(formData.packagePrice) - parseFloat(formData.retainerFee)).toLocaleString()}`
-                                : formData.packagePrice
-                                ? `$${parseFloat(formData.packagePrice).toLocaleString()}`
-                                : '—'}
-                            </span>
-                          </div>
                         </div>
                       </div>
                     </div>
 
                     <div>
                       <div className="flex items-center justify-between mb-2">
-                        <label className="block text-sm font-medium text-stone-700">
-                          Notes
-                        </label>
+                        <label className="block text-sm font-medium text-stone-700">Notes</label>
                         <button
                           type="button"
                           onClick={() => {
                             const lines: string[] = []
-                            
-                            // Client info
                             const clientName = formData.partnerFirstName
                               ? `${formData.firstName} ${formData.lastName} & ${formData.partnerFirstName} ${formData.partnerLastName || formData.lastName}`
                               : `${formData.firstName} ${formData.lastName}`
@@ -610,62 +596,40 @@ export function CreateClientModal({ isOpen, onClose }: CreateClientModalProps) {
                             if (formData.email) lines.push(`Email: ${formData.email}`)
                             if (formData.phone) lines.push(`Phone: ${formData.phone}`)
                             lines.push('')
-                            
-                            // Event info
                             lines.push(`EVENT: ${EVENT_TYPE_LABELS[formData.eventType as EventType]}`)
                             if (formData.eventDate) {
                               const date = new Date(formData.eventDate + 'T00:00:00')
-                              lines.push(`Date: ${date.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}`)
+                              lines.push(`Date: ${date.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}`)
+                            }
+                            if (formData.eventTime) {
+                              const [hours, minutes] = formData.eventTime.split(':').map(Number)
+                              const period = hours >= 12 ? 'PM' : 'AM'
+                              const displayHours = hours % 12 || 12
+                              lines.push(`Arrival: ${displayHours}:${minutes.toString().padStart(2, '0')} ${period}`)
                             }
                             if (formData.eventVenue) lines.push(`Venue: ${formData.eventVenue}`)
                             if (formData.eventLocation) lines.push(`Location: ${formData.eventLocation}`)
-                            lines.push('')
-                            
-                            // Package info
-                            if (formData.packageName) {
-                              lines.push(`PACKAGE: ${formData.packageName}`)
-                            } else {
-                              lines.push('PACKAGE DETAILS')
+                            if (formData.packageName || formData.packagePrice) {
+                              lines.push('')
+                              if (formData.packageName) lines.push(`PACKAGE: ${formData.packageName}`)
+                              if (formData.packageHours) lines.push(`Coverage: ${formData.packageHours} hours`)
+                              if (formData.packagePrice) lines.push(`Investment: $${parseFloat(formData.packagePrice).toLocaleString()}`)
+                              if (formData.retainerFee) lines.push(`Deposit: $${parseFloat(formData.retainerFee).toLocaleString()}`)
                             }
-                            if (formData.packageHours) lines.push(`Coverage: ${formData.packageHours} hours`)
-                            if (formData.packagePrice) {
-                              const price = parseFloat(formData.packagePrice)
-                              lines.push(`Investment: $${price.toLocaleString()}`)
-                            }
-                            lines.push('')
-                            
-                            // Payment breakdown
-                            if (formData.retainerFee || formData.packagePrice) {
-                              lines.push('PAYMENT SCHEDULE')
-                              if (formData.retainerFee) {
-                                const retainer = parseFloat(formData.retainerFee)
-                                lines.push(`Deposit: $${retainer.toLocaleString()} (due upon signing)`)
-                              }
-                              if (formData.packagePrice) {
-                                const price = parseFloat(formData.packagePrice)
-                                const retainer = formData.retainerFee ? parseFloat(formData.retainerFee) : 0
-                                const remaining = price - retainer
-                                if (remaining > 0) {
-                                  lines.push(`Balance: $${remaining.toLocaleString()} (due before event)`)
-                                }
-                              }
-                            }
-                            
                             updateField('notes', lines.join('\n'))
                           }}
-                          className="h-9 inline-flex items-center gap-1.5 px-3 text-sm font-medium text-amber-700 bg-amber-50 hover:bg-amber-100 active:bg-amber-200 rounded-lg transition-colors"
+                          className="h-8 w-8 flex items-center justify-center rounded-lg hover:bg-stone-100 active:bg-stone-200 transition-colors"
+                          title="Generate summary"
                         >
-                          <Wand2 className="w-4 h-4" />
-                          Generate Summary
+                          <Wand2 className="w-4 h-4 text-stone-500" />
                         </button>
                       </div>
                       <textarea
                         value={formData.notes}
                         onChange={e => updateField('notes', e.target.value)}
-                        rows={6}
-                        className="w-full px-4 py-3 text-base border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-stone-900/10 focus:border-stone-400 resize-none font-mono text-sm"
-                        placeholder="Tap 'Generate Summary' to create a detailed overview..."
-                        enterKeyHint="done"
+                        rows={4}
+                        className="w-full px-4 py-3 text-xs border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-stone-900/20 focus:border-stone-400 resize-none font-mono"
+                        placeholder="Click the wand icon to generate a summary..."
                       />
                     </div>
                   </motion.div>
@@ -679,35 +643,32 @@ export function CreateClientModal({ isOpen, onClose }: CreateClientModalProps) {
               )}
             </div>
 
-            {/* Footer - Sticky at bottom with safe area padding + extra space for floating widgets */}
+            {/* Footer */}
             <div className="flex items-center justify-between px-5 py-4 pb-[max(5rem,calc(env(safe-area-inset-bottom)+4rem))] sm:pb-4 border-t border-stone-100 bg-white sticky bottom-0">
               <button
                 onClick={() => {
-                  if (step === 'event') setStep('client')
-                  else if (step === 'package') setStep('event')
+                  if (currentStepIndex > 0) goPrev()
                   else handleClose()
                 }}
                 className="px-5 py-3 text-base font-medium text-stone-600 hover:text-stone-900 active:bg-stone-100 rounded-xl transition-colors"
               >
-                {step === 'client' ? 'Cancel' : 'Back'}
+                {currentStepIndex === 0 ? 'Cancel' : 'Back'}
               </button>
 
               {step !== 'package' ? (
                 <button
-                  onClick={() => {
-                    if (step === 'client') setStep('event')
-                    else if (step === 'event') setStep('package')
-                  }}
+                  onClick={goNext}
                   disabled={!canProceed()}
-                  className="px-6 py-3 text-base font-medium bg-stone-900 text-white rounded-xl hover:bg-stone-800 active:bg-stone-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed min-w-[120px]"
+                  className="inline-flex items-center gap-2 px-6 py-3 text-base font-medium bg-stone-900 text-white rounded-xl hover:bg-stone-800 active:bg-stone-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Continue
+                  Next
+                  <ChevronRight className="w-4 h-4" />
                 </button>
               ) : (
                 <button
                   onClick={handleSubmit}
                   disabled={isPending}
-                  className="inline-flex items-center justify-center gap-2 px-6 py-3 text-base font-medium bg-stone-900 text-white rounded-xl hover:bg-stone-800 active:bg-stone-700 transition-colors disabled:opacity-50 min-w-[120px]"
+                  className="inline-flex items-center justify-center gap-2 px-6 py-3 text-base font-medium bg-stone-900 text-white rounded-xl hover:bg-stone-800 active:bg-stone-700 transition-colors disabled:opacity-50"
                 >
                   {isPending && <Loader2 className="w-4 h-4 animate-spin" />}
                   Create Client

@@ -17,9 +17,9 @@ interface UploadInterfaceProps {
 export function UploadInterface({ gallery, images }: UploadInterfaceProps) {
   const router = useRouter()
 
-  // Handle upload completion - redirect to cinematic reveal
+  // Handle upload completion - go straight to gallery editor
   const handleUploadComplete = () => {
-    router.push(`/gallery/${gallery.id}/ready`)
+    router.push(`/gallery/${gallery.id}`)
   }
 
   return (

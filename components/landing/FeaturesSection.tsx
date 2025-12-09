@@ -1,7 +1,7 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { Zap, Lock, Download } from 'lucide-react'
+import { Zap, Lock, Download, Clock } from 'lucide-react'
 
 const features = [
   {
@@ -18,6 +18,12 @@ const features = [
     title: 'One-click zip downloads',
     description: 'Clients can download their entire gallery or individual selects with a single click.',
     icon: Download,
+  },
+  {
+    title: 'Automated workflows',
+    description: 'Schedule emails to send automatically. What to wear guides, timeline reminders, thank you notes—set it once, never forget again.',
+    icon: Clock,
+    isNew: true,
   },
 ]
 
@@ -69,7 +75,14 @@ export function FeaturesSection() {
                   </div>
                   
                   <div>
-                    <h3 className="text-xl font-bold text-gray-900">{feature.title}</h3>
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-xl font-bold text-gray-900">{feature.title}</h3>
+                      {'isNew' in feature && feature.isNew && (
+                        <span className="px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider bg-stone-900 text-white rounded">
+                          New
+                        </span>
+                      )}
+                    </div>
                     <p className="mt-2 text-gray-500 leading-relaxed">{feature.description}</p>
                   </div>
                 </div>

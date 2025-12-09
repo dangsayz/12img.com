@@ -92,7 +92,7 @@ export async function getUserGalleries(clerkId: string) {
     countMap.set(img.gallery_id, (countMap.get(img.gallery_id) || 0) + 1)
   })
 
-  // Get cover images
+  // Get cover images - either explicit cover_image_id or first image as fallback
   const coverImageIds = data
     .filter((g) => g.cover_image_id)
     .map((g) => g.cover_image_id!)
@@ -107,29 +107,71 @@ export async function getUserGalleries(clerkId: string) {
     coverImages = covers || []
   }
 
-  // Generate signed URLs for covers
-  const coverPaths = coverImages.map((c) => c.storage_path)
-  const signedUrls =
-    coverPaths.length > 0 ? await getSignedUrlsBatch(coverPaths, undefined, 'COVER') : new Map()
+  // For galleries without explicit cover, get first image as fallback (single batch query)
+  const galleriesWithoutCover = data.filter((g) => !g.cover_image_id)
+  const fallbackCoverMap = new Map<string, string>() // gallery_id -> storage_path
+  
+  if (galleriesWithoutCover.length > 0) {
+    // Get first image for ALL galleries without cover in ONE query using DISTINCT ON
+    const galleryIdsWithoutCover = galleriesWithoutCover.map(g => g.id)
+    
+    // Use a raw query approach: get all images for these galleries, then pick first per gallery
+    const { data: allFirstImages } = await supabaseAdmin
+      .from('images')
+      .select('gallery_id, storage_path, created_at')
+      .in('gallery_id', galleryIdsWithoutCover)
+      .order('created_at', { ascending: true })
+    
+    // Group by gallery and take first
+    if (allFirstImages) {
+      const seenGalleries = new Set<string>()
+      for (const img of allFirstImages) {
+        if (!seenGalleries.has(img.gallery_id)) {
+          seenGalleries.add(img.gallery_id)
+          fallbackCoverMap.set(img.gallery_id, img.storage_path)
+        }
+      }
+    }
+  }
 
+  // Generate signed URLs for all covers (explicit + fallback)
+  const allCoverPaths = [
+    ...coverImages.map((c) => c.storage_path),
+    ...Array.from(fallbackCoverMap.values())
+  ]
+  const signedUrls =
+    allCoverPaths.length > 0 ? await getSignedUrlsBatch(allCoverPaths, undefined, 'COVER') : new Map()
+
+  // Map explicit cover image IDs to URLs
   const coverUrlMap = new Map<string, string>()
   coverImages.forEach((c) => {
     const url = signedUrls.get(c.storage_path)
     if (url) coverUrlMap.set(c.id, url)
   })
 
-  return data.map((gallery) => ({
-    id: gallery.id,
-    title: gallery.title,
-    slug: gallery.slug,
-    hasPassword: !!gallery.password_hash,
-    downloadEnabled: gallery.download_enabled,
-    isPublic: gallery.is_public ?? true,
-    createdAt: gallery.created_at,
-    updatedAt: gallery.updated_at,
-    coverImageUrl: gallery.cover_image_id
-      ? coverUrlMap.get(gallery.cover_image_id) || null
-      : null,
-    imageCount: countMap.get(gallery.id) || 0,
-  }))
+  return data.map((gallery) => {
+    // Use explicit cover if set, otherwise use fallback first image
+    let coverImageUrl: string | null = null
+    if (gallery.cover_image_id) {
+      coverImageUrl = coverUrlMap.get(gallery.cover_image_id) || null
+    } else {
+      const fallbackPath = fallbackCoverMap.get(gallery.id)
+      if (fallbackPath) {
+        coverImageUrl = signedUrls.get(fallbackPath) || null
+      }
+    }
+    
+    return {
+      id: gallery.id,
+      title: gallery.title,
+      slug: gallery.slug,
+      hasPassword: !!gallery.password_hash,
+      downloadEnabled: gallery.download_enabled,
+      isPublic: gallery.is_public ?? true,
+      createdAt: gallery.created_at,
+      updatedAt: gallery.updated_at,
+      coverImageUrl,
+      imageCount: countMap.get(gallery.id) || 0,
+    }
+  })
 }

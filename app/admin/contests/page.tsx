@@ -22,7 +22,7 @@
  */
 
 import { Suspense } from 'react'
-import { createServerClient } from '@/lib/supabase/server'
+import { supabaseAdmin } from '@/lib/supabase/admin'
 import { ContestsPageContent } from './ContestsPageContent'
 
 export const dynamic = 'force-dynamic'
@@ -32,9 +32,7 @@ export const dynamic = 'force-dynamic'
 // ─────────────────────────────────────────────────────────────────────────────
 
 async function getContests() {
-  const supabase = createServerClient()
-  
-  const { data: contests, error } = await supabase
+  const { data: contests, error } = await supabaseAdmin
     .from('contests')
     .select(`
       *,
@@ -47,7 +45,7 @@ async function getContests() {
     .order('created_at', { ascending: false })
   
   if (error) {
-    console.error('[Admin Contests] Error fetching contests:', error)
+    console.error('[Admin Contests] Error fetching contests:', error.message, error.code, error.details)
     return []
   }
   

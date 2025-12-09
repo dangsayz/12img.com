@@ -49,9 +49,12 @@ export function AppNav({
   // Format storage display
   const formatStorage = (bytes: number) => {
     if (bytes >= 1024 * 1024 * 1024) {
-      return `${(bytes / (1024 * 1024 * 1024)).toFixed(1)}GB`
+      const gb = bytes / (1024 * 1024 * 1024)
+      return gb >= 10 ? `${Math.round(gb)}GB` : `${gb.toFixed(1)}GB`
     }
-    return `${(bytes / (1024 * 1024)).toFixed(0)}MB`
+    const mb = bytes / (1024 * 1024)
+    if (mb < 1) return '<1MB'
+    return `${Math.round(mb)}MB`
   }
   
   const storagePercent = Math.min((storageUsed / storageLimit) * 100, 100)
@@ -131,11 +134,11 @@ export function AppNav({
                       storagePercent > 90 ? 'bg-red-500' : 
                       storagePercent > 70 ? 'bg-amber-500' : 'bg-emerald-500'
                     }`}
-                    style={{ width: `${storagePercent}%` }}
+                    style={{ width: `${Math.max(storagePercent, 1)}%` }}
                   />
                 </div>
-                <span className="text-xs text-stone-400 font-medium">
-                  {formatStorage(storageUsed)}
+                <span className="text-xs text-stone-400 font-medium whitespace-nowrap">
+                  {formatStorage(storageUsed)} / {formatStorage(storageLimit)}
                 </span>
               </div>
             </div>

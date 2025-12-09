@@ -118,6 +118,7 @@ function mapDbToClient(row: Tables<'client_profiles'>): ClientProfile {
     partnerPhone: row.partner_phone,
     eventType: row.event_type as any,
     eventDate: row.event_date,
+    eventTime: (row as any).event_time || null,
     eventLocation: row.event_location,
     eventVenue: row.event_venue,
     packageName: row.package_name,
@@ -696,6 +697,110 @@ export async function markContractViewed(
   } catch (e) {
     console.error('[markContractViewed] Exception:', e)
     return { success: true } // Don't fail on tracking errors
+  }
+}
+
+// ============================================
+// CANCEL CONTRACT
+// ============================================
+
+import { sendContractCancellationToClient, sendContractCancellationToPhotographer } from '@/server/services/contract-email.service'
+
+export async function cancelContract(
+  contractId: string,
+  reason?: string
+): Promise<ActionResult> {
+  const { userId: clerkId } = await auth()
+  if (!clerkId) {
+    return { success: false, error: userError('UNAUTHORIZED', 'Please sign in to continue') }
+  }
+
+  const user = await getOrCreateUserByClerkId(clerkId)
+  if (!user) {
+    return { success: false, error: systemError('USER_NOT_FOUND', 'User account not found') }
+  }
+
+  try {
+    // Get contract with client info
+    const { data: contract, error: fetchError } = await supabaseAdmin
+      .from('contracts')
+      .select('*, client_profiles(*)')
+      .eq('id', contractId)
+      .eq('photographer_id', user.id)
+      .single()
+
+    if (fetchError || !contract) {
+      return { success: false, error: userError('NOT_FOUND', 'Contract not found') }
+    }
+
+    // Can only cancel sent or viewed contracts (not draft, signed, or archived)
+    if (contract.status === 'draft') {
+      return { success: false, error: userError('INVALID_STATE', 'Draft contracts should be deleted, not cancelled') }
+    }
+    if (contract.status === 'signed') {
+      return { success: false, error: userError('INVALID_STATE', 'Signed contracts cannot be cancelled') }
+    }
+    if (contract.status === 'archived' || contract.status === 'cancelled') {
+      return { success: false, error: userError('INVALID_STATE', 'Contract is already archived or cancelled') }
+    }
+
+    const client = contract.client_profiles as unknown as Tables<'client_profiles'>
+
+    // Update contract status to cancelled
+    const { error: updateError } = await supabaseAdmin
+      .from('contracts')
+      .update({
+        status: 'cancelled',
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', contractId)
+
+    if (updateError) {
+      console.error('[cancelContract] Update error:', updateError)
+      return { success: false, error: systemError('DB_ERROR', 'Failed to cancel contract') }
+    }
+
+    // Get photographer settings for emails
+    const { data: settings } = await supabaseAdmin
+      .from('user_settings')
+      .select('business_name, contact_email')
+      .eq('user_id', user.id)
+      .single()
+
+    const photographerName = settings?.business_name || user.display_name || 'Your Photographer'
+    const photographerEmail = settings?.contact_email || user.email
+    const clientName = `${client.first_name}${client.partner_first_name ? ` & ${client.partner_first_name}` : ''} ${client.last_name}`
+
+    // Send cancellation emails to both parties
+    await Promise.all([
+      sendContractCancellationToClient({
+        clientEmail: client.email,
+        clientName,
+        photographerName,
+        photographerEmail,
+        eventType: client.event_type || 'photography',
+        eventDate: client.event_date || undefined,
+        cancellationReason: reason,
+      }),
+      sendContractCancellationToPhotographer({
+        clientEmail: client.email,
+        clientName,
+        photographerName,
+        photographerEmail,
+        eventType: client.event_type || 'photography',
+        eventDate: client.event_date || undefined,
+        cancellationReason: reason,
+      }),
+    ])
+
+    revalidatePath('/dashboard/clients')
+    revalidatePath(`/dashboard/clients/${client.id}`)
+    revalidatePath(`/dashboard/contracts/${contractId}`)
+
+    return { success: true }
+  } catch (e) {
+    console.error('[cancelContract] Exception:', e)
+    return { success: false, error: systemError('UNKNOWN', 'An unexpected error occurred') }
   }
 }
 

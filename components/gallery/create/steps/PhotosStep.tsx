@@ -5,15 +5,16 @@ import { UploadZone } from '@/components/upload/UploadZone'
 
 interface PhotosStepProps {
   galleryId: string
+  gallerySlug: string
   onComplete: () => void
 }
 
-export function PhotosStep({ galleryId, onComplete }: PhotosStepProps) {
+export function PhotosStep({ galleryId, gallerySlug, onComplete }: PhotosStepProps) {
   const router = useRouter()
 
-  // Redirect to cinematic reveal page after upload
+  // Go straight to public gallery after upload
   const handleUploadComplete = () => {
-    router.push(`/gallery/${galleryId}/ready`)
+    router.push(`/view-reel/${gallerySlug}`)
   }
 
   return (

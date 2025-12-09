@@ -13,6 +13,9 @@ interface PricingButtonProps {
 export function PricingButton({ planId, children, className }: PricingButtonProps) {
   const { isSignedIn, isLoaded } = useUser()
   const [loading, setLoading] = useState(false)
+  
+  // Determine disabled state - use undefined instead of false to avoid hydration mismatch
+  const isDisabled = loading || !isLoaded ? true : undefined
 
   const handleClick = async () => {
     // If not signed in, redirect to sign-up with plan
@@ -55,7 +58,7 @@ export function PricingButton({ planId, children, className }: PricingButtonProp
   return (
     <button
       onClick={handleClick}
-      disabled={loading || !isLoaded}
+      disabled={isDisabled}
       className={className}
     >
       {loading ? (

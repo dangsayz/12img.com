@@ -90,6 +90,8 @@ export interface UserSettings {
   notifyImagesDownloaded: boolean
   notifyArchiveReady: boolean
   emailDigestFrequency: 'immediate' | 'daily' | 'weekly' | 'never'
+  // Social sharing
+  socialSharingEnabled: boolean
 }
 
 const DEFAULT_SETTINGS: UserSettings = {
@@ -107,6 +109,7 @@ const DEFAULT_SETTINGS: UserSettings = {
   notifyImagesDownloaded: true,
   notifyArchiveReady: true,
   emailDigestFrequency: 'immediate',
+  socialSharingEnabled: false,
 }
 
 export async function getUserSettings(clerkId: string): Promise<UserSettings> {
@@ -140,6 +143,7 @@ export async function getUserSettings(clerkId: string): Promise<UserSettings> {
     notifyImagesDownloaded: data.notify_images_downloaded ?? true,
     notifyArchiveReady: data.notify_archive_ready ?? true,
     emailDigestFrequency: data.email_digest_frequency ?? 'immediate',
+    socialSharingEnabled: data.social_sharing_enabled ?? false,
   }
 }
 

@@ -16,7 +16,6 @@ import {
 } from 'lucide-react'
 import { createGallery } from '@/server/actions/gallery.actions'
 import { PhotosStep } from './steps/PhotosStep'
-import { ShareStep } from './steps/ShareStep'
 import { TemplateSelector } from '@/components/gallery/templates/TemplateSelector'
 import { type GalleryTemplate, DEFAULT_TEMPLATE } from '@/components/gallery/templates'
 
@@ -160,7 +159,7 @@ export function SimpleWizard() {
           
           {/* Step Indicator - Super minimal */}
           <div className="flex items-center gap-2">
-            {[0, 1, 2].map((step) => (
+            {[0, 1].map((step) => (
               <div
                 key={step}
                 className={`h-1.5 rounded-full transition-all ${
@@ -332,7 +331,7 @@ export function SimpleWizard() {
           )}
 
           {/* Step 2: Add Photos */}
-          {currentStep === 1 && galleryId && (
+          {currentStep === 1 && galleryId && gallerySlug && (
             <motion.div
               key="step-2"
               initial={{ opacity: 0, y: 20 }}
@@ -342,23 +341,8 @@ export function SimpleWizard() {
             >
               <PhotosStep 
                 galleryId={galleryId}
-                onComplete={() => setCurrentStep(2)}
-              />
-            </motion.div>
-          )}
-
-          {/* Step 3: Share */}
-          {currentStep === 2 && galleryId && (
-            <motion.div
-              key="step-3"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-            >
-              <ShareStep 
-                galleryId={galleryId}
-                gallerySlug={gallerySlug!}
-                galleryName={galleryName}
+                gallerySlug={gallerySlug}
+                onComplete={() => router.push(`/view-reel/${gallerySlug}`)}
               />
             </motion.div>
           )}

@@ -294,7 +294,10 @@ export function UploadZone({ galleryId, onUploadComplete }: UploadZoneProps) {
       // Final refresh after all batches
       if (allSuccessful.length > 0) {
         router.refresh()
-        onUploadComplete()
+        // Small delay to let UI update, then redirect
+        setTimeout(() => {
+          onUploadComplete()
+        }, 500)
       }
 
     } catch (err) {
@@ -392,6 +395,14 @@ export function UploadZone({ galleryId, onUploadComplete }: UploadZoneProps) {
                 onClick={processQueue}
               >
                 Retry
+              </Button>
+            ) : uploads.filter(u => u.status === 'completed').length > 0 ? (
+              <Button
+                size="sm"
+                className="bg-stone-900 hover:bg-stone-800 text-white"
+                onClick={onUploadComplete}
+              >
+                Continue →
               </Button>
             ) : (
               <span className="text-sm text-emerald-600 font-medium">

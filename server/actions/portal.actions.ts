@@ -43,6 +43,16 @@ export interface PortalData {
   photographerName: string
   photographerEmail: string
   permissions: PortalPermissions
+  deliveryProgress: DeliveryProgressData | null
+}
+
+export interface DeliveryProgressData {
+  status: 'pending_event' | 'in_progress' | 'overdue' | 'delivered'
+  percentComplete: number
+  daysRemaining: number | null
+  daysElapsed: number
+  estimatedDeliveryDate: string | null
+  isOverdue: boolean
 }
 
 // ============================================
@@ -85,6 +95,7 @@ function mapDbToClient(row: Tables<'client_profiles'>): ClientProfile {
     partnerPhone: row.partner_phone,
     eventType: row.event_type as any,
     eventDate: row.event_date,
+    eventTime: (row as any).event_time || null,
     eventLocation: row.event_location,
     eventVenue: row.event_venue,
     packageName: row.package_name,
@@ -326,6 +337,28 @@ export async function getPortalData(
       .eq('user_id', context.photographerId)
       .single()
 
+    // Get delivery progress if there's an active contract
+    let deliveryProgress: DeliveryProgressData | null = null
+    const { data: progressData } = await supabaseAdmin
+      .from('delivery_progress')
+      .select('*')
+      .eq('client_id', context.clientId)
+      .eq('photographer_id', context.photographerId)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+
+    if (progressData) {
+      deliveryProgress = {
+        status: progressData.delivery_status as DeliveryProgressData['status'],
+        percentComplete: progressData.percent_complete || 0,
+        daysRemaining: progressData.days_remaining,
+        daysElapsed: progressData.days_elapsed || 0,
+        estimatedDeliveryDate: progressData.estimated_delivery_date,
+        isOverdue: progressData.is_overdue || false,
+      }
+    }
+
     return {
       success: true,
       data: {
@@ -333,6 +366,7 @@ export async function getPortalData(
         photographerName: settings?.business_name || photographer.display_name || 'Photographer',
         photographerEmail: photographer.email,
         permissions: context.permissions,
+        deliveryProgress,
       },
     }
   } catch (e) {

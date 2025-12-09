@@ -16,7 +16,9 @@ export default function robots(): MetadataRoute.Robots {
           '/settings/',
           '/gallery/',       // User's private gallery management
           '/upload/',
-          '/ruanta-dashboard/',
+          '/admin/',         // Admin panel
+          '/dashboard/',     // User dashboard
+          '/portal/',        // Client portal (private tokens)
           '/view-reel/*/download',   // Download endpoints
         ],
       },

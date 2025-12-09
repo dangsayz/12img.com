@@ -41,6 +41,7 @@ import {
   resendContract,
   duplicateContract,
   archiveContract,
+  cancelContract,
   sendContractCopy,
 } from '@/server/actions/contract.actions'
 
@@ -88,6 +89,8 @@ export function ContractEditor({ contract, clientName, clientId }: ContractEdito
   const [expirationDays, setExpirationDays] = useState(30)
   const [showSendConfirm, setShowSendConfirm] = useState(false)
   const [showCopySentModal, setShowCopySentModal] = useState(false)
+  const [showCancelModal, setShowCancelModal] = useState(false)
+  const [cancelReason, setCancelReason] = useState('')
   
   // Check if this is the first time viewing contracts
   useEffect(() => {
@@ -104,11 +107,12 @@ export function ContractEditor({ contract, clientName, clientId }: ContractEdito
         if (showCopySentModal) setShowCopySentModal(false)
         if (showDeleteConfirm) setShowDeleteConfirm(false)
         if (showSendConfirm) setShowSendConfirm(false)
+        if (showCancelModal) setShowCancelModal(false)
       }
     }
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [showCopySentModal, showDeleteConfirm, showSendConfirm])
+  }, [showCopySentModal, showDeleteConfirm, showSendConfirm, showCancelModal])
   
   const dismissHints = () => {
     localStorage.setItem('contract-editor-hints-seen', 'true')
@@ -244,6 +248,28 @@ export function ContractEditor({ contract, clientName, clientId }: ContractEdito
 
       // Navigate back to client page
       router.push(`/dashboard/clients/${clientId}`)
+    })
+  }
+
+  const handleCancel = () => {
+    setError(null)
+    
+    startTransition(async () => {
+      const result = await cancelContract(contract.id, cancelReason || undefined)
+
+      if (!result.success) {
+        setError(result.error?.message || 'Failed to cancel contract')
+        setShowCancelModal(false)
+        return
+      }
+
+      setSuccess('Contract cancelled. Both parties have been notified.')
+      setShowCancelModal(false)
+      setCancelReason('')
+      // Redirect back to client page after brief delay
+      setTimeout(() => {
+        router.push(`/dashboard/clients/${clientId}`)
+      }, 1500)
     })
   }
 
@@ -446,6 +472,14 @@ export function ContractEditor({ contract, clientName, clientId }: ContractEdito
               {isSent && (
                 <>
                   <button
+                    onClick={() => setShowCancelModal(true)}
+                    disabled={isPending}
+                    className="inline-flex items-center gap-2 px-3 py-2 border border-red-200 text-red-600 rounded-lg hover:bg-red-50 transition-colors text-sm"
+                  >
+                    <X className="w-4 h-4" />
+                    Cancel
+                  </button>
+                  <button
                     onClick={handleDuplicate}
                     disabled={isPending}
                     className="inline-flex items-center gap-2 px-3 py-2 border border-stone-300 text-stone-700 rounded-lg hover:bg-stone-100 transition-colors text-sm"
@@ -546,6 +580,13 @@ export function ContractEditor({ contract, clientName, clientId }: ContractEdito
             )}
             {isSent && (
               <>
+                <button
+                  onClick={() => setShowCancelModal(true)}
+                  disabled={isPending}
+                  className="p-2.5 border border-red-200 text-red-600 rounded-xl hover:bg-red-50 transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
                 <button
                   onClick={handleDuplicate}
                   disabled={isPending}
@@ -742,6 +783,81 @@ export function ContractEditor({ contract, clientName, clientId }: ContractEdito
             <button onClick={() => setSuccess(null)} className="text-emerald-400 hover:text-emerald-600">
               <X className="w-5 h-5" />
             </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Cancel Contract Modal */}
+      <AnimatePresence>
+        {showCancelModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+            onClick={() => setShowCancelModal(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="bg-white rounded-xl p-6 max-w-md w-full shadow-xl"
+              onClick={e => e.stopPropagation()}
+            >
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 rounded-xl bg-red-100 flex items-center justify-center">
+                  <X className="w-5 h-5 text-red-600" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-medium text-stone-900">Cancel Contract</h3>
+                  <p className="text-sm text-stone-500">for {clientName}</p>
+                </div>
+              </div>
+              
+              <p className="text-stone-600 text-sm mb-4">
+                This will cancel the contract and notify both you and the client via email.
+              </p>
+              
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-stone-700 mb-2">
+                  Reason for cancellation <span className="text-stone-400 font-normal">(optional)</span>
+                </label>
+                <textarea
+                  value={cancelReason}
+                  onChange={e => setCancelReason(e.target.value)}
+                  placeholder="e.g., Client requested to reschedule, Date no longer available..."
+                  className="w-full px-4 py-3 text-sm border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-300 resize-none"
+                  rows={3}
+                />
+                <p className="text-xs text-stone-400 mt-2">
+                  This reason will be shared with the client in the notification email.
+                </p>
+              </div>
+              
+              <div className="flex justify-end gap-3">
+                <button
+                  onClick={() => {
+                    setShowCancelModal(false)
+                    setCancelReason('')
+                  }}
+                  className="px-4 py-2 text-stone-600 hover:text-stone-900 transition-colors"
+                >
+                  Keep Contract
+                </button>
+                <button
+                  onClick={handleCancel}
+                  disabled={isPending}
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50"
+                >
+                  {isPending ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <X className="w-4 h-4" />
+                  )}
+                  Cancel Contract
+                </button>
+              </div>
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>

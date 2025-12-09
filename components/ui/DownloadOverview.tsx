@@ -2,7 +2,7 @@
 
 import { useState, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Download, Camera, Check, Loader2, X, Image as ImageIcon } from 'lucide-react'
+import { Download, Check, Loader2, X, Image as ImageIcon } from 'lucide-react'
 import html2canvas from 'html2canvas'
 
 interface DownloadOverviewProps {
@@ -104,7 +104,7 @@ export function DownloadOverview({
     
     return (
       <>
-        <Camera className="w-4 h-4" />
+        <Download className="w-4 h-4" />
         <span className="hidden sm:inline">Save Overview</span>
       </>
     )
@@ -133,7 +133,7 @@ export function DownloadOverview({
           {isCapturing ? (
             <Loader2 className="w-5 h-5 animate-spin" />
           ) : (
-            <Camera className="w-5 h-5" />
+            <Download className="w-5 h-5" />
           )}
         </button>
       )}
@@ -147,7 +147,7 @@ export function DownloadOverview({
           {isCapturing ? (
             <Loader2 className="w-4 h-4 animate-spin" />
           ) : (
-            <Camera className="w-4 h-4" />
+            <Download className="w-4 h-4" />
           )}
           <span>Save</span>
         </button>

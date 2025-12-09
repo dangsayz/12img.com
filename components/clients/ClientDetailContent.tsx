@@ -38,6 +38,8 @@ import { type ClientProfile, type ContractWithDetails, type Milestone, type Deli
 import { type Message } from '@/server/actions/message.actions'
 import { generatePortalToken, type PortalToken } from '@/server/actions/portal.actions'
 import { archiveClientProfile, updateClientProfile } from '@/server/actions/client.actions'
+import { getClientWorkflows } from '@/server/actions/workflow.actions'
+import { type ScheduledWorkflow } from '@/lib/workflows/types'
 import { MessageModal } from '@/components/messages/MessageModal'
 import { EditClientModal } from '@/components/clients/EditClientModal'
 import { CreateContractModal } from '@/components/contracts/CreateContractModal'
@@ -46,6 +48,91 @@ import { MilestoneTimeline, MilestoneTimelineCompact } from '@/components/milest
 import { DeliveryCountdown } from '@/components/milestones'
 import { ContractStatusBadge } from '@/components/contracts/ContractStatusBadge'
 import { DownloadOverview } from '@/components/ui/DownloadOverview'
+import { WorkflowList, WorkflowScheduler } from '@/components/workflows'
+
+// Helper component to parse and display notes elegantly
+function FormattedNotes({ notes }: { notes: string }) {
+  // Parse the notes into sections
+  const sections: { title: string; items: string[] }[] = []
+  let currentSection: { title: string; items: string[] } | null = null
+  
+  const lines = notes.split('\n').filter(line => line.trim())
+  
+  for (const line of lines) {
+    const trimmed = line.trim()
+    
+    // Check if this is a section header (all caps with colon, or ends with colon)
+    const isHeader = /^[A-Z][A-Z\s]+:?$/.test(trimmed) || 
+                     /^[A-Z][a-z]+(\s[A-Z][a-z]+)*:$/.test(trimmed)
+    
+    if (isHeader) {
+      if (currentSection) {
+        sections.push(currentSection)
+      }
+      currentSection = { 
+        title: trimmed.replace(/:$/, ''), 
+        items: [] 
+      }
+    } else if (currentSection) {
+      currentSection.items.push(trimmed)
+    } else {
+      // No section yet, create a default one
+      currentSection = { title: '', items: [trimmed] }
+    }
+  }
+  
+  if (currentSection) {
+    sections.push(currentSection)
+  }
+
+  // If no clear sections found, just display as plain text
+  if (sections.length === 0 || (sections.length === 1 && !sections[0].title)) {
+    return (
+      <p className="text-sm text-stone-600 whitespace-pre-wrap leading-relaxed">
+        {notes}
+      </p>
+    )
+  }
+
+  return (
+    <div className="space-y-5">
+      {sections.map((section, idx) => (
+        <div key={idx}>
+          {section.title && (
+            <h3 className="text-[10px] font-semibold text-stone-400 uppercase tracking-[0.2em] mb-2.5">
+              {section.title}
+            </h3>
+          )}
+          <div className="space-y-1.5">
+            {section.items.map((item, itemIdx) => {
+              // Check if item has a label (e.g., "Email: test@example.com")
+              const labelMatch = item.match(/^([A-Za-z\s]+):\s*(.+)$/)
+              
+              if (labelMatch) {
+                return (
+                  <div key={itemIdx} className="flex items-baseline gap-2">
+                    <span className="text-xs text-stone-400 min-w-[80px]">
+                      {labelMatch[1]}
+                    </span>
+                    <span className="text-sm text-stone-700 font-medium">
+                      {labelMatch[2]}
+                    </span>
+                  </div>
+                )
+              }
+              
+              return (
+                <p key={itemIdx} className="text-sm text-stone-600 leading-relaxed">
+                  {item}
+                </p>
+              )
+            })}
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
 
 interface ClientDetailContentProps {
   client: ClientProfile
@@ -65,7 +152,10 @@ export function ClientDetailContent({
   deliveryProgress,
 }: ClientDetailContentProps) {
   const router = useRouter()
-  const [activeTab, setActiveTab] = useState<'overview' | 'contracts'>('overview')
+  const [activeTab, setActiveTab] = useState<'overview' | 'contracts' | 'automations'>('overview')
+  const [workflows, setWorkflows] = useState<ScheduledWorkflow[]>([])
+  const [showWorkflowScheduler, setShowWorkflowScheduler] = useState(false)
+  const [isLoadingWorkflows, setIsLoadingWorkflows] = useState(false)
   const [copiedLink, setCopiedLink] = useState(false)
   const [isPending, startTransition] = useTransition()
   const [isMessageModalOpen, setIsMessageModalOpen] = useState(false)
@@ -98,6 +188,27 @@ export function ClientDetailContent({
   const daysUntil = eventDate
     ? Math.ceil((eventDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24))
     : null
+
+  // Load workflows when automations tab is selected
+  const loadWorkflows = async () => {
+    setIsLoadingWorkflows(true)
+    try {
+      const data = await getClientWorkflows(client.id)
+      setWorkflows(data)
+    } catch (e) {
+      console.error('Failed to load workflows:', e)
+    } finally {
+      setIsLoadingWorkflows(false)
+    }
+  }
+
+  // Load workflows on tab switch
+  const handleTabChange = (tab: 'overview' | 'contracts' | 'automations') => {
+    setActiveTab(tab)
+    if (tab === 'automations' && workflows.length === 0) {
+      loadWorkflows()
+    }
+  }
 
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -306,10 +417,10 @@ export function ClientDetailContent({
       {/* Tabs */}
       <div className="flex items-center gap-1 mb-6">
         <div className="flex gap-1 p-1 bg-stone-100/80 rounded-xl">
-          {(['overview', 'contracts'] as const).map(tab => (
+          {(['overview', 'contracts', 'automations'] as const).map(tab => (
             <button
               key={tab}
-              onClick={() => setActiveTab(tab)}
+              onClick={() => handleTabChange(tab)}
               className={`relative px-4 py-2 text-sm font-medium rounded-lg transition-all ${
                 activeTab === tab
                   ? 'bg-white text-stone-900 shadow-sm'
@@ -325,6 +436,18 @@ export function ClientDetailContent({
                       activeTab === 'contracts' ? 'bg-stone-100' : 'bg-stone-200/60'
                     }`}>
                       {contracts.length}
+                    </span>
+                  )}
+                </span>
+              )}
+              {tab === 'automations' && (
+                <span className="flex items-center gap-1.5">
+                  Automations
+                  {workflows.filter(w => w.status === 'pending').length > 0 && (
+                    <span className={`px-1.5 py-0.5 rounded text-xs ${
+                      activeTab === 'automations' ? 'bg-stone-100' : 'bg-stone-200/60'
+                    }`}>
+                      {workflows.filter(w => w.status === 'pending').length}
                     </span>
                   )}
                 </span>
@@ -454,10 +577,13 @@ export function ClientDetailContent({
             {client.notes && (
               <div className="bg-white rounded-2xl border border-stone-200/60 shadow-sm overflow-hidden">
                 <div className="px-6 py-4 border-b border-stone-100 bg-stone-50/50">
-                  <h2 className="text-sm font-semibold text-stone-900">Notes</h2>
+                  <h2 className="text-sm font-semibold text-stone-900 flex items-center gap-2">
+                    <StickyNote className="w-4 h-4 text-stone-400" />
+                    Notes
+                  </h2>
                 </div>
                 <div className="p-6">
-                  <p className="text-sm text-stone-600 whitespace-pre-wrap leading-relaxed">{client.notes}</p>
+                  <FormattedNotes notes={client.notes} />
                 </div>
               </div>
             )}
@@ -679,8 +805,54 @@ export function ClientDetailContent({
           )}
         </div>
       )}
+
+      {/* Automations Tab Content */}
+      {activeTab === 'automations' && (
+        <div className="bg-white rounded-2xl border border-stone-200/60 shadow-sm overflow-hidden">
+          <div className="px-6 py-4 border-b border-stone-100 bg-stone-50/50 flex items-center justify-between">
+            <div>
+              <h2 className="text-sm font-semibold text-stone-900 flex items-center gap-2">
+                <Clock className="w-4 h-4 text-stone-400" />
+                Automated Emails
+              </h2>
+              <p className="text-xs text-stone-500 mt-0.5">
+                Schedule emails to send automatically based on event date
+              </p>
+            </div>
+            <button
+              onClick={() => setShowWorkflowScheduler(true)}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-stone-900 text-white text-sm font-medium rounded-xl hover:bg-stone-800 transition-colors shadow-sm"
+            >
+              <Plus className="w-4 h-4" />
+              Add Automation
+            </button>
+          </div>
+          <div className="p-6">
+            {isLoadingWorkflows ? (
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="w-6 h-6 text-stone-400 animate-spin" />
+              </div>
+            ) : (
+              <WorkflowList
+                workflows={workflows}
+                onRefresh={loadWorkflows}
+              />
+            )}
+          </div>
+        </div>
+      )}
       </div>
       {/* End of capturable section */}
+
+      {/* Workflow Scheduler Modal */}
+      <WorkflowScheduler
+        clientId={client.id}
+        clientName={`${client.firstName} ${client.lastName}`}
+        eventDate={client.eventDate}
+        isOpen={showWorkflowScheduler}
+        onClose={() => setShowWorkflowScheduler(false)}
+        onSuccess={loadWorkflows}
+      />
 
       {/* Message Modal */}
       <MessageModal

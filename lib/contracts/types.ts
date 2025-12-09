@@ -31,6 +31,8 @@ export interface MergeFieldData {
   event_type_display: string
   event_date: string
   event_date_formatted: string
+  event_time: string
+  event_time_formatted: string
   event_location: string
   event_venue: string
   
@@ -177,6 +179,7 @@ export interface ClientProfile {
   partnerPhone: string | null
   eventType: EventType
   eventDate: string | null
+  eventTime: string | null // Arrival/start time (HH:MM format)
   eventLocation: string | null
   eventVenue: string | null
   packageName: string | null

@@ -20,14 +20,14 @@ import {
   Users,
   FileText,
   MessageSquare,
-  X
+  X,
+  Trophy
 } from 'lucide-react'
 import { deleteGallery, toggleGalleryVisibility } from '@/server/actions/gallery.actions'
 import { updateProfileVisibility } from '@/server/actions/profile.actions'
 import { VisibilityBadgeOverlay } from '@/components/ui/VisibilityBadge'
 import type { ProfileVisibilityMode } from '@/types/database'
 import { OnboardingHint } from '@/components/onboarding'
-import { SpotlightBanner } from '@/components/spotlight/SpotlightBanner'
 import { CountryFlag, hasCustomFlag } from '@/components/ui/CountryFlag'
 
 interface Gallery {
@@ -309,49 +309,13 @@ export function CleanDashboard({ galleries, photographerName, country, visibilit
         </div>
       )}
 
-      {/* Feature Hint - Client Portal (Minimal, Apple-inspired) */}
-      <AnimatePresence>
-        {showFeatureHint && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="max-w-7xl mx-auto px-6 pt-6"
-          >
-            <div className="flex items-center justify-between py-3 px-4 bg-stone-50 rounded-full border border-stone-100">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-full bg-stone-900 flex items-center justify-center">
-                  <Users className="w-4 h-4 text-white" />
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-medium text-stone-900">Client Portal</span>
-                  <span className="text-[10px] font-medium text-stone-500 bg-stone-200 px-1.5 py-0.5 rounded uppercase tracking-wide">New</span>
-                </div>
-                <span className="hidden sm:inline text-sm text-stone-500">·</span>
-                <span className="hidden sm:inline text-sm text-stone-500">Contracts, messaging & more</span>
-              </div>
-              
-              <div className="flex items-center gap-2">
-                <Link
-                  href="/dashboard/clients"
-                  className="text-sm font-medium text-stone-900 hover:text-stone-600 transition-colors"
-                >
-                  Get Started →
-                </Link>
-                <button
-                  onClick={dismissFeatureHint}
-                  className="p-1.5 rounded-full hover:bg-stone-200 transition-colors ml-2"
-                >
-                  <X className="w-3.5 h-3.5 text-stone-400" />
-                </button>
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Spotlight Contest Banner - Shows when contest is active */}
-      <SpotlightBanner contest={activeContest || null} userPlan={userPlan} />
+      {/* Feature Hints Container - Handles single or multiple banners elegantly */}
+      <FeatureHintsContainer
+        showClientPortal={showFeatureHint}
+        onDismissClientPortal={dismissFeatureHint}
+        contest={activeContest || null}
+        userPlan={userPlan}
+      />
 
       {/* Gallery Grid */}
       <div className="max-w-7xl mx-auto px-6 py-16" data-onboarding="dashboard-galleries">
@@ -385,6 +349,164 @@ export function CleanDashboard({ galleries, photographerName, country, visibilit
         )}
       </div>
     </div>
+  )
+}
+
+// ============================================================================
+// FEATURE HINTS CONTAINER
+// Handles single or multiple promotional banners elegantly
+// - Single banner: Full width, centered
+// - Multiple banners: Side-by-side on desktop, stacked on mobile
+// ============================================================================
+
+const PAID_PLANS = ['essential', 'pro', 'studio', 'elite']
+
+function FeatureHintsContainer({
+  showClientPortal,
+  onDismissClientPortal,
+  contest,
+  userPlan = 'free'
+}: {
+  showClientPortal: boolean
+  onDismissClientPortal: () => void
+  contest: {
+    id: string
+    name: string
+    theme: string | null
+    status: 'submissions_open' | 'voting'
+  } | null
+  userPlan?: string
+}) {
+  const isPaidUser = PAID_PLANS.includes(userPlan.toLowerCase())
+  const [spotlightDismissed, setSpotlightDismissed] = useState(true)
+  
+  // Check if spotlight was dismissed
+  useEffect(() => {
+    if (!contest) return
+    const dismissedContests = localStorage.getItem('12img_spotlight_dismissed')
+    const dismissedIds = dismissedContests ? JSON.parse(dismissedContests) : []
+    setSpotlightDismissed(dismissedIds.includes(contest.id))
+  }, [contest])
+  
+  const handleDismissSpotlight = () => {
+    setSpotlightDismissed(true)
+    if (!contest) return
+    const dismissedContests = localStorage.getItem('12img_spotlight_dismissed')
+    const dismissedIds = dismissedContests ? JSON.parse(dismissedContests) : []
+    dismissedIds.push(contest.id)
+    localStorage.setItem('12img_spotlight_dismissed', JSON.stringify(dismissedIds))
+  }
+  
+  const showSpotlight = isPaidUser && contest && !spotlightDismissed
+  const bothVisible = showClientPortal && showSpotlight
+  
+  // Nothing to show
+  if (!showClientPortal && !showSpotlight) return null
+  
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      className="max-w-7xl mx-auto px-6 pt-6"
+    >
+      <div className={`flex gap-3 ${bothVisible ? 'flex-col sm:flex-row' : ''}`}>
+        {/* Client Portal Hint */}
+        <AnimatePresence>
+          {showClientPortal && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className={bothVisible ? 'flex-1' : 'w-full'}
+            >
+              <div className="flex items-center justify-between py-3 px-4 bg-stone-50 rounded-full border border-stone-100 h-full">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-8 h-8 rounded-full bg-stone-900 flex items-center justify-center flex-shrink-0">
+                    <Users className="w-4 h-4 text-white" />
+                  </div>
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className="text-sm font-medium text-stone-900 whitespace-nowrap">Client Portal</span>
+                    <span className="text-[10px] font-medium text-stone-500 bg-stone-200 px-1.5 py-0.5 rounded uppercase tracking-wide flex-shrink-0">New</span>
+                  </div>
+                  {!bothVisible && (
+                    <>
+                      <span className="hidden sm:inline text-sm text-stone-500">·</span>
+                      <span className="hidden sm:inline text-sm text-stone-500 truncate">Contracts, messaging & more</span>
+                    </>
+                  )}
+                </div>
+                
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  <Link
+                    href="/dashboard/clients"
+                    className="text-sm font-medium text-stone-900 hover:text-stone-600 transition-colors whitespace-nowrap"
+                  >
+                    Get Started →
+                  </Link>
+                  <button
+                    onClick={onDismissClientPortal}
+                    className="p-1.5 rounded-full hover:bg-stone-200 transition-colors ml-1"
+                  >
+                    <X className="w-3.5 h-3.5 text-stone-400" />
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+        
+        {/* Spotlight Contest Hint */}
+        <AnimatePresence>
+          {showSpotlight && contest && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className={bothVisible ? 'flex-1' : 'w-full'}
+            >
+              <div className="flex items-center justify-between py-3 px-4 bg-stone-50 rounded-full border border-stone-100 h-full">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-8 h-8 rounded-full bg-stone-900 flex items-center justify-center flex-shrink-0">
+                    <Trophy className="w-4 h-4 text-white" />
+                  </div>
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className="text-sm font-medium text-stone-900 whitespace-nowrap">
+                      {contest.status === 'submissions_open' ? 'Spotlight' : 'Voting Open'}
+                    </span>
+                    <span className="text-[10px] font-medium text-stone-500 bg-stone-200 px-1.5 py-0.5 rounded uppercase tracking-wide flex-shrink-0">
+                      {contest.status === 'submissions_open' ? 'Open' : 'Live'}
+                    </span>
+                  </div>
+                  {!bothVisible && (
+                    <>
+                      <span className="hidden sm:inline text-sm text-stone-500">·</span>
+                      <span className="hidden sm:inline text-sm text-stone-500 truncate">
+                        {contest.theme || (contest.status === 'submissions_open' ? 'Submit your best shot' : "Pick this month's winner")}
+                      </span>
+                    </>
+                  )}
+                </div>
+                
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  <Link
+                    href={contest.status === 'submissions_open' ? '/contest/submit' : '/contest'}
+                    className="text-sm font-medium text-stone-900 hover:text-stone-600 transition-colors whitespace-nowrap"
+                  >
+                    {contest.status === 'submissions_open' ? 'Enter →' : 'Vote →'}
+                  </Link>
+                  <button
+                    onClick={handleDismissSpotlight}
+                    className="p-1.5 rounded-full hover:bg-stone-200 transition-colors ml-1"
+                  >
+                    <X className="w-3.5 h-3.5 text-stone-400" />
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    </motion.div>
   )
 }
 

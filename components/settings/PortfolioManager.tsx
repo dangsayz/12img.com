@@ -32,7 +32,7 @@ interface AvailableImage {
   galleryId: string
   galleryTitle: string
   isInPortfolio: boolean
-  thumbnailUrl?: string
+  thumbnailUrl: string
 }
 
 interface Gallery {
@@ -152,10 +152,6 @@ export function PortfolioManager() {
     })
   }, [])
 
-  const getImageUrl = (storagePath: string) => {
-    return `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/gallery-images/${storagePath}`
-  }
-
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -239,7 +235,7 @@ export function PortfolioManager() {
               className="relative aspect-[3/4] rounded-lg overflow-hidden group cursor-grab active:cursor-grabbing"
             >
               <Image
-                src={getImageUrl(image.storagePath)}
+                src={image.thumbnailUrl || ''}
                 alt=""
                 fill
                 className="object-cover"
@@ -479,7 +475,7 @@ export function PortfolioManager() {
                         `}
                       >
                         <Image
-                          src={getImageUrl(image.storagePath)}
+                          src={image.thumbnailUrl}
                           alt=""
                           fill
                           className="object-cover transition-transform duration-300 group-hover:scale-105"
