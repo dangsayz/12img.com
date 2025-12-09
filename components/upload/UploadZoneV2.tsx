@@ -31,6 +31,7 @@ import { FileStagingList } from './FileStagingList'
 import { FileItemState } from './FileItem'
 import { LargeUploadOverlay } from './LargeUploadOverlay'
 import { motion, AnimatePresence } from 'framer-motion'
+import { AlertCircle, X } from 'lucide-react'
 
 interface UploadZoneProps {
   galleryId: string
@@ -44,6 +45,19 @@ interface EnhancedFileState extends FileItemState {
   compressionRatio?: number
   width?: number
   height?: number
+}
+
+interface RejectedFile {
+  name: string
+  reason: string
+}
+
+/**
+ * Natural sort comparator - handles numbers in filenames correctly
+ * e.g., "img-2.jpg" comes before "img-10.jpg"
+ */
+function naturalSort(a: File, b: File): number {
+  return a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' })
 }
 
 export function UploadZoneV2({ galleryId, onUploadComplete }: UploadZoneProps) {
@@ -62,6 +76,10 @@ export function UploadZoneV2({ galleryId, onUploadComplete }: UploadZoneProps) {
   // Compression stats
   const [totalOriginalBytes, setTotalOriginalBytes] = useState(0)
   const [totalCompressedBytes, setTotalCompressedBytes] = useState(0)
+  
+  // Rejected files tracking
+  const [rejectedFiles, setRejectedFiles] = useState<RejectedFile[]>([])
+  const [showRejectedBanner, setShowRejectedBanner] = useState(false)
   
   // Keep ref in sync with state
   useEffect(() => {
@@ -137,33 +155,71 @@ export function UploadZoneV2({ galleryId, onUploadComplete }: UploadZoneProps) {
     }
   }, [])
 
-  const validateFile = (file: File): string | null => {
+  const validateFile = (file: File): { valid: boolean; reason?: string } => {
+    // Check for video files
+    if (file.type.startsWith('video/')) {
+      return { valid: false, reason: 'Video files are not supported. Please upload images only.' }
+    }
+    
+    // Check for other non-image files
+    if (!file.type.startsWith('image/')) {
+      return { valid: false, reason: `"${file.type || 'Unknown'}" is not a supported format.` }
+    }
+    
+    // Check for specific allowed image types
     if (!ALLOWED_MIME_TYPES.includes(file.type as any)) {
-      return `Invalid file type`
+      const format = file.type.replace('image/', '').toUpperCase()
+      return { valid: false, reason: `${format} format not supported. Use JPEG, PNG, or WebP.` }
     }
+    
+    // Check file size
     if (file.size > MAX_FILE_SIZE) {
-      return `File too large`
+      const sizeMB = (file.size / (1024 * 1024)).toFixed(1)
+      const maxMB = (MAX_FILE_SIZE / (1024 * 1024)).toFixed(0)
+      return { valid: false, reason: `File too large (${sizeMB}MB). Max size is ${maxMB}MB.` }
     }
-    return null
+    
+    return { valid: true }
   }
 
   const handleFiles = useCallback((fileList: FileList | null) => {
     if (!fileList) return
 
-    const files = Array.from(fileList)
+    // Sort files naturally (so img-2 comes before img-10)
+    const files = Array.from(fileList).sort(naturalSort)
+    
+    // Separate valid and invalid files
+    const validFiles: File[] = []
+    const newRejected: RejectedFile[] = []
+    
+    for (const file of files) {
+      const validation = validateFile(file)
+      if (validation.valid) {
+        validFiles.push(file)
+      } else {
+        newRejected.push({ name: file.name, reason: validation.reason! })
+      }
+    }
+    
+    // Show rejected files banner if any
+    if (newRejected.length > 0) {
+      setRejectedFiles(prev => [...prev, ...newRejected])
+      setShowRejectedBanner(true)
+    }
+    
+    // Process valid files in chunks
     const CHUNK_SIZE = 100
     
     const processChunk = (startIndex: number) => {
-      const chunk = files.slice(startIndex, startIndex + CHUNK_SIZE)
-      const newUploads: EnhancedFileState[] = chunk.map((file) => {
-        const error = validateFile(file)
+      const chunk = validFiles.slice(startIndex, startIndex + CHUNK_SIZE)
+      const newUploads: EnhancedFileState[] = chunk.map((file, idx) => {
+        const globalIndex = startIndex + idx
         return {
-          id: `up-${Date.now()}-${Math.random().toString(36).slice(2)}-${startIndex}`,
+          id: `up-${Date.now()}-${Math.random().toString(36).slice(2)}-${globalIndex}`,
           file,
-          previewUrl: startIndex < 20 ? URL.createObjectURL(file) : undefined,
-          status: error ? 'error' : 'pending' as const,
+          previewUrl: globalIndex < 20 ? URL.createObjectURL(file) : undefined,
+          status: 'pending' as const,
           progress: 0,
-          error: error || undefined,
           originalSize: file.size,
         }
       })
@@ -171,12 +227,14 @@ export function UploadZoneV2({ galleryId, onUploadComplete }: UploadZoneProps) {
       setUploads((prev) => [...prev, ...newUploads])
       setTotalOriginalBytes(prev => prev + chunk.reduce((sum, f) => sum + f.size, 0))
       
-      if (startIndex + CHUNK_SIZE < files.length) {
+      if (startIndex + CHUNK_SIZE < validFiles.length) {
         setTimeout(() => processChunk(startIndex + CHUNK_SIZE), 10)
       }
     }
     
-    processChunk(0)
+    if (validFiles.length > 0) {
+      processChunk(0)
+    }
   }, [])
 
   const handleDrop = useCallback((e: React.DragEvent) => {
@@ -425,6 +483,51 @@ export function UploadZoneV2({ galleryId, onUploadComplete }: UploadZoneProps) {
         estimatedMinutes={estimatedMinutes}
         onMinimize={() => setOverlayMinimized(true)}
       />
+      
+      {/* Rejected Files Banner */}
+      <AnimatePresence>
+        {showRejectedBanner && rejectedFiles.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="mb-4 p-4 bg-amber-50 border border-amber-200 rounded-xl"
+          >
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex items-start gap-3">
+                <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-amber-800">
+                    {rejectedFiles.length} file{rejectedFiles.length > 1 ? 's' : ''} skipped
+                  </p>
+                  <div className="mt-2 space-y-1 max-h-32 overflow-y-auto">
+                    {rejectedFiles.slice(0, 10).map((file, i) => (
+                      <p key={i} className="text-xs text-amber-700">
+                        <span className="font-medium">{file.name}</span>
+                        <span className="text-amber-600"> — {file.reason}</span>
+                      </p>
+                    ))}
+                    {rejectedFiles.length > 10 && (
+                      <p className="text-xs text-amber-600 italic">
+                        +{rejectedFiles.length - 10} more files skipped
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+              <button
+                onClick={() => {
+                  setShowRejectedBanner(false)
+                  setRejectedFiles([])
+                }}
+                className="p-1 hover:bg-amber-100 rounded-lg transition-colors"
+              >
+                <X className="w-4 h-4 text-amber-600" />
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
       
       {/* Compression Toggle */}
       <div className="flex items-center justify-between mb-4 px-1">
