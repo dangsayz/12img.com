@@ -101,7 +101,7 @@ export function EditorialViewer({
           const isFirstContent = index === 1 && spread.pageNumber === 1
           return (
             <div key={spread.id} id={spread.id}>
-              <Spread spread={spread} debug={debug} isFirstContent={isFirstContent} />
+              <Spread spread={spread} debug={debug} isFirstContent={isFirstContent} galleryTitle={title} />
             </div>
           )
         })}

@@ -8,6 +8,7 @@ import { LayoutEngine } from '@/lib/editorial/engine'
 import { EditorialViewer } from '@/components/editorial/EditorialViewer'
 import { PasswordGate } from '@/components/gallery/PasswordGate'
 import { getProxyImageUrl, getSeoDownloadFilename } from '@/lib/seo/image-urls'
+import { ImageGalleryJsonLd, BreadcrumbJsonLd } from '@/components/seo/JsonLd'
 
 export const dynamic = 'force-dynamic'
 
@@ -47,12 +48,16 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   // Use OG image API which handles cover image or first image fallback
   const ogImageUrl = `${baseUrl}/api/og/gallery/${gallery.id}`
   
+  // Get photographer name for better SEO
+  const photographerName = (gallery as { photographer_name?: string }).photographer_name || '12img'
+  const description = `View ${gallery.title} - a stunning photo gallery by ${photographerName}. Delivered with 12img, the minimal gallery platform for photographers.`
+  
   return {
-    title: `${gallery.title} | 12img`,
-    description: `View ${gallery.title} - a beautiful photo gallery on 12img`,
+    title: `${gallery.title} | ${photographerName} | 12img`,
+    description,
     openGraph: {
-      title: gallery.title,
-      description: `View ${gallery.title} - a beautiful photo gallery on 12img`,
+      title: `${gallery.title} | ${photographerName}`,
+      description,
       url: galleryUrl,
       siteName: '12img',
       images: [
@@ -60,16 +65,19 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
           url: ogImageUrl,
           width: 1200,
           height: 630,
-          alt: gallery.title,
+          alt: `${gallery.title} - Photo gallery by ${photographerName}`,
         },
       ],
       type: 'website',
     },
     twitter: {
       card: 'summary_large_image',
-      title: gallery.title,
-      description: `View ${gallery.title} - a beautiful photo gallery on 12img`,
+      title: `${gallery.title} | ${photographerName}`,
+      description,
       images: [ogImageUrl],
+    },
+    alternates: {
+      canonical: galleryUrl,
     },
   }
 }
@@ -218,15 +226,43 @@ export default async function EditorialLiveViewPage({ params }: Props) {
     url: img.url,
   }))
 
+  // Base URL for structured data
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://www.12img.com'
+  const galleryUrl = `${baseUrl}/view-live/${gallery.slug}`
+  const photographerName = (gallery as { photographer_name?: string }).photographer_name || '12img'
+
+  // Prepare images for structured data (first 10 for performance)
+  const structuredDataImages = imagesWithUrls.slice(0, 10).map((img, index) => ({
+    url: img.url,
+    name: `${gallery.title} - Photo ${index + 1}`,
+    description: `Photo ${index + 1} from ${gallery.title} by ${photographerName}`,
+  }))
+
   return (
-    <EditorialViewer 
-      spreads={spreads} 
-      title={gallery.title} 
-      galleryId={gallery.id}
-      imageCount={images.length}
-      eventDate={presentationData?.eventDate}
-      location={presentationData?.location}
-      previewImages={previewImages}
-    />
+    <>
+      <ImageGalleryJsonLd
+        name={gallery.title}
+        description={`${gallery.title} - a stunning photo gallery by ${photographerName}. Delivered with 12img.`}
+        url={galleryUrl}
+        images={structuredDataImages}
+        author={{ name: photographerName }}
+      />
+      <BreadcrumbJsonLd
+        items={[
+          { name: 'Home', url: baseUrl },
+          { name: 'Galleries', url: `${baseUrl}/profiles` },
+          { name: gallery.title, url: galleryUrl },
+        ]}
+      />
+      <EditorialViewer 
+        spreads={spreads} 
+        title={gallery.title} 
+        galleryId={gallery.id}
+        imageCount={images.length}
+        eventDate={presentationData?.eventDate}
+        location={presentationData?.location}
+        previewImages={previewImages}
+      />
+    </>
   )
 }

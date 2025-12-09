@@ -80,10 +80,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   // Dynamic pages - Public photographer profiles
   let profilePages: MetadataRoute.Sitemap = []
+  let galleryPages: MetadataRoute.Sitemap = []
   
   try {
     const supabase = createClient(supabaseUrl, supabaseServiceKey)
     
+    // Fetch public profiles
     const { data: profiles } = await supabase
       .from('users')
       .select('profile_slug, updated_at')
@@ -100,9 +102,27 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         priority: 0.7,
       }))
     }
+    
+    // Fetch public galleries for sitemap (SEO boost)
+    const { data: galleries } = await supabase
+      .from('galleries')
+      .select('slug, updated_at')
+      .eq('is_public', true)
+      .not('slug', 'is', null)
+      .order('updated_at', { ascending: false })
+      .limit(2000)
+    
+    if (galleries) {
+      galleryPages = galleries.map((gallery) => ({
+        url: `${baseUrl}/view-reel/${gallery.slug}`,
+        lastModified: gallery.updated_at ? new Date(gallery.updated_at) : currentDate,
+        changeFrequency: 'monthly' as const,
+        priority: 0.6,
+      }))
+    }
   } catch (error) {
-    console.error('Error fetching profiles for sitemap:', error)
+    console.error('Error fetching data for sitemap:', error)
   }
 
-  return [...staticPages, ...profilePages]
+  return [...staticPages, ...profilePages, ...galleryPages]
 }

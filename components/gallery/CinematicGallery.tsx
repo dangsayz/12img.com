@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Share2, Download, Check, ChevronDown, X } from 'lucide-react'
 import { type PresentationData } from '@/lib/types/presentation'
+import { getSeoAltText } from '@/lib/seo/image-urls'
 
 interface GalleryImage {
   id: string
@@ -212,7 +213,7 @@ export function CinematicGallery({
                 <div className={`relative ${getAspectClass(coverImage)} max-h-[75vh]`}>
                   <Image
                     src={coverImage.previewUrl || coverImage.thumbnailUrl}
-                    alt=""
+                    alt={getSeoAltText(displayTitle)}
                     fill
                     className="object-cover"
                     style={{ objectPosition: `${coverImage.focalX ?? 50}% ${coverImage.focalY ?? 50}%` }}
@@ -279,6 +280,7 @@ export function CinematicGallery({
             row={row}
             onImageClick={openLightbox}
             textColor={textColor}
+            galleryTitle={displayTitle}
           />
         ))}
       </section>
@@ -365,7 +367,7 @@ export function CinematicGallery({
             >
               <Image
                 src={lightboxImage.previewUrl || lightboxImage.thumbnailUrl}
-                alt=""
+                alt={getSeoAltText(displayTitle, undefined, lightboxIndex + 1)}
                 width={lightboxImage.width || 1920}
                 height={lightboxImage.height || 1080}
                 className="max-w-full max-h-[90vh] object-contain"
@@ -386,13 +388,15 @@ export function CinematicGallery({
 function RowRenderer({ 
   row, 
   onImageClick,
-  textColor
+  textColor,
+  galleryTitle
 }: { 
   row: LayoutRow
   onImageClick: (img: GalleryImage) => void
   textColor: string
+  galleryTitle: string
 }) {
-  const FloatingImage = ({ img, className = '' }: { img: GalleryImage; className?: string }) => (
+  const FloatingImage = ({ img, className = '', imageIndex }: { img: GalleryImage; className?: string; imageIndex?: number }) => (
     <motion.div
       initial={{ opacity: 0, y: 40 }}
       whileInView={{ opacity: 1, y: 0 }}
@@ -404,7 +408,7 @@ function RowRenderer({
       <div className={`relative ${getAspectClass(img)} overflow-hidden`}>
         <Image
           src={img.previewUrl || img.thumbnailUrl}
-          alt=""
+          alt={getSeoAltText(galleryTitle, undefined, imageIndex)}
           fill
           className="object-cover transition-transform duration-700 group-hover:scale-[1.02]"
           style={{ objectPosition: `${img.focalX ?? 50}% ${img.focalY ?? 50}%` }}

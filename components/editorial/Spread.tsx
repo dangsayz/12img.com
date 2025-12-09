@@ -9,9 +9,10 @@ interface Props {
   spread: EditorialSpread
   debug?: boolean
   isFirstContent?: boolean
+  galleryTitle?: string
 }
 
-export function Spread({ spread, debug, isFirstContent }: Props) {
+export function Spread({ spread, debug, isFirstContent, galleryTitle }: Props) {
   const isViewportHeight = spread.height === 'viewport'
   
   // Theme configuration - neutral palette only
@@ -57,7 +58,7 @@ export function Spread({ spread, debug, isFirstContent }: Props) {
       )}
 
       {spread.elements.map((element) => (
-        <SpreadElement key={element.id} element={element} />
+        <SpreadElement key={element.id} element={element} galleryTitle={galleryTitle} />
       ))}
 
       {/* Page Folio / Number - Only show for actual content pages (not title/quote spreads) */}
@@ -88,7 +89,7 @@ export function Spread({ spread, debug, isFirstContent }: Props) {
   )
 }
 
-function SpreadElement({ element }: { element: LayoutElement }) {
+function SpreadElement({ element, galleryTitle }: { element: LayoutElement; galleryTitle?: string }) {
   // Compute styles for grid placement
   const gridStyle: React.CSSProperties = {
     gridColumn: `${element.span.colStart} / span ${element.span.colSpan}`,
@@ -116,6 +117,7 @@ function SpreadElement({ element }: { element: LayoutElement }) {
               image={element.content} 
               fit={element.style?.fit} 
               className={element.style?.className}
+              galleryTitle={galleryTitle}
             />
             {element.content.role === 'hero' && (
               <div className="mt-2 hidden md:block">

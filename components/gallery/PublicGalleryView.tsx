@@ -7,6 +7,7 @@ import { Download, ChevronDown, Share2, Check, Loader2, Heart, X, ArrowLeft } fr
 // Note: Heart used in FullscreenViewer, X used for close button
 import Link from 'next/link'
 import { PinterestShareButton, PinterestShareButtonDark } from '@/components/ui/PinterestShareButton'
+import { getSeoAltText } from '@/lib/seo/image-urls'
 
 interface GalleryImage {
   id: string
@@ -126,7 +127,7 @@ function FullscreenViewer({
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.3 }}
           src={image.previewUrl}
-          alt=""
+          alt={getSeoAltText(galleryTitle || 'Photo Gallery', undefined, currentIndex + 1)}
           className="max-w-full max-h-full object-contain"
           style={{ objectPosition: `${image.focalX ?? 50}% ${image.focalY ?? 50}%` }}
         />
@@ -202,7 +203,7 @@ function CleanGridCard({
     >
       <Image
         src={image.thumbnailUrl}
-        alt=""
+        alt={getSeoAltText(galleryTitle || 'Photo Gallery', undefined, index + 1)}
         fill
         className="object-cover transition-transform duration-500 group-hover:scale-[1.02]"
         style={{ objectPosition: `${image.focalX ?? 50}% ${image.focalY ?? 50}%` }}
@@ -259,7 +260,7 @@ function ImageCard({
     >
       <Image
         src={image.previewUrl || image.thumbnailUrl}
-        alt=""
+        alt={getSeoAltText(galleryTitle || 'Photo Gallery', undefined, index + 1)}
         fill
         className="object-cover"
         style={{ objectPosition: `${image.focalX ?? 50}% ${image.focalY ?? 50}%` }}
@@ -338,7 +339,7 @@ export function PublicGalleryView({
           {/* Hero Image - Full quality, no effects */}
           <Image
             src={heroImage.originalUrl || heroImage.previewUrl}
-            alt=""
+            alt={getSeoAltText(title, photographerName)}
             fill
             className="object-cover"
             style={{ objectPosition: `${heroImage.focalX ?? 50}% ${heroImage.focalY ?? 50}%` }}

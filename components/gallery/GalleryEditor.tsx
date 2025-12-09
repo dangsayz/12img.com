@@ -81,6 +81,7 @@ function MasonryImageItem({
     image.width && image.height ? image.width / image.height : 1
   )
   const [loaded, setLoaded] = useState(false)
+  const [isHovered, setIsHovered] = useState(false)
   
   const imgSrc = image.originalUrl || image.previewUrl || image.thumbnailUrl
   
@@ -98,6 +99,9 @@ function MasonryImageItem({
     setLoaded(true)
   }
 
+  // Format image number with leading zeros
+  const imageNumber = String(index + 1).padStart(3, '0')
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -113,76 +117,133 @@ function MasonryImageItem({
           onSelect()
         }
       }}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
     >
       {imgSrc ? (
-        <Image
-          src={imgSrc}
-          alt=""
-          fill
-          className="object-cover transition-transform duration-500 group-hover:scale-[1.02]"
-          style={{ objectPosition: `${focalX}% ${focalY}%` }}
-          sizes={isHero ? "(max-width: 768px) 100vw, 50vw" : "(max-width: 768px) 50vw, 25vw"}
-          quality={100}
-          loading={index < 6 ? "eager" : "lazy"}
-          onLoad={handleImageLoad}
-        />
+        <motion.div
+          className="absolute inset-0"
+          animate={{ scale: isHovered && !isSelecting ? 1.02 : 1 }}
+          transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+        >
+          <Image
+            src={imgSrc}
+            alt=""
+            fill
+            className="object-cover"
+            style={{ objectPosition: `${focalX}% ${focalY}%` }}
+            sizes={isHero ? "(max-width: 768px) 100vw, 50vw" : "(max-width: 768px) 50vw, 25vw"}
+            quality={100}
+            loading={index < 6 ? "eager" : "lazy"}
+            onLoad={handleImageLoad}
+          />
+        </motion.div>
       ) : (
         <div className="absolute inset-0 flex items-center justify-center bg-stone-200 animate-pulse">
           <div className="w-6 h-6 border-2 border-stone-300 border-t-stone-500 rounded-full animate-spin" />
         </div>
       )}
       
+      {/* Subtle gradient overlay on hover - editorial style */}
+      <motion.div
+        className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent pointer-events-none"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: isHovered && !isSelecting ? 1 : 0 }}
+        transition={{ duration: 0.3 }}
+      />
+      
+      {/* Image number - appears on hover, bottom left */}
+      {!isSelecting && (
+        <motion.div
+          className="absolute bottom-3 left-3 pointer-events-none"
+          initial={{ opacity: 0, y: 4 }}
+          animate={{ 
+            opacity: isHovered ? 1 : 0,
+            y: isHovered ? 0 : 4
+          }}
+          transition={{ duration: 0.2, ease: 'easeOut' }}
+        >
+          <span className="text-[10px] font-mono text-white/80 tracking-[0.15em]">
+            {imageNumber}
+          </span>
+        </motion.div>
+      )}
+      
       {/* Focal point indicator (shows if custom focal point is set) */}
       {hasFocalPoint && !isSelecting && (
-        <div 
-          className="absolute w-3 h-3 rounded-full bg-white border-2 border-stone-900 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"
+        <motion.div 
+          className="absolute w-2.5 h-2.5 rounded-full bg-white/90 shadow-sm pointer-events-none"
           style={{ 
             left: `${focalX}%`, 
             top: `${focalY}%`,
             transform: 'translate(-50%, -50%)'
           }}
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: isHovered ? 1 : 0, scale: isHovered ? 1 : 0.8 }}
+          transition={{ duration: 0.2 }}
         />
       )}
       
       {/* Selection checkbox */}
       {isSelecting && (
-        <div className={`absolute top-2 left-2 w-5 h-5 border-2 flex items-center justify-center transition-colors ${
-          isSelected
-            ? 'bg-stone-900 border-stone-900'
-            : 'bg-white/90 border-stone-400'
-        }`}>
+        <motion.div 
+          className={`absolute top-2.5 left-2.5 w-5 h-5 border-2 flex items-center justify-center transition-colors ${
+            isSelected
+              ? 'bg-stone-900 border-stone-900'
+              : 'bg-white/90 border-stone-300'
+          }`}
+          initial={{ scale: 0.9 }}
+          animate={{ scale: 1 }}
+          whileTap={{ scale: 0.95 }}
+        >
           {isSelected && (
             <Check className="w-3 h-3 text-white" />
           )}
-        </div>
+        </motion.div>
       )}
 
-      {/* Hover actions */}
+      {/* Hover actions - refined positioning and animation */}
       {!isSelecting && (
-        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors">
-          <div className="absolute top-2 right-2 flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-            {/* Focal point button */}
-            <button 
-              onClick={(e) => {
-                e.stopPropagation()
-                onEditFocalPoint()
-              }}
-              className="w-8 h-8 bg-white/90 flex items-center justify-center hover:bg-white transition-colors rounded"
-              title="Set focal point"
-            >
-              <svg className="w-4 h-4 text-stone-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <circle cx="12" cy="12" r="3" />
-                <path d="M12 2v4M12 18v4M2 12h4M18 12h4" />
-              </svg>
-            </button>
-            <button className="w-8 h-8 bg-white/90 flex items-center justify-center hover:bg-white transition-colors rounded">
-              <ExternalLink className="w-4 h-4 text-stone-600" />
-            </button>
-            <button className="w-8 h-8 bg-white/90 flex items-center justify-center hover:bg-white transition-colors rounded">
-              <Trash2 className="w-4 h-4 text-red-500" />
-            </button>
-          </div>
-        </div>
+        <motion.div 
+          className="absolute top-2.5 right-2.5 flex flex-col gap-1.5"
+          initial={{ opacity: 0, x: 4 }}
+          animate={{ 
+            opacity: isHovered ? 1 : 0,
+            x: isHovered ? 0 : 4
+          }}
+          transition={{ duration: 0.2, ease: 'easeOut' }}
+        >
+          {/* Focal point button */}
+          <motion.button 
+            onClick={(e) => {
+              e.stopPropagation()
+              onEditFocalPoint()
+            }}
+            className="w-7 h-7 bg-white/95 backdrop-blur-sm flex items-center justify-center hover:bg-white transition-colors shadow-sm"
+            title="Set focal point"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            <svg className="w-3.5 h-3.5 text-stone-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <circle cx="12" cy="12" r="3" />
+              <path d="M12 2v4M12 18v4M2 12h4M18 12h4" />
+            </svg>
+          </motion.button>
+          <motion.button 
+            className="w-7 h-7 bg-white/95 backdrop-blur-sm flex items-center justify-center hover:bg-white transition-colors shadow-sm"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            <ExternalLink className="w-3.5 h-3.5 text-stone-600" />
+          </motion.button>
+          <motion.button 
+            className="w-7 h-7 bg-white/95 backdrop-blur-sm flex items-center justify-center hover:bg-red-50 transition-colors shadow-sm"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            <Trash2 className="w-3.5 h-3.5 text-red-500" />
+          </motion.button>
+        </motion.div>
       )}
     </motion.div>
   )
@@ -1048,17 +1109,57 @@ export function GalleryEditor({
             </div>
           )}
 
-          {/* Load More Button */}
+          {/* Load More - Editorial Style */}
           {loadedImages.length > visibleCount && (
-            <div className="mt-8 text-center">
-              <button
+            <motion.div 
+              className="mt-16 flex flex-col items-center"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.2 }}
+            >
+              {/* Decorative line */}
+              <div className="w-px h-12 bg-gradient-to-b from-transparent via-stone-200 to-stone-300" />
+              
+              <motion.button
                 onClick={loadMoreImages}
                 disabled={isLoadingMore}
-                className="px-6 py-3 text-sm font-medium text-stone-600 hover:text-stone-900 bg-stone-100 hover:bg-stone-200 transition-colors disabled:opacity-50"
+                className="group relative py-6 px-8 disabled:opacity-50"
+                whileHover={{ y: -2 }}
+                whileTap={{ y: 0 }}
               >
-                {isLoadingMore ? 'Loading...' : `Load more (${loadedImages.length - visibleCount} remaining)`}
-              </button>
-            </div>
+                {isLoadingMore ? (
+                  <div className="flex items-center gap-3">
+                    <motion.div
+                      className="w-4 h-4 border border-stone-300 border-t-stone-600 rounded-full"
+                      animate={{ rotate: 360 }}
+                      transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+                    />
+                    <span className="text-xs tracking-[0.2em] uppercase text-stone-400">
+                      Loading
+                    </span>
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center gap-2">
+                    <span className="text-[10px] tracking-[0.3em] uppercase text-stone-400 group-hover:text-stone-600 transition-colors">
+                      Continue
+                    </span>
+                    <span className="text-xs font-light text-stone-500 group-hover:text-stone-700 transition-colors">
+                      {loadedImages.length - visibleCount} more
+                    </span>
+                    <motion.div
+                      className="mt-1"
+                      animate={{ y: [0, 3, 0] }}
+                      transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
+                    >
+                      <ChevronDown className="w-4 h-4 text-stone-300 group-hover:text-stone-500 transition-colors" />
+                    </motion.div>
+                  </div>
+                )}
+              </motion.button>
+              
+              {/* Bottom decorative line */}
+              <div className="w-px h-8 bg-gradient-to-b from-stone-300 to-transparent" />
+            </motion.div>
           )}
         </div>
       </div>

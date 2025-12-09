@@ -273,3 +273,65 @@ export function BreadcrumbJsonLd({ items }: BreadcrumbJsonLdProps) {
     />
   )
 }
+
+interface ImageGalleryJsonLdProps {
+  name: string
+  description: string
+  url: string
+  images: Array<{
+    url: string
+    name?: string
+    description?: string
+  }>
+  author?: {
+    name: string
+    url?: string
+  }
+  datePublished?: string
+}
+
+export function ImageGalleryJsonLd({ 
+  name, 
+  description, 
+  url, 
+  images, 
+  author,
+  datePublished 
+}: ImageGalleryJsonLdProps) {
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'ImageGallery',
+    name,
+    description,
+    url,
+    ...(author && {
+      author: {
+        '@type': 'Person',
+        name: author.name,
+        ...(author.url && { url: author.url }),
+      },
+    }),
+    ...(datePublished && { datePublished }),
+    image: images.map((img, index) => ({
+      '@type': 'ImageObject',
+      url: img.url,
+      name: img.name || `${name} - Photo ${index + 1}`,
+      description: img.description || `Photo ${index + 1} from ${name}`,
+      contentUrl: img.url,
+    })),
+    numberOfItems: images.length,
+    provider: {
+      '@type': 'Organization',
+      name: '12img',
+      url: 'https://12img.com',
+    },
+  }
+
+  return (
+    <script
+      type="application/ld+json"
+      suppressHydrationWarning
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+    />
+  )
+}

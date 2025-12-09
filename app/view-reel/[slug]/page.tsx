@@ -10,6 +10,7 @@ import { CinematicGallery } from '@/components/gallery/CinematicGallery'
 import { PasswordGate } from '@/components/gallery/PasswordGate'
 import { type PresentationData } from '@/lib/types/presentation'
 import { type GalleryTemplate } from '@/components/gallery/templates'
+import { ImageGalleryJsonLd, BreadcrumbJsonLd } from '@/components/seo/JsonLd'
 
 export const dynamic = 'force-dynamic'
 
@@ -55,12 +56,16 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   // Use OG image API which handles cover image or first image fallback
   const ogImageUrl = `${baseUrl}/api/og/gallery/${gallery.id}`
   
+  // Get photographer name for better SEO
+  const photographerName = (gallery as { photographer_name?: string }).photographer_name || '12img'
+  const description = `View ${gallery.title} - a stunning photo gallery by ${photographerName}. Delivered with 12img, the minimal gallery platform for photographers.`
+  
   return {
-    title: `${gallery.title} | 12img`,
-    description: `View ${gallery.title} - a beautiful photo gallery on 12img`,
+    title: `${gallery.title} | ${photographerName} | 12img`,
+    description,
     openGraph: {
-      title: gallery.title,
-      description: `View ${gallery.title} - a beautiful photo gallery on 12img`,
+      title: `${gallery.title} | ${photographerName}`,
+      description,
       url: galleryUrl,
       siteName: '12img',
       images: [
@@ -68,16 +73,19 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
           url: ogImageUrl,
           width: 1200,
           height: 630,
-          alt: gallery.title,
+          alt: `${gallery.title} - Photo gallery by ${photographerName}`,
         },
       ],
       type: 'website',
     },
     twitter: {
       card: 'summary_large_image',
-      title: gallery.title,
-      description: `View ${gallery.title} - a beautiful photo gallery on 12img`,
+      title: `${gallery.title} | ${photographerName}`,
+      description,
       images: [ogImageUrl],
+    },
+    alternates: {
+      canonical: galleryUrl,
     },
   }
 }
@@ -214,30 +222,74 @@ export default async function PublicViewPage({ params }: Props) {
   // Get presentation data if available
   const presentation = (gallery as { presentation_data?: PresentationData | null }).presentation_data
 
+  // Base URL for structured data
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://www.12img.com'
+  const galleryUrl = `${baseUrl}/view-reel/${gallery.slug}`
+  const photographerName = (gallery as { photographer_name?: string }).photographer_name || '12img'
+
+  // Prepare images for structured data (first 10 for performance)
+  const structuredDataImages = galleryImages.slice(0, 10).map((img, index) => ({
+    url: img.previewUrl || img.thumbnailUrl,
+    name: `${gallery.title} - Photo ${index + 1}`,
+    description: `Photo ${index + 1} from ${gallery.title} by ${photographerName}`,
+  }))
+
   // Cinematic template - dark, moody, editorial scroll layout
   if (template === 'cinematic') {
     return (
-      <CinematicGallery
-        title={gallery.title}
-        images={galleryImages}
-        galleryId={gallery.id}
-        gallerySlug={gallery.slug}
-        downloadEnabled={gallery.download_enabled}
-        totalFileSizeBytes={totalFileSizeBytes}
-        presentation={presentation}
-      />
+      <>
+        <ImageGalleryJsonLd
+          name={gallery.title}
+          description={`${gallery.title} - a stunning photo gallery by ${photographerName}. Delivered with 12img.`}
+          url={galleryUrl}
+          images={structuredDataImages}
+          author={{ name: photographerName }}
+        />
+        <BreadcrumbJsonLd
+          items={[
+            { name: 'Home', url: baseUrl },
+            { name: 'Galleries', url: `${baseUrl}/profiles` },
+            { name: gallery.title, url: galleryUrl },
+          ]}
+        />
+        <CinematicGallery
+          title={gallery.title}
+          images={galleryImages}
+          galleryId={gallery.id}
+          gallerySlug={gallery.slug}
+          downloadEnabled={gallery.download_enabled}
+          totalFileSizeBytes={totalFileSizeBytes}
+          presentation={presentation}
+        />
+      </>
     )
   }
 
   // Mosaic and Clean Grid templates
   return (
-    <PublicGalleryView
-      title={gallery.title}
-      images={galleryImages}
-      downloadEnabled={gallery.download_enabled}
-      galleryId={gallery.id}
-      gallerySlug={gallery.slug}
-      template={template as 'mosaic' | 'clean-grid'}
-    />
+    <>
+      <ImageGalleryJsonLd
+        name={gallery.title}
+        description={`${gallery.title} - a stunning photo gallery by ${photographerName}. Delivered with 12img.`}
+        url={galleryUrl}
+        images={structuredDataImages}
+        author={{ name: photographerName }}
+      />
+      <BreadcrumbJsonLd
+        items={[
+          { name: 'Home', url: baseUrl },
+          { name: 'Galleries', url: `${baseUrl}/profiles` },
+          { name: gallery.title, url: galleryUrl },
+        ]}
+      />
+      <PublicGalleryView
+        title={gallery.title}
+        images={galleryImages}
+        downloadEnabled={gallery.download_enabled}
+        galleryId={gallery.id}
+        gallerySlug={gallery.slug}
+        template={template as 'mosaic' | 'clean-grid'}
+      />
+    </>
   )
 }

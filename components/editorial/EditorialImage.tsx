@@ -6,6 +6,7 @@ import { motion, useInView } from 'framer-motion'
 import { cn } from '@/lib/utils/cn'
 import { EditorialImage as IEditorialImage } from '@/lib/editorial/types'
 import { PinterestShareButton } from '@/components/ui/PinterestShareButton'
+import { getSeoAltText } from '@/lib/seo/image-urls'
 
 interface Props {
   image: IEditorialImage
@@ -13,9 +14,10 @@ interface Props {
   className?: string
   fit?: 'cover' | 'contain'
   galleryTitle?: string
+  imageIndex?: number
 }
 
-export function EditorialImage({ image, priority = false, className, fit = 'cover', galleryTitle }: Props) {
+export function EditorialImage({ image, priority = false, className, fit = 'cover', galleryTitle, imageIndex }: Props) {
   const ref = useRef<HTMLDivElement>(null)
   const isInView = useInView(ref, { once: true, margin: '-100px' })
   const [isLoaded, setIsLoaded] = useState(false)
@@ -50,7 +52,7 @@ export function EditorialImage({ image, priority = false, className, fit = 'cove
           >
             <img
               src={image.url}
-              alt=""
+              alt={getSeoAltText(galleryTitle || 'Photo Gallery', undefined, imageIndex)}
               loading={priority ? 'eager' : 'lazy'}
               onLoad={() => setIsLoaded(true)}
               onError={() => setHasError(true)}
