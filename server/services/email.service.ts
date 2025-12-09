@@ -1022,3 +1022,181 @@ export async function sendGalleryInviteEmail(
     return { success: false, error: errorMessage }
   }
 }
+
+// ═══════════════════════════════════════════════════════════════
+// VENDOR SHARE EMAIL
+// ═══════════════════════════════════════════════════════════════
+
+interface VendorShareEmailData {
+  vendorName: string
+  vendorEmail: string
+  galleryTitle: string
+  photographerName: string
+  photographerBusiness?: string
+  imageCount: number
+  accessUrl: string
+}
+
+/**
+ * Generate ultra-minimalist vendor share email HTML
+ */
+function generateVendorShareEmailHtml(data: VendorShareEmailData): string {
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://12img.com'
+  
+  return `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gallery Access</title>
+</head>
+<body style="margin: 0; padding: 0; background-color: #fafafa; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="min-height: 100vh;">
+    <tr>
+      <td align="center" style="padding: 60px 20px;">
+        
+        <!-- Main Card -->
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width: 480px; background: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.08);">
+          
+          <!-- Header -->
+          <tr>
+            <td style="padding: 48px 40px 32px; text-align: center;">
+              <div style="width: 48px; height: 48px; background: #1c1917; border-radius: 50%; margin: 0 auto 24px; display: flex; align-items: center; justify-content: center;">
+                <span style="color: white; font-size: 14px; font-weight: 700;">12</span>
+              </div>
+              <p style="margin: 0; font-size: 12px; letter-spacing: 0.2em; text-transform: uppercase; color: #a8a29e;">
+                Gallery Access
+              </p>
+            </td>
+          </tr>
+          
+          <!-- Content -->
+          <tr>
+            <td style="padding: 0 40px 40px;">
+              <h1 style="margin: 0 0 8px; font-size: 28px; font-weight: 400; color: #1c1917; text-align: center; font-family: Georgia, serif;">
+                ${data.galleryTitle}
+              </h1>
+              <p style="margin: 0 0 32px; font-size: 14px; color: #78716c; text-align: center;">
+                ${data.imageCount} photos by ${data.photographerBusiness || data.photographerName}
+              </p>
+              
+              <!-- Divider -->
+              <div style="width: 40px; height: 1px; background: #e7e5e4; margin: 0 auto 32px;"></div>
+              
+              <!-- Message -->
+              <p style="margin: 0 0 32px; font-size: 15px; line-height: 1.7; color: #44403c; text-align: center;">
+                ${data.photographerName} has shared a gallery with you. View and download images for your portfolio.
+              </p>
+              
+              <!-- CTA Button -->
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
+                <tr>
+                  <td align="center">
+                    <a href="${data.accessUrl}" style="display: inline-block; padding: 16px 48px; background: #1c1917; color: #ffffff; text-decoration: none; font-size: 14px; font-weight: 500; border-radius: 100px; letter-spacing: 0.02em;">
+                      View Gallery
+                    </a>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          
+          <!-- Footer -->
+          <tr>
+            <td style="padding: 24px 40px; background: #fafaf9; border-top: 1px solid #f5f5f4;">
+              <p style="margin: 0; font-size: 12px; color: #a8a29e; text-align: center;">
+                This link is private and unique to you.
+              </p>
+            </td>
+          </tr>
+          
+        </table>
+        
+        <!-- Bottom Logo -->
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width: 480px;">
+          <tr>
+            <td style="padding: 32px 0; text-align: center;">
+              <a href="${baseUrl}" style="font-size: 11px; color: #d6d3d1; text-decoration: none; letter-spacing: 0.1em;">
+                12IMG.COM
+              </a>
+            </td>
+          </tr>
+        </table>
+        
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+`
+}
+
+/**
+ * Generate plain text version
+ */
+function generateVendorShareEmailText(data: VendorShareEmailData): string {
+  return `
+GALLERY ACCESS
+━━━━━━━━━━━━━━
+
+${data.galleryTitle}
+${data.imageCount} photos by ${data.photographerBusiness || data.photographerName}
+
+${data.photographerName} has shared a gallery with you.
+View and download images for your portfolio.
+
+View Gallery: ${data.accessUrl}
+
+━━━━━━━━━━━━━━
+This link is private and unique to you.
+
+12img.com
+`.trim()
+}
+
+/**
+ * Send vendor share notification email
+ */
+export async function sendVendorShareEmail(
+  data: VendorShareEmailData
+): Promise<EmailResult> {
+  if (!isEmailConfigured()) {
+    log.info('Email not configured, skipping vendor share email')
+    return { success: false, error: 'Email not configured' }
+  }
+
+  try {
+    const subject = `${data.photographerBusiness || data.photographerName} shared "${data.galleryTitle}" with you`
+    const html = generateVendorShareEmailHtml(data)
+    const text = generateVendorShareEmailText(data)
+
+    const { data: result, error } = await resend.emails.send({
+      from: process.env.EMAIL_FROM || '12img <noreply@12img.com>',
+      to: data.vendorEmail,
+      subject,
+      html,
+      text,
+      tags: [
+        { name: 'type', value: 'vendor-share' },
+      ],
+    })
+
+    if (error) {
+      log.error('Failed to send vendor share email', error)
+      return { success: false, error: error.message }
+    }
+
+    log.info('Vendor share email sent', { 
+      messageId: result?.id, 
+      recipient: data.vendorEmail,
+      gallery: data.galleryTitle
+    })
+
+    return { success: true, messageId: result?.id }
+  } catch (err) {
+    const errorMessage = err instanceof Error ? err.message : 'Unknown error'
+    log.error('Vendor share email failed', err)
+    return { success: false, error: errorMessage }
+  }
+}

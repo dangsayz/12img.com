@@ -3,7 +3,8 @@
 import { auth } from '@clerk/nextjs/server'
 import { revalidatePath } from 'next/cache'
 import { supabaseAdmin } from '@/lib/supabase/admin'
-import { getUserByClerkId } from '@/server/queries/user.queries'
+import { getUserByClerkId, getUserSettings } from '@/server/queries/user.queries'
+import { sendVendorShareEmail } from '@/server/services/email.service'
 import {
   Vendor,
   VendorCategory,
@@ -541,6 +542,50 @@ export async function shareGalleryWithVendor(
       .insert(imageInserts)
 
     if (imageError) throw new Error(imageError.message)
+  }
+
+  // Send email notification to vendor
+  try {
+    // Get vendor details
+    const { data: vendor } = await supabase
+      .from('vendors')
+      .select('business_name, email')
+      .eq('id', input.vendor_id)
+      .single()
+
+    // Get gallery details
+    const { data: gallery } = await supabase
+      .from('galleries')
+      .select('title')
+      .eq('id', input.gallery_id)
+      .single()
+
+    // Get image count
+    const { count: imageCount } = await supabase
+      .from('images')
+      .select('*', { count: 'exact', head: true })
+      .eq('gallery_id', input.gallery_id)
+
+    // Get photographer settings
+    const settings = await getUserSettings(clerkId)
+
+    if (vendor?.email && gallery) {
+      const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://12img.com'
+      const accessUrl = `${baseUrl}/vendor/${accessToken}`
+
+      await sendVendorShareEmail({
+        vendorName: vendor.business_name,
+        vendorEmail: vendor.email,
+        galleryTitle: gallery.title,
+        photographerName: user.display_name || 'A photographer',
+        photographerBusiness: settings.businessName || undefined,
+        imageCount: imageCount || 0,
+        accessUrl,
+      })
+    }
+  } catch (emailError) {
+    // Don't fail the share if email fails
+    console.error('Failed to send vendor share email:', emailError)
   }
 
   revalidatePath(`/gallery/${input.gallery_id}`)
