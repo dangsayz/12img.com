@@ -7,6 +7,8 @@ import { NextResponse } from 'next/server'
  * 2. Update delivery progress countdown
  * 3. Send contract expiry reminders (3 days and 1 day before)
  * 4. Process expired contracts (notify both parties, archive)
+ * 5. Send scheduled workflow emails
+ * 6. Contest winner selection and phase transitions
  */
 export async function GET(request: Request) {
   const startTime = Date.now()
@@ -72,6 +74,34 @@ export async function GET(request: Request) {
     results.contractExpired = await expiredResponse.json()
   } catch (error) {
     results.contractExpired = { error: String(error) }
+  }
+
+  // 5. Send scheduled workflow emails
+  try {
+    const workflowsResponse = await fetch(
+      `${process.env.NEXT_PUBLIC_APP_URL}/api/cron/send-workflows`,
+      { 
+        method: 'GET',
+        headers: { 'Authorization': `Bearer ${secret}` }
+      }
+    )
+    results.workflows = await workflowsResponse.json()
+  } catch (error) {
+    results.workflows = { error: String(error) }
+  }
+
+  // 6. Contest winner selection and phase transitions
+  try {
+    const contestResponse = await fetch(
+      `${process.env.NEXT_PUBLIC_APP_URL}/api/cron/contest-winner`,
+      { 
+        method: 'GET',
+        headers: { 'Authorization': `Bearer ${secret}` }
+      }
+    )
+    results.contest = await contestResponse.json()
+  } catch (error) {
+    results.contest = { error: String(error) }
   }
 
   const duration = Date.now() - startTime
