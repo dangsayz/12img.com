@@ -71,7 +71,10 @@ export function CardView({ card }: CardViewProps) {
 
   const shareUrl = typeof window !== 'undefined' ? window.location.href : ''
   const shareTitle = card.title || 'Beautiful Photo'
-  const shareText = card.subtitle || 'Check out this beautiful photo'
+  const photographerCredit = card.photographerName ? `Photo by ${card.photographerName}` : 'Shared via 12img.com'
+  const shareText = card.title 
+    ? `${card.title} — ${photographerCredit}` 
+    : photographerCredit
 
   // Social share URLs
   const socialLinks = [
