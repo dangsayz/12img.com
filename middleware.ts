@@ -18,6 +18,7 @@ const isPublicRoute = createRouteMatcher([
   '/profile/(.*)',
   '/gallery/(.*)',
   '/portal/(.*)', // Client portal routes
+  '/vendor/(.*)', // Vendor portal routes
   '/api/share/(.*)',
   '/api/demo-card',
   '/api/webhook/clerk',

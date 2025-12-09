@@ -8,6 +8,7 @@ import { NotificationSection } from '@/components/settings/NotificationSection'
 import { DangerZone } from '@/components/settings/DangerZone'
 import { ProfileVisibilitySection } from '@/components/settings/ProfileVisibilitySection'
 import { PortfolioManager } from '@/components/settings/PortfolioManager'
+import { VendorSection } from '@/components/vendors/VendorSection'
 import { AppNav } from '@/components/layout/AppNav'
 import { normalizePlanId } from '@/lib/config/pricing'
 import { PLAN_TIERS, type PlanTier } from '@/lib/config/pricing-v2'
@@ -101,6 +102,9 @@ export default async function SettingsPage() {
             <h2 className="text-xs uppercase tracking-[0.2em] text-stone-400 mb-6">Portfolio</h2>
             <PortfolioManager />
           </section>
+
+          {/* Vendor Network Section */}
+          <VendorSection />
 
           {/* Account & Usage Section */}
           <AccountSection 

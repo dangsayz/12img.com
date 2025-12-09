@@ -461,6 +461,19 @@ export const FEATURE_ROWS: FeatureRow[] = [
       elite: { status: 'included', note: 'Unlimited', tooltip: 'Unlimited automations and custom templates' },
     },
   },
+  {
+    id: 'vendor_network',
+    group: 'automation',
+    label: 'Vendor Network',
+    description: 'Share galleries with vendors for referrals',
+    availability: {
+      free: { status: 'limited', note: '3 vendors', tooltip: '3 vendors, 3 shares/month' },
+      essential: { status: 'limited', note: '15 vendors', tooltip: '15 vendors, 15 shares/month' },
+      pro: { status: 'limited', note: '50 vendors', tooltip: '50 vendors, 50 shares/month' },
+      studio: { status: 'included', note: 'Unlimited', tooltip: 'Unlimited vendors and shares' },
+      elite: { status: 'included', note: 'Unlimited', tooltip: 'Unlimited vendors and shares' },
+    },
+  },
 
   // ─── Advanced Features ───
   {

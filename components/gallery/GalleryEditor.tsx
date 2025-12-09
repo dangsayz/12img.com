@@ -40,10 +40,12 @@ import {
   FileText,
   ArrowDown,
   ImageIcon,
-  Star
+  Star,
+  Users
 } from 'lucide-react'
 import { EmailActivity } from '@/components/gallery/EmailActivity'
 import { ShareModal } from '@/components/gallery/ShareModal'
+import { VendorShareModal } from '@/components/vendors/VendorShareModal'
 import { SocialShareButtons } from '@/components/ui/SocialShareButtons'
 import { PresentationSettings } from '@/components/gallery/PresentationSettings'
 import { SortableImageGrid } from '@/components/gallery/SortableImageGrid'
@@ -333,6 +335,7 @@ export function GalleryEditor({
   const [isLoadingMore, setIsLoadingMore] = useState(false)
   const [showActivity, setShowActivity] = useState(false)
   const [showShareModal, setShowShareModal] = useState(false)
+  const [showVendorShareModal, setShowVendorShareModal] = useState(false)
   const [showPresentationSettings, setShowPresentationSettings] = useState(false)
   const [isReordering, setIsReordering] = useState(false)
   const [isEditingTitle, setIsEditingTitle] = useState(false)
@@ -799,6 +802,13 @@ export function GalleryEditor({
                       title="Send to client"
                     >
                       <Send className="w-4 h-4" />
+                    </button>
+                    <button 
+                      onClick={() => setShowVendorShareModal(true)}
+                      className="h-11 w-11 flex items-center justify-center bg-white border border-stone-200 rounded-lg text-stone-600 hover:border-stone-400 hover:text-stone-900 transition-all"
+                      title="Share with vendors"
+                    >
+                      <Users className="w-4 h-4" />
                     </button>
                   </div>
 
@@ -1268,6 +1278,13 @@ export function GalleryEditor({
         currentTemplate={currentTemplate}
       />
 
+      {/* Vendor Share Modal */}
+      <VendorShareModal
+        isOpen={showVendorShareModal}
+        onClose={() => setShowVendorShareModal(false)}
+        galleryId={gallery.id}
+        galleryTitle={currentTitle}
+      />
 
       {/* Password Modal */}
       <AnimatePresence>
