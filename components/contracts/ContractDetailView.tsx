@@ -17,6 +17,7 @@ import {
   Check,
 } from 'lucide-react'
 import { type ContractWithDetails, type ExtendedContractStatus, type Milestone, type DeliveryProgress } from '@/lib/contracts/types'
+import { parseLocalDate } from '@/lib/contracts/merge-fields'
 import {
   MilestoneTimeline,
   DeliveryCountdown,
@@ -81,7 +82,7 @@ export function ContractDetailView({ contract, portalUrl }: ContractDetailViewPr
     }
   }
 
-  const eventDate = contract.client?.eventDate ? new Date(contract.client.eventDate) : null
+  const eventDate = parseLocalDate(contract.client?.eventDate)
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-stone-50 to-white">

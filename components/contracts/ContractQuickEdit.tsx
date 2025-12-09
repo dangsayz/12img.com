@@ -7,6 +7,7 @@ import { InlineEditField } from './InlineEditField'
 import { updateClientProfile } from '@/server/actions/client.actions'
 import { regenerateContractHtml } from '@/server/actions/contract.actions'
 import { type ClientProfile, EVENT_TYPE_LABELS } from '@/lib/contracts/types'
+import { parseLocalDate } from '@/lib/contracts/merge-fields'
 import type { EventType } from '@/types/database'
 
 interface ContractQuickEditProps {
@@ -63,7 +64,7 @@ export function ContractQuickEdit({ client, contractId, disabled = false }: Cont
     updateRetainerByPercent(percent)
   }
 
-  const eventDate = client.eventDate ? new Date(client.eventDate) : null
+  const eventDate = parseLocalDate(client.eventDate)
   const formattedDate = eventDate
     ? eventDate.toLocaleDateString('en-US', {
         weekday: 'long',

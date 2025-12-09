@@ -16,6 +16,7 @@ import {
   ArrowLeft,
 } from 'lucide-react'
 import { type ClientWithStats, CONTRACT_STATUS_CONFIG, EVENT_TYPE_LABELS } from '@/lib/contracts/types'
+import { parseLocalDate } from '@/lib/contracts/merge-fields'
 import { CreateClientModal } from './CreateClientModal'
 import { OnboardingHint } from '@/components/onboarding'
 
@@ -42,7 +43,8 @@ export function ClientsPageContent({ clients }: ClientsPageContentProps) {
     // Status filter
     if (filter === 'upcoming') {
       if (!client.eventDate) return false
-      const eventDate = new Date(client.eventDate)
+      const eventDate = parseLocalDate(client.eventDate)
+      if (!eventDate) return false
       const now = new Date()
       const thirtyDaysFromNow = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000)
       return eventDate >= now && eventDate <= thirtyDaysFromNow
@@ -63,7 +65,8 @@ export function ClientsPageContent({ clients }: ClientsPageContentProps) {
     total: clients.length,
     upcoming: clients.filter(c => {
       if (!c.eventDate) return false
-      const eventDate = new Date(c.eventDate)
+      const eventDate = parseLocalDate(c.eventDate)
+      if (!eventDate) return false
       const now = new Date()
       const thirtyDaysFromNow = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000)
       return eventDate >= now && eventDate <= thirtyDaysFromNow
@@ -205,7 +208,7 @@ export function ClientsPageContent({ clients }: ClientsPageContentProps) {
 }
 
 function ClientRow({ client }: { client: ClientWithStats }) {
-  const eventDate = client.eventDate ? new Date(client.eventDate) : null
+  const eventDate = parseLocalDate(client.eventDate)
   const isUpcoming = eventDate && eventDate >= new Date()
   const daysUntil = eventDate
     ? Math.ceil((eventDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24))

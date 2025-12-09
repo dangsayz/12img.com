@@ -40,6 +40,7 @@ import { generatePortalToken, type PortalToken } from '@/server/actions/portal.a
 import { archiveClientProfile, updateClientProfile } from '@/server/actions/client.actions'
 import { getClientWorkflows } from '@/server/actions/workflow.actions'
 import { type ScheduledWorkflow } from '@/lib/workflows/types'
+import { parseLocalDate } from '@/lib/contracts/merge-fields'
 import { MessageModal } from '@/components/messages/MessageModal'
 import { EditClientModal } from '@/components/clients/EditClientModal'
 import { CreateContractModal } from '@/components/contracts/CreateContractModal'
@@ -184,7 +185,7 @@ export function ClientDetailContent({
     })
   }
 
-  const eventDate = client.eventDate ? new Date(client.eventDate) : null
+  const eventDate = parseLocalDate(client.eventDate)
   const daysUntil = eventDate
     ? Math.ceil((eventDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24))
     : null

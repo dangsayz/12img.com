@@ -21,6 +21,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { type ClientProfile, EVENT_TYPE_LABELS, CLAUSE_CATEGORY_LABELS } from '@/lib/contracts/types'
 import { getClausesForEventType, EVENT_TYPE_DEFAULTS, type ClauseTemplate } from '@/lib/contracts/event-clauses'
 import { createContract } from '@/server/actions/contract.actions'
+import { parseLocalDate } from '@/lib/contracts/merge-fields'
 
 // Event type icons
 const EVENT_TYPE_ICONS: Record<string, string> = {
@@ -126,8 +127,8 @@ export function CreateContractForm({ client }: CreateContractFormProps) {
     })
   }
 
-  const eventDate = client.eventDate ? new Date(client.eventDate) : null
-  const balanceDueDate = client.balanceDueDate ? new Date(client.balanceDueDate) : null
+  const eventDate = parseLocalDate(client.eventDate)
+  const balanceDueDate = parseLocalDate(client.balanceDueDate)
   
   // Calculate balance due
   const balanceDue = client.packagePrice && client.retainerFee 

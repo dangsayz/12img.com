@@ -9,6 +9,27 @@ import type { MergeFieldData, ClientProfile } from './types'
 import { EVENT_TYPE_LABELS, DEFAULT_MERGE_DATA } from './types'
 
 // ============================================
+// DATE HELPERS
+// ============================================
+
+/**
+ * Parse a date string as local date (not UTC)
+ * Fixes timezone offset bug where "2026-08-01" becomes July 31 in local time
+ */
+export function parseLocalDate(dateString: string | null | undefined): Date | null {
+  if (!dateString) return null
+  
+  // If it's a date-only string (YYYY-MM-DD), parse as local
+  if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
+    const [year, month, day] = dateString.split('-').map(Number)
+    return new Date(year, month - 1, day) // month is 0-indexed
+  }
+  
+  // Otherwise use standard parsing
+  return new Date(dateString)
+}
+
+// ============================================
 // MERGE FIELD PATTERN
 // ============================================
 
@@ -128,7 +149,7 @@ export function buildMergeDataFromClient(
     ? `${client.partnerFirstName} ${client.partnerLastName}`
     : client.partnerFirstName || ''
   
-  const eventDate = client.eventDate ? new Date(client.eventDate) : null
+  const eventDate = parseLocalDate(client.eventDate)
   const eventDateFormatted = eventDate
     ? eventDate.toLocaleDateString('en-US', {
         weekday: 'long',

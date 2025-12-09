@@ -17,7 +17,8 @@ import {
   Users,
   ChevronDown,
   FolderPlus,
-  UserPlus
+  UserPlus,
+  LayoutDashboard
 } from 'lucide-react'
 
 export type UserRole = 'user' | 'support' | 'admin' | 'super_admin'
@@ -203,6 +204,19 @@ export function AppNav({
                           <p className="text-xs text-stone-400">Add client & send contract</p>
                         </div>
                       </Link>
+                      
+                      {/* Divider */}
+                      <div className="my-1 mx-2 border-t border-stone-100" />
+                      
+                      {/* Dashboard Link */}
+                      <Link
+                        href="/dashboard/clients"
+                        onClick={() => setNewMenuOpen(false)}
+                        className="flex items-center gap-3 px-3 py-2 rounded-lg text-stone-500 hover:bg-stone-50 hover:text-stone-700 transition-colors"
+                      >
+                        <LayoutDashboard className="w-4 h-4" />
+                        <span className="text-sm">Dashboard</span>
+                      </Link>
                     </div>
                   </motion.div>
                 )}
@@ -360,6 +374,19 @@ export function AppNav({
                       <span className="font-medium text-stone-900">New Contract</span>
                       <p className="text-xs text-stone-400">Add client & send contract</p>
                     </div>
+                  </Link>
+                  
+                  {/* Divider */}
+                  <div className="my-2 mx-4 border-t border-stone-100" />
+                  
+                  {/* Dashboard Link */}
+                  <Link
+                    href="/dashboard/clients"
+                    onClick={() => setMobileOpen(false)}
+                    className="flex items-center gap-3 px-4 py-2.5 rounded-xl text-stone-500 hover:bg-stone-50 transition-all"
+                  >
+                    <LayoutDashboard className="w-5 h-5" />
+                    <span className="font-medium">Dashboard</span>
                   </Link>
                 </div>
                 

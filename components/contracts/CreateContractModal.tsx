@@ -26,6 +26,7 @@ import {
 import { type ClientProfile, EVENT_TYPE_LABELS, CLAUSE_CATEGORY_LABELS } from '@/lib/contracts/types'
 import { getClausesForEventType, EVENT_TYPE_DEFAULTS, type ClauseTemplate } from '@/lib/contracts/event-clauses'
 import { createContract } from '@/server/actions/contract.actions'
+import { parseLocalDate } from '@/lib/contracts/merge-fields'
 
 interface CreateContractModalProps {
   isOpen: boolean
@@ -237,7 +238,7 @@ export function CreateContractModal({ isOpen, onClose, client }: CreateContractM
     })
   }
 
-  const eventDate = client.eventDate ? new Date(client.eventDate) : null
+  const eventDate = parseLocalDate(client.eventDate)
   const clientName = `${client.firstName}${client.partnerFirstName ? ` & ${client.partnerFirstName}` : ` ${client.lastName}`}`
   const eventConfig = EVENT_TYPE_CONFIG[client.eventType] || EVENT_TYPE_CONFIG.other
   const EventIcon = eventConfig.icon
