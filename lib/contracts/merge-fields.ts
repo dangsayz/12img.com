@@ -171,6 +171,8 @@ export function buildMergeDataFromClient(
     event_type_display: EVENT_TYPE_LABELS[client.eventType] || client.eventType,
     event_date: client.eventDate || '',
     event_date_formatted: eventDateFormatted,
+    event_time: (client as any).eventTime || '',
+    event_time_formatted: (client as any).eventTime || '',
     event_location: client.eventLocation || '',
     event_venue: client.eventVenue || '',
     
