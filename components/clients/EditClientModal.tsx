@@ -3,7 +3,7 @@
 import { useState, useTransition, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, Loader2, Wand2, ChevronLeft, ChevronRight, User, Users, Mail, Calendar, MapPin, Package } from 'lucide-react'
+import { X, Loader2, Wand2, ChevronLeft, ChevronRight, User, Users, Mail, Calendar, MapPin, Package, Check } from 'lucide-react'
 import { updateClientProfile, getClientLocationSuggestions } from '@/server/actions/client.actions'
 import { type EventType } from '@/types/database'
 import { type ClientProfile, EVENT_TYPE_LABELS } from '@/lib/contracts/types'
@@ -684,35 +684,42 @@ export function EditClientModal({ isOpen, onClose, client }: EditClientModalProp
 
             {/* Footer - Sticky with large touch targets and safe area */}
             <div className="flex-shrink-0 px-5 pt-4 pb-6 border-t border-stone-100 bg-white" style={{ paddingBottom: 'max(1.5rem, env(safe-area-inset-bottom))' }}>
-              <div className="flex items-center justify-between gap-4">
-                {/* Cancel / Back button */}
+              <div className="flex items-center justify-between gap-3">
+                {/* Back button */}
                 <button
                   onClick={currentStepIndex > 0 ? goPrev : onClose}
-                  className="h-14 min-w-[100px] px-6 text-base font-medium text-stone-600 hover:text-stone-900 active:bg-stone-100 rounded-xl transition-colors"
+                  className="h-12 px-4 text-sm font-medium text-stone-600 hover:text-stone-900 active:bg-stone-100 rounded-xl transition-colors"
                 >
                   {currentStepIndex > 0 ? 'Back' : 'Cancel'}
                 </button>
 
-                {/* Next / Save button */}
-                {currentStepIndex < STEPS.length - 1 ? (
-                  <button
-                    onClick={goNext}
-                    disabled={!canProceed()}
-                    className="h-14 min-w-[120px] px-8 inline-flex items-center justify-center gap-2 text-base font-medium bg-stone-900 text-white rounded-xl hover:bg-stone-800 active:bg-stone-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    Next
-                    <ChevronRight className="w-5 h-5" />
-                  </button>
-                ) : (
+                <div className="flex items-center gap-2">
+                  {/* Save button - always visible */}
                   <button
                     onClick={handleSubmit}
-                    disabled={isPending || !canProceed()}
-                    className="h-14 min-w-[120px] px-8 inline-flex items-center justify-center gap-2 text-base font-medium bg-stone-900 text-white rounded-xl hover:bg-stone-800 active:bg-stone-700 transition-colors disabled:opacity-50"
+                    disabled={isPending || !formData.firstName || !formData.lastName || !formData.email}
+                    className="h-12 px-5 inline-flex items-center justify-center gap-2 text-sm font-medium border border-stone-200 text-stone-700 rounded-xl hover:bg-stone-50 active:bg-stone-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    {isPending && <Loader2 className="w-5 h-5 animate-spin" />}
+                    {isPending ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <Check className="w-4 h-4" />
+                    )}
                     Save
                   </button>
-                )}
+
+                  {/* Next button - only show if not on last step */}
+                  {currentStepIndex < STEPS.length - 1 && (
+                    <button
+                      onClick={goNext}
+                      disabled={!canProceed()}
+                      className="h-12 px-5 inline-flex items-center justify-center gap-2 text-sm font-medium bg-stone-900 text-white rounded-xl hover:bg-stone-800 active:bg-stone-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      Next
+                      <ChevronRight className="w-4 h-4" />
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
           </motion.div>

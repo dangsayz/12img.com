@@ -45,7 +45,7 @@ export const PLAN_TIERS: Record<PlanTier, PlanTierConfig> = {
     galleryLimit: 3,
     expiryDays: 7,
     contractsPerMonth: 1,        // Trial: 1 contract to test the feature
-    clientManagement: false,     // No client management on free
+    clientManagement: true,      // Allow access to try the feature (limited to 1 contract)
   },
   essential: {
     id: 'essential',
