@@ -4,7 +4,7 @@ import { useState, useCallback, useRef, useEffect, memo } from 'react'
 import Image from 'next/image'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Download, X, ChevronDown } from 'lucide-react'
-import { PinterestShareButton, PinterestShareButtonDark } from '@/components/ui/PinterestShareButton'
+import { SocialShareButtons, SocialShareButtonsDark } from '@/components/ui/SocialShareButtons'
 import { ImageDownloadButton, ImageDownloadButtonDark } from '@/components/ui/ImageDownloadButton'
 import { getSeoAltText } from '@/lib/seo/image-urls'
 
@@ -84,10 +84,9 @@ const ImageCard = memo(function ImageCard({
             <ImageDownloadButton imageId={image.id} size="sm" />
           )}
           {image.originalUrl && (
-            <PinterestShareButton
+            <SocialShareButtons
               imageUrl={image.originalUrl}
               description={`${galleryTitle} | 12img`}
-              variant="icon"
               size="sm"
             />
           )}
@@ -139,7 +138,7 @@ const FullscreenViewer = memo(function FullscreenViewer({
           <ImageDownloadButtonDark imageId={image.id} size="md" />
         )}
         {image.previewUrl && (
-          <PinterestShareButtonDark
+          <SocialShareButtonsDark
             imageUrl={image.previewUrl}
             description={`${galleryTitle} | 12img`}
           />

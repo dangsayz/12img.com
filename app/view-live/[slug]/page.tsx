@@ -50,7 +50,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   
   // Get photographer name for better SEO
   const photographerName = (gallery as { photographer_name?: string }).photographer_name || '12img'
-  const description = `View ${gallery.title} - a stunning photo gallery by ${photographerName}. Delivered with 12img, the minimal gallery platform for photographers.`
+  const description = `${gallery.title} by ${photographerName}`
   
   return {
     title: `${gallery.title} | ${photographerName} | 12img`,
@@ -73,8 +73,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     twitter: {
       card: 'summary_large_image',
       title: `${gallery.title} | ${photographerName}`,
-      description,
+      description: `${gallery.title} by ${photographerName} — made by 12img`,
       images: [ogImageUrl],
+      creator: '@12aboretum',
+      site: '@12img',
     },
     alternates: {
       canonical: galleryUrl,

@@ -110,8 +110,20 @@ export function AppNav({
           {/* Right: Actions */}
           <div className="flex items-center gap-2 bg-white/95 backdrop-blur-xl border border-stone-200/60 rounded-full px-2 py-1.5 shadow-sm shadow-stone-900/5 pointer-events-auto">
             
-            {/* Storage Indicator - Desktop */}
+            {/* Plan Badge + Storage Indicator - Desktop */}
             <div className="hidden lg:flex items-center gap-2 px-2 py-1">
+              {/* Free Plan Badge with Upgrade Link */}
+              {userPlan === 'free' && (
+                <Link
+                  href="/pricing"
+                  className="flex items-center gap-1 px-2 py-0.5 bg-stone-100 hover:bg-stone-200 rounded-full transition-colors group"
+                >
+                  <span className="text-[10px] font-medium text-stone-500 uppercase tracking-wide">Free</span>
+                  <span className="text-[10px] text-stone-400 group-hover:text-stone-600">→</span>
+                </Link>
+              )}
+              
+              {/* Storage Bar */}
               <div className="flex items-center gap-1.5">
                 <div className="w-16 h-1.5 bg-stone-100 rounded-full overflow-hidden">
                   <div 
@@ -329,6 +341,21 @@ export function AppNav({
                       style={{ width: `${storagePercent}%` }}
                     />
                   </div>
+                  
+                  {/* Free Plan Upgrade Banner */}
+                  {userPlan === 'free' && (
+                    <Link
+                      href="/pricing"
+                      onClick={() => setMobileOpen(false)}
+                      className="flex items-center justify-between px-4 py-3 mb-4 bg-stone-100 rounded-xl hover:bg-stone-200 transition-colors"
+                    >
+                      <div>
+                        <p className="text-sm font-medium text-stone-900">Free Plan</p>
+                        <p className="text-xs text-stone-500">Upgrade for more storage & features</p>
+                      </div>
+                      <span className="text-stone-400">→</span>
+                    </Link>
+                  )}
                   
                   {/* User */}
                   <div className="flex items-center gap-3">

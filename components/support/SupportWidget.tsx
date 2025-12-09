@@ -24,8 +24,14 @@ export function SupportWidget() {
   const [input, setInput] = useState('')
   const [isSending, setIsSending] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
+  const [isMounted, setIsMounted] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
+  
+  // Prevent hydration mismatch - only render after mount
+  useEffect(() => {
+    setIsMounted(true)
+  }, [])
   
   // Hide widget on admin pages
   const isAdminPage = pathname?.startsWith('/admin')
@@ -129,8 +135,8 @@ export function SupportWidget() {
   // Show QuickShareWidget for all users, but chat only for authenticated users
   const showChatButton = isLoaded && isSignedIn
 
-  // Don't render on admin pages
-  if (isAdminPage) return null
+  // Don't render on admin pages or before mount (prevents hydration mismatch)
+  if (isAdminPage || !isMounted) return null
 
   return (
     <>

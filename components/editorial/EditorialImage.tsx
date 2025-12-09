@@ -5,7 +5,7 @@ import React, { useState, useRef } from 'react'
 import { motion, useInView } from 'framer-motion'
 import { cn } from '@/lib/utils/cn'
 import { EditorialImage as IEditorialImage } from '@/lib/editorial/types'
-import { PinterestShareButton } from '@/components/ui/PinterestShareButton'
+import { SocialShareButtons } from '@/components/ui/SocialShareButtons'
 import { ImageDownloadButton } from '@/components/ui/ImageDownloadButton'
 import { getSeoAltText } from '@/lib/seo/image-urls'
 
@@ -85,10 +85,9 @@ export function EditorialImage({ image, priority = false, className, fit = 'cove
             {downloadEnabled && image.id && (
               <ImageDownloadButton imageId={image.id} size="sm" />
             )}
-            <PinterestShareButton
+            <SocialShareButtons
               imageUrl={image.url}
               description={galleryTitle ? `${galleryTitle} | 12img` : '12img'}
-              variant="icon"
               size="sm"
             />
           </div>

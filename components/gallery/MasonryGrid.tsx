@@ -104,8 +104,8 @@ export function MasonryGrid({ images: initialImages, editable = false, galleryId
 
   return (
     <>
-      {/* Clean grid with square containers - 4 per row max */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-5 py-8 px-2">
+      {/* Pic-Time style masonry - 3 columns with generous spacing */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-6 sm:gap-8 lg:gap-10 py-8 px-2">
         {images.map((image, index) => (
           <MasonryItem
             key={image.id}

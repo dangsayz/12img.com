@@ -35,7 +35,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
   const imageUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/demo-cards/${card.storage_path}`
   const title = card.title || 'Beautiful Photo'
-  const description = card.subtitle || 'Shared via 12img - Professional photo galleries for photographers'
+  const description = card.subtitle || 'made by 12img'
 
   return {
     title: `${title} | 12img`,

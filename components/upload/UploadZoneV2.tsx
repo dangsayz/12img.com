@@ -432,11 +432,23 @@ export function UploadZoneV2({ galleryId, onUploadComplete }: UploadZoneProps) {
         const batchResults = await Promise.all(results)
         const successful = batchResults.filter(r => r.success)
         
-        // Step 5: Confirm uploads
+        // Step 5: Confirm uploads - IMPORTANT: Sort by original batch order to preserve upload sequence
+        // Uploads complete in random order due to adaptive concurrency, but we need to insert
+        // them in the database in the order the user selected/dropped them
         if (successful.length > 0) {
+          // Create a map of localId -> batch index for sorting
+          const batchOrderMap = new Map(batch.map((item, idx) => [item.id, idx]))
+          
+          // Sort successful uploads back to original batch order
+          const sortedSuccessful = [...successful].sort((a, b) => {
+            const orderA = batchOrderMap.get(a.localId) ?? 0
+            const orderB = batchOrderMap.get(b.localId) ?? 0
+            return orderA - orderB
+          })
+          
           await confirmUploads({
             galleryId,
-            uploads: successful.map(r => {
+            uploads: sortedSuccessful.map(r => {
               const upload = batch.find(u => u.id === r.localId)!
               const compressed = compressedBlobs.get(r.localId)
               return {

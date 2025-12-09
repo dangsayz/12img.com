@@ -8,6 +8,7 @@ import { LandingPage } from '@/components/landing/LandingPage'
 import { checkOnboardingStatus, checkWelcomeSeen } from '@/server/actions/onboarding.actions'
 import { PLAN_TIERS, type PlanTier } from '@/lib/config/pricing-v2'
 import { getUserProfile } from '@/server/actions/profile.actions'
+import { getActiveContest } from '@/server/actions/contest.actions'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -29,12 +30,13 @@ export default async function HomePage() {
       redirect('/welcome')
     }
 
-    const [galleries, userData, userSettings, isAdmin, profileData] = await Promise.all([
+    const [galleries, userData, userSettings, isAdmin, profileData, activeContest] = await Promise.all([
       getUserGalleries(userId),
       getUserWithUsage(userId),
       getUserSettings(userId),
       checkIsAdmin(userId),
       getUserProfile(),
+      getActiveContest(),
     ])
     
     const plan = (userData?.plan || 'free') as PlanTier
@@ -52,8 +54,16 @@ export default async function HomePage() {
         <CleanDashboard 
           galleries={galleries} 
           photographerName={userSettings?.businessName || undefined}
+          country={userSettings?.country}
           visibilityMode={profileData?.visibilityMode || 'PRIVATE'}
           profileSlug={profileData?.profileSlug}
+          activeContest={activeContest ? {
+            id: activeContest.id,
+            name: activeContest.name,
+            theme: activeContest.theme,
+            status: activeContest.status as 'submissions_open' | 'voting',
+          } : null}
+          userPlan={plan}
         />
       </div>
     )

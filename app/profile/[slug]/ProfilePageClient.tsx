@@ -4,8 +4,9 @@ import { useState, useCallback, useMemo, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, useScroll, useTransform, useSpring, AnimatePresence } from 'framer-motion'
 import { Camera, Lock, Image as ImageIcon, Mail, Globe } from 'lucide-react'
+import { CountryFlag, hasCustomFlag } from '@/components/ui/CountryFlag'
 import { VisibilityBadge, LockIndicator, PrivateOverlay } from '@/components/ui/VisibilityBadge'
-import { PinterestShareButton } from '@/components/ui/PinterestShareButton'
+import { SocialShareButtons } from '@/components/ui/SocialShareButtons'
 import { LazyImage, HeroImage } from '@/components/ui/LazyImage'
 import { PublicHeader } from '@/components/profile/PublicHeader'
 import { PINEntryModal } from '@/components/profile/PINEntryModal'
@@ -50,6 +51,7 @@ interface Profile {
   contactEmail?: string | null
   websiteUrl?: string | null
   location?: string | null
+  country?: string | null
   isOwner?: boolean
 }
 
@@ -275,8 +277,11 @@ export function ProfilePageClient({ profile }: ProfilePageClientProps) {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 1.2, ease: [0.22, 1, 0.36, 1] }}
           >
-            <h1 className="font-serif text-2xl sm:text-3xl tracking-[0.25em] text-stone-800 uppercase font-light">
+            <h1 className="font-serif text-2xl sm:text-3xl tracking-[0.25em] text-stone-800 uppercase font-light flex items-center justify-center gap-3">
               {profile.display_name || 'Photographer'}
+              {profile.country && hasCustomFlag(profile.country) && (
+                <CountryFlag country={profile.country} size="md" />
+              )}
             </h1>
             <motion.div 
               className="w-8 h-px bg-stone-300 mx-auto mt-4"
@@ -514,12 +519,11 @@ export function ProfilePageClient({ profile }: ProfilePageClientProps) {
                           objectPosition={`${image.focal_x ?? 50}% ${image.focal_y ?? 50}%`}
                         />
                         
-                        {/* Pinterest share on hover */}
+                        {/* Social share on hover */}
                         <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10">
-                          <PinterestShareButton
+                          <SocialShareButtons
                             imageUrl={image.imageUrl}
                             description={`${image.gallery_title} by ${profile.display_name || 'Photographer'} | 12img`}
-                            variant="icon"
                             size="sm"
                           />
                         </div>

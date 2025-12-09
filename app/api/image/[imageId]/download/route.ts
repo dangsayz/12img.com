@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createServerClient } from '@/lib/supabase/server'
+import { getImageWithGallery } from '@/server/queries/image.queries'
+import { getSignedDownloadUrl } from '@/lib/storage/signed-urls'
 
 export async function GET(
   request: NextRequest,
@@ -7,43 +8,29 @@ export async function GET(
 ) {
   const { imageId } = await params
   
-  const supabase = createServerClient()
+  // Get image with gallery info using admin client (bypasses RLS)
+  const result = await getImageWithGallery(imageId)
   
-  // Get image details
-  const { data: image, error } = await supabase
-    .from('images')
-    .select(`
-      id,
-      original_url,
-      file_name,
-      galleries!inner (
-        id,
-        title,
-        slug,
-        download_enabled
-      )
-    `)
-    .eq('id', imageId)
-    .single()
-  
-  if (error || !image) {
+  if (!result) {
     return NextResponse.json({ error: 'Image not found' }, { status: 404 })
   }
   
+  const { image, gallery } = result
+  
   // Check if downloads are enabled for this gallery
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const gallery = (image.galleries as any)
-  if (!gallery?.download_enabled) {
+  if (!gallery.download_enabled) {
     return NextResponse.json({ error: 'Downloads are disabled for this gallery' }, { status: 403 })
   }
   
-  // Get the original image URL
-  const originalUrl = image.original_url
-  if (!originalUrl) {
+  // Get the storage path and generate a signed URL for the original
+  const storagePath = image.storage_path
+  if (!storagePath) {
     return NextResponse.json({ error: 'Original image not available' }, { status: 404 })
   }
   
   try {
+    // Generate signed URL for the original image (no transforms)
+    const originalUrl = await getSignedDownloadUrl(storagePath)
     // Fetch the original image
     const imageResponse = await fetch(originalUrl)
     if (!imageResponse.ok) {
@@ -63,7 +50,7 @@ export async function GET(
     const gallerySlug = slugify(gallery.title || 'gallery')
     const extension = contentType.includes('png') ? 'png' : 
                       contentType.includes('webp') ? 'webp' : 'jpg'
-    const filename = `12img-${gallerySlug}-${image.file_name || `photo-${imageId.slice(0, 8)}`}.${extension}`
+    const filename = `12img-${gallerySlug}-${image.original_filename || `photo-${imageId.slice(0, 8)}`}.${extension}`
     
     return new NextResponse(imageBuffer, {
       headers: {

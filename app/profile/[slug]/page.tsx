@@ -37,7 +37,7 @@ export async function generateMetadata({ params }: ProfilePageProps): Promise<Me
   // SEO-optimized description
   const description = profile.bio 
     ? profile.bio 
-    : `View ${photographerName}'s photography portfolio with ${galleryCount} ${galleryCount === 1 ? 'gallery' : 'galleries'} on 12img. Professional photo gallery delivery.`
+    : `${photographerName}'s photography portfolio — ${galleryCount} ${galleryCount === 1 ? 'gallery' : 'galleries'}`
 
   return {
     title: `${photographerName} — Photography Portfolio`,
@@ -51,7 +51,8 @@ export async function generateMetadata({ params }: ProfilePageProps): Promise<Me
     twitter: {
       card: 'summary_large_image',
       title: `${photographerName} — Photography Portfolio`,
-      description,
+      description: `${photographerName}'s portfolio — made by 12img`,
+      images: ogImageUrl ? [ogImageUrl] : undefined,
     },
     alternates: {
       canonical: `${siteUrl}/profile/${slug}`,

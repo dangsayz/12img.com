@@ -110,8 +110,10 @@ export function UploadZone({ galleryId, onUploadComplete }: UploadZoneProps) {
   const handleFiles = useCallback((fileList: FileList | null) => {
     if (!fileList) return
 
-    // Process in chunks to avoid blocking UI
-    const files = Array.from(fileList)
+    // Sort files naturally (so img-2 comes before img-10) then process in chunks
+    const files = Array.from(fileList).sort((a, b) => 
+      a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' })
+    )
     const CHUNK_SIZE = 100
     
     const processChunk = (startIndex: number) => {
@@ -260,11 +262,21 @@ export function UploadZone({ galleryId, onUploadComplete }: UploadZoneProps) {
         const batchResults = await Promise.all(results)
         const successful = batchResults.filter(r => r.success)
         
-        // 5. Confirm this batch immediately
+        // 5. Confirm this batch immediately - sort by original order to preserve upload sequence
         if (successful.length > 0) {
+          // Create a map of localId -> batch index for sorting
+          const batchOrderMap = new Map(batch.map((item, idx) => [item.id, idx]))
+          
+          // Sort successful uploads back to original batch order
+          const sortedSuccessful = [...successful].sort((a, b) => {
+            const orderA = batchOrderMap.get(a.localId) ?? 0
+            const orderB = batchOrderMap.get(b.localId) ?? 0
+            return orderA - orderB
+          })
+          
           await confirmUploads({
             galleryId,
-            uploads: successful.map(r => {
+            uploads: sortedSuccessful.map(r => {
                const upload = batch.find(u => u.id === r.localId)!
                return {
                  storagePath: r.storagePath,

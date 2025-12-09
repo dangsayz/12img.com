@@ -38,8 +38,13 @@ export function ImageUploader({ galleryId }: ImageUploaderProps) {
   const handleFileSelect = useCallback((files: FileList | null) => {
     if (!files) return
 
+    // Sort files naturally (so img-2 comes before img-10)
+    const sortedFiles = Array.from(files).sort((a, b) => 
+      a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' })
+    )
+
     const newUploads: UploadItem[] = []
-    Array.from(files).forEach((file, i) => {
+    sortedFiles.forEach((file, i) => {
       const error = validateFile(file)
       newUploads.push({
         localId: `upload-${Date.now()}-${i}`,
@@ -152,11 +157,21 @@ export function ImageUploader({ galleryId }: ImageUploaderProps) {
       const results = await Promise.all(uploadPromises)
       const successful = results.filter((r) => r.success)
 
-      // Confirm uploads
+      // Confirm uploads - sort by original order to preserve upload sequence
       if (successful.length > 0) {
+        // Create a map of localId -> original index for sorting
+        const orderMap = new Map(pendingUploads.map((item, idx) => [item.localId, idx]))
+        
+        // Sort successful uploads back to original order
+        const sortedSuccessful = [...successful].sort((a, b) => {
+          const orderA = orderMap.get(a.localId) ?? 0
+          const orderB = orderMap.get(b.localId) ?? 0
+          return orderA - orderB
+        })
+        
         await confirmUploads({
           galleryId,
-          uploads: successful.map((r) => {
+          uploads: sortedSuccessful.map((r) => {
             const upload = pendingUploads.find((u) => u.localId === r.localId)!
             return {
               storagePath: r.storagePath,

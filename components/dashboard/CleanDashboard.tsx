@@ -27,6 +27,8 @@ import { updateProfileVisibility } from '@/server/actions/profile.actions'
 import { VisibilityBadgeOverlay } from '@/components/ui/VisibilityBadge'
 import type { ProfileVisibilityMode } from '@/types/database'
 import { OnboardingHint } from '@/components/onboarding'
+import { SpotlightBanner } from '@/components/spotlight/SpotlightBanner'
+import { CountryFlag, hasCustomFlag } from '@/components/ui/CountryFlag'
 
 interface Gallery {
   id: string
@@ -59,16 +61,26 @@ function formatRelativeTime(dateString: string): string {
   return `${Math.floor(diffDays / 365)} year${Math.floor(diffDays / 365) > 1 ? 's' : ''} ago`
 }
 
+interface ActiveContest {
+  id: string
+  name: string
+  theme: string | null
+  status: 'submissions_open' | 'voting'
+}
+
 interface CleanDashboardProps {
   galleries: Gallery[]
   photographerName?: string
+  country?: string | null
   visibilityMode?: ProfileVisibilityMode
   profileSlug?: string | null
+  activeContest?: ActiveContest | null
+  userPlan?: string
 }
 
 const CATEGORIES = ['ALL', 'WEDDING', 'FAMILY', 'PORTRAITS', 'LIFESTYLE', 'EVENTS']
 
-export function CleanDashboard({ galleries, photographerName, visibilityMode = 'PRIVATE', profileSlug }: CleanDashboardProps) {
+export function CleanDashboard({ galleries, photographerName, country, visibilityMode = 'PRIVATE', profileSlug, activeContest, userPlan = 'free' }: CleanDashboardProps) {
   const [activeCategory, setActiveCategory] = useState('ALL')
   const [searchQuery, setSearchQuery] = useState('')
   const [hoveredId, setHoveredId] = useState<string | null>(null)
@@ -146,9 +158,12 @@ export function CleanDashboard({ galleries, photographerName, visibilityMode = '
             duration: 1, 
             ease: [0.25, 0.1, 0.25, 1],
           }}
-          className="font-sans text-[clamp(2rem,8vw,5rem)] font-medium tracking-[-0.02em] text-stone-900 text-center leading-[1.1]"
+          className="font-sans text-[clamp(2rem,8vw,5rem)] font-medium tracking-[-0.02em] text-stone-900 text-center leading-[1.1] flex items-center justify-center gap-4"
         >
           {photographerName || 'My Galleries'}
+          {country && hasCustomFlag(country) && (
+            <CountryFlag country={country} size="lg" />
+          )}
         </motion.h1>
         <motion.p 
           initial={{ opacity: 0, y: 10 }}
@@ -334,6 +349,9 @@ export function CleanDashboard({ galleries, photographerName, visibilityMode = '
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Spotlight Contest Banner - Shows when contest is active */}
+      <SpotlightBanner contest={activeContest || null} userPlan={userPlan} />
 
       {/* Gallery Grid */}
       <div className="max-w-7xl mx-auto px-6 py-16" data-onboarding="dashboard-galleries">

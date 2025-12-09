@@ -84,7 +84,12 @@ export function UploadModal({ isOpen, onClose, galleryId }: UploadModalProps) {
     const newUploads: FileItemState[] = []
     const newDuplicates: DuplicateFile[] = []
 
-    for (const file of Array.from(fileList)) {
+    // Sort files naturally (so img-2 comes before img-10)
+    const sortedFiles = Array.from(fileList).sort((a, b) => 
+      a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' })
+    )
+
+    for (const file of sortedFiles) {
       if (!ACCEPTED_TYPES.includes(file.type)) continue
       if (file.size > MAX_FILE_SIZE) continue
 
@@ -224,7 +229,7 @@ export function UploadModal({ isOpen, onClose, galleryId }: UploadModalProps) {
         }
       }
 
-      // Confirm uploads in database
+      // Confirm uploads in database - sort by original order to preserve upload sequence
       let completedUploads: FileItemState[] = []
       setUploads(prev => {
         completedUploads = prev.filter(u => u.status === 'completed' && u.storagePath && u.token)
@@ -233,9 +238,19 @@ export function UploadModal({ isOpen, onClose, galleryId }: UploadModalProps) {
       await new Promise(r => setTimeout(r, 50))
 
       if (completedUploads.length > 0) {
+        // Create a map of id -> original index from pendingItems for sorting
+        const orderMap = new Map(pendingItems.map((item, idx) => [item.id, idx]))
+        
+        // Sort completed uploads back to original order
+        const sortedCompleted = [...completedUploads].sort((a, b) => {
+          const orderA = orderMap.get(a.id) ?? 0
+          const orderB = orderMap.get(b.id) ?? 0
+          return orderA - orderB
+        })
+        
         await confirmUploads({
           galleryId,
-          uploads: completedUploads.map(u => ({
+          uploads: sortedCompleted.map(u => ({
             storagePath: u.storagePath!,
             token: u.token!,
             originalFilename: u.file.name,

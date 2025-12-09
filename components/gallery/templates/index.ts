@@ -1,5 +1,6 @@
 export { CleanGrid } from './CleanGrid'
 export { MosaicLayout } from './MosaicLayout'
+export { MosaicView } from './MosaicView'
 export { CinematicLayout } from './CinematicLayout'
 
 export type GalleryTemplate = 'mosaic' | 'clean-grid' | 'cinematic' | 'editorial'

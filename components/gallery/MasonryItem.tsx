@@ -3,7 +3,7 @@
 import { useState, useCallback, useTransition, useEffect } from 'react'
 import { Trash2, Loader2, RefreshCw } from 'lucide-react'
 import { deleteImage, getThumbnailUrl } from '@/server/actions/image.actions'
-import { PinterestShareButton } from '@/components/ui/PinterestShareButton'
+import { SocialShareButtons } from '@/components/ui/SocialShareButtons'
 import type { ProcessingStatus } from '@/types/database'
 import type { ImageDerivatives } from '@/lib/storage/signed-urls'
 
@@ -238,14 +238,13 @@ export function MasonryItem({
         </div>
       )}
 
-      {/* Hover Overlay - Public view with Pinterest */}
+      {/* Hover Overlay - Public view with social share */}
       {!editable && showPinterestShare && isHovered && currentUrl && (
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute top-2 right-2 pointer-events-auto">
-            <PinterestShareButton
+            <SocialShareButtons
               imageUrl={currentUrl}
               description={galleryTitle ? `${galleryTitle} | 12img` : '12img'}
-              variant="icon"
               size="sm"
             />
           </div>

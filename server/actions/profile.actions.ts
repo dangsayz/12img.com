@@ -634,7 +634,7 @@ export async function getPublicProfileBySlug(slug: string, viewerUserId?: string
     // Get user settings for contact info and business name fallback
     const { data: settings } = await supabaseAdmin
       .from('user_settings')
-      .select('business_name, contact_email, website_url')
+      .select('business_name, contact_email, website_url, country')
       .eq('user_id', profile.id)
       .single()
 
@@ -788,6 +788,7 @@ export async function getPublicProfileBySlug(slug: string, viewerUserId?: string
       display_name: profile.display_name || settings?.business_name || null,
       contactEmail: settings?.contact_email || null,
       websiteUrl: settings?.website_url || null,
+      country: settings?.country || null,
       galleries: galleriesWithCounts,
       portfolioImages: formattedPortfolioImages,
       isOwner: !!isOwner,

@@ -18,7 +18,13 @@ const templateIcons: Record<GalleryTemplate, React.ReactNode> = {
 
 export function TemplateSelector({ selected, onSelect }: TemplateSelectorProps) {
   return (
-    <div className="grid grid-cols-2 gap-4">
+    <div className="space-y-6">
+      {/* Hint */}
+      <p className="text-[11px] tracking-[0.2em] uppercase text-stone-400 text-center">
+        This is how your client will experience the gallery
+      </p>
+      
+      <div className="grid grid-cols-2 gap-4">
       {GALLERY_TEMPLATES.map((template) => {
         const isSelected = selected === template.id
         
@@ -110,6 +116,7 @@ export function TemplateSelector({ selected, onSelect }: TemplateSelectorProps) 
           </motion.button>
         )
       })}
+      </div>
     </div>
   )
 }

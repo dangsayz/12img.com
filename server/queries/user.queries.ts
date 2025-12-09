@@ -83,6 +83,8 @@ export interface UserSettings {
   brandColor: string
   contactEmail: string | null
   websiteUrl: string | null
+  // Location
+  country: string | null
   // Notification preferences
   notifyGalleryViewed: boolean
   notifyImagesDownloaded: boolean
@@ -100,6 +102,7 @@ const DEFAULT_SETTINGS: UserSettings = {
   brandColor: '#000000',
   contactEmail: null,
   websiteUrl: null,
+  country: null,
   notifyGalleryViewed: true,
   notifyImagesDownloaded: true,
   notifyArchiveReady: true,
@@ -132,6 +135,7 @@ export async function getUserSettings(clerkId: string): Promise<UserSettings> {
     brandColor: data.brand_color ?? '#000000',
     contactEmail: data.contact_email ?? null,
     websiteUrl: data.website_url ?? null,
+    country: data.country ?? null,
     notifyGalleryViewed: data.notify_gallery_viewed ?? true,
     notifyImagesDownloaded: data.notify_images_downloaded ?? true,
     notifyArchiveReady: data.notify_archive_ready ?? true,

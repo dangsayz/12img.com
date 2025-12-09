@@ -100,47 +100,50 @@ export class LayoutEngine {
       let consumed = 1
       let spreadElements: LayoutElement[] = []
 
-      // 0. Layered Collage (5 images - Complex)
-      // If we have 5 images and a mix of orientations
+      // 0. Staggered Cascade (5 images - Clean asymmetric)
+      // Elegant stepped layout with intentional whitespace
       if (remaining >= 5 && pageNum % 4 === 0) { // Occasional complex spread
-        template = 'layered-collage'
+        template = 'staggered-cascade'
         consumed = 5
         spreadElements = [
-          // Large anchor left
+          // Primary large image - left anchor
           {
             id: `img-${current.id}`,
             type: 'image',
             content: current,
-            span: { colStart: 2, colSpan: 5, rowStart: 1, rowSpan: 2 },
+            span: { colStart: 1, colSpan: 6, rowStart: 1, rowSpan: 2 },
             style: { fit: 'cover' }
           },
-          // Top right grid
+          // Staggered right column - top
           {
             id: `img-${next.id}`,
             type: 'image',
             content: next,
-            span: { colStart: 8, colSpan: 2, rowStart: 1, rowSpan: 1 }
+            span: { colStart: 7, colSpan: 5, rowStart: 1, rowSpan: 1 },
+            style: { fit: 'cover' }
           },
+          // Staggered right column - bottom pair
           {
             id: `img-${next2.id}`,
             type: 'image',
             content: next2,
-            span: { colStart: 10, colSpan: 2, rowStart: 1, rowSpan: 1 }
+            span: { colStart: 7, colSpan: 3, rowStart: 2, rowSpan: 1 },
+            style: { fit: 'cover' }
           },
-          // Bottom right overlapping or grid
           {
             id: `img-${next3.id}`,
             type: 'image',
             content: next3,
-            span: { colStart: 8, colSpan: 4, rowStart: 2, rowSpan: 1 }
+            span: { colStart: 10, colSpan: 2, rowStart: 2, rowSpan: 1 },
+            style: { fit: 'cover' }
           },
-          // Offset accent
+          // Fifth image - subtle offset below main
           {
-             id: `img-${next4.id}`,
-             type: 'image',
-             content: next4,
-             span: { colStart: 6, colSpan: 3, rowStart: 1, rowSpan: 1 }, // Overlap center
-             style: { className: 'z-10 shadow-xl border-4 border-white' }
+            id: `img-${next4.id}`,
+            type: 'image',
+            content: next4,
+            span: { colStart: 2, colSpan: 4, rowStart: 3, rowSpan: 1 },
+            style: { fit: 'cover' }
           }
         ]
       }

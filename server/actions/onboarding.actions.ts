@@ -1,6 +1,6 @@
 'use server'
 
-import { auth } from '@clerk/nextjs/server'
+import { auth, currentUser } from '@clerk/nextjs/server'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 import { getOrCreateUserByClerkId } from '@/server/queries/user.queries'
 
@@ -26,16 +26,25 @@ export async function completeOnboarding(data: OnboardingData): Promise<{ succes
       return { success: false, error: 'Failed to get user' }
     }
 
-    // Generate profile slug from business name
-    const baseSlug = data.businessName.trim()
+    // Get Clerk user for fallback display name
+    const clerkUser = await currentUser()
+    const clerkDisplayName = clerkUser?.firstName 
+      ? `${clerkUser.firstName}${clerkUser.lastName ? ' ' + clerkUser.lastName : ''}`
+      : clerkUser?.username || 'User'
+
+    // Use provided business name or fall back to Clerk display name
+    const displayName = data.businessName.trim() || clerkDisplayName
+
+    // Generate profile slug from display name
+    const baseSlug = displayName
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/^-|-$/g, '')
     
     // Get unique slug (append number if taken)
-    let profileSlug = baseSlug || 'photographer'
+    let profileSlug = baseSlug || 'user'
     if (profileSlug.length < 3) {
-      profileSlug = profileSlug + '-studio'
+      profileSlug = profileSlug + '-gallery'
     }
     
     // Check if slug is taken and make unique
@@ -59,7 +68,7 @@ export async function completeOnboarding(data: OnboardingData): Promise<{ succes
       .from('users')
       .update({
         profile_slug: finalSlug,
-        display_name: data.businessName.trim(),
+        display_name: displayName,
       })
       .eq('id', user.id)
 
@@ -68,7 +77,7 @@ export async function completeOnboarding(data: OnboardingData): Promise<{ succes
       .from('user_settings')
       .upsert({
         user_id: user.id,
-        business_name: data.businessName.trim(),
+        business_name: displayName,
         photography_type: data.photographyType,
         country: data.country || null,
         state: data.state || null,

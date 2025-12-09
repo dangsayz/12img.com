@@ -6,6 +6,7 @@ import { getGalleryImages } from '@/server/queries/image.queries'
 import { getSignedUrlsWithSizes } from '@/lib/storage/signed-urls'
 import { EditorialGallery } from '@/components/gallery/EditorialGallery'
 import { PublicGalleryView } from '@/components/gallery/PublicGalleryView'
+import { MosaicView } from '@/components/gallery/templates/MosaicView'
 import { CinematicGallery } from '@/components/gallery/CinematicGallery'
 import { PasswordGate } from '@/components/gallery/PasswordGate'
 import { type PresentationData } from '@/lib/types/presentation'
@@ -58,7 +59,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   
   // Get photographer name for better SEO
   const photographerName = (gallery as { photographer_name?: string }).photographer_name || '12img'
-  const description = `View ${gallery.title} - a stunning photo gallery by ${photographerName}. Delivered with 12img, the minimal gallery platform for photographers.`
+  const description = `${gallery.title} by ${photographerName}`
   
   return {
     title: `${gallery.title} | ${photographerName} | 12img`,
@@ -81,8 +82,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     twitter: {
       card: 'summary_large_image',
       title: `${gallery.title} | ${photographerName}`,
-      description,
+      description: `${gallery.title} by ${photographerName} — made by 12img`,
       images: [ogImageUrl],
+      creator: '@12aboretum',
+      site: '@12img',
     },
     alternates: {
       canonical: galleryUrl,
@@ -265,7 +268,37 @@ export default async function PublicViewPage({ params }: Props) {
     )
   }
 
-  // Mosaic and Clean Grid templates
+  // Mosaic template - Pic-Time style split hero + masonry
+  if (template === 'mosaic') {
+    return (
+      <>
+        <ImageGalleryJsonLd
+          name={gallery.title}
+          description={`${gallery.title} - a stunning photo gallery by ${photographerName}. Delivered with 12img.`}
+          url={galleryUrl}
+          images={structuredDataImages}
+          author={{ name: photographerName }}
+        />
+        <BreadcrumbJsonLd
+          items={[
+            { name: 'Home', url: baseUrl },
+            { name: 'Galleries', url: `${baseUrl}/profiles` },
+            { name: gallery.title, url: galleryUrl },
+          ]}
+        />
+        <MosaicView
+          title={gallery.title}
+          images={galleryImages}
+          downloadEnabled={gallery.download_enabled}
+          photographerName={photographerName}
+          galleryId={gallery.id}
+          gallerySlug={gallery.slug}
+        />
+      </>
+    )
+  }
+
+  // Clean Grid template
   return (
     <>
       <ImageGalleryJsonLd
@@ -286,9 +319,10 @@ export default async function PublicViewPage({ params }: Props) {
         title={gallery.title}
         images={galleryImages}
         downloadEnabled={gallery.download_enabled}
+        photographerName={photographerName}
         galleryId={gallery.id}
         gallerySlug={gallery.slug}
-        template={template as 'mosaic' | 'clean-grid'}
+        template="clean-grid"
       />
     </>
   )

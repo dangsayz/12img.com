@@ -7,6 +7,7 @@ import { Menu, X, ArrowRight, Upload, Lock, Shield, Zap, Check, Instagram, Quote
 import { PricingMatrix } from '@/components/pricing/PricingMatrix'
 import { useAuthModal } from '@/components/auth/AuthModal'
 import { useAuth, UserButton } from '@clerk/nextjs'
+import { CommunitySpotlightCardClient } from '@/components/spotlight/CommunitySpotlightCardClient'
 
 // --- Landing Page Component ---
 
@@ -1344,6 +1345,9 @@ export function LandingPage() {
           </div>
         </div>
       </section>
+
+      {/* --- Community Spotlight --- */}
+      <CommunitySpotlightCardClient />
 
       {/* --- 10. Pricing Preview --- */}
       <section id="pricing" className="py-12 md:py-20 lg:py-32 px-4 sm:px-6 bg-[#F5F5F7]">

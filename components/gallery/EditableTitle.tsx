@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useRef, useEffect, useTransition } from 'react'
-import { useRouter } from 'next/navigation'
 import { Pencil, Check } from 'lucide-react'
 import { updateGallery } from '@/server/actions/gallery.actions'
 
@@ -10,13 +9,15 @@ interface EditableTitleProps {
   initialTitle: string
   currentSlug?: string
   className?: string
+  onTitleChange?: (newTitle: string) => void
 }
 
-export function EditableTitle({ galleryId, initialTitle, currentSlug, className = '' }: EditableTitleProps) {
-  const router = useRouter()
+export function EditableTitle({ galleryId, initialTitle, currentSlug, className = '', onTitleChange }: EditableTitleProps) {
   const [isEditing, setIsEditing] = useState(false)
   const [title, setTitle] = useState(initialTitle)
+  const [savedTitle, setSavedTitle] = useState(initialTitle)
   const [isPending, startTransition] = useTransition()
+  const [showSaved, setShowSaved] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
@@ -28,8 +29,8 @@ export function EditableTitle({ galleryId, initialTitle, currentSlug, className 
 
   const handleSave = () => {
     const trimmed = title.trim()
-    if (!trimmed || trimmed === initialTitle) {
-      setTitle(initialTitle)
+    if (!trimmed || trimmed === savedTitle) {
+      setTitle(savedTitle)
       setIsEditing(false)
       return
     }
@@ -39,10 +40,14 @@ export function EditableTitle({ galleryId, initialTitle, currentSlug, className 
       formData.set('title', trimmed)
       const result = await updateGallery(galleryId, formData)
       if (result.error) {
-        setTitle(initialTitle)
-      } else if (result.slug && result.slug !== currentSlug) {
-        // Slug changed, navigate to new URL
-        router.replace(`/gallery/${result.slug}`)
+        setTitle(savedTitle)
+      } else {
+        // Update local state, no redirect needed
+        setSavedTitle(trimmed)
+        onTitleChange?.(trimmed)
+        // Show saved indicator briefly
+        setShowSaved(true)
+        setTimeout(() => setShowSaved(false), 2000)
       }
       setIsEditing(false)
     })
@@ -53,7 +58,7 @@ export function EditableTitle({ galleryId, initialTitle, currentSlug, className 
       e.preventDefault()
       handleSave()
     } else if (e.key === 'Escape') {
-      setTitle(initialTitle)
+      setTitle(savedTitle)
       setIsEditing(false)
     }
   }
@@ -87,14 +92,21 @@ export function EditableTitle({ galleryId, initialTitle, currentSlug, className 
   }
 
   return (
-    <button
-      onClick={() => setIsEditing(true)}
-      className={`group relative text-left font-semibold tracking-tight ${className}`}
-    >
-      <span className="border-b-2 border-transparent group-hover:border-gray-300">
-        {title}
-      </span>
-      <Pencil className="inline-block ml-2 w-4 h-4 text-gray-300 opacity-0 group-hover:opacity-100 -translate-y-0.5" />
-    </button>
+    <div className="flex items-center gap-2">
+      <button
+        onClick={() => setIsEditing(true)}
+        className={`group relative text-left font-semibold tracking-tight ${className}`}
+      >
+        <span className="border-b-2 border-transparent group-hover:border-gray-300">
+          {title}
+        </span>
+        <Pencil className="inline-block ml-2 w-4 h-4 text-gray-300 opacity-0 group-hover:opacity-100 -translate-y-0.5" />
+      </button>
+      {showSaved && (
+        <span className="text-xs text-stone-500 animate-fade-in">
+          Saved
+        </span>
+      )}
+    </div>
   )
 }

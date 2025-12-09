@@ -44,7 +44,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Download, ChevronDown, Share2, Check, Loader2, Heart, X, ArrowLeft } from 'lucide-react'
 // Note: Heart used in FullscreenViewer, X used for close button
 import Link from 'next/link'
-import { PinterestShareButton, PinterestShareButtonDark } from '@/components/ui/PinterestShareButton'
+import { SocialShareButtons, SocialShareButtonsDark } from '@/components/ui/SocialShareButtons'
 import { ImageDownloadButton, ImageDownloadButtonDark } from '@/components/ui/ImageDownloadButton'
 import { getSeoAltText } from '@/lib/seo/image-urls'
 
@@ -149,7 +149,7 @@ function FullscreenViewer({
           <ImageDownloadButtonDark imageId={image.id} size="md" />
         )}
         {image.previewUrl && (
-          <PinterestShareButtonDark
+          <SocialShareButtonsDark
             imageUrl={image.previewUrl}
             description={galleryTitle ? `${galleryTitle} | 12img` : '12img'}
           />
@@ -257,7 +257,7 @@ function CleanGridCard({
         style={{ objectPosition: `${image.focalX ?? 50}% ${image.focalY ?? 50}%` }}
         sizes="(max-width: 768px) 50vw, 33vw"
         onLoad={() => setIsLoaded(true)}
-        loading={index < 12 ? 'eager' : 'lazy'}
+        loading={index < 20 ? 'eager' : 'lazy'}
         priority={index < 6}
       />
       {/* Subtle hover */}
@@ -272,10 +272,9 @@ function CleanGridCard({
             <ImageDownloadButton imageId={image.id} size="sm" />
           )}
           {image.originalUrl && (
-            <PinterestShareButton
+            <SocialShareButtons
               imageUrl={image.originalUrl}
               description={galleryTitle ? `${galleryTitle} | 12img` : '12img'}
-              variant="icon"
               size="sm"
             />
           )}
@@ -325,7 +324,7 @@ function ImageCard({
         style={{ objectPosition: `${image.focalX ?? 50}% ${image.focalY ?? 50}%` }}
         sizes="(max-width: 768px) 100vw, 50vw"
         priority={priority || index < 4}
-        loading={priority || index < 8 ? 'eager' : 'lazy'}
+        loading={priority || index < 20 ? 'eager' : 'lazy'}
         onLoad={() => setIsLoaded(true)}
       />
       {/* Action buttons on hover */}
@@ -338,10 +337,9 @@ function ImageCard({
             <ImageDownloadButton imageId={image.id} size="sm" />
           )}
           {(image.originalUrl || image.previewUrl || image.thumbnailUrl) && (
-            <PinterestShareButton
+            <SocialShareButtons
               imageUrl={image.originalUrl || image.previewUrl || image.thumbnailUrl}
               description={galleryTitle ? `${galleryTitle} | 12img` : '12img'}
-              variant="icon"
               size="sm"
             />
           )}
@@ -515,13 +513,13 @@ export function PublicGalleryView({
             /* ============================================
                MOSAIC LAYOUT - Pic-Time style varied grid
                ============================================ */
-            <div className="space-y-3 md:space-y-4">
+            <div className="space-y-6 md:space-y-10">
               {mosaicRows.map((row, rowIdx) => {
                 switch (row.type) {
                   case 'featured-left':
                     // 1 large left (2/3) + 2 stacked right (1/3)
                     return (
-                      <div key={rowIdx} className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
+                      <div key={rowIdx} className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-10">
                         <ImageCard
                           image={row.images[0]}
                           index={getGlobalIndex(row.images[0])}
@@ -531,7 +529,7 @@ export function PublicGalleryView({
                           galleryTitle={title}
                           downloadEnabled={downloadEnabled}
                         />
-                        <div className="grid grid-rows-2 gap-3 md:gap-4">
+                        <div className="grid grid-rows-2 gap-6 md:gap-10">
                           {row.images.slice(1).map((img) => (
                             <ImageCard
                               key={img.id}
@@ -550,8 +548,8 @@ export function PublicGalleryView({
                   case 'featured-right':
                     // 2 stacked left (1/3) + 1 large right (2/3)
                     return (
-                      <div key={rowIdx} className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
-                        <div className="grid grid-rows-2 gap-3 md:gap-4 order-2 md:order-1">
+                      <div key={rowIdx} className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-10">
+                        <div className="grid grid-rows-2 gap-6 md:gap-10 order-2 md:order-1">
                           {row.images.slice(1).map((img) => (
                             <ImageCard
                               key={img.id}
@@ -578,7 +576,7 @@ export function PublicGalleryView({
                   case 'quad':
                     // 4 equal columns
                     return (
-                      <div key={rowIdx} className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+                      <div key={rowIdx} className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-10">
                         {row.images.map((img, idx) => (
                           <ImageCard
                             key={img.id}
@@ -598,7 +596,7 @@ export function PublicGalleryView({
                     const aspect1 = getAspectCategory(row.images[0])
                     const aspect2 = row.images[1] ? getAspectCategory(row.images[1]) : 'square'
                     return (
-                      <div key={rowIdx} className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
+                      <div key={rowIdx} className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-10">
                         {row.images.map((img) => {
                           const cat = getAspectCategory(img)
                           const aspectClass = cat === 'portrait' ? 'aspect-[3/4]' : cat === 'landscape' ? 'aspect-[4/3]' : 'aspect-square'
@@ -639,9 +637,9 @@ export function PublicGalleryView({
             </div>
           ) : (
             /* ============================================
-               CLEAN GRID - Uniform cards, consistent sizing
+               CLEAN GRID - Pic-Time style 3-column masonry
                ============================================ */
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-6 sm:gap-8 lg:gap-10">
               {images.map((image, idx) => (
                 <CleanGridCard
                   key={image.id}

@@ -25,7 +25,7 @@ export type SpreadTemplate =
   | 'asymmetric-left'   // Heavy left, light right
   | 'asymmetric-right'  // Heavy right, light left
   | 'quad-grid'         // 2x2 grid of details
-  | 'layered-collage'   // Overlapping images
+  | 'staggered-cascade' // Clean asymmetric stepped layout
 
 export interface GridSpan {
   colStart: number

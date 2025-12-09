@@ -42,8 +42,7 @@ import {
 } from 'lucide-react'
 import { EmailActivity } from '@/components/gallery/EmailActivity'
 import { ShareModal } from '@/components/gallery/ShareModal'
-import { PinterestShareButton } from '@/components/ui/PinterestShareButton'
-import { FocalPointEditor } from '@/components/gallery/FocalPointEditor'
+import { SocialShareButtons } from '@/components/ui/SocialShareButtons'
 import { PresentationSettings } from '@/components/gallery/PresentationSettings'
 import { SortableImageGrid } from '@/components/gallery/SortableImageGrid'
 import { type GalleryTemplate, GALLERY_TEMPLATES, DEFAULT_TEMPLATE } from '@/components/gallery/templates'
@@ -68,7 +67,6 @@ function MasonryImageItem({
   isSelecting,
   isSelected,
   onSelect,
-  onEditFocalPoint,
 }: {
   image: GalleryImage
   index: number
@@ -76,7 +74,6 @@ function MasonryImageItem({
   isSelecting: boolean
   isSelected: boolean
   onSelect: () => void
-  onEditFocalPoint: () => void
 }) {
   const [aspectRatio, setAspectRatio] = useState<number>(
     image.width && image.height ? image.width / image.height : 1
@@ -109,7 +106,7 @@ function MasonryImageItem({
       animate={{ opacity: loaded ? 1 : 0.5 }}
       transition={{ duration: 0.3 }}
       className={`
-        relative cursor-pointer group overflow-hidden break-inside-avoid mb-2 bg-stone-100
+        relative cursor-pointer group overflow-hidden bg-stone-100
         ${isSelecting && isSelected ? 'ring-2 ring-stone-900' : ''}
       `}
       style={{ aspectRatio }}
@@ -214,22 +211,6 @@ function MasonryImageItem({
           }}
           transition={{ duration: 0.2, ease: 'easeOut' }}
         >
-          {/* Focal point button */}
-          <motion.button 
-            onClick={(e) => {
-              e.stopPropagation()
-              onEditFocalPoint()
-            }}
-            className="w-7 h-7 bg-white/95 backdrop-blur-sm flex items-center justify-center hover:bg-white transition-colors shadow-sm"
-            title="Set focal point"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            <svg className="w-3.5 h-3.5 text-stone-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <circle cx="12" cy="12" r="3" />
-              <path d="M12 2v4M12 18v4M2 12h4M18 12h4" />
-            </svg>
-          </motion.button>
           {/* Download button */}
           <motion.button 
             onClick={(e) => {
@@ -309,7 +290,6 @@ export function GalleryEditor({
   const [isLoadingMore, setIsLoadingMore] = useState(false)
   const [showActivity, setShowActivity] = useState(false)
   const [showShareModal, setShowShareModal] = useState(false)
-  const [focalPointImage, setFocalPointImage] = useState<GalleryImage | null>(null)
   const [showPresentationSettings, setShowPresentationSettings] = useState(false)
   const [isReordering, setIsReordering] = useState(false)
   const [isEditingTitle, setIsEditingTitle] = useState(false)
@@ -647,13 +627,12 @@ export function GalleryEditor({
                     className="object-cover"
                     priority
                   />
-                  {/* Pinterest share on hover */}
+                  {/* Social share on hover */}
                   <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10">
-                    <PinterestShareButton
+                    <SocialShareButtons
                       imageUrl={coverImage.originalUrl || coverImage.previewUrl}
                       pageUrl={shareUrl}
                       description={`${gallery.title} | 12img`}
-                      variant="icon"
                       size="md"
                     />
                   </div>
@@ -1078,8 +1057,8 @@ export function GalleryEditor({
                 onImagesReorder={(newImages) => setLoadedImages(newImages)}
               />
             ) : (
-              /* Masonry Grid for viewing */
-              <div className="columns-2 md:columns-3 lg:columns-4 gap-2">
+              /* Grid for viewing - fills horizontally (left to right) */
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
                 {loadedImages.slice(0, visibleCount).map((image, index) => {
                   // First image is hero (larger)
                   const isHero = index === 0
@@ -1101,7 +1080,6 @@ export function GalleryEditor({
                         }
                         setSelectedImages(newSelected)
                       }}
-                      onEditFocalPoint={() => setFocalPointImage(image)}
                     />
                   )
                 })}
@@ -1224,29 +1202,6 @@ export function GalleryEditor({
         currentTemplate={currentTemplate}
       />
 
-      {/* Focal Point Editor */}
-      {focalPointImage && (
-        <FocalPointEditor
-          isOpen={!!focalPointImage}
-          onClose={() => setFocalPointImage(null)}
-          image={{
-            id: focalPointImage.id,
-            url: focalPointImage.originalUrl || focalPointImage.previewUrl || focalPointImage.thumbnailUrl,
-            focalX: focalPointImage.focalX,
-            focalY: focalPointImage.focalY,
-          }}
-          onSave={(focalX, focalY) => {
-            // Update the image in local state
-            setLoadedImages(prev => 
-              prev.map(img => 
-                img.id === focalPointImage.id 
-                  ? { ...img, focalX, focalY }
-                  : img
-              )
-            )
-          }}
-        />
-      )}
 
       {/* Password Modal */}
       <AnimatePresence>

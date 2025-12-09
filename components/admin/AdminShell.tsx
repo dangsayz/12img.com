@@ -23,6 +23,7 @@ import {
   MessageCircle,
   Menu,
   X,
+  Trophy,
 } from 'lucide-react'
 import { RealtimeIndicator } from './RealtimeIndicator'
 
@@ -67,6 +68,11 @@ const NAV_ITEMS = [
     title: 'Support',
     href: '/admin/support',
     icon: MessageCircle,
+  },
+  {
+    title: 'Contests',
+    href: '/admin/contests',
+    icon: Trophy,
   },
   {
     title: 'Audit Logs',

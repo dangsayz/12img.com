@@ -1,6 +1,21 @@
+/**
+ * ============================================================================
+ * CINEMATIC GALLERY - Moody, Dark Gallery Template
+ * ============================================================================
+ * 
+ * Inspired by Pic-Time's dark gallery theme with varied row patterns:
+ * - Hero section with image + title side by side
+ * - Varied row layouts (4 equal, 1+2 stacked, 2+1 tall, 3 equal, wide span)
+ * - Generous spacing (40px gaps - 5x normal)
+ * - Dark/moody color scheme (stone-900 background)
+ * 
+ * @see https://pic-time.com for reference
+ * ============================================================================
+ */
+
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect, useCallback } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -8,6 +23,11 @@ import { Share2, Download, Check, ChevronDown, X } from 'lucide-react'
 import { type PresentationData } from '@/lib/types/presentation'
 import { getSeoAltText } from '@/lib/seo/image-urls'
 import { ImageDownloadButtonDark } from '@/components/ui/ImageDownloadButton'
+import { SocialShareButtonsDark } from '@/components/ui/SocialShareButtons'
+
+// ─────────────────────────────────────────────────────────────────────────────
+// TYPES
+// ─────────────────────────────────────────────────────────────────────────────
 
 interface GalleryImage {
   id: string
@@ -30,6 +50,34 @@ interface CinematicGalleryProps {
   presentation?: PresentationData | null
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// ROW PATTERN TYPES (Pic-Time style)
+// ─────────────────────────────────────────────────────────────────────────────
+
+type RowPattern = 
+  | 'four-equal'      // 4 images, equal width
+  | 'one-tall-two'    // 1 tall left, 2 stacked right
+  | 'two-one-tall'    // 2 stacked left, 1 tall right
+  | 'three-equal'     // 3 images, equal width
+  | 'wide-two'        // 1 wide top, 2 below
+  | 'single'          // 1 large image
+
+interface Row {
+  pattern: RowPattern
+  images: GalleryImage[]
+  startIndex: number
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// CONSTANTS
+// ─────────────────────────────────────────────────────────────────────────────
+
+const GAP = 40 // 5x normal gap (~8px) = 40px
+
+// ─────────────────────────────────────────────────────────────────────────────
+// HELPERS
+// ─────────────────────────────────────────────────────────────────────────────
+
 function formatFileSize(bytes: number): string {
   if (bytes === 0) return '0 B'
   const k = 1024
@@ -44,68 +92,344 @@ function formatDate(dateStr?: string): string {
   return date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
 }
 
-// Get natural aspect ratio class
-function getAspectClass(img: GalleryImage): string {
-  if (!img.width || !img.height) return 'aspect-[3/4]'
-  const ratio = img.width / img.height
-  if (ratio > 1.4) return 'aspect-[3/2]' // Landscape
-  if (ratio < 0.7) return 'aspect-[2/3]' // Portrait
-  return 'aspect-[4/5]' // Near square
-}
-
-// Layout row types
-type RowLayout = 'hero' | 'single-center' | 'trio-float' | 'duo-offset' | 'single-left' | 'single-right'
-
-interface LayoutRow {
-  type: RowLayout
-  images: GalleryImage[]
-}
-
-function generateLayout(images: GalleryImage[]): LayoutRow[] {
+// Generate varied row patterns (Pic-Time style)
+function generateRows(images: GalleryImage[]): Row[] {
   if (images.length === 0) return []
   
-  const rows: LayoutRow[] = []
+  const result: Row[] = []
   let i = 0
+  let patternIndex = 0
   
-  // Hero - first image
-  if (images.length > 0) {
-    rows.push({ type: 'hero', images: [images[0]] })
-    i = 1
-  }
-  
-  // Generate varied rows
-  const patterns: RowLayout[] = ['trio-float', 'single-center', 'duo-offset', 'single-left', 'trio-float', 'single-right']
-  let patternIdx = 0
+  // Pattern sequence for visual variety
+  const patterns: RowPattern[] = [
+    'four-equal',
+    'one-tall-two',
+    'three-equal',
+    'two-one-tall',
+    'wide-two',
+    'three-equal',
+    'four-equal',
+  ]
   
   while (i < images.length) {
     const remaining = images.length - i
-    const pattern = patterns[patternIdx % patterns.length]
+    const pattern = patterns[patternIndex % patterns.length]
     
-    if (pattern === 'trio-float' && remaining >= 3) {
-      rows.push({ type: 'trio-float', images: images.slice(i, i + 3) })
-      i += 3
-    } else if (pattern === 'duo-offset' && remaining >= 2) {
-      rows.push({ type: 'duo-offset', images: images.slice(i, i + 2) })
-      i += 2
-    } else if (remaining >= 1) {
-      // Single variations
-      const singleType = patternIdx % 3 === 0 ? 'single-center' : patternIdx % 3 === 1 ? 'single-left' : 'single-right'
-      rows.push({ type: singleType, images: [images[i]] })
-      i += 1
+    let count = 0
+    switch (pattern) {
+      case 'four-equal':
+        count = Math.min(4, remaining)
+        break
+      case 'one-tall-two':
+      case 'two-one-tall':
+      case 'three-equal':
+      case 'wide-two':
+        count = Math.min(3, remaining)
+        break
+      case 'single':
+        count = 1
+        break
+      default:
+        count = Math.min(3, remaining)
     }
     
-    patternIdx++
+    // Adjust pattern if not enough images
+    let actualPattern = pattern
+    if (count === 1) actualPattern = 'single'
+    else if (count === 2) actualPattern = 'three-equal' // Will just show 2
+    else if (count === 3 && pattern === 'four-equal') actualPattern = 'three-equal'
+    
+    result.push({
+      pattern: actualPattern,
+      images: images.slice(i, i + count),
+      startIndex: i + 1, // +1 because hero is index 0
+    })
+    
+    i += count
+    patternIndex++
   }
   
-  return rows
+  return result
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// IMAGE CARD (Dark theme with hover actions)
+// ─────────────────────────────────────────────────────────────────────────────
+
+function ImageCard({
+  image,
+  index,
+  onClick,
+  galleryTitle,
+  downloadEnabled,
+  className = '',
+  aspectRatio,
+}: {
+  image: GalleryImage
+  index: number
+  onClick: () => void
+  galleryTitle?: string
+  downloadEnabled?: boolean
+  className?: string
+  aspectRatio?: string
+}) {
+  const [isHovered, setIsHovered] = useState(false)
+  const [isLoaded, setIsLoaded] = useState(false)
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: '-50px' }}
+      transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+      className={`relative cursor-pointer group overflow-hidden bg-stone-800 ${className}`}
+      style={{ aspectRatio }}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      onClick={onClick}
+    >
+      {/* Skeleton */}
+      {!isLoaded && (
+        <div className="absolute inset-0 bg-stone-800 animate-pulse" />
+      )}
+
+      {/* Image */}
+      {image.thumbnailUrl && (
+        <Image
+          src={image.thumbnailUrl}
+          alt={getSeoAltText(galleryTitle || 'Photo', undefined, index + 1)}
+          fill
+          className={`object-cover transition-all duration-700 ${
+            isLoaded ? 'opacity-100' : 'opacity-0'
+          } ${isHovered ? 'scale-105' : 'scale-100'}`}
+          style={{ 
+            objectPosition: `${image.focalX ?? 50}% ${image.focalY ?? 50}%`,
+          }}
+          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+          onLoad={() => setIsLoaded(true)}
+          loading={index < 8 ? 'eager' : 'lazy'}
+        />
+      )}
+
+      {/* Hover overlay */}
+      <motion.div
+        initial={false}
+        animate={{ opacity: isHovered ? 1 : 0 }}
+        transition={{ duration: 0.2 }}
+        className="absolute inset-0 bg-black/30"
+      />
+
+      {/* Actions - top right */}
+      <motion.div
+        initial={false}
+        animate={{ opacity: isHovered ? 1 : 0 }}
+        transition={{ duration: 0.2 }}
+        className="absolute top-3 right-3 flex gap-1.5"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {downloadEnabled && (
+          <ImageDownloadButtonDark imageId={image.id} size="sm" />
+        )}
+        <SocialShareButtonsDark
+          imageUrl={image.thumbnailUrl}
+          description={`${galleryTitle || 'Photo'} | 12img`}
+        />
+      </motion.div>
+    </motion.div>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ROW COMPONENTS (Pic-Time style patterns)
+// ─────────────────────────────────────────────────────────────────────────────
+
+function FourEqualRow({ images, startIndex, onImageClick, galleryTitle, downloadEnabled }: {
+  images: GalleryImage[]
+  startIndex: number
+  onImageClick: (index: number) => void
+  galleryTitle?: string
+  downloadEnabled?: boolean
+}) {
+  return (
+    <div className="grid grid-cols-2 md:grid-cols-4" style={{ gap: GAP }}>
+      {images.map((img, i) => (
+        <ImageCard
+          key={img.id}
+          image={img}
+          index={startIndex + i}
+          onClick={() => onImageClick(startIndex + i)}
+          galleryTitle={galleryTitle}
+          downloadEnabled={downloadEnabled}
+          aspectRatio="4/3"
+        />
+      ))}
+    </div>
+  )
+}
+
+function OneTallTwoRow({ images, startIndex, onImageClick, galleryTitle, downloadEnabled }: {
+  images: GalleryImage[]
+  startIndex: number
+  onImageClick: (index: number) => void
+  galleryTitle?: string
+  downloadEnabled?: boolean
+}) {
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2" style={{ gap: GAP }}>
+      {/* Tall left */}
+      <ImageCard
+        image={images[0]}
+        index={startIndex}
+        onClick={() => onImageClick(startIndex)}
+        galleryTitle={galleryTitle}
+        downloadEnabled={downloadEnabled}
+        aspectRatio="3/4"
+      />
+      {/* Two stacked right */}
+      <div className="flex flex-col" style={{ gap: GAP }}>
+        {images.slice(1, 3).map((img, i) => (
+          <ImageCard
+            key={img.id}
+            image={img}
+            index={startIndex + 1 + i}
+            onClick={() => onImageClick(startIndex + 1 + i)}
+            galleryTitle={galleryTitle}
+            downloadEnabled={downloadEnabled}
+            className="flex-1"
+          />
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function TwoOneTallRow({ images, startIndex, onImageClick, galleryTitle, downloadEnabled }: {
+  images: GalleryImage[]
+  startIndex: number
+  onImageClick: (index: number) => void
+  galleryTitle?: string
+  downloadEnabled?: boolean
+}) {
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2" style={{ gap: GAP }}>
+      {/* Two stacked left */}
+      <div className="flex flex-col" style={{ gap: GAP }}>
+        {images.slice(0, 2).map((img, i) => (
+          <ImageCard
+            key={img.id}
+            image={img}
+            index={startIndex + i}
+            onClick={() => onImageClick(startIndex + i)}
+            galleryTitle={galleryTitle}
+            downloadEnabled={downloadEnabled}
+            className="flex-1"
+          />
+        ))}
+      </div>
+      {/* Tall right */}
+      {images[2] && (
+        <ImageCard
+          image={images[2]}
+          index={startIndex + 2}
+          onClick={() => onImageClick(startIndex + 2)}
+          galleryTitle={galleryTitle}
+          downloadEnabled={downloadEnabled}
+          aspectRatio="3/4"
+        />
+      )}
+    </div>
+  )
+}
+
+function ThreeEqualRow({ images, startIndex, onImageClick, galleryTitle, downloadEnabled }: {
+  images: GalleryImage[]
+  startIndex: number
+  onImageClick: (index: number) => void
+  galleryTitle?: string
+  downloadEnabled?: boolean
+}) {
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3" style={{ gap: GAP }}>
+      {images.map((img, i) => (
+        <ImageCard
+          key={img.id}
+          image={img}
+          index={startIndex + i}
+          onClick={() => onImageClick(startIndex + i)}
+          galleryTitle={galleryTitle}
+          downloadEnabled={downloadEnabled}
+          aspectRatio="4/3"
+        />
+      ))}
+    </div>
+  )
+}
+
+function WideTwoRow({ images, startIndex, onImageClick, galleryTitle, downloadEnabled }: {
+  images: GalleryImage[]
+  startIndex: number
+  onImageClick: (index: number) => void
+  galleryTitle?: string
+  downloadEnabled?: boolean
+}) {
+  return (
+    <div className="flex flex-col" style={{ gap: GAP }}>
+      {/* Wide top */}
+      <ImageCard
+        image={images[0]}
+        index={startIndex}
+        onClick={() => onImageClick(startIndex)}
+        galleryTitle={galleryTitle}
+        downloadEnabled={downloadEnabled}
+        aspectRatio="21/9"
+      />
+      {/* Two below */}
+      <div className="grid grid-cols-1 md:grid-cols-2" style={{ gap: GAP }}>
+        {images.slice(1, 3).map((img, i) => (
+          <ImageCard
+            key={img.id}
+            image={img}
+            index={startIndex + 1 + i}
+            onClick={() => onImageClick(startIndex + 1 + i)}
+            galleryTitle={galleryTitle}
+            downloadEnabled={downloadEnabled}
+            aspectRatio="4/3"
+          />
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function SingleRow({ images, startIndex, onImageClick, galleryTitle, downloadEnabled }: {
+  images: GalleryImage[]
+  startIndex: number
+  onImageClick: (index: number) => void
+  galleryTitle?: string
+  downloadEnabled?: boolean
+}) {
+  return (
+    <ImageCard
+      image={images[0]}
+      index={startIndex}
+      onClick={() => onImageClick(startIndex)}
+      galleryTitle={galleryTitle}
+      downloadEnabled={downloadEnabled}
+      aspectRatio="16/9"
+    />
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// MAIN COMPONENT
+// ─────────────────────────────────────────────────────────────────────────────
 
 export function CinematicGallery({
   title,
   images,
   galleryId,
   gallerySlug,
-  downloadEnabled = true,
+  downloadEnabled = false,
   totalFileSizeBytes,
   presentation,
 }: CinematicGalleryProps) {
@@ -113,11 +437,14 @@ export function CinematicGallery({
   const [lightboxImage, setLightboxImage] = useState<GalleryImage | null>(null)
   const [lightboxIndex, setLightboxIndex] = useState(0)
   
-  const rows = useMemo(() => generateLayout(images), [images])
-  
-  const coverImage = presentation?.coverImageId 
+  // Hero image is first, grid images are the rest
+  const heroImage = presentation?.coverImageId 
     ? images.find(img => img.id === presentation.coverImageId) || images[0]
     : images[0]
+  const gridImages = images.slice(1)
+  
+  // Generate varied row patterns
+  const rows = useMemo(() => generateRows(gridImages), [gridImages])
   
   const displayTitle = presentation?.coupleNames?.partner1 
     ? presentation.coupleNames.partner2
@@ -137,11 +464,10 @@ export function CinematicGallery({
     window.location.href = `/api/gallery/${galleryId}/download`
   }
 
-  const openLightbox = (img: GalleryImage) => {
-    const idx = images.findIndex(i => i.id === img.id)
-    setLightboxIndex(idx >= 0 ? idx : 0)
-    setLightboxImage(img)
-  }
+  const openLightbox = useCallback((index: number) => {
+    setLightboxIndex(index)
+    setLightboxImage(images[index])
+  }, [images])
 
   const navigateLightbox = (direction: 'prev' | 'next') => {
     const newIndex = direction === 'next' 
@@ -151,139 +477,158 @@ export function CinematicGallery({
     setLightboxImage(images[newIndex])
   }
 
-  // Pure black editorial palette
-  const bgColor = 'bg-black'
-  const textColor = 'text-white'
-  const accentColor = 'text-white'
+  // Keyboard navigation for lightbox
+  useEffect(() => {
+    if (!lightboxImage) return
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setLightboxImage(null)
+      if (e.key === 'ArrowLeft' && lightboxIndex > 0) navigateLightbox('prev')
+      if (e.key === 'ArrowRight' && lightboxIndex < images.length - 1) navigateLightbox('next')
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [lightboxImage, lightboxIndex, images.length])
 
   return (
-    <div className={`min-h-screen ${bgColor}`}>
-      {/* Header */}
-      <header className="fixed top-0 left-0 right-0 z-50 px-6 py-5 flex items-center justify-between">
-        <Link 
-          href={`/gallery/${gallerySlug || galleryId}`}
-          className={`text-sm ${textColor} opacity-60 hover:opacity-100 transition-opacity`}
-        >
-          ← Back
-        </Link>
-        
-        <div className="flex items-center gap-6">
-          <button
-            onClick={handleShare}
-            className={`text-sm ${textColor} opacity-60 hover:opacity-100 transition-opacity`}
-          >
-            {showCopied ? 'Copied!' : 'Share'}
-          </button>
-          
-          {downloadEnabled && (
-            <button
-              onClick={handleDownload}
-              className={`text-sm ${accentColor} hover:opacity-80 transition-opacity`}
-            >
-              Download
-            </button>
-          )}
-        </div>
-      </header>
-
-      {/* Hero Section - Editorial split layout */}
-      <section className="min-h-screen flex items-center justify-center px-8 pt-20 pb-16">
-        <div className="max-w-6xl w-full grid lg:grid-cols-2 gap-12 lg:gap-24 items-center">
-          {/* Cover Image with vertical text */}
-          <div className="relative">
-            {/* Vertical photographer credit - editorial style */}
+    <div className="min-h-screen bg-stone-900">
+      {/* ════════════════════════════════════════════════════════════════════
+          HERO SECTION - Image left, title right (Pic-Time style)
+          ════════════════════════════════════════════════════════════════════ */}
+      <section className="min-h-screen flex items-center justify-center px-8 md:px-16 lg:px-24 py-16">
+        <div className="max-w-[1600px] w-full grid grid-cols-1 lg:grid-cols-2 gap-16 lg:gap-24 items-center">
+          {/* Hero Image */}
+          {heroImage && (
             <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 1, delay: 0.5 }}
-              className="absolute -left-12 top-1/2 -translate-y-1/2 hidden lg:block"
+              initial={{ opacity: 0, x: -30 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+              className="relative aspect-[4/5] cursor-pointer overflow-hidden"
+              onClick={() => openLightbox(0)}
             >
-              <span className="text-[10px] text-white/30 uppercase tracking-[0.3em] whitespace-nowrap transform -rotate-90 block origin-center">
-                Photos by 12img
-              </span>
+              {/* Vertical photographer credit */}
+              <div className="absolute -left-12 top-1/2 -translate-y-1/2 hidden lg:block">
+                <span className="text-[10px] text-white/30 uppercase tracking-[0.3em] whitespace-nowrap transform -rotate-90 block origin-center">
+                  Photos by 12img
+                </span>
+              </div>
+              <Image
+                src={heroImage.previewUrl || heroImage.thumbnailUrl}
+                alt={getSeoAltText(displayTitle, undefined, 1)}
+                fill
+                className="object-cover"
+                style={{ 
+                  objectPosition: `${heroImage.focalX ?? 50}% ${heroImage.focalY ?? 50}%`,
+                }}
+                priority
+                sizes="(max-width: 1024px) 100vw, 50vw"
+              />
             </motion.div>
-            
-            {coverImage && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8 }}
-                className="relative cursor-pointer"
-                onClick={() => openLightbox(coverImage)}
-              >
-                <div className={`relative ${getAspectClass(coverImage)} max-h-[75vh]`}>
-                  <Image
-                    src={coverImage.previewUrl || coverImage.thumbnailUrl}
-                    alt={getSeoAltText(displayTitle)}
-                    fill
-                    className="object-cover"
-                    style={{ objectPosition: `${coverImage.focalX ?? 50}% ${coverImage.focalY ?? 50}%` }}
-                    priority
-                    sizes="50vw"
-                  />
-                </div>
-              </motion.div>
-            )}
-          </div>
-          
-          {/* Title & Info - Editorial typography */}
+          )}
+
+          {/* Title & Info */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.2 }}
-            className="lg:pl-8"
+            initial={{ opacity: 0, x: 30 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.8, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
+            className="text-white"
           >
-            {/* Large serif title */}
-            <h1 className="font-serif text-4xl sm:text-5xl lg:text-6xl text-white tracking-tight mb-8 leading-[1.1]">
+            {/* Gallery title */}
+            <h1 className="font-serif text-4xl md:text-5xl lg:text-6xl font-light tracking-wide text-white/90 mb-4">
               {displayTitle}
             </h1>
-            
-            {/* Thin divider line */}
+
+            {/* Thin divider */}
             <div className="w-16 h-px bg-white/20 mb-8" />
-            
-            {/* Event date - elegant small caps */}
+
+            {/* Date */}
             {presentation?.eventDate && (
-              <p className="text-sm text-white/50 tracking-widest uppercase mb-6">
+              <p className="text-white/50 text-sm tracking-widest uppercase mb-6">
                 {formatDate(presentation.eventDate)}
               </p>
             )}
-            
-            {/* Subtitle / Location */}
+
+            {/* Subtitle */}
             {presentation?.subtitle && (
               <p className="text-white/40 text-sm tracking-wide mb-8">
                 {presentation.subtitle}
               </p>
             )}
-            
-            {/* Image count - minimal */}
+
+            {/* Image count */}
             <p className="text-xs text-white/30 tracking-[0.2em] uppercase">
               {images.length} photographs
             </p>
-            
+
+            {/* Actions */}
+            <div className="flex items-center gap-4 mt-8">
+              <button
+                onClick={handleShare}
+                className="flex items-center gap-2 px-4 py-2 text-sm text-white/60 hover:text-white/90 transition-colors"
+              >
+                {showCopied ? <Check className="w-4 h-4" /> : <Share2 className="w-4 h-4" />}
+                {showCopied ? 'Copied' : 'Share'}
+              </button>
+              {downloadEnabled && (
+                <button
+                  onClick={handleDownload}
+                  className="flex items-center gap-2 px-4 py-2 text-sm text-white/60 hover:text-white/90 transition-colors"
+                >
+                  <Download className="w-4 h-4" />
+                  Download All
+                </button>
+              )}
+            </div>
+
             {/* Scroll indicator */}
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ delay: 1.2 }}
+              transition={{ delay: 1.5 }}
               className="mt-16 hidden lg:block"
             >
-              <ChevronDown className="w-5 h-5 text-white/20 animate-bounce" />
+              <motion.div
+                animate={{ y: [0, 8, 0] }}
+                transition={{ repeat: Infinity, duration: 2, ease: 'easeInOut' }}
+              >
+                <ChevronDown className="w-6 h-6 text-white/30" />
+              </motion.div>
             </motion.div>
           </motion.div>
         </div>
       </section>
 
-      {/* Floating Images Grid */}
-      <section className="pb-24">
-        {rows.slice(1).map((row, idx) => (
-          <RowRenderer
-            key={idx}
-            row={row}
-            onImageClick={openLightbox}
-            textColor={textColor}
-            galleryTitle={displayTitle}
-          />
-        ))}
+      {/* ════════════════════════════════════════════════════════════════════
+          GRID SECTION - Varied row patterns with generous spacing (40px)
+          ════════════════════════════════════════════════════════════════════ */}
+      <section className="px-8 md:px-16 lg:px-24 pb-24">
+        <div className="max-w-[1600px] mx-auto flex flex-col" style={{ gap: GAP }}>
+          {rows.map((row, rowIndex) => {
+            const props = {
+              images: row.images,
+              startIndex: row.startIndex,
+              onImageClick: openLightbox,
+              galleryTitle: displayTitle,
+              downloadEnabled,
+            }
+
+            switch (row.pattern) {
+              case 'four-equal':
+                return <FourEqualRow key={rowIndex} {...props} />
+              case 'one-tall-two':
+                return <OneTallTwoRow key={rowIndex} {...props} />
+              case 'two-one-tall':
+                return <TwoOneTallRow key={rowIndex} {...props} />
+              case 'three-equal':
+                return <ThreeEqualRow key={rowIndex} {...props} />
+              case 'wide-two':
+                return <WideTwoRow key={rowIndex} {...props} />
+              case 'single':
+                return <SingleRow key={rowIndex} {...props} />
+              default:
+                return <ThreeEqualRow key={rowIndex} {...props} />
+            }
+          })}
+        </div>
       </section>
 
       {/* Footer - Editorial minimal */}
@@ -335,17 +680,26 @@ export function CinematicGallery({
             className="fixed inset-0 z-[100] bg-black/95 flex items-center justify-center"
             onClick={() => setLightboxImage(null)}
           >
-            {/* Top bar with download and close */}
-            <div className="absolute top-6 right-6 flex items-center gap-2 z-10">
-              {downloadEnabled && lightboxImage && (
-                <ImageDownloadButtonDark imageId={lightboxImage.id} size="md" />
-              )}
-              <button
-                onClick={() => setLightboxImage(null)}
-                className="p-3 text-white/60 hover:text-white transition-colors rounded-full bg-white/10 hover:bg-white/20"
-              >
-                <X className="w-6 h-6" />
-              </button>
+            {/* Top bar with actions */}
+            <div className="absolute top-6 left-6 right-6 flex items-center justify-between z-10">
+              <span className="text-white/50 text-sm">
+                {lightboxIndex + 1} / {images.length}
+              </span>
+              <div className="flex items-center gap-2">
+                {downloadEnabled && lightboxImage && (
+                  <ImageDownloadButtonDark imageId={lightboxImage.id} size="md" />
+                )}
+                <SocialShareButtonsDark
+                  imageUrl={lightboxImage.previewUrl || lightboxImage.thumbnailUrl}
+                  description={`${displayTitle} | 12img`}
+                />
+                <button
+                  onClick={() => setLightboxImage(null)}
+                  className="p-3 text-white/60 hover:text-white transition-colors rounded-full bg-white/10 hover:bg-white/20"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
             </div>
 
             {lightboxIndex > 0 && (
@@ -380,124 +734,9 @@ export function CinematicGallery({
                 className="max-w-full max-h-[90vh] object-contain"
               />
             </motion.div>
-
-            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 text-white/40 text-sm">
-              {lightboxIndex + 1} / {images.length}
-            </div>
           </motion.div>
         )}
       </AnimatePresence>
     </div>
   )
-}
-
-// Row Renderer - Creates floating, asymmetric layouts
-function RowRenderer({ 
-  row, 
-  onImageClick,
-  textColor,
-  galleryTitle
-}: { 
-  row: LayoutRow
-  onImageClick: (img: GalleryImage) => void
-  textColor: string
-  galleryTitle: string
-}) {
-  const FloatingImage = ({ img, className = '', imageIndex }: { img: GalleryImage; className?: string; imageIndex?: number }) => (
-    <motion.div
-      initial={{ opacity: 0, y: 40 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: '-100px' }}
-      transition={{ duration: 0.8 }}
-      className={`relative cursor-pointer group ${className}`}
-      onClick={() => onImageClick(img)}
-    >
-      <div className={`relative ${getAspectClass(img)} overflow-hidden`}>
-        <Image
-          src={img.previewUrl || img.thumbnailUrl}
-          alt={getSeoAltText(galleryTitle, undefined, imageIndex)}
-          fill
-          className="object-cover transition-transform duration-700 group-hover:scale-[1.02]"
-          style={{ objectPosition: `${img.focalX ?? 50}% ${img.focalY ?? 50}%` }}
-          sizes="(max-width: 768px) 90vw, 40vw"
-        />
-      </div>
-    </motion.div>
-  )
-
-  switch (row.type) {
-    case 'trio-float':
-      // Three images floating at different heights - like the reference
-      return (
-        <div className="px-8 md:px-16 py-16">
-          <div className="max-w-7xl mx-auto flex flex-wrap md:flex-nowrap items-end gap-6 md:gap-8">
-            <FloatingImage 
-              img={row.images[0]} 
-              className="w-full md:w-[30%] md:mb-20"
-            />
-            <FloatingImage 
-              img={row.images[1]} 
-              className="w-full md:w-[25%] md:mb-8"
-            />
-            <FloatingImage 
-              img={row.images[2]} 
-              className="w-full md:w-[35%] md:ml-auto"
-            />
-          </div>
-        </div>
-      )
-
-    case 'duo-offset':
-      // Two images, offset vertically
-      return (
-        <div className="px-8 md:px-16 py-16">
-          <div className="max-w-5xl mx-auto flex flex-wrap md:flex-nowrap items-start gap-6 md:gap-12">
-            <FloatingImage 
-              img={row.images[0]} 
-              className="w-full md:w-[45%] md:mt-24"
-            />
-            <FloatingImage 
-              img={row.images[1]} 
-              className="w-full md:w-[45%] md:ml-auto"
-            />
-          </div>
-        </div>
-      )
-
-    case 'single-center':
-      return (
-        <div className="px-8 md:px-24 py-16">
-          <div className="max-w-3xl mx-auto">
-            <FloatingImage img={row.images[0]} />
-          </div>
-        </div>
-      )
-
-    case 'single-left':
-      return (
-        <div className="px-8 md:px-16 py-16">
-          <div className="max-w-6xl">
-            <FloatingImage 
-              img={row.images[0]} 
-              className="w-full md:w-[50%]"
-            />
-          </div>
-        </div>
-      )
-
-    case 'single-right':
-      return (
-        <div className="px-8 md:px-16 py-16">
-          <div className="max-w-6xl ml-auto">
-            <FloatingImage 
-              img={row.images[0]} 
-              className="w-full md:w-[50%] md:ml-auto"
-            />
-          </div>
-        </div>
-      )
-
-    default:
-      return null
-  }
 }

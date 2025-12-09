@@ -46,8 +46,15 @@ export default async function GalleryReadyPage({ params }: Props) {
     }
   })
 
-  // Get cover image (first image or designated cover)
-  const coverImage = previewImages[0] || null
+  // Get cover image (first image or designated cover) with dimensions
+  const firstImage = dbImages[0]
+  const coverImage = firstImage ? {
+    id: firstImage.id,
+    thumbnailUrl: signedUrls.get(firstImage.storage_path)?.thumbnail || '',
+    previewUrl: signedUrls.get(firstImage.storage_path)?.preview || '',
+    width: firstImage.width || undefined,
+    height: firstImage.height || undefined,
+  } : null
 
   return (
     <GalleryReadyClient

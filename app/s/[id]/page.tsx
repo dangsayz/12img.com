@@ -44,17 +44,17 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   return {
     title: 'Shared Image',
-    description: 'Image shared via 12img.com — Quick, free image sharing',
+    description: 'made by 12img',
     openGraph: {
       title: 'Shared Image',
-      description: 'Image shared via 12img.com',
+      description: 'made by 12img',
       images: [{ url: imageUrl, width: 1200, height: 630 }],
       type: 'website',
     },
     twitter: {
       card: 'summary_large_image',
       title: 'Shared Image',
-      description: 'Image shared via 12img.com',
+      description: 'made by 12img',
       images: [imageUrl],
     },
   }

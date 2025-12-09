@@ -5,7 +5,7 @@ import { createPortal } from 'react-dom'
 import { X, ChevronLeft, ChevronRight, Download, Loader2, Share2, Check } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { getPreviewUrls, getOriginalUrl } from '@/server/actions/gallery.actions'
-import { PinterestShareButtonDark } from '@/components/ui/PinterestShareButton'
+import { SocialShareButtonsDark } from '@/components/ui/SocialShareButtons'
 import type { ProcessingStatus } from '@/types/database'
 import type { ImageDerivatives } from '@/lib/storage/signed-urls'
 
@@ -322,9 +322,9 @@ export function FullscreenViewer({
 
         {/* Actions */}
         <div className="flex items-center gap-2">
-          {/* Pinterest share button */}
+          {/* Social share buttons */}
           {currentPreviewUrl && (
-            <PinterestShareButtonDark
+            <SocialShareButtonsDark
               imageUrl={currentPreviewUrl}
               pageUrl={gallerySlug ? `${typeof window !== 'undefined' ? window.location.origin : ''}/view-reel/${gallerySlug}` : undefined}
               description={galleryTitle ? `${galleryTitle} | 12img` : '12img'}
