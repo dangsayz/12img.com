@@ -21,12 +21,20 @@ export type VendorCategory =
   | 'videographer'
   | 'officiant'
   | 'transportation'
+  | 'photographer'
+  | 'stationery'
+  | 'lighting'
+  | 'photo_booth'
+  | 'decor'
+  | 'bridal'
+  | 'jewelry'
+  | 'entertainment'
   | 'other'
 
 export interface VendorCategoryConfig {
   id: VendorCategory
   label: string
-  emoji: string
+  icon: string  // Lucide icon name
   color: string  // Tailwind color class
   bgColor: string
 }
@@ -35,84 +43,140 @@ export const VENDOR_CATEGORIES: Record<VendorCategory, VendorCategoryConfig> = {
   florist: {
     id: 'florist',
     label: 'Florist',
-    emoji: '🌸',
-    color: 'text-pink-600',
-    bgColor: 'bg-pink-100',
+    icon: 'Flower2',
+    color: 'text-stone-600',
+    bgColor: 'bg-stone-100',
   },
   planner: {
     id: 'planner',
     label: 'Planner',
-    emoji: '💎',
-    color: 'text-purple-600',
-    bgColor: 'bg-purple-100',
+    icon: 'ClipboardList',
+    color: 'text-stone-600',
+    bgColor: 'bg-stone-100',
   },
   venue: {
     id: 'venue',
     label: 'Venue',
-    emoji: '🏛️',
+    icon: 'Building2',
     color: 'text-stone-600',
     bgColor: 'bg-stone-100',
   },
   dj: {
     id: 'dj',
     label: 'DJ / Music',
-    emoji: '🎵',
-    color: 'text-blue-600',
-    bgColor: 'bg-blue-100',
+    icon: 'Music',
+    color: 'text-stone-600',
+    bgColor: 'bg-stone-100',
   },
   caterer: {
     id: 'caterer',
     label: 'Caterer',
-    emoji: '🍽️',
-    color: 'text-orange-600',
-    bgColor: 'bg-orange-100',
+    icon: 'UtensilsCrossed',
+    color: 'text-stone-600',
+    bgColor: 'bg-stone-100',
   },
   bakery: {
     id: 'bakery',
     label: 'Bakery',
-    emoji: '🎂',
-    color: 'text-amber-600',
-    bgColor: 'bg-amber-100',
+    icon: 'Cake',
+    color: 'text-stone-600',
+    bgColor: 'bg-stone-100',
   },
   rentals: {
     id: 'rentals',
     label: 'Rentals',
-    emoji: '🪑',
-    color: 'text-teal-600',
-    bgColor: 'bg-teal-100',
+    icon: 'Armchair',
+    color: 'text-stone-600',
+    bgColor: 'bg-stone-100',
   },
   hair_makeup: {
     id: 'hair_makeup',
     label: 'Hair & Makeup',
-    emoji: '💄',
-    color: 'text-rose-600',
-    bgColor: 'bg-rose-100',
+    icon: 'Scissors',
+    color: 'text-stone-600',
+    bgColor: 'bg-stone-100',
   },
   videographer: {
     id: 'videographer',
     label: 'Videographer',
-    emoji: '🎬',
-    color: 'text-indigo-600',
-    bgColor: 'bg-indigo-100',
+    icon: 'Video',
+    color: 'text-stone-600',
+    bgColor: 'bg-stone-100',
   },
   officiant: {
     id: 'officiant',
     label: 'Officiant',
-    emoji: '📜',
-    color: 'text-slate-600',
-    bgColor: 'bg-slate-100',
+    icon: 'ScrollText',
+    color: 'text-stone-600',
+    bgColor: 'bg-stone-100',
   },
   transportation: {
     id: 'transportation',
     label: 'Transportation',
-    emoji: '🚗',
-    color: 'text-gray-600',
-    bgColor: 'bg-gray-100',
+    icon: 'Car',
+    color: 'text-stone-600',
+    bgColor: 'bg-stone-100',
+  },
+  photographer: {
+    id: 'photographer',
+    label: 'Photographer',
+    icon: 'Camera',
+    color: 'text-stone-600',
+    bgColor: 'bg-stone-100',
+  },
+  stationery: {
+    id: 'stationery',
+    label: 'Stationery',
+    icon: 'PenTool',
+    color: 'text-stone-600',
+    bgColor: 'bg-stone-100',
+  },
+  lighting: {
+    id: 'lighting',
+    label: 'Lighting',
+    icon: 'Lightbulb',
+    color: 'text-stone-600',
+    bgColor: 'bg-stone-100',
+  },
+  photo_booth: {
+    id: 'photo_booth',
+    label: 'Photo Booth',
+    icon: 'ImagePlus',
+    color: 'text-stone-600',
+    bgColor: 'bg-stone-100',
+  },
+  decor: {
+    id: 'decor',
+    label: 'Decor',
+    icon: 'Palette',
+    color: 'text-stone-600',
+    bgColor: 'bg-stone-100',
+  },
+  bridal: {
+    id: 'bridal',
+    label: 'Bridal',
+    icon: 'Shirt',
+    color: 'text-stone-600',
+    bgColor: 'bg-stone-100',
+  },
+  jewelry: {
+    id: 'jewelry',
+    label: 'Jewelry',
+    icon: 'Gem',
+    color: 'text-stone-600',
+    bgColor: 'bg-stone-100',
+  },
+  entertainment: {
+    id: 'entertainment',
+    label: 'Entertainment',
+    icon: 'PartyPopper',
+    color: 'text-stone-600',
+    bgColor: 'bg-stone-100',
   },
   other: {
     id: 'other',
     label: 'Other',
-    emoji: '✨',
+    icon: 'MoreHorizontal',
     color: 'text-stone-600',
     bgColor: 'bg-stone-100',
   },
@@ -138,6 +202,8 @@ export interface Vendor {
   color: string | null
   notes: string | null
   is_archived: boolean
+  linked_user_id: string | null  // If vendor is a registered 12img user
+  invite_sent_at: string | null  // If invitation was sent
   created_at: string
   updated_at: string
 }
@@ -153,6 +219,8 @@ export interface CreateVendorInput {
   logo_url?: string
   color?: string
   notes?: string
+  linked_user_id?: string  // Link to existing 12img user
+  invite_email?: string    // Email to send invitation to
 }
 
 export interface UpdateVendorInput {

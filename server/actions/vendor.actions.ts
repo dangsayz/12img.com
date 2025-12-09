@@ -25,6 +25,101 @@ import {
 } from '@/lib/vendors/types'
 
 // ═══════════════════════════════════════════════════════════════
+// SEARCH REGISTERED USERS
+// ═══════════════════════════════════════════════════════════════
+
+export interface RegisteredUser {
+  id: string
+  email?: string | null
+  display_name: string | null
+  profile_slug: string | null
+  instagram_handle: string | null
+  business_name: string | null
+}
+
+/**
+ * Look up a registered 12img user by email
+ * Returns user info if found, null if not registered
+ */
+export async function lookupUserByEmail(email: string): Promise<RegisteredUser | null> {
+  const { userId: clerkId } = await auth()
+  if (!clerkId) throw new Error('Unauthorized')
+
+  const user = await getUserByClerkId(clerkId)
+  if (!user) throw new Error('User not found')
+
+  if (!email || !email.includes('@')) return null
+
+  const supabase = supabaseAdmin
+  const normalizedEmail = email.toLowerCase().trim()
+  
+  console.log('Email lookup - searching for:', normalizedEmail)
+  
+  // First, just find the user by email (simple query)
+  const { data: foundUser, error } = await supabase
+    .from('users')
+    .select('id, email, display_name, profile_slug')
+    .ilike('email', normalizedEmail)
+    .maybeSingle()
+
+  if (error) {
+    console.log('Email lookup - error:', error.message)
+    return null
+  }
+  
+  if (!foundUser) {
+    console.log('Email lookup - no user found for:', normalizedEmail)
+    return null
+  }
+
+  console.log('Email lookup - found user:', foundUser.id, foundUser.email)
+
+  // Now get their settings separately
+  const { data: settings } = await supabase
+    .from('user_settings')
+    .select('business_name, instagram_handle')
+    .eq('user_id', foundUser.id)
+    .maybeSingle()
+
+  return {
+    id: foundUser.id,
+    email: foundUser.email,
+    display_name: foundUser.display_name,
+    profile_slug: foundUser.profile_slug,
+    instagram_handle: settings?.instagram_handle || null,
+    business_name: settings?.business_name || null,
+  }
+}
+
+/**
+ * Get previously used vendor emails for autocomplete
+ * Returns emails from existing vendors that the user has added
+ */
+export async function getVendorEmailSuggestions(query: string): Promise<string[]> {
+  const { userId: clerkId } = await auth()
+  if (!clerkId) throw new Error('Unauthorized')
+
+  const user = await getUserByClerkId(clerkId)
+  if (!user) throw new Error('User not found')
+
+  if (!query || query.length < 2) return []
+
+  const supabase = supabaseAdmin
+  
+  const { data, error } = await supabase
+    .from('vendors')
+    .select('email')
+    .eq('user_id', user.id)
+    .not('email', 'is', null)
+    .ilike('email', `%${query}%`)
+    .limit(5)
+
+  if (error) return []
+  
+  return (data || []).map(v => v.email).filter(Boolean) as string[]
+}
+
+// ═══════════════════════════════════════════════════════════════
 // VENDOR CRUD
 // ═══════════════════════════════════════════════════════════════
 
@@ -91,18 +186,25 @@ export async function createVendor(input: CreateVendorInput): Promise<Vendor> {
       business_name: input.business_name,
       category: input.category,
       contact_name: input.contact_name || null,
-      email: input.email || null,
+      email: input.email || input.invite_email || null,
       phone: input.phone || null,
       instagram_handle: instagram,
       website: input.website || null,
       logo_url: input.logo_url || null,
       color: input.color || null,
       notes: input.notes || null,
+      linked_user_id: input.linked_user_id || null,
+      invite_sent_at: input.invite_email ? new Date().toISOString() : null,
     })
     .select()
     .single()
 
   if (error) throw new Error(error.message)
+  
+  // TODO: Send invitation email if invite_email is provided
+  // if (input.invite_email) {
+  //   await sendVendorInviteEmail(input.invite_email, user, data)
+  // }
   
   revalidatePath('/settings/vendors')
   return data
@@ -341,20 +443,29 @@ export async function getGalleryVendorShares(
   if (!user) throw new Error('User not found')
 
   const supabase = supabaseAdmin
+  
+  // Get shares for this gallery where the vendor belongs to the current user
   const { data, error } = await supabase
     .from('gallery_vendor_shares')
     .select(`
       *,
-      vendor:vendors(*),
+      vendor:vendors!inner(*),
       gallery:galleries(id, title, slug),
       terms_template:vendor_terms_templates(*)
     `)
     .eq('gallery_id', galleryId)
-    .eq('user_id', user.id)
-    .eq('is_revoked', false)
+    .eq('vendor.user_id', user.id)
     .order('shared_at', { ascending: false })
 
-  if (error) throw new Error(error.message)
+  if (error) {
+    // Table may not exist yet - return empty array
+    if (error.message.includes('does not exist')) {
+      console.log('gallery_vendor_shares table not yet created - run migration 055')
+      return []
+    }
+    console.error('getGalleryVendorShares error:', error)
+    throw new Error(error.message)
+  }
 
   // Get image counts for each share
   const shares = data || []

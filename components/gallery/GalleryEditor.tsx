@@ -41,7 +41,8 @@ import {
   ArrowDown,
   ImageIcon,
   Star,
-  Users
+  Users,
+  ChevronRight
 } from 'lucide-react'
 import { EmailActivity } from '@/components/gallery/EmailActivity'
 import { ShareModal } from '@/components/gallery/ShareModal'
@@ -917,8 +918,25 @@ export function GalleryEditor({
                     </button>
                   </div>
 
+                  {/* Share with Vendors - Clear CTA */}
+                  <div className="py-4 border-t border-stone-200 mt-4">
+                    <button
+                      onClick={() => setShowVendorShareModal(true)}
+                      className="w-full flex items-center gap-3 p-3 bg-stone-50 hover:bg-stone-100 border border-stone-200 hover:border-stone-300 rounded-xl transition-all group"
+                    >
+                      <div className="w-10 h-10 rounded-lg bg-stone-900 flex items-center justify-center shrink-0">
+                        <Users className="w-5 h-5 text-white" />
+                      </div>
+                      <div className="flex-1 text-left">
+                        <p className="text-sm font-medium text-stone-900">Share with Vendors</p>
+                        <p className="text-xs text-stone-500">Give florists, planners & venues access</p>
+                      </div>
+                      <ChevronRight className="w-4 h-4 text-stone-400 group-hover:text-stone-600 transition-colors" />
+                    </button>
+                  </div>
+
                   {/* Email Activity Toggle */}
-                  <div className="pt-6 border-t border-stone-200 mt-6">
+                  <div className="pt-4 border-t border-stone-200">
                     <button
                       onClick={() => setShowActivity(!showActivity)}
                       className="flex items-center justify-between w-full text-left"

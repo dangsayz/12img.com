@@ -89,9 +89,12 @@ export function LandingPage() {
               <Link href="#contracts" className="px-3 py-1.5 rounded-full text-sm font-medium text-stone-500 hover:text-stone-900 hover:bg-stone-50 transition-all">
                 Contracts
               </Link>
-              <Link href="#automations" className="px-3 py-1.5 rounded-full text-sm font-medium text-stone-500 hover:text-stone-900 hover:bg-stone-50 transition-all flex items-center gap-1">
+              <Link href="#vendors" className="px-3 py-1.5 rounded-full text-sm font-medium text-stone-500 hover:text-stone-900 hover:bg-stone-50 transition-all flex items-center gap-1">
+                Vendors
+                <span className="px-1 py-0.5 bg-stone-900 text-white text-[9px] font-bold uppercase tracking-wider rounded">New</span>
+              </Link>
+              <Link href="#automations" className="px-3 py-1.5 rounded-full text-sm font-medium text-stone-500 hover:text-stone-900 hover:bg-stone-50 transition-all">
                 Automations
-                <span className="px-1 py-0.5 bg-violet-100 text-violet-700 text-[9px] font-bold uppercase tracking-wider rounded">New</span>
               </Link>
               <Link href="#pricing" className="px-3 py-1.5 rounded-full text-sm font-medium text-stone-500 hover:text-stone-900 hover:bg-stone-50 transition-all">
                 Pricing
@@ -1155,6 +1158,178 @@ export function LandingPage() {
             </div>
           </div>
 
+        </div>
+      </section>
+
+      {/* --- Vendor Network - Ultra Minimal Editorial Section --- */}
+      <section id="vendors" className="py-24 lg:py-40 px-4 sm:px-6 bg-[#FAFAFA] scroll-mt-20 relative overflow-hidden">
+        {/* Subtle texture */}
+        <div className="absolute inset-0 opacity-[0.02]" style={{
+          backgroundImage: `radial-gradient(circle at 1px 1px, #000 0.5px, transparent 0)`,
+          backgroundSize: '24px 24px'
+        }} />
+        
+        <div className="max-w-[1200px] mx-auto relative">
+          {/* Editorial Header */}
+          <div className="max-w-3xl mx-auto text-center mb-16 lg:mb-24">
+            <div className="inline-flex items-center gap-3 mb-8">
+              <div className="h-px w-12 bg-stone-300" />
+              <span className="text-[11px] font-medium uppercase tracking-[0.25em] text-stone-400">Vendor Network</span>
+              <div className="h-px w-12 bg-stone-300" />
+            </div>
+            
+            <h2 className="font-serif text-4xl sm:text-5xl lg:text-6xl text-stone-900 leading-[1.1] tracking-[-0.02em] mb-8">
+              Share once.<br />
+              <span className="italic font-light">Everyone wins.</span>
+            </h2>
+            
+            <p className="text-stone-500 text-lg lg:text-xl leading-relaxed max-w-xl mx-auto font-light">
+              Stop emailing ZIP files. Give vendors their own portal to download images for their portfolios.
+            </p>
+          </div>
+
+          {/* Main Visual - The Flow */}
+          <div className="relative mb-16 lg:mb-24">
+            {/* Connection Lines - Desktop Only */}
+            <div className="hidden lg:block absolute top-1/2 left-[20%] right-[20%] h-px bg-gradient-to-r from-transparent via-stone-200 to-transparent" />
+            
+            {/* Three Step Flow */}
+            <div className="grid md:grid-cols-3 gap-8 lg:gap-4 max-w-4xl mx-auto">
+              {/* Step 1: Add Vendor */}
+              <div className="relative group">
+                <div className="bg-white rounded-2xl border border-stone-200 p-6 lg:p-8 hover:border-stone-300 hover:shadow-lg transition-all duration-500">
+                  <div className="w-10 h-10 rounded-xl bg-stone-900 flex items-center justify-center mb-5">
+                    <Users className="w-5 h-5 text-white" />
+                  </div>
+                  <p className="text-[10px] uppercase tracking-[0.2em] text-stone-400 mb-2">Step 1</p>
+                  <h4 className="font-medium text-lg text-stone-900 mb-2">Add your vendors</h4>
+                  <p className="text-stone-500 text-sm leading-relaxed">
+                    Enter their email. We'll check if they're on 12img. If not, send an invite.
+                  </p>
+                  
+                  {/* Mini mockup */}
+                  <div className="mt-5 p-3 bg-stone-50 rounded-lg border border-stone-100">
+                    <div className="flex items-center gap-2 text-xs text-stone-400 mb-2">
+                      <Mail className="w-3 h-3" />
+                      <span>florist@email.com</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-6 h-6 rounded-full bg-stone-900 flex items-center justify-center">
+                        <Check className="w-3 h-3 text-white" />
+                      </div>
+                      <span className="text-xs text-stone-600">Registered on 12img</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Step 2: Share Gallery */}
+              <div className="relative group">
+                <div className="bg-white rounded-2xl border border-stone-200 p-6 lg:p-8 hover:border-stone-300 hover:shadow-lg transition-all duration-500">
+                  <div className="w-10 h-10 rounded-xl bg-stone-900 flex items-center justify-center mb-5">
+                    <Send className="w-5 h-5 text-white" />
+                  </div>
+                  <p className="text-[10px] uppercase tracking-[0.2em] text-stone-400 mb-2">Step 2</p>
+                  <h4 className="font-medium text-lg text-stone-900 mb-2">Share the gallery</h4>
+                  <p className="text-stone-500 text-sm leading-relaxed">
+                    One click. They get a private link with your usage terms built in.
+                  </p>
+                  
+                  {/* Mini mockup */}
+                  <div className="mt-5 p-3 bg-stone-50 rounded-lg border border-stone-100">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-xs font-medium text-stone-700">Sarah & James Wedding</span>
+                      <span className="text-[10px] text-emerald-600">Sent ✓</span>
+                    </div>
+                    <div className="flex gap-1">
+                      {['Florist', 'Venue', 'Planner'].map((v, i) => (
+                        <span key={i} className="px-2 py-0.5 bg-stone-200 rounded text-[10px] text-stone-600">{v}</span>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Step 3: They Download */}
+              <div className="relative group">
+                <div className="bg-white rounded-2xl border border-stone-200 p-6 lg:p-8 hover:border-stone-300 hover:shadow-lg transition-all duration-500">
+                  <div className="w-10 h-10 rounded-xl bg-stone-900 flex items-center justify-center mb-5">
+                    <ImageIcon className="w-5 h-5 text-white" />
+                  </div>
+                  <p className="text-[10px] uppercase tracking-[0.2em] text-stone-400 mb-2">Step 3</p>
+                  <h4 className="font-medium text-lg text-stone-900 mb-2">They download</h4>
+                  <p className="text-stone-500 text-sm leading-relaxed">
+                    Vendors accept terms, pick their images, download. You get notified.
+                  </p>
+                  
+                  {/* Mini mockup */}
+                  <div className="mt-5 p-3 bg-stone-50 rounded-lg border border-stone-100">
+                    <div className="flex items-center gap-2 mb-2">
+                      <div className="w-5 h-5 rounded-full bg-emerald-100 flex items-center justify-center">
+                        <Check className="w-3 h-3 text-emerald-600" />
+                      </div>
+                      <span className="text-xs text-stone-600">Terms accepted</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-5 h-5 rounded-full bg-stone-200 flex items-center justify-center">
+                        <ArrowRight className="w-3 h-3 text-stone-500 rotate-90" />
+                      </div>
+                      <span className="text-xs text-stone-600">12 images downloaded</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Stats Row */}
+          <div className="flex justify-center mb-16 lg:mb-24">
+            <div className="inline-flex items-center gap-8 lg:gap-16 px-8 py-6 bg-white rounded-2xl border border-stone-200">
+              <div className="text-center">
+                <p className="text-4xl lg:text-5xl font-extralight text-stone-900 tracking-tight">20+</p>
+                <p className="text-[10px] uppercase tracking-[0.2em] text-stone-400 mt-1">Categories</p>
+              </div>
+              <div className="w-px h-12 bg-stone-200" />
+              <div className="text-center">
+                <p className="text-4xl lg:text-5xl font-extralight text-stone-900 tracking-tight">1</p>
+                <p className="text-[10px] uppercase tracking-[0.2em] text-stone-400 mt-1">Click share</p>
+              </div>
+              <div className="w-px h-12 bg-stone-200" />
+              <div className="text-center">
+                <p className="text-4xl lg:text-5xl font-extralight text-stone-900 tracking-tight">0</p>
+                <p className="text-[10px] uppercase tracking-[0.2em] text-stone-400 mt-1">ZIP files</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Vendor Categories Preview */}
+          <div className="max-w-3xl mx-auto">
+            <p className="text-center text-xs uppercase tracking-[0.2em] text-stone-400 mb-6">Works with every vendor type</p>
+            <div className="flex flex-wrap justify-center gap-2">
+              {['Florist', 'Planner', 'Venue', 'DJ', 'Caterer', 'Bakery', 'Hair & Makeup', 'Videographer', 'Photo Booth', 'Lighting', 'Stationery', 'Bridal'].map((cat, i) => (
+                <span 
+                  key={i} 
+                  className="px-3 py-1.5 bg-white border border-stone-200 rounded-full text-xs text-stone-600 hover:border-stone-300 hover:bg-stone-50 transition-colors cursor-default"
+                >
+                  {cat}
+                </span>
+              ))}
+              <span className="px-3 py-1.5 bg-stone-900 text-white rounded-full text-xs">
+                +8 more
+              </span>
+            </div>
+          </div>
+
+          {/* CTA */}
+          <div className="text-center mt-16">
+            <button 
+              onClick={() => openAuthModal('sign-up')}
+              className="inline-flex items-center gap-2 bg-stone-900 text-white px-8 py-4 font-medium hover:bg-black transition-colors rounded-full"
+            >
+              Build Your Vendor Network
+              <ArrowRight className="w-4 h-4" />
+            </button>
+          </div>
         </div>
       </section>
 

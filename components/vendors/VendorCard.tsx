@@ -18,6 +18,7 @@ import {
   getVendorInitials,
   getInstagramUrl,
 } from '@/lib/vendors/types'
+import { VendorCategoryIcon } from './VendorCategoryIcon'
 
 interface VendorCardProps {
   vendor: Vendor
@@ -110,8 +111,8 @@ export function VendorCard({ vendor, onEdit, onArchive, onDelete }: VendorCardPr
             {vendor.business_name}
           </h3>
           <div className="flex items-center gap-2 mt-1">
-            <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs ${category.bgColor} ${category.color}`}>
-              <span>{category.emoji}</span>
+            <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs ${category.bgColor} ${category.color}`}>
+              <VendorCategoryIcon category={vendor.category} size={12} />
               <span>{category.label}</span>
             </span>
           </div>

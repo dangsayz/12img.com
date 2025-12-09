@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Plus, Users, Search, Filter } from 'lucide-react'
+import { Plus, Users, Search, Filter, ArrowRight, Image as ImageIcon } from 'lucide-react'
 import { VendorCard } from './VendorCard'
 import { AddVendorModal } from './AddVendorModal'
 import {
@@ -158,7 +158,7 @@ export function VendorSection({ initialVendors, initialLimits }: VendorSectionPr
               <option value="all">All Categories</option>
               {VENDOR_CATEGORY_OPTIONS.map((cat) => (
                 <option key={cat.id} value={cat.id}>
-                  {cat.emoji} {cat.label}
+                  {cat.label}
                 </option>
               ))}
             </select>
@@ -195,6 +195,30 @@ export function VendorSection({ initialVendors, initialLimits }: VendorSectionPr
             <Plus className="w-4 h-4" />
             Add Your First Vendor
           </button>
+        </div>
+      )}
+
+      {/* Next Steps Hint - Show when vendors exist */}
+      {!loading && vendors.length > 0 && vendors.length <= 3 && (
+        <div className="mb-6 p-4 bg-stone-50 border border-stone-100 rounded-xl">
+          <div className="flex items-start gap-3">
+            <div className="w-8 h-8 rounded-lg bg-stone-900 flex items-center justify-center shrink-0">
+              <ImageIcon className="w-4 h-4 text-white" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-stone-900 mb-1">Next: Share a gallery</p>
+              <p className="text-xs text-stone-500 leading-relaxed">
+                Go to <span className="font-medium">Galleries</span>, open any gallery, and click the <span className="font-medium">Share with Vendors</span> button to give them access.
+              </p>
+            </div>
+            <a 
+              href="/dashboard"
+              className="shrink-0 flex items-center gap-1 px-3 py-1.5 bg-stone-900 text-white text-xs font-medium rounded-lg hover:bg-stone-800 transition-colors"
+            >
+              Go to Galleries
+              <ArrowRight className="w-3 h-3" />
+            </a>
+          </div>
         </div>
       )}
 

@@ -161,7 +161,7 @@ export function VendorShareModal({ isOpen, onClose, galleryId, galleryTitle }: V
                             const cat = VENDOR_CATEGORIES[vendor.category]
                             return (
                               <option key={vendor.id} value={vendor.id}>
-                                {cat.emoji} {vendor.business_name}
+                                {vendor.business_name} ({cat.label})
                               </option>
                             )
                           })}
@@ -232,7 +232,12 @@ export function VendorShareModal({ isOpen, onClose, galleryId, galleryTitle }: V
                                 <p className="font-medium text-stone-900 truncate">
                                   {share.vendor.business_name}
                                 </p>
-                                <div className="flex items-center gap-2 text-xs text-stone-500">
+                                {share.vendor.email && (
+                                  <p className="text-xs text-stone-400 truncate">
+                                    {share.vendor.email}
+                                  </p>
+                                )}
+                                <div className="flex items-center gap-2 text-xs text-stone-500 mt-0.5">
                                   <span>{share.image_count} photos</span>
                                   {share.viewed_at && (
                                     <>
