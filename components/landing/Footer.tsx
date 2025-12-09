@@ -42,7 +42,7 @@ export function Footer() {
         <div>
           <h4 className="text-white font-medium mb-6">Social</h4>
           <div className="flex gap-4">
-             <Link href="https://instagram.com/12img" target="_blank" className="w-8 h-8 flex items-center justify-center bg-white/10 hover:bg-white/20 transition-colors rounded-full">
+             <Link href="https://www.instagram.com/12images" target="_blank" className="w-8 h-8 flex items-center justify-center bg-white/10 hover:bg-white/20 transition-colors rounded-full">
                <Instagram className="w-4 h-4 text-white" />
              </Link>
           </div>
