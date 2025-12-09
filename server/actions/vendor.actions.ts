@@ -661,16 +661,19 @@ export async function getVendorPortalData(
       .eq('share_id', share.id)
       .order('position', { ascending: true })
 
-    images = (selectedImages || []).map((si: { image: { id: string; storage_path: string; original_filename: string; width: number | null; height: number | null } }) => ({
-      id: si.image.id,
-      storage_path: si.image.storage_path,
-      original_filename: si.image.original_filename,
-      width: si.image.width,
-      height: si.image.height,
-      thumbnail_url: '', // Will be populated with signed URLs
-      preview_url: '',
-      download_url: '',
-    }))
+    images = (selectedImages || []).map((si: any) => {
+      const img = Array.isArray(si.image) ? si.image[0] : si.image
+      return {
+        id: img.id,
+        storage_path: img.storage_path,
+        original_filename: img.original_filename,
+        width: img.width,
+        height: img.height,
+        thumbnail_url: '', // Will be populated with signed URLs
+        preview_url: '',
+        download_url: '',
+      }
+    }).filter((img: any) => img.id)
   } else {
     // Get all gallery images
     const { data: galleryImages } = await supabase
