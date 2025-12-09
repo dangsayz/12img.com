@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useTransition, useMemo, useEffect } from 'react'
+import { useState, useTransition, useMemo, useEffect, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import {
@@ -25,6 +25,9 @@ import {
   MousePointer2,
   Lightbulb,
   Mail,
+  Pencil,
+  RotateCcw,
+  Save,
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
@@ -80,7 +83,6 @@ export function ContractEditor({ contract, clientName, clientId }: ContractEdito
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
-  const [isEditing, setIsEditing] = useState(false)
   const [showPreview, setShowPreview] = useState(true)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [copiedUrl, setCopiedUrl] = useState(false)
@@ -119,16 +121,75 @@ export function ContractEditor({ contract, clientName, clientId }: ContractEdito
     setShowHints(false)
   }
   
+  // Contract status flags
+  const isDraft = contract.status === 'draft'
+  const isSent = contract.status === 'sent' || contract.status === 'viewed'
+  const isSigned = contract.status === 'signed'
+  const isArchived = contract.status === 'archived'
+  
   // Editable clauses state
   const [editableClauses, setEditableClauses] = useState<ClauseSnapshot[]>(
     contract.clausesSnapshot || []
   )
   const [expandedClauses, setExpandedClauses] = useState<Set<string>>(new Set())
-
-  const isDraft = contract.status === 'draft'
-  const isSent = contract.status === 'sent' || contract.status === 'viewed'
-  const isSigned = contract.status === 'signed'
-  const isArchived = contract.status === 'archived'
+  
+  // Inline editing state
+  const [editingClauseId, setEditingClauseId] = useState<string | null>(null)
+  const [editingContent, setEditingContent] = useState('')
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
+  
+  // Track if clauses have been modified from original
+  const originalClauses = useRef(contract.clausesSnapshot || [])
+  
+  // Auto-resize textarea
+  useEffect(() => {
+    if (textareaRef.current && editingClauseId) {
+      textareaRef.current.style.height = 'auto'
+      textareaRef.current.style.height = `${textareaRef.current.scrollHeight + 4}px`
+      textareaRef.current.focus()
+    }
+  }, [editingContent, editingClauseId])
+  
+  // Check for unsaved changes
+  useEffect(() => {
+    const hasChanges = JSON.stringify(editableClauses) !== JSON.stringify(originalClauses.current)
+    setHasUnsavedChanges(hasChanges)
+  }, [editableClauses])
+  
+  // Start inline editing a clause
+  const startInlineEdit = useCallback((clause: ClauseSnapshot) => {
+    if (!isDraft) return
+    setEditingClauseId(clause.id)
+    setEditingContent(clause.content)
+  }, [isDraft])
+  
+  // Save inline edit
+  const saveInlineEdit = useCallback(() => {
+    if (!editingClauseId) return
+    
+    setEditableClauses(prev =>
+      prev.map(c => (c.id === editingClauseId ? { ...c, content: editingContent } : c))
+    )
+    setEditingClauseId(null)
+    setEditingContent('')
+  }, [editingClauseId, editingContent])
+  
+  // Cancel inline edit
+  const cancelInlineEdit = useCallback(() => {
+    setEditingClauseId(null)
+    setEditingContent('')
+  }, [])
+  
+  // Handle keyboard shortcuts for inline editing
+  const handleInlineKeyDown = useCallback((e: React.KeyboardEvent) => {
+    if (e.key === 'Escape') {
+      cancelInlineEdit()
+    } else if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+      e.preventDefault()
+      saveInlineEdit()
+    }
+  }, [cancelInlineEdit, saveInlineEdit])
 
   // Group clauses by category
   const clausesByCategory = useMemo(() => {
@@ -176,7 +237,7 @@ export function ContractEditor({ contract, clientName, clientId }: ContractEdito
       }
 
       setSuccess('Contract saved successfully')
-      setIsEditing(false)
+      originalClauses.current = editableClauses // Update original to match saved
       router.refresh()
     })
   }
@@ -422,15 +483,8 @@ export function ContractEditor({ contract, clientName, clientId }: ContractEdito
 
             {/* Desktop Action Buttons - Hidden on mobile */}
             <div className="hidden sm:flex items-center gap-2">
-              {isDraft && !isEditing && (
+              {isDraft && (
                 <>
-                  <button
-                    onClick={() => setIsEditing(true)}
-                    className="inline-flex items-center gap-2 px-3 py-2 border border-stone-200 rounded-lg hover:bg-stone-50 transition-colors text-sm"
-                  >
-                    <Edit3 className="w-4 h-4" />
-                    Edit
-                  </button>
                   <button
                     onClick={() => setShowDeleteConfirm(true)}
                     className="inline-flex items-center gap-2 px-3 py-2 border border-red-200 text-red-600 rounded-lg hover:bg-red-50 transition-colors text-sm"
@@ -440,32 +494,12 @@ export function ContractEditor({ contract, clientName, clientId }: ContractEdito
                   </button>
                   <button
                     onClick={() => setShowSendConfirm(true)}
-                    disabled={isPending}
+                    disabled={isPending || hasUnsavedChanges}
                     className="inline-flex items-center gap-2 px-4 py-2 bg-stone-900 text-white text-sm rounded-lg hover:bg-stone-800 transition-colors disabled:opacity-50"
+                    title={hasUnsavedChanges ? 'Save changes first' : ''}
                   >
                     {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
                     Send to Client
-                  </button>
-                </>
-              )}
-              {isDraft && isEditing && (
-                <>
-                  <button
-                    onClick={() => {
-                      setEditableClauses(contract.clausesSnapshot || [])
-                      setIsEditing(false)
-                    }}
-                    className="px-3 py-2 text-sm text-stone-600 hover:text-stone-900 transition-colors"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={handleSaveChanges}
-                    disabled={isPending}
-                    className="inline-flex items-center gap-2 px-4 py-2 bg-stone-900 text-white text-sm rounded-lg hover:bg-stone-800 transition-colors disabled:opacity-50"
-                  >
-                    {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
-                    Save
                   </button>
                 </>
               )}
@@ -532,15 +566,8 @@ export function ContractEditor({ contract, clientName, clientId }: ContractEdito
         {/* Mobile Action Bar - Sticky bottom on mobile */}
         <div className="sm:hidden border-t border-stone-100 px-4 py-3 bg-stone-50">
           <div className="flex items-center gap-2">
-            {isDraft && !isEditing && (
+            {isDraft && (
               <>
-                <button
-                  onClick={() => setIsEditing(true)}
-                  className="flex-1 inline-flex items-center justify-center gap-2 px-3 py-2.5 border border-stone-200 rounded-xl hover:bg-white transition-colors text-sm font-medium"
-                >
-                  <Edit3 className="w-4 h-4" />
-                  Edit
-                </button>
                 <button
                   onClick={() => setShowDeleteConfirm(true)}
                   className="p-2.5 border border-red-200 text-red-600 rounded-xl hover:bg-red-50 transition-colors"
@@ -549,32 +576,11 @@ export function ContractEditor({ contract, clientName, clientId }: ContractEdito
                 </button>
                 <button
                   onClick={() => setShowSendConfirm(true)}
-                  disabled={isPending}
+                  disabled={isPending || hasUnsavedChanges}
                   className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-stone-900 text-white text-sm font-medium rounded-xl hover:bg-stone-800 transition-colors disabled:opacity-50"
                 >
                   {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-                  Send
-                </button>
-              </>
-            )}
-            {isDraft && isEditing && (
-              <>
-                <button
-                  onClick={() => {
-                    setEditableClauses(contract.clausesSnapshot || [])
-                    setIsEditing(false)
-                  }}
-                  className="flex-1 px-3 py-2.5 text-sm font-medium text-stone-600 border border-stone-200 rounded-xl hover:bg-white transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleSaveChanges}
-                  disabled={isPending}
-                  className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-stone-900 text-white text-sm font-medium rounded-xl hover:bg-stone-800 transition-colors disabled:opacity-50"
-                >
-                  {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
-                  Save
+                  {hasUnsavedChanges ? 'Save First' : 'Send to Client'}
                 </button>
               </>
             )}
@@ -1285,7 +1291,7 @@ export function ContractEditor({ contract, clientName, clientId }: ContractEdito
             </div>
           )}
 
-          {/* Contract Content */}
+          {/* Contract Content - Inline Editing */}
           {showPreview ? (
             <div className="bg-white rounded-2xl border border-stone-200/60 shadow-sm overflow-hidden">
               <div
@@ -1295,57 +1301,168 @@ export function ContractEditor({ contract, clientName, clientId }: ContractEdito
             </div>
           ) : (
             <div className="bg-white rounded-2xl border border-stone-200/60 shadow-sm overflow-hidden">
+              {/* Floating Save Bar - Shows when there are unsaved changes */}
+              <AnimatePresence>
+                {hasUnsavedChanges && isDraft && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                    className="sticky top-0 z-20 bg-stone-900 text-white px-4 py-3 flex items-center justify-between"
+                  >
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 bg-amber-400 rounded-full animate-pulse" />
+                      <span className="text-sm font-medium">Unsaved changes</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => {
+                          setEditableClauses(originalClauses.current)
+                          setEditingClauseId(null)
+                        }}
+                        className="px-3 py-1.5 text-sm text-stone-300 hover:text-white transition-colors"
+                      >
+                        Discard
+                      </button>
+                      <button
+                        onClick={handleSaveChanges}
+                        disabled={isPending}
+                        className="flex items-center gap-1.5 px-4 py-1.5 bg-white text-stone-900 text-sm font-medium rounded-lg hover:bg-stone-100 transition-colors disabled:opacity-50"
+                      >
+                        {isPending ? (
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        ) : (
+                          <Save className="w-3.5 h-3.5" />
+                        )}
+                        Save All
+                      </button>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+              
+              {/* Hint Banner for Draft Mode */}
+              {isDraft && !editingClauseId && !hasUnsavedChanges && (
+                <div className="px-5 py-3 bg-stone-50 border-b border-stone-100 flex items-center gap-2">
+                  <Pencil className="w-4 h-4 text-stone-400" />
+                  <span className="text-sm text-stone-500">
+                    Click any clause below to edit it directly
+                  </span>
+                </div>
+              )}
+              
               <div className="divide-y divide-stone-100">
                 {Object.entries(clausesByCategory).map(([category, clauses]) => (
                   <div key={category} className="p-5">
                     <h3 className="text-xs font-semibold text-stone-400 uppercase tracking-wider mb-4">
                       {CLAUSE_CATEGORY_LABELS[category as keyof typeof CLAUSE_CATEGORY_LABELS] || category}
                     </h3>
-                    <div className="space-y-3">
-                      {clauses.map(clause => (
-                        <div
-                          key={clause.id}
-                          className="border border-stone-200 rounded-xl overflow-hidden"
-                        >
-                          <button
-                            onClick={() => toggleClauseExpand(clause.id)}
-                            className="w-full flex items-center justify-between p-4 hover:bg-stone-50 transition-colors"
+                    <div className="space-y-4">
+                      {clauses.map(clause => {
+                        const isEditingThis = editingClauseId === clause.id
+                        
+                        return (
+                          <div
+                            key={clause.id}
+                            className={`
+                              relative rounded-xl transition-all duration-200
+                              ${isEditingThis 
+                                ? 'ring-2 ring-stone-900 bg-white shadow-lg' 
+                                : isDraft 
+                                  ? 'hover:bg-stone-50 cursor-pointer group border border-transparent hover:border-stone-200' 
+                                  : 'border border-stone-100'
+                              }
+                            `}
                           >
-                            <span className="font-medium text-stone-900">{clause.title}</span>
-                            {expandedClauses.has(clause.id) ? (
-                              <ChevronUp className="w-4 h-4 text-stone-400" />
-                            ) : (
-                              <ChevronDown className="w-4 h-4 text-stone-400" />
-                            )}
-                          </button>
-                          <AnimatePresence>
-                            {expandedClauses.has(clause.id) && (
-                              <motion.div
-                                initial={{ height: 0, opacity: 0 }}
-                                animate={{ height: 'auto', opacity: 1 }}
-                                exit={{ height: 0, opacity: 0 }}
-                                transition={{ duration: 0.2 }}
-                                className="overflow-hidden"
-                              >
-                                <div className="p-4 pt-0 border-t border-stone-100">
-                                  {isEditing && isDraft ? (
+                            {/* Clause Header */}
+                            <div 
+                              className={`
+                                flex items-center justify-between p-4 
+                                ${!isEditingThis && isDraft ? 'cursor-pointer' : ''}
+                              `}
+                              onClick={() => !isEditingThis && isDraft && startInlineEdit(clause)}
+                            >
+                              <div className="flex items-center gap-3">
+                                <span className="font-medium text-stone-900">{clause.title}</span>
+                                {!isEditingThis && isDraft && (
+                                  <span className="opacity-0 group-hover:opacity-100 transition-opacity text-[10px] text-stone-400 flex items-center gap-1">
+                                    <Pencil className="w-3 h-3" />
+                                    click to edit
+                                  </span>
+                                )}
+                              </div>
+                              {isEditingThis && (
+                                <div className="flex items-center gap-1">
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation()
+                                      cancelInlineEdit()
+                                    }}
+                                    className="p-1.5 text-stone-400 hover:text-stone-600 hover:bg-stone-100 rounded-lg transition-colors"
+                                    title="Cancel (Esc)"
+                                  >
+                                    <X className="w-4 h-4" />
+                                  </button>
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation()
+                                      saveInlineEdit()
+                                    }}
+                                    className="flex items-center gap-1 px-2.5 py-1 text-xs font-medium bg-stone-900 text-white rounded-lg hover:bg-stone-800 transition-colors"
+                                    title="Save (⌘+Enter)"
+                                  >
+                                    <Check className="w-3.5 h-3.5" />
+                                    Done
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+                            
+                            {/* Clause Content */}
+                            <div className="px-4 pb-4">
+                              <AnimatePresence mode="wait">
+                                {isEditingThis ? (
+                                  <motion.div
+                                    key="editing"
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    exit={{ opacity: 0 }}
+                                    transition={{ duration: 0.15 }}
+                                  >
                                     <textarea
-                                      value={clause.content}
-                                      onChange={e => updateClauseContent(clause.id, e.target.value)}
-                                      className="w-full min-h-[150px] p-4 text-sm border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-stone-900 focus:border-transparent resize-y"
+                                      ref={textareaRef}
+                                      value={editingContent}
+                                      onChange={(e) => setEditingContent(e.target.value)}
+                                      onKeyDown={handleInlineKeyDown}
+                                      className="w-full min-h-[120px] p-4 text-sm text-stone-700 leading-relaxed border border-stone-200 rounded-xl resize-none focus:outline-none focus:ring-2 focus:ring-stone-900 focus:border-transparent bg-stone-50"
+                                      placeholder="Enter clause content..."
                                     />
-                                  ) : (
+                                    <div className="flex items-center justify-between mt-2 text-[10px] text-stone-400">
+                                      <span>⌘+Enter to save • Esc to cancel</span>
+                                      <span>{editingContent.length} characters</span>
+                                    </div>
+                                  </motion.div>
+                                ) : (
+                                  <motion.div
+                                    key="viewing"
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    exit={{ opacity: 0 }}
+                                    transition={{ duration: 0.15 }}
+                                    onClick={() => isDraft && startInlineEdit(clause)}
+                                    className={isDraft ? 'cursor-pointer' : ''}
+                                  >
                                     <div
-                                      className="text-sm text-stone-600 prose prose-sm max-w-none"
+                                      className="text-sm text-stone-600 prose prose-sm max-w-none leading-relaxed"
                                       dangerouslySetInnerHTML={{ __html: clause.content }}
                                     />
-                                  )}
-                                </div>
-                              </motion.div>
-                            )}
-                          </AnimatePresence>
-                        </div>
-                      ))}
+                                  </motion.div>
+                                )}
+                              </AnimatePresence>
+                            </div>
+                          </div>
+                        )
+                      })}
                     </div>
                   </div>
                 ))}

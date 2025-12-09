@@ -262,11 +262,17 @@ export function ClientDetailContent({
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-3 flex-wrap">
                     <h1 className="text-2xl sm:text-3xl font-light text-stone-900 tracking-tight">
-                      {client.firstName}
-                      {client.partnerFirstName && (
-                        <span className="text-stone-400 font-extralight"> & </span>
+                      {client.partnerFirstName ? (
+                        // Couples: First names only (e.g., "Angela & Christopher")
+                        <>
+                          {client.firstName}
+                          <span className="text-stone-400 font-extralight"> & </span>
+                          {client.partnerFirstName}
+                        </>
+                      ) : (
+                        // Single client: Full name (e.g., "Angela Castillo")
+                        <>{client.firstName} {client.lastName}</>
                       )}
-                      {client.partnerFirstName || client.lastName}
                     </h1>
                     {client.eventType === 'wedding' && (
                       <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-rose-50 text-rose-600 rounded-full text-xs font-medium">

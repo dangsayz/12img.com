@@ -31,7 +31,7 @@ const UNIVERSAL_CLAUSES: ClauseTemplate[] = [
     id: 'payment-terms',
     title: 'Payment Terms',
     category: 'payment',
-    content: `A non-refundable retainer of {{retainer_percentage}} of the total package price ({{package_price_formatted}}) is due upon signing this agreement to secure the date. The remaining balance is due {{payment_due_date}}.
+    content: `A non-refundable retainer of {{retainer_amount}} is due upon signing this agreement to secure the date. The remaining balance of {{remaining_balance}} is due {{payment_due_date}}.
 
 Accepted payment methods: bank transfer, credit card, Venmo, or check. Late payments may result in postponement of image delivery until the balance is settled.`,
     isRequired: true,

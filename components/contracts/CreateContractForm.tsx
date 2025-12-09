@@ -113,7 +113,7 @@ export function CreateContractForm({ client }: CreateContractFormProps) {
         mergeDataOverrides: {
           delivery_weeks: EVENT_TYPE_DEFAULTS[client.eventType]?.deliveryWeeks || '2-3',
           estimated_images: EVENT_TYPE_DEFAULTS[client.eventType]?.estimatedImages || '50-100',
-          retainer_amount: EVENT_TYPE_DEFAULTS[client.eventType]?.retainerAmount || '50%',
+          // retainer_amount is calculated from client.retainerFee in buildMergeDataFromClient
         },
       })
 
