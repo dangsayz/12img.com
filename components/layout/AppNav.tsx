@@ -115,8 +115,8 @@ export function AppNav({
             
             {/* Plan Badge + Storage Indicator - Desktop */}
             <div className="hidden lg:flex items-center gap-2 px-2 py-1">
-              {/* Free Plan Badge with Upgrade Link */}
-              {userPlan === 'free' && (
+              {/* Plan Badge - All users */}
+              {userPlan === 'free' ? (
                 <Link
                   href="/pricing"
                   className="flex items-center gap-1 px-2 py-0.5 bg-stone-100 hover:bg-stone-200 rounded-full transition-colors group"
@@ -124,6 +124,10 @@ export function AppNav({
                   <span className="text-[10px] font-medium text-stone-500 uppercase tracking-wide">Free</span>
                   <span className="text-[10px] text-stone-400 group-hover:text-stone-600">→</span>
                 </Link>
+              ) : (
+                <span className="px-2 py-0.5 bg-stone-100 rounded-full text-[10px] font-medium text-stone-600 uppercase tracking-wide">
+                  {userPlan}
+                </span>
               )}
               
               {/* Storage Bar */}
