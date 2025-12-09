@@ -30,6 +30,19 @@ export function ImageDownloadButton({
     setStatus('downloading')
     
     try {
+      // Detect if mobile (iOS Safari doesn't support blob downloads)
+      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)
+      
+      if (isMobile) {
+        // Mobile: Open in new tab - user can long-press to save
+        // This triggers the native "Save Image" option on iOS/Android
+        window.open(`/api/image/${imageId}/download`, '_blank')
+        setStatus('done')
+        setTimeout(() => setStatus('idle'), 2000)
+        return
+      }
+      
+      // Desktop: Use blob download for better filename control
       const response = await fetch(`/api/image/${imageId}/download`)
       
       if (!response.ok) {

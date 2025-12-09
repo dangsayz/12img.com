@@ -37,7 +37,8 @@ import {
   Globe,
   GripVertical,
   Shield,
-  FileText
+  FileText,
+  ArrowDown
 } from 'lucide-react'
 import { EmailActivity } from '@/components/gallery/EmailActivity'
 import { ShareModal } from '@/components/gallery/ShareModal'
@@ -228,6 +229,20 @@ function MasonryImageItem({
               <circle cx="12" cy="12" r="3" />
               <path d="M12 2v4M12 18v4M2 12h4M18 12h4" />
             </svg>
+          </motion.button>
+          {/* Download button */}
+          <motion.button 
+            onClick={(e) => {
+              e.stopPropagation()
+              // Open download in new tab (works on mobile too)
+              window.open(`/api/image/${image.id}/download`, '_blank')
+            }}
+            className="w-7 h-7 bg-white/95 backdrop-blur-sm flex items-center justify-center hover:bg-emerald-50 transition-colors shadow-sm"
+            title="Download photo"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            <ArrowDown className="w-3.5 h-3.5 text-emerald-600" />
           </motion.button>
           <motion.button 
             className="w-7 h-7 bg-white/95 backdrop-blur-sm flex items-center justify-center hover:bg-white transition-colors shadow-sm"
