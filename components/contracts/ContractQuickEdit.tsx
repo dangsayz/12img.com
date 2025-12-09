@@ -21,12 +21,13 @@ const EVENT_TYPE_OPTIONS = Object.entries(EVENT_TYPE_LABELS).map(([value, label]
   label,
 }))
 
-const RETAINER_PERCENTAGES = [25, 50, 100]
+// Common retainer amounts in dollars
+const COMMON_RETAINER_AMOUNTS = [250, 500, 1000]
 
 export function ContractQuickEdit({ client, contractId, disabled = false }: ContractQuickEditProps) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
-  const [customPercent, setCustomPercent] = useState<string>('')
+  const [customAmount, setCustomAmount] = useState<string>('')
   const [showCustomInput, setShowCustomInput] = useState(false)
 
   // Helper to update a single field
@@ -45,23 +46,22 @@ export function ContractQuickEdit({ client, contractId, disabled = false }: Cont
     }
   }
 
-  // Update retainer by percentage
-  const updateRetainerByPercent = (percent: number) => {
-    if (!client.packagePrice || disabled) return
+  // Update retainer by dollar amount
+  const updateRetainerAmount = (amount: number) => {
+    if (disabled) return
     
     startTransition(async () => {
-      const retainerAmount = Math.round((client.packagePrice! * percent) / 100)
-      await updateField('retainerFee', retainerAmount)
+      await updateField('retainerFee', amount)
       setShowCustomInput(false)
-      setCustomPercent('')
+      setCustomAmount('')
     })
   }
 
-  // Handle custom percentage input
-  const handleCustomPercentSubmit = () => {
-    const percent = parseInt(customPercent)
-    if (isNaN(percent) || percent < 0 || percent > 100) return
-    updateRetainerByPercent(percent)
+  // Handle custom amount input
+  const handleCustomAmountSubmit = () => {
+    const amount = parseInt(customAmount)
+    if (isNaN(amount) || amount < 0) return
+    updateRetainerAmount(amount)
   }
 
   const eventDate = parseLocalDate(client.eventDate)
@@ -73,11 +73,6 @@ export function ContractQuickEdit({ client, contractId, disabled = false }: Cont
         year: 'numeric',
       })
     : undefined
-
-  // Calculate retainer percentage if both values exist
-  const retainerPercentage = client.packagePrice && client.retainerFee
-    ? Math.round((client.retainerFee / client.packagePrice) * 100)
-    : null
 
   const balanceDue = client.packagePrice && client.retainerFee
     ? client.packagePrice - client.retainerFee
@@ -207,72 +202,62 @@ export function ContractQuickEdit({ client, contractId, disabled = false }: Cont
               {isPending && <Loader2 className="w-4 h-4 text-white/60 animate-spin" />}
             </div>
             
-            {client.packagePrice ? (
-              <div className="flex gap-2">
-                {RETAINER_PERCENTAGES.map(percent => (
-                  <button
-                    key={percent}
-                    onClick={() => updateRetainerByPercent(percent)}
-                    disabled={disabled || isPending}
-                    className={`flex-1 py-2 px-3 text-sm font-medium rounded-lg border transition-all ${
-                      retainerPercentage === percent
-                        ? 'bg-white text-stone-900 border-white'
-                        : 'bg-transparent text-white border-white/20 hover:border-white/40 hover:bg-white/5'
-                    } disabled:opacity-50`}
-                  >
-                    {percent}%
-                    <span className="block text-xs opacity-60 mt-0.5">
-                      ${Math.round((client.packagePrice! * percent) / 100).toLocaleString()}
-                    </span>
-                  </button>
-                ))}
-                
-                {/* Custom percentage button/input */}
-                {showCustomInput ? (
-                  <div className="flex-1 flex gap-1">
+            <div className="flex gap-2">
+              {COMMON_RETAINER_AMOUNTS.map(amount => (
+                <button
+                  key={amount}
+                  onClick={() => updateRetainerAmount(amount)}
+                  disabled={disabled || isPending}
+                  className={`flex-1 py-2.5 px-3 text-sm font-medium rounded-lg border transition-all ${
+                    client.retainerFee === amount
+                      ? 'bg-white text-stone-900 border-white'
+                      : 'bg-transparent text-white border-white/20 hover:border-white/40 hover:bg-white/5'
+                  } disabled:opacity-50`}
+                >
+                  ${amount.toLocaleString()}
+                </button>
+              ))}
+              
+              {/* Custom amount button/input */}
+              {showCustomInput ? (
+                <div className="flex-1 flex gap-1">
+                  <div className="relative flex-1">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400">$</span>
                     <input
                       type="number"
-                      value={customPercent}
-                      onChange={e => setCustomPercent(e.target.value)}
-                      onKeyDown={e => e.key === 'Enter' && handleCustomPercentSubmit()}
-                      placeholder="%"
+                      value={customAmount}
+                      onChange={e => setCustomAmount(e.target.value)}
+                      onKeyDown={e => e.key === 'Enter' && handleCustomAmountSubmit()}
+                      placeholder="0"
                       min={0}
-                      max={100}
-                      className="w-full py-2 px-3 text-sm text-stone-900 bg-white rounded-lg border border-white focus:outline-none focus:ring-2 focus:ring-white/50"
+                      className="w-full py-2.5 pl-7 pr-3 text-sm text-stone-900 bg-white rounded-lg border border-white focus:outline-none focus:ring-2 focus:ring-white/50"
                       autoFocus
                     />
-                    <button
-                      onClick={handleCustomPercentSubmit}
-                      disabled={!customPercent || isPending}
-                      className="px-3 py-2 text-sm font-medium bg-white text-stone-900 rounded-lg disabled:opacity-50"
-                    >
-                      ✓
-                    </button>
                   </div>
-                ) : (
                   <button
-                    onClick={() => setShowCustomInput(true)}
-                    disabled={disabled || isPending}
-                    className={`flex-1 py-2 px-3 text-sm font-medium rounded-lg border transition-all ${
-                      retainerPercentage !== null && !RETAINER_PERCENTAGES.includes(retainerPercentage)
-                        ? 'bg-white text-stone-900 border-white'
-                        : 'bg-transparent text-white border-white/20 hover:border-white/40 hover:bg-white/5'
-                    } disabled:opacity-50`}
+                    onClick={handleCustomAmountSubmit}
+                    disabled={!customAmount || isPending}
+                    className="px-3 py-2 text-sm font-medium bg-white text-stone-900 rounded-lg disabled:opacity-50"
                   >
-                    {retainerPercentage !== null && !RETAINER_PERCENTAGES.includes(retainerPercentage) 
-                      ? `${retainerPercentage}%` 
-                      : 'Other'}
-                    {retainerPercentage !== null && !RETAINER_PERCENTAGES.includes(retainerPercentage) && (
-                      <span className="block text-xs opacity-60 mt-0.5">
-                        ${client.retainerFee?.toLocaleString()}
-                      </span>
-                    )}
+                    ✓
                   </button>
-                )}
-              </div>
-            ) : (
-              <p className="text-sm text-stone-500 italic">Set package price first</p>
-            )}
+                </div>
+              ) : (
+                <button
+                  onClick={() => setShowCustomInput(true)}
+                  disabled={disabled || isPending}
+                  className={`flex-1 py-2.5 px-3 text-sm font-medium rounded-lg border transition-all ${
+                    client.retainerFee !== null && !COMMON_RETAINER_AMOUNTS.includes(client.retainerFee || 0)
+                      ? 'bg-white text-stone-900 border-white'
+                      : 'bg-transparent text-white border-white/20 hover:border-white/40 hover:bg-white/5'
+                  } disabled:opacity-50`}
+                >
+                  {client.retainerFee !== null && !COMMON_RETAINER_AMOUNTS.includes(client.retainerFee || 0)
+                    ? `$${client.retainerFee?.toLocaleString()}`
+                    : 'Custom'}
+                </button>
+              )}
+            </div>
           </div>
 
           {/* Calculated Values */}

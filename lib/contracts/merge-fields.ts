@@ -67,6 +67,7 @@ export function hasMergeFields(template: string): boolean {
 
 /**
  * Replace all merge fields in a template with values from data
+ * Supports conditional sections: {{#field}}content{{/field}} - only shown if field has value
  */
 export function replaceMergeFields(
   template: string,
@@ -79,7 +80,25 @@ export function replaceMergeFields(
 ): string {
   const { highlightMissing = false, missingPlaceholder = '[MISSING]', hideEmpty = true } = options
   
-  return template.replace(MERGE_FIELD_PATTERN, (match, fieldName) => {
+  // First, handle conditional sections {{#field}}...{{/field}}
+  // These sections are only shown if the field has a non-empty value
+  const CONDITIONAL_PATTERN = /\{\{#([a-z_]+)\}\}([\s\S]*?)\{\{\/\1\}\}/gi
+  
+  let result = template.replace(CONDITIONAL_PATTERN, (match, fieldName, content) => {
+    const key = fieldName.toLowerCase() as keyof MergeFieldData
+    const value = data[key]
+    
+    // If field has a value, keep the content (will be processed for merge fields later)
+    if (value !== undefined && value !== null && value !== '') {
+      return content
+    }
+    
+    // If field is empty, remove the entire section
+    return ''
+  })
+  
+  // Then, replace regular merge fields {{field}}
+  result = result.replace(MERGE_FIELD_PATTERN, (match, fieldName) => {
     const key = fieldName.toLowerCase() as keyof MergeFieldData
     const value = data[key]
     
@@ -98,6 +117,8 @@ export function replaceMergeFields(
     
     return match // Keep original if no replacement
   })
+  
+  return result
 }
 
 /**
@@ -176,6 +197,34 @@ export function buildMergeDataFromClient(
     })
   }
   
+  // Extract only custom notes (filter out auto-generated summary lines)
+  const extractCustomNotes = (notes: string | null): string => {
+    if (!notes) return ''
+    
+    const lines = notes.split('\n')
+    const customLines: string[] = []
+    
+    // Skip lines that are part of the auto-generated summary
+    const summaryPrefixes = [
+      'CLIENT:', 'Email:', 'Phone:', 
+      'EVENT:', 'Date:', 'Venue:', 'Location:', 'Arrival:',
+      'PACKAGE:', 'Coverage:', 'Investment:', 'Deposit:'
+    ]
+    
+    for (const line of lines) {
+      const trimmed = line.trim()
+      if (!trimmed) continue
+      
+      // Check if this line is part of the auto-generated summary
+      const isSummaryLine = summaryPrefixes.some(prefix => trimmed.startsWith(prefix))
+      if (!isSummaryLine) {
+        customLines.push(trimmed)
+      }
+    }
+    
+    return customLines.join(' • ')
+  }
+  
   const data: MergeFieldData = {
     // Client Info
     client_name: fullName,
@@ -183,6 +232,7 @@ export function buildMergeDataFromClient(
     client_last_name: client.lastName,
     client_email: client.email,
     client_phone: client.phone || '',
+    client_notes: extractCustomNotes(client.notes),
     partner_name: partnerName,
     partner_first_name: client.partnerFirstName || '',
     partner_last_name: client.partnerLastName || '',

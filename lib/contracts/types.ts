@@ -22,6 +22,7 @@ export interface MergeFieldData {
   client_last_name: string
   client_email: string
   client_phone: string
+  client_notes: string
   partner_name: string
   partner_first_name: string
   partner_last_name: string

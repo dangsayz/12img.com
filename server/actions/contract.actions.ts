@@ -593,7 +593,10 @@ export async function signContract(
     const clausesSnapshot = contract.clauses_snapshot as unknown as ClauseSnapshot[]
     const headerHtml = replaceMergeFields(DEFAULT_CONTRACT_HEADER, updatedMergeData)
     const footerHtml = replaceMergeFields(DEFAULT_CONTRACT_FOOTER, updatedMergeData)
-    const clausesHtml = clausesSnapshot.map(c => wrapClause(c.title, c.content)).join('\n')
+    // Replace merge fields in clause content before wrapping
+    const clausesHtml = clausesSnapshot.map(c => 
+      wrapClause(c.title, replaceMergeFields(c.content, updatedMergeData))
+    ).join('\n')
 
     const fullHtml = `
       ${CONTRACT_STYLES}
@@ -943,7 +946,10 @@ export async function updateContract(
     // Re-render contract HTML with updated data
     const headerHtml = replaceMergeFields(DEFAULT_CONTRACT_HEADER, updatedMergeData)
     const footerHtml = replaceMergeFields(DEFAULT_CONTRACT_FOOTER, updatedMergeData)
-    const clausesHtml = finalClauses.map(c => wrapClause(c.title, c.content)).join('\n')
+    // Replace merge fields in clause content before wrapping
+    const clausesHtml = finalClauses.map(c => 
+      wrapClause(c.title, replaceMergeFields(c.content, updatedMergeData))
+    ).join('\n')
 
     const fullHtml = `
       ${CONTRACT_STYLES}
@@ -1408,7 +1414,10 @@ export async function regenerateContractHtml(
     // Build full contract HTML
     const headerHtml = replaceMergeFields(DEFAULT_CONTRACT_HEADER, mergeData)
     const footerHtml = replaceMergeFields(DEFAULT_CONTRACT_FOOTER, mergeData)
-    const clausesHtml = existingClauses.map(c => wrapClause(c.title, c.content)).join('\n')
+    // Replace merge fields in clause content before wrapping
+    const clausesHtml = existingClauses.map(c => 
+      wrapClause(c.title, replaceMergeFields(c.content, mergeData))
+    ).join('\n')
 
     const fullHtml = `
       ${CONTRACT_STYLES}

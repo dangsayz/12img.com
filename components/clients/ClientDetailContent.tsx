@@ -53,84 +53,180 @@ import { WorkflowList, WorkflowScheduler } from '@/components/workflows'
 
 // Helper component to parse and display notes elegantly
 function FormattedNotes({ notes }: { notes: string }) {
-  // Parse the notes into sections
-  const sections: { title: string; items: string[] }[] = []
-  let currentSection: { title: string; items: string[] } | null = null
+  // Parse the notes into structured sections
+  const lines = notes.split('\n')
   
-  const lines = notes.split('\n').filter(line => line.trim())
+  // Extract structured data
+  const clientData: { name?: string; email?: string; phone?: string } = {}
+  const eventData: { type?: string; date?: string; venue?: string; location?: string; arrival?: string } = {}
+  const packageData: { name?: string; hours?: string; investment?: string; deposit?: string } = {}
+  const customNotes: string[] = []
+  
+  let currentSection = ''
   
   for (const line of lines) {
     const trimmed = line.trim()
+    if (!trimmed) continue
     
-    // Check if this is a section header (all caps with colon, or ends with colon)
-    const isHeader = /^[A-Z][A-Z\s]+:?$/.test(trimmed) || 
-                     /^[A-Z][a-z]+(\s[A-Z][a-z]+)*:$/.test(trimmed)
-    
-    if (isHeader) {
-      if (currentSection) {
-        sections.push(currentSection)
-      }
-      currentSection = { 
-        title: trimmed.replace(/:$/, ''), 
-        items: [] 
-      }
-    } else if (currentSection) {
-      currentSection.items.push(trimmed)
-    } else {
-      // No section yet, create a default one
-      currentSection = { title: '', items: [trimmed] }
+    // Detect section headers
+    if (trimmed.startsWith('CLIENT:')) {
+      currentSection = 'client'
+      clientData.name = trimmed.replace('CLIENT:', '').trim()
+    } else if (trimmed.startsWith('EVENT:')) {
+      currentSection = 'event'
+      eventData.type = trimmed.replace('EVENT:', '').trim()
+    } else if (trimmed.startsWith('PACKAGE:')) {
+      currentSection = 'package'
+      packageData.name = trimmed.replace('PACKAGE:', '').trim()
+    } else if (trimmed.startsWith('Email:')) {
+      clientData.email = trimmed.replace('Email:', '').trim()
+    } else if (trimmed.startsWith('Phone:')) {
+      clientData.phone = trimmed.replace('Phone:', '').trim()
+    } else if (trimmed.startsWith('Date:')) {
+      eventData.date = trimmed.replace('Date:', '').trim()
+    } else if (trimmed.startsWith('Venue:')) {
+      eventData.venue = trimmed.replace('Venue:', '').trim()
+    } else if (trimmed.startsWith('Location:')) {
+      eventData.location = trimmed.replace('Location:', '').trim()
+    } else if (trimmed.startsWith('Arrival:')) {
+      eventData.arrival = trimmed.replace('Arrival:', '').trim()
+    } else if (trimmed.startsWith('Coverage:')) {
+      packageData.hours = trimmed.replace('Coverage:', '').trim()
+    } else if (trimmed.startsWith('Investment:')) {
+      packageData.investment = trimmed.replace('Investment:', '').trim()
+    } else if (trimmed.startsWith('Deposit:')) {
+      packageData.deposit = trimmed.replace('Deposit:', '').trim()
+    } else if (!['CLIENT', 'EVENT', 'PACKAGE'].some(s => trimmed.startsWith(s))) {
+      // Custom note that doesn't fit the structure
+      customNotes.push(trimmed)
     }
   }
   
-  if (currentSection) {
-    sections.push(currentSection)
-  }
-
-  // If no clear sections found, just display as plain text
-  if (sections.length === 0 || (sections.length === 1 && !sections[0].title)) {
+  const hasStructuredData = clientData.name || eventData.type || packageData.name
+  
+  // If no structured data, show as elegant plain text
+  if (!hasStructuredData) {
     return (
-      <p className="text-sm text-stone-600 whitespace-pre-wrap leading-relaxed">
-        {notes}
-      </p>
+      <div className="relative">
+        <div className="absolute -left-3 top-0 bottom-0 w-0.5 bg-gradient-to-b from-amber-400 via-amber-300 to-transparent rounded-full" />
+        <p className="text-sm text-stone-600 whitespace-pre-wrap leading-relaxed pl-3">
+          {notes}
+        </p>
+      </div>
     )
   }
 
   return (
-    <div className="space-y-5">
-      {sections.map((section, idx) => (
-        <div key={idx}>
-          {section.title && (
-            <h3 className="text-[10px] font-semibold text-stone-400 uppercase tracking-[0.2em] mb-2.5">
-              {section.title}
-            </h3>
-          )}
-          <div className="space-y-1.5">
-            {section.items.map((item, itemIdx) => {
-              // Check if item has a label (e.g., "Email: test@example.com")
-              const labelMatch = item.match(/^([A-Za-z\s]+):\s*(.+)$/)
-              
-              if (labelMatch) {
-                return (
-                  <div key={itemIdx} className="flex items-baseline gap-2">
-                    <span className="text-xs text-stone-400 min-w-[80px]">
-                      {labelMatch[1]}
-                    </span>
-                    <span className="text-sm text-stone-700 font-medium">
-                      {labelMatch[2]}
-                    </span>
-                  </div>
-                )
-              }
-              
-              return (
-                <p key={itemIdx} className="text-sm text-stone-600 leading-relaxed">
-                  {item}
-                </p>
-              )
-            })}
+    <div className="space-y-4">
+      {/* Client Card */}
+      {clientData.name && (
+        <div className="group relative overflow-hidden rounded-xl bg-gradient-to-br from-stone-900 to-stone-800 p-4 text-white">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -translate-y-16 translate-x-16" />
+          <div className="relative">
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center">
+                <Heart className="w-3 h-3 text-white/70" />
+              </div>
+              <span className="text-[10px] uppercase tracking-[0.2em] text-white/50 font-medium">Client</span>
+            </div>
+            <p className="text-lg font-medium tracking-tight">{clientData.name}</p>
+            {(clientData.email || clientData.phone) && (
+              <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-white/60">
+                {clientData.email && <span>{clientData.email}</span>}
+                {clientData.phone && <span>{clientData.phone}</span>}
+              </div>
+            )}
           </div>
         </div>
-      ))}
+      )}
+      
+      {/* Event Card */}
+      {eventData.type && (
+        <div className="rounded-xl border border-stone-200 bg-white overflow-hidden">
+          <div className="px-4 py-2.5 bg-stone-50 border-b border-stone-100">
+            <div className="flex items-center gap-2">
+              <Calendar className="w-3.5 h-3.5 text-stone-400" />
+              <span className="text-[10px] uppercase tracking-[0.2em] text-stone-400 font-medium">Event</span>
+            </div>
+          </div>
+          <div className="p-4">
+            <p className="text-base font-semibold text-stone-900 mb-3">{eventData.type}</p>
+            <div className="grid grid-cols-2 gap-3">
+              {eventData.date && (
+                <div>
+                  <p className="text-[10px] uppercase tracking-wider text-stone-400 mb-0.5">Date</p>
+                  <p className="text-sm text-stone-700">{eventData.date}</p>
+                </div>
+              )}
+              {eventData.arrival && (
+                <div>
+                  <p className="text-[10px] uppercase tracking-wider text-stone-400 mb-0.5">Arrival</p>
+                  <p className="text-sm text-stone-700">{eventData.arrival}</p>
+                </div>
+              )}
+              {eventData.venue && (
+                <div>
+                  <p className="text-[10px] uppercase tracking-wider text-stone-400 mb-0.5">Venue</p>
+                  <p className="text-sm text-stone-700">{eventData.venue}</p>
+                </div>
+              )}
+              {eventData.location && (
+                <div>
+                  <p className="text-[10px] uppercase tracking-wider text-stone-400 mb-0.5">Location</p>
+                  <p className="text-sm text-stone-700">{eventData.location}</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* Package Card */}
+      {packageData.name && (
+        <div className="rounded-xl border border-stone-200 bg-white overflow-hidden">
+          <div className="px-4 py-2.5 bg-stone-50 border-b border-stone-100">
+            <div className="flex items-center gap-2">
+              <Camera className="w-3.5 h-3.5 text-stone-400" />
+              <span className="text-[10px] uppercase tracking-[0.2em] text-stone-400 font-medium">Package</span>
+            </div>
+          </div>
+          <div className="p-4">
+            <p className="text-base font-semibold text-stone-900 mb-3">{packageData.name}</p>
+            <div className="flex flex-wrap gap-3">
+              {packageData.hours && (
+                <div className="flex items-center gap-1.5 px-2.5 py-1 bg-stone-100 rounded-lg">
+                  <Clock className="w-3 h-3 text-stone-500" />
+                  <span className="text-xs font-medium text-stone-600">{packageData.hours}</span>
+                </div>
+              )}
+              {packageData.investment && (
+                <div className="flex items-center gap-1.5 px-2.5 py-1 bg-emerald-50 rounded-lg">
+                  <span className="text-xs font-semibold text-emerald-700">{packageData.investment}</span>
+                </div>
+              )}
+              {packageData.deposit && (
+                <div className="flex items-center gap-1.5 px-2.5 py-1 bg-amber-50 rounded-lg">
+                  <span className="text-xs font-medium text-amber-700">Deposit: {packageData.deposit}</span>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* Custom Notes */}
+      {customNotes.length > 0 && (
+        <div className="relative">
+          <div className="absolute -left-3 top-0 bottom-0 w-0.5 bg-gradient-to-b from-amber-400 via-amber-300 to-transparent rounded-full" />
+          <div className="pl-3 space-y-1">
+            {customNotes.map((note, idx) => (
+              <p key={idx} className="text-sm text-stone-600 leading-relaxed">
+                {note}
+              </p>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   )
 }

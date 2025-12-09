@@ -89,6 +89,17 @@ export const DEFAULT_CONTRACT_HEADER = `
     </div>
   </div>
   
+  <!-- Special Notes (only shown if notes exist) - Elegant minimal design -->
+  {{#client_notes}}
+  <div class="notes-section">
+    <div class="notes-accent"></div>
+    <div class="notes-body">
+      <span class="notes-icon">✦</span>
+      <p class="notes-text">{{client_notes}}</p>
+    </div>
+  </div>
+  {{/client_notes}}
+  
   <!-- Terms Header -->
   <div class="terms-header">
     <div class="terms-line"></div>
@@ -441,6 +452,40 @@ export const CONTRACT_STYLES = `
   
   .payment-value {
     font-weight: 500;
+  }
+  
+  /* ============================================
+     SPECIAL NOTES - Ultra Minimal
+     ============================================ */
+  
+  .notes-section {
+    margin: 1.5rem 0;
+    text-align: center;
+  }
+  
+  .notes-accent {
+    display: none;
+  }
+  
+  .notes-body {
+    display: inline-block;
+  }
+  
+  .notes-icon {
+    display: none;
+  }
+  
+  .notes-text {
+    font-size: 0.8125rem;
+    font-style: italic;
+    color: var(--contract-muted);
+    line-height: 1.5;
+    margin: 0;
+  }
+  
+  /* Hide the old yellow notes card if it exists */
+  .notes-card {
+    display: none !important;
   }
   
   /* ============================================

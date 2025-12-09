@@ -10,24 +10,19 @@ import {
   RefreshCw,
   Trash2,
   Copy,
-  Edit3,
   Eye,
   Check,
   X,
   AlertCircle,
   Loader2,
-  ChevronDown,
-  ChevronUp,
-  ExternalLink,
   Clock,
   CheckCircle2,
   Archive,
-  MousePointer2,
   Lightbulb,
   Mail,
   Pencil,
-  RotateCcw,
   Save,
+  Edit3,
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
@@ -57,9 +52,9 @@ interface ContractEditorProps {
 // Hints for first-time users
 const HINTS = [
   {
-    icon: Edit3,
-    title: 'Edit Your Contract',
-    description: 'Click "Edit" to customize clauses and terms before sending.',
+    icon: Pencil,
+    title: 'Tap to Edit',
+    description: 'Click any clause to edit it directly. Changes save automatically.',
   },
   {
     icon: Eye,
@@ -93,6 +88,9 @@ export function ContractEditor({ contract, clientName, clientId }: ContractEdito
   const [showCopySentModal, setShowCopySentModal] = useState(false)
   const [showCancelModal, setShowCancelModal] = useState(false)
   const [cancelReason, setCancelReason] = useState('')
+  const [previewLanguage, setPreviewLanguage] = useState<'en' | 'es'>('en')
+  const [translatedHtml, setTranslatedHtml] = useState<string | null>(null)
+  const [isTranslating, setIsTranslating] = useState(false)
   
   // Check if this is the first time viewing contracts
   useEffect(() => {
@@ -131,7 +129,6 @@ export function ContractEditor({ contract, clientName, clientId }: ContractEdito
   const [editableClauses, setEditableClauses] = useState<ClauseSnapshot[]>(
     contract.clausesSnapshot || []
   )
-  const [expandedClauses, setExpandedClauses] = useState<Set<string>>(new Set())
   
   // Inline editing state
   const [editingClauseId, setEditingClauseId] = useState<string | null>(null)
@@ -164,16 +161,37 @@ export function ContractEditor({ contract, clientName, clientId }: ContractEdito
     setEditingContent(clause.content)
   }, [isDraft])
   
-  // Save inline edit
+  // Save inline edit - updates local state AND saves to database
   const saveInlineEdit = useCallback(() => {
     if (!editingClauseId) return
     
-    setEditableClauses(prev =>
-      prev.map(c => (c.id === editingClauseId ? { ...c, content: editingContent } : c))
+    // Update local state first
+    const updatedClauses = editableClauses.map(c => 
+      c.id === editingClauseId ? { ...c, content: editingContent } : c
     )
+    setEditableClauses(updatedClauses)
     setEditingClauseId(null)
     setEditingContent('')
-  }, [editingClauseId, editingContent])
+    
+    // Save to database immediately
+    startTransition(async () => {
+      const result = await updateContract({
+        contractId: contract.id,
+        clausesSnapshot: updatedClauses,
+      })
+
+      if (!result.success) {
+        setError(result.error?.message || 'Failed to save changes')
+        return
+      }
+
+      setSuccess('Saved')
+      originalClauses.current = updatedClauses
+      // Clear success message after 2 seconds
+      setTimeout(() => setSuccess(null), 2000)
+      router.refresh()
+    })
+  }, [editingClauseId, editingContent, editableClauses, contract.id, router])
   
   // Cancel inline edit
   const cancelInlineEdit = useCallback(() => {
@@ -203,23 +221,335 @@ export function ContractEditor({ contract, clientName, clientId }: ContractEdito
     return grouped
   }, [editableClauses])
 
-  const toggleClauseExpand = (clauseId: string) => {
-    setExpandedClauses(prev => {
-      const next = new Set(prev)
-      if (next.has(clauseId)) {
-        next.delete(clauseId)
-      } else {
-        next.add(clauseId)
-      }
-      return next
-    })
-  }
-
-  const updateClauseContent = (clauseId: string, newContent: string) => {
-    setEditableClauses(prev =>
-      prev.map(c => (c.id === clauseId ? { ...c, content: newContent } : c))
-    )
-  }
+  // Comprehensive Spanish translation for contract terms
+  const translateToSpanish = useCallback((html: string): string => {
+    // Extensive phrase-based translations (longest phrases first for accuracy)
+    const phrases: Record<string, string> = {
+      // Full sentences and long phrases
+      'A non-refundable retainer of': 'Un anticipo no reembolsable de',
+      'is due upon signing this agreement to secure the date': 'se debe al firmar este acuerdo para asegurar la fecha',
+      'The remaining balance is due': 'El saldo restante vence el',
+      'The remaining balance of': 'El saldo restante de',
+      'Accepted payment methods: bank transfer, credit card, Venmo, or check': 'Métodos de pago aceptados: transferencia bancaria, tarjeta de crédito, Venmo o cheque',
+      'Late payments may result in postponement of image delivery until the balance is settled': 'Los pagos atrasados pueden resultar en el aplazamiento de la entrega de imágenes hasta que se liquide el saldo',
+      'The Photographer retains full copyright ownership of all images created under this agreement': 'El Fotógrafo retiene la propiedad total de los derechos de autor de todas las imágenes creadas bajo este acuerdo',
+      'in accordance with U.S. Copyright Law': 'de acuerdo con la Ley de Derechos de Autor de EE.UU.',
+      'The Client receives a personal, non-exclusive, non-transferable license to': 'El Cliente recibe una licencia personal, no exclusiva e intransferible para',
+      'Print images for personal display': 'Imprimir imágenes para exhibición personal',
+      'Share images on personal social media with photographer credit': 'Compartir imágenes en redes sociales personales con crédito al fotógrafo',
+      'Use images for personal announcements and invitations': 'Usar imágenes para anuncios e invitaciones personales',
+      'The Photographer reserves the right to use images for': 'El Fotógrafo se reserva el derecho de usar las imágenes para',
+      'Portfolio and website display': 'Exhibición en portafolio y sitio web',
+      'Marketing and promotional materials': 'Materiales de marketing y promoción',
+      'Social media and advertising': 'Redes sociales y publicidad',
+      'Industry publications and competitions': 'Publicaciones y competencias de la industria',
+      'Educational purposes': 'Propósitos educativos',
+      'The Client may request in writing to exclude specific images from the Photographer\'s portfolio': 'El Cliente puede solicitar por escrito excluir imágenes específicas del portafolio del Fotógrafo',
+      'In the unlikely event of total photographic failure due to equipment malfunction, memory card failure, theft, or circumstances beyond the Photographer\'s control': 'En el improbable caso de falla fotográfica total debido a mal funcionamiento del equipo, falla de tarjeta de memoria, robo o circunstancias fuera del control del Fotógrafo',
+      'liability is limited to a full refund of all payments received under this agreement': 'la responsabilidad se limita al reembolso total de todos los pagos recibidos bajo este acuerdo',
+      'The Photographer is not liable for': 'El Fotógrafo no es responsable por',
+      'Compromised coverage due to venue restrictions or poor lighting conditions': 'Cobertura comprometida debido a restricciones del lugar o malas condiciones de iluminación',
+      'Missed moments due to timeline changes not communicated to the Photographer': 'Momentos perdidos debido a cambios en el cronograma no comunicados al Fotógrafo',
+      'Images affected by conditions outside the Photographer\'s control': 'Imágenes afectadas por condiciones fuera del control del Fotógrafo',
+      'Any indirect, incidental, or consequential damages': 'Cualquier daño indirecto, incidental o consecuente',
+      'The Client acknowledges that photography is inherently unpredictable and that the Photographer cannot guarantee specific shots or outcomes': 'El Cliente reconoce que la fotografía es inherentemente impredecible y que el Fotógrafo no puede garantizar tomas o resultados específicos',
+      'More than 90 days before event: Retainer forfeited; no additional fees': 'Más de 90 días antes del evento: Anticipo perdido; sin cargos adicionales',
+      '30-90 days before event: 50% of total package price due': '30-90 días antes del evento: 50% del precio total del paquete',
+      'Less than 30 days before event: 100% of total package price due': 'Menos de 30 días antes del evento: 100% del precio total del paquete',
+      'One reschedule is permitted at no additional charge if requested more than 30 days in advance, subject to Photographer availability': 'Se permite una reprogramación sin cargo adicional si se solicita con más de 30 días de anticipación, sujeto a disponibilidad del Fotógrafo',
+      'Subsequent reschedules may incur a': 'Reprogramaciones posteriores pueden incurrir en un cargo de',
+      'rebooking fee': 'cargo por reprogramación',
+      'If the Photographer must cancel due to illness, emergency, or circumstances beyond their control, all payments will be refunded in full': 'Si el Fotógrafo debe cancelar debido a enfermedad, emergencia o circunstancias fuera de su control, todos los pagos serán reembolsados en su totalidad',
+      'The Photographer will make reasonable efforts to secure a qualified replacement photographer': 'El Fotógrafo hará esfuerzos razonables para asegurar un fotógrafo de reemplazo calificado',
+      'The Client grants permission for the Photographer to use their likeness in images for the purposes outlined in this agreement': 'El Cliente otorga permiso para que el Fotógrafo use su imagen en fotografías para los propósitos descritos en este acuerdo',
+      'Neither party shall be liable for failure to perform obligations due to circumstances beyond reasonable control': 'Ninguna de las partes será responsable por el incumplimiento de obligaciones debido a circunstancias fuera del control razonable',
+      'including but not limited to natural disasters, government actions, pandemic, or other unforeseeable events': 'incluyendo pero no limitado a desastres naturales, acciones gubernamentales, pandemia u otros eventos imprevisibles',
+      'This agreement constitutes the entire understanding between the parties and supersedes all prior agreements': 'Este acuerdo constituye el entendimiento completo entre las partes y reemplaza todos los acuerdos anteriores',
+      'Any modifications must be made in writing and signed by both parties': 'Cualquier modificación debe hacerse por escrito y ser firmada por ambas partes',
+      'By signing below, both parties agree to the terms and conditions outlined in this agreement': 'Al firmar a continuación, ambas partes aceptan los términos y condiciones descritos en este acuerdo',
+      'hours of coverage': 'horas de cobertura',
+      'hour of coverage': 'hora de cobertura',
+      
+      // Headers and titles
+      'Photography Services Agreement': 'Contrato de Servicios Fotográficos',
+      'THE PHOTOGRAPHER': 'EL FOTÓGRAFO',
+      'THE CLIENT': 'EL CLIENTE',
+      'INVESTMENT SUMMARY': 'RESUMEN DE INVERSIÓN',
+      'TERMS & CONDITIONS': 'TÉRMINOS Y CONDICIONES',
+      'Payment Terms': 'Términos de Pago',
+      'Copyright & Image Usage': 'Derechos de Autor y Uso de Imágenes',
+      'Limitation of Liability': 'Limitación de Responsabilidad',
+      'Cancellation & Rescheduling': 'Cancelación y Reprogramación',
+      'Model Release': 'Autorización de Modelo',
+      'Force Majeure': 'Fuerza Mayor',
+      'Entire Agreement': 'Acuerdo Completo',
+      'Client Cancellation': 'Cancelación del Cliente',
+      'Photographer Cancellation': 'Cancelación del Fotógrafo',
+      'Rescheduling': 'Reprogramación',
+      'Client License': 'Licencia del Cliente',
+      'Photographer Rights': 'Derechos del Fotógrafo',
+      'Signature': 'Firma',
+      'Date': 'Fecha',
+      'Event Details': 'Detalles del Evento',
+      'Package Details': 'Detalles del Paquete',
+      
+      // Common labels
+      'Retainer Due': 'Anticipo Requerido',
+      'Balance Due': 'Saldo Pendiente',
+      'Total': 'Total',
+      'Subtotal': 'Subtotal',
+      'Price': 'Precio',
+      'Hours': 'Horas',
+      'Location': 'Ubicación',
+      'Venue': 'Lugar',
+      'Time': 'Hora',
+      'Phone': 'Teléfono',
+      'Email': 'Correo Electrónico',
+      'Address': 'Dirección',
+      
+      // Event types
+      'Wedding': 'Boda',
+      'Engagement': 'Compromiso',
+      'Portrait': 'Retrato',
+      'Family': 'Familia',
+      'Maternity': 'Maternidad',
+      'Newborn': 'Recién Nacido',
+      'Birthday': 'Cumpleaños',
+      'Quinceañera': 'Quinceañera',
+      'Quince': 'Quinceañera',
+      'Corporate': 'Corporativo',
+      'Event': 'Evento',
+      'Other': 'Otro',
+      
+      // Days and time
+      'Monday': 'Lunes',
+      'Tuesday': 'Martes',
+      'Wednesday': 'Miércoles',
+      'Thursday': 'Jueves',
+      'Friday': 'Viernes',
+      'Saturday': 'Sábado',
+      'Sunday': 'Domingo',
+      'January': 'Enero',
+      'February': 'Febrero',
+      'March': 'Marzo',
+      'April': 'Abril',
+      'May': 'Mayo',
+      'June': 'Junio',
+      'July': 'Julio',
+      'August': 'Agosto',
+      'September': 'Septiembre',
+      'October': 'Octubre',
+      'November': 'Noviembre',
+      'December': 'Diciembre',
+      'days': 'días',
+      'day': 'día',
+      'weeks': 'semanas',
+      'week': 'semana',
+      'months': 'meses',
+      'month': 'mes',
+      'before': 'antes',
+      'after': 'después',
+      'within': 'dentro de',
+    }
+    
+    // Individual words (applied after phrases)
+    const words: Record<string, string> = {
+      'agreement': 'acuerdo',
+      'contract': 'contrato',
+      'photographer': 'fotógrafo',
+      'client': 'cliente',
+      'payment': 'pago',
+      'payments': 'pagos',
+      'retainer': 'anticipo',
+      'deposit': 'depósito',
+      'balance': 'saldo',
+      'refund': 'reembolso',
+      'refundable': 'reembolsable',
+      'non-refundable': 'no reembolsable',
+      'cancellation': 'cancelación',
+      'cancel': 'cancelar',
+      'reschedule': 'reprogramar',
+      'rescheduling': 'reprogramación',
+      'copyright': 'derechos de autor',
+      'license': 'licencia',
+      'images': 'imágenes',
+      'image': 'imagen',
+      'photos': 'fotos',
+      'photo': 'foto',
+      'photographs': 'fotografías',
+      'photograph': 'fotografía',
+      'gallery': 'galería',
+      'portfolio': 'portafolio',
+      'delivery': 'entrega',
+      'delivered': 'entregado',
+      'coverage': 'cobertura',
+      'session': 'sesión',
+      'event': 'evento',
+      'wedding': 'boda',
+      'liability': 'responsabilidad',
+      'liable': 'responsable',
+      'damages': 'daños',
+      'terms': 'términos',
+      'conditions': 'condiciones',
+      'rights': 'derechos',
+      'permission': 'permiso',
+      'personal': 'personal',
+      'commercial': 'comercial',
+      'exclusive': 'exclusivo',
+      'non-exclusive': 'no exclusivo',
+      'transferable': 'transferible',
+      'non-transferable': 'no transferible',
+      'signed': 'firmado',
+      'signing': 'firmar',
+      'signature': 'firma',
+      'parties': 'partes',
+      'party': 'parte',
+      'both': 'ambas',
+      'either': 'cualquiera',
+      'neither': 'ninguna',
+      'shall': 'deberá',
+      'must': 'debe',
+      'may': 'puede',
+      'will': 'será',
+      'would': 'sería',
+      'should': 'debería',
+      'required': 'requerido',
+      'optional': 'opcional',
+      'included': 'incluido',
+      'additional': 'adicional',
+      'fee': 'cargo',
+      'fees': 'cargos',
+      'charge': 'cargo',
+      'charges': 'cargos',
+      'cost': 'costo',
+      'costs': 'costos',
+      'price': 'precio',
+      'total': 'total',
+      'full': 'completo',
+      'partial': 'parcial',
+      'written': 'escrito',
+      'writing': 'por escrito',
+      'notice': 'aviso',
+      'notify': 'notificar',
+      'notification': 'notificación',
+      'prior': 'previo',
+      'advance': 'anticipación',
+      'availability': 'disponibilidad',
+      'available': 'disponible',
+      'unavailable': 'no disponible',
+      'emergency': 'emergencia',
+      'illness': 'enfermedad',
+      'circumstances': 'circunstancias',
+      'control': 'control',
+      'beyond': 'fuera de',
+      'reasonable': 'razonable',
+      'unreasonable': 'irrazonable',
+      'failure': 'falla',
+      'equipment': 'equipo',
+      'malfunction': 'mal funcionamiento',
+      'theft': 'robo',
+      'loss': 'pérdida',
+      'damage': 'daño',
+      'venue': 'lugar',
+      'location': 'ubicación',
+      'lighting': 'iluminación',
+      'restrictions': 'restricciones',
+      'timeline': 'cronograma',
+      'schedule': 'horario',
+      'changes': 'cambios',
+      'modifications': 'modificaciones',
+      'understanding': 'entendimiento',
+      'supersedes': 'reemplaza',
+      'outlined': 'descritos',
+      'described': 'descritos',
+      'purposes': 'propósitos',
+      'purpose': 'propósito',
+      'use': 'uso',
+      'display': 'exhibición',
+      'print': 'imprimir',
+      'share': 'compartir',
+      'social media': 'redes sociales',
+      'website': 'sitio web',
+      'marketing': 'marketing',
+      'promotional': 'promocional',
+      'advertising': 'publicidad',
+      'publications': 'publicaciones',
+      'competitions': 'competencias',
+      'educational': 'educativo',
+      'credit': 'crédito',
+      'acknowledgment': 'reconocimiento',
+      'request': 'solicitar',
+      'exclude': 'excluir',
+      'specific': 'específico',
+      'unpredictable': 'impredecible',
+      'guarantee': 'garantizar',
+      'guaranteed': 'garantizado',
+      'outcomes': 'resultados',
+      'shots': 'tomas',
+      'moments': 'momentos',
+      'missed': 'perdidos',
+      'affected': 'afectadas',
+      'compromised': 'comprometida',
+      'indirect': 'indirecto',
+      'incidental': 'incidental',
+      'consequential': 'consecuente',
+      'acknowledges': 'reconoce',
+      'agrees': 'acepta',
+      'grants': 'otorga',
+      'reserves': 'reserva',
+      'retains': 'retiene',
+      'receives': 'recibe',
+      'forfeited': 'perdido',
+      'permitted': 'permitido',
+      'incur': 'incurrir',
+      'efforts': 'esfuerzos',
+      'secure': 'asegurar',
+      'qualified': 'calificado',
+      'replacement': 'reemplazo',
+      'likeness': 'imagen',
+      'natural disasters': 'desastres naturales',
+      'government': 'gobierno',
+      'pandemic': 'pandemia',
+      'unforeseeable': 'imprevisibles',
+      'entire': 'completo',
+      'constitutes': 'constituye',
+    }
+    
+    let translated = html
+    
+    // First pass: Replace full phrases (sorted by length, longest first)
+    const sortedPhrases = Object.keys(phrases).sort((a, b) => b.length - a.length)
+    for (const phrase of sortedPhrases) {
+      const regex = new RegExp(phrase.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi')
+      translated = translated.replace(regex, phrases[phrase])
+    }
+    
+    // Second pass: Replace individual words (only whole words, case-insensitive)
+    const sortedWords = Object.keys(words).sort((a, b) => b.length - a.length)
+    for (const word of sortedWords) {
+      // Use word boundary to avoid partial replacements
+      const regex = new RegExp(`\\b${word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'gi')
+      translated = translated.replace(regex, words[word])
+    }
+    
+    return translated
+  }, [])
+  
+  // Handle language change
+  useEffect(() => {
+    const html = contract.renderedHtml
+    if (previewLanguage === 'es' && html) {
+      setIsTranslating(true)
+      // Small delay to show loading state
+      const timer = setTimeout(() => {
+        setTranslatedHtml(translateToSpanish(html))
+        setIsTranslating(false)
+      }, 300)
+      return () => clearTimeout(timer)
+    } else {
+      setTranslatedHtml(null)
+    }
+  }, [previewLanguage, contract.renderedHtml, translateToSpanish])
 
   const handleSaveChanges = () => {
     setError(null)
@@ -1294,10 +1624,224 @@ export function ContractEditor({ contract, clientName, clientId }: ContractEdito
           {/* Contract Content - Inline Editing */}
           {showPreview ? (
             <div className="bg-white rounded-2xl border border-stone-200/60 shadow-sm overflow-hidden">
-              <div
-                className="p-8 sm:p-10 prose prose-stone max-w-none"
-                dangerouslySetInnerHTML={{ __html: contract.renderedHtml || '' }}
-              />
+              {/* Language Toggle + Edit Hint */}
+              <div className="px-6 py-3 bg-stone-50 border-b border-stone-100 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <span className="text-xs text-stone-500">Preview Language</span>
+                  <div className="flex items-center gap-1 p-0.5 bg-stone-200/50 rounded-lg">
+                    <button
+                      onClick={() => setPreviewLanguage('en')}
+                      className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${
+                        previewLanguage === 'en'
+                          ? 'bg-white text-stone-900 shadow-sm'
+                          : 'text-stone-500 hover:text-stone-700'
+                      }`}
+                    >
+                      🇺🇸 English
+                    </button>
+                    <button
+                      onClick={() => setPreviewLanguage('es')}
+                      className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${
+                        previewLanguage === 'es'
+                          ? 'bg-white text-stone-900 shadow-sm'
+                          : 'text-stone-500 hover:text-stone-700'
+                      }`}
+                    >
+                      🇲🇽 Español
+                    </button>
+                  </div>
+                </div>
+                {isDraft && (
+                  <div className="flex items-center gap-1.5 text-xs text-stone-400">
+                    <Pencil className="w-3 h-3" />
+                    <span>Hover any section to edit</span>
+                  </div>
+                )}
+              </div>
+              
+              {/* Contract Preview with Hover-to-Edit */}
+              <div className="relative">
+                {isTranslating && (
+                  <div className="absolute inset-0 bg-white/80 flex items-center justify-center z-10">
+                    <div className="flex items-center gap-2 text-stone-500">
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span className="text-sm">Translating...</span>
+                    </div>
+                  </div>
+                )}
+                
+                {/* Contract Header (Parties, Event, Investment Summary) */}
+                {contract.renderedHtml && (
+                  <div 
+                    className="prose prose-stone max-w-none"
+                    dangerouslySetInnerHTML={{ 
+                      __html: (() => {
+                        // Extract just the header portion (before contract-clauses)
+                        const html = previewLanguage === 'es' && translatedHtml 
+                          ? translatedHtml 
+                          : contract.renderedHtml
+                        const clausesStart = html.indexOf('<div class="contract-clauses">')
+                        if (clausesStart > 0) {
+                          return html.substring(0, clausesStart)
+                        }
+                        return ''
+                      })()
+                    }}
+                  />
+                )}
+                
+                {/* Editable clause sections */}
+                <div className="px-8 sm:px-10 pb-8 sm:pb-10">
+                  {editableClauses.map((clause, index) => {
+                    const isEditingThis = editingClauseId === clause.id
+                    
+                    return (
+                      <div key={clause.id} className={index > 0 ? 'mt-8' : ''}>
+                        {/* Clause with hover effect for drafts */}
+                        <div
+                          className={`
+                            relative rounded-xl transition-all duration-200 -mx-4 px-4 py-3
+                            ${isDraft && !isEditingThis ? 'cursor-pointer hover:bg-amber-50/50 hover:ring-1 hover:ring-amber-200 group' : ''}
+                            ${isEditingThis ? 'bg-stone-50 ring-2 ring-stone-900' : ''}
+                          `}
+                          onClick={() => isDraft && !isEditingThis && startInlineEdit(clause)}
+                        >
+                          {/* Edit indicator on hover */}
+                          {isDraft && !isEditingThis && (
+                            <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1.5 px-2 py-1 bg-stone-900 text-white text-[10px] font-medium rounded-md shadow-lg">
+                              <Pencil className="w-3 h-3" />
+                              Click to edit
+                            </div>
+                          )}
+                          
+                          <AnimatePresence mode="wait">
+                            {isEditingThis ? (
+                              <motion.div
+                                key="editing"
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                transition={{ duration: 0.15 }}
+                              >
+                                {/* Editing header */}
+                                <div className="flex items-center justify-between mb-3">
+                                  <span className="text-sm font-medium text-stone-700">{clause.title}</span>
+                                  <div className="flex items-center gap-1">
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation()
+                                        cancelInlineEdit()
+                                      }}
+                                      className="p-1.5 text-stone-400 hover:text-stone-600 hover:bg-stone-200 rounded-lg transition-colors"
+                                      title="Cancel (Esc)"
+                                    >
+                                      <X className="w-4 h-4" />
+                                    </button>
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation()
+                                        saveInlineEdit()
+                                      }}
+                                      disabled={isPending}
+                                      className="flex items-center gap-1 px-2.5 py-1 text-xs font-medium bg-stone-900 text-white rounded-lg hover:bg-stone-800 transition-colors disabled:opacity-50"
+                                      title="Save (⌘+Enter)"
+                                    >
+                                      {isPending ? (
+                                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                      ) : (
+                                        <Check className="w-3.5 h-3.5" />
+                                      )}
+                                      {isPending ? 'Saving...' : 'Done'}
+                                    </button>
+                                  </div>
+                                </div>
+                                <textarea
+                                  ref={textareaRef}
+                                  value={editingContent}
+                                  onChange={(e) => setEditingContent(e.target.value)}
+                                  onKeyDown={handleInlineKeyDown}
+                                  className="w-full min-h-[150px] p-4 text-sm text-stone-700 leading-relaxed border border-stone-200 rounded-xl resize-none focus:outline-none focus:ring-2 focus:ring-stone-900 focus:border-transparent bg-white"
+                                  placeholder="Enter clause content..."
+                                />
+                                <div className="flex items-center justify-between mt-2 text-[10px] text-stone-400">
+                                  <span>⌘+Enter to save • Esc to cancel</span>
+                                  <span>{editingContent.length} characters</span>
+                                </div>
+                              </motion.div>
+                            ) : (
+                              <motion.div
+                                key="viewing"
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                transition={{ duration: 0.15 }}
+                                className="prose prose-stone prose-sm max-w-none"
+                              >
+                                <h3 className="text-base font-semibold text-stone-900 mb-2">{clause.title}</h3>
+                                <div 
+                                  className="text-sm text-stone-600 leading-relaxed"
+                                  dangerouslySetInnerHTML={{ 
+                                    __html: previewLanguage === 'es' 
+                                      ? translateToSpanish(clause.content)
+                                      : clause.content 
+                                  }}
+                                />
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+              
+              {/* Floating Save Bar for Preview Mode */}
+              <AnimatePresence>
+                {hasUnsavedChanges && isDraft && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 20 }}
+                    className="sticky bottom-0 z-20 bg-stone-900 text-white px-4 py-3 flex items-center justify-between border-t border-stone-800"
+                  >
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 bg-amber-400 rounded-full animate-pulse" />
+                      <span className="text-sm font-medium">Unsaved changes</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => {
+                          setEditableClauses(originalClauses.current)
+                          setEditingClauseId(null)
+                        }}
+                        className="px-3 py-1.5 text-sm text-stone-300 hover:text-white transition-colors"
+                      >
+                        Discard
+                      </button>
+                      <button
+                        onClick={handleSaveChanges}
+                        disabled={isPending}
+                        className="flex items-center gap-1.5 px-4 py-1.5 bg-white text-stone-900 text-sm font-medium rounded-lg hover:bg-stone-100 transition-colors disabled:opacity-50"
+                      >
+                        {isPending ? (
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        ) : (
+                          <Save className="w-3.5 h-3.5" />
+                        )}
+                        Save All
+                      </button>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+              
+              {/* Spanish disclaimer */}
+              {previewLanguage === 'es' && !hasUnsavedChanges && (
+                <div className="px-6 py-3 bg-amber-50 border-t border-amber-100 text-xs text-amber-700">
+                  <strong>Nota:</strong> Esta es una traducción automática para referencia. El contrato legal vinculante es la versión en inglés.
+                </div>
+              )}
             </div>
           ) : (
             <div className="bg-white rounded-2xl border border-stone-200/60 shadow-sm overflow-hidden">
@@ -1408,11 +1952,16 @@ export function ContractEditor({ contract, clientName, clientId }: ContractEdito
                                       e.stopPropagation()
                                       saveInlineEdit()
                                     }}
-                                    className="flex items-center gap-1 px-2.5 py-1 text-xs font-medium bg-stone-900 text-white rounded-lg hover:bg-stone-800 transition-colors"
+                                    disabled={isPending}
+                                    className="flex items-center gap-1 px-2.5 py-1 text-xs font-medium bg-stone-900 text-white rounded-lg hover:bg-stone-800 transition-colors disabled:opacity-50"
                                     title="Save (⌘+Enter)"
                                   >
-                                    <Check className="w-3.5 h-3.5" />
-                                    Done
+                                    {isPending ? (
+                                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                    ) : (
+                                      <Check className="w-3.5 h-3.5" />
+                                    )}
+                                    {isPending ? 'Saving...' : 'Done'}
                                   </button>
                                 </div>
                               )}

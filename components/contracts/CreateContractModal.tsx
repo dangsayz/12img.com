@@ -457,6 +457,19 @@ export function CreateContractModal({ isOpen, onClose, client }: CreateContractM
                         </div>
                       )}
                     </div>
+                    
+                    {/* Deposit/Retainer - Full width below */}
+                    {client.retainerFee && (
+                      <div className="mt-3 bg-stone-900 rounded-xl p-3 shadow-sm">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2 text-stone-400 text-xs">
+                            <DollarSign className="w-3.5 h-3.5" />
+                            Deposit Due
+                          </div>
+                          <p className="font-semibold text-white">${client.retainerFee.toLocaleString()}</p>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </motion.div>
 
