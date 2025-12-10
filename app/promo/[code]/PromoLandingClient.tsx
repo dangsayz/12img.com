@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { storePromo } from '@/lib/promo/persistence'
-import { Check, Loader2, Users } from 'lucide-react'
+import { Check, Users, ArrowRight, Clock, Shield, Zap } from 'lucide-react'
 
 interface PromoLandingClientProps {
   campaign: {
@@ -27,10 +27,10 @@ interface PromoLandingClientProps {
 
 export function PromoLandingClient({ campaign, redirectUrl, utmParams }: PromoLandingClientProps) {
   const router = useRouter()
-  const [status, setStatus] = useState<'storing' | 'redirecting' | 'error'>('storing')
+  const [saved, setSaved] = useState(false)
 
   useEffect(() => {
-    // Store the promo in cookie + localStorage
+    // Store the promo in cookie + localStorage immediately
     try {
       storePromo({
         code: campaign.code,
@@ -42,22 +42,11 @@ export function PromoLandingClient({ campaign, redirectUrl, utmParams }: PromoLa
         medium: utmParams.medium,
         campaign: utmParams.campaign,
       })
-      
-      setStatus('redirecting')
-      
-      // Small delay to show the UI, then redirect
-      setTimeout(() => {
-        router.push(redirectUrl)
-      }, 1500)
+      setSaved(true)
     } catch (error) {
       console.error('Failed to store promo:', error)
-      setStatus('error')
-      // Redirect anyway after error
-      setTimeout(() => {
-        router.push(redirectUrl)
-      }, 2000)
     }
-  }, [campaign, redirectUrl, utmParams, router])
+  }, [campaign, utmParams])
 
   const formatDiscount = () => {
     switch (campaign.discountType) {
@@ -72,72 +61,96 @@ export function PromoLandingClient({ campaign, redirectUrl, utmParams }: PromoLa
     }
   }
 
+  const handleClaim = () => {
+    router.push(redirectUrl)
+  }
+
   return (
     <div className="min-h-screen bg-stone-50 flex items-center justify-center p-4">
-      <div className="max-w-md w-full text-center">
+      <div className="max-w-lg w-full">
         {/* Logo */}
-        <div className="flex items-center justify-center gap-2 mb-12">
+        <div className="flex items-center justify-center gap-2 mb-10">
           <div className="w-10 h-10 bg-stone-900 rounded-full flex items-center justify-center">
             <span className="text-white text-sm font-bold">12</span>
           </div>
           <span className="text-xl font-semibold text-stone-900">img</span>
         </div>
 
-        {/* Badge */}
-        {campaign.badgeText && (
-          <div className="inline-block px-4 py-1.5 bg-stone-900 text-white text-xs font-bold uppercase tracking-wider mb-6">
-            {campaign.badgeText}
-          </div>
-        )}
-
-        {/* Headline */}
-        <h1 className="text-3xl font-serif text-stone-900 mb-3">
-          {campaign.headline}
-        </h1>
-
-        {/* Subheadline */}
-        {campaign.subheadline && (
-          <p className="text-stone-500 mb-8">
-            {campaign.subheadline}
-          </p>
-        )}
-
-        {/* Discount Display */}
-        <div className="bg-white border border-stone-200 p-6 mb-8">
-          <p className="text-sm text-stone-500 uppercase tracking-wider mb-2">Your Discount</p>
-          <p className="text-4xl font-serif text-stone-900">{formatDiscount()}</p>
-          {campaign.spotsRemaining !== null && (
-            <div className="flex items-center justify-center gap-2 mt-4 text-sm text-stone-600">
-              <Users className="w-4 h-4" />
-              <span>{campaign.spotsRemaining} spots remaining</span>
+        {/* Main Card */}
+        <div className="bg-white border border-stone-200 overflow-hidden">
+          {/* Badge Header */}
+          {campaign.badgeText && (
+            <div className="bg-stone-900 text-white text-center py-3 px-4">
+              <span className="text-xs font-bold uppercase tracking-wider">
+                {campaign.badgeText}
+              </span>
             </div>
           )}
-        </div>
 
-        {/* Status */}
-        <div className="flex items-center justify-center gap-3 text-stone-600">
-          {status === 'storing' && (
-            <>
-              <Loader2 className="w-5 h-5 animate-spin" />
-              <span>Saving your discount...</span>
-            </>
-          )}
-          {status === 'redirecting' && (
-            <>
-              <Check className="w-5 h-5 text-emerald-600" />
-              <span>Discount saved! Redirecting...</span>
-            </>
-          )}
-          {status === 'error' && (
-            <>
-              <span className="text-amber-600">Redirecting to sign up...</span>
-            </>
-          )}
+          <div className="p-8 text-center">
+            {/* Headline */}
+            <h1 className="text-3xl font-serif text-stone-900 mb-3">
+              {campaign.headline}
+            </h1>
+
+            {/* Subheadline */}
+            {campaign.subheadline && (
+              <p className="text-stone-500 mb-8">
+                {campaign.subheadline}
+              </p>
+            )}
+
+            {/* Discount Display */}
+            <div className="bg-stone-50 border border-stone-100 p-6 mb-6">
+              <p className="text-xs text-stone-400 uppercase tracking-wider mb-2">Your Exclusive Discount</p>
+              <p className="text-5xl font-serif text-stone-900 mb-2">{formatDiscount()}</p>
+              {campaign.spotsRemaining !== null && (
+                <div className="flex items-center justify-center gap-2 text-sm text-amber-700 font-medium">
+                  <Users className="w-4 h-4" />
+                  <span>Only {campaign.spotsRemaining} spots left</span>
+                </div>
+              )}
+            </div>
+
+            {/* Benefits */}
+            <div className="grid grid-cols-3 gap-4 mb-8 text-center">
+              <div className="p-3">
+                <Zap className="w-5 h-5 mx-auto mb-2 text-stone-400" />
+                <p className="text-xs text-stone-500">2TB Storage</p>
+              </div>
+              <div className="p-3">
+                <Shield className="w-5 h-5 mx-auto mb-2 text-stone-400" />
+                <p className="text-xs text-stone-500">Unlimited Galleries</p>
+              </div>
+              <div className="p-3">
+                <Clock className="w-5 h-5 mx-auto mb-2 text-stone-400" />
+                <p className="text-xs text-stone-500">Locked Forever</p>
+              </div>
+            </div>
+
+            {/* CTA Button */}
+            <button
+              onClick={handleClaim}
+              className="w-full bg-stone-900 hover:bg-stone-800 text-white py-4 px-6 text-sm font-medium uppercase tracking-wider transition-colors flex items-center justify-center gap-2"
+            >
+              Claim Your Spot
+              <ArrowRight className="w-4 h-4" />
+            </button>
+
+            {/* Saved indicator */}
+            {saved && (
+              <div className="flex items-center justify-center gap-2 mt-4 text-sm text-emerald-600">
+                <Check className="w-4 h-4" />
+                <span>Discount saved to your session</span>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Fine print */}
-        <p className="mt-12 text-xs text-stone-400">
-          Your discount will be automatically applied at checkout.
+        <p className="mt-6 text-center text-xs text-stone-400">
+          Your discount will be automatically applied at checkout.<br />
+          No credit card required to sign up.
         </p>
       </div>
     </div>
