@@ -25,6 +25,7 @@ import {
   Trophy,
   Lightbulb,
   Bell,
+  Tag,
 } from 'lucide-react'
 import { RealtimeIndicator } from './RealtimeIndicator'
 
@@ -80,6 +81,11 @@ const NAV_ITEMS = [
     title: 'Feature Requests',
     href: '/admin/feature-requests',
     icon: Lightbulb,
+  },
+  {
+    title: 'Promos',
+    href: '/admin/promos',
+    icon: Tag,
   },
   {
     title: 'Feature Flags',

@@ -171,6 +171,21 @@ export async function sendContractEmail(options: SendContractEmailOptions) {
             </td>
           </tr>
           
+          <!-- Client Account CTA -->
+          <tr>
+            <td style="padding-top: 32px; text-align: center;">
+              <p style="margin: 0 0 8px; font-size: 14px; color: #666666;">
+                <strong style="color: #000000;">Keep everything in one place.</strong>
+              </p>
+              <p style="margin: 0; font-size: 13px; color: #999999; line-height: 1.6;">
+                Create a free 12img account to access your contracts, galleries, and project details anytime.
+              </p>
+              <p style="margin: 12px 0 0;">
+                <a href="https://12img.com/sign-up?ref=contract" style="color: #000000; font-size: 13px; text-decoration: underline;">Create your free account →</a>
+              </p>
+            </td>
+          </tr>
+          
           <!-- Branding -->
           <tr>
             <td style="padding-top: 48px; text-align: center;">
@@ -207,6 +222,15 @@ Review & Sign: ${portalUrl}
 
 Questions? Reply directly to this email.
 
+---
+
+Keep everything in one place.
+
+Create a free 12img account to access your contracts, galleries, and project details anytime.
+
+Create your free account: 12img.com/sign-up
+
+---
 ${photographerName}
   `.trim()
 
@@ -299,6 +323,17 @@ export async function sendSignatureConfirmationEmail(options: SendSignatureConfi
       </p>
       
       <hr style="border: none; border-top: 1px solid #e7e5e4; margin: 32px 0;">
+      
+      <!-- Client Account CTA -->
+      <div style="background: #f5f5f4; border-radius: 8px; padding: 20px; margin: 0 0 24px; text-align: center;">
+        <p style="margin: 0 0 8px; font-size: 14px; font-weight: 600; color: #1c1917;">
+          Your project, all in one place
+        </p>
+        <p style="margin: 0 0 12px; font-size: 13px; color: #78716c; line-height: 1.6;">
+          Create a free 12img account to access your contract, track your booking, and view your gallery when it's ready.
+        </p>
+        <a href="https://12img.com/sign-up?ref=signed" style="color: #1c1917; font-size: 13px; text-decoration: underline;">Create your free account →</a>
+      </div>
       
       <p style="font-size: 11px; color: #d6d3d1; text-align: center;">
         Sent via <a href="https://12img.com" style="color: #a8a29e;">12IMG</a>
@@ -474,6 +509,18 @@ export async function sendContractExpiryReminder(options: {
         <p style="font-size: 14px; color: #78716c; text-align: center;">
           Questions? Just reply to this email.
         </p>
+        
+        <!-- Client Account CTA -->
+        <div style="background: #fafaf9; padding: 20px; margin-top: 24px; text-align: center;">
+          <p style="margin: 0 0 8px; font-size: 14px; font-weight: 500; color: #1c1917;">
+            Stay organized, stress-free
+          </p>
+          <p style="margin: 0; font-size: 13px; color: #78716c; line-height: 1.6;">
+            Create a free 12img account to access your contracts and galleries in one secure place.
+            <br/>
+            <a href="https://12img.com/sign-up?ref=reminder" style="color: #1c1917; text-decoration: underline;">Create your free account →</a>
+          </p>
+        </div>
       </div>
       
       <!-- Footer -->

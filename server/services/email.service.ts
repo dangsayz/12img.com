@@ -367,6 +367,20 @@ function generateArchiveEmailHtml(data: ArchiveEmailData): string {
                 ⏰ This download link expires in <strong>${data.expiresInDays} days</strong>. 
                 Save it somewhere safe!
               </p>
+              
+              <!-- Client Account CTA -->
+              <div style="margin: 32px 0 0; padding: 24px; background-color: #f9fafb; border-radius: 8px; text-align: center;">
+                <p style="margin: 0 0 8px; font-size: 15px; font-weight: 600; color: #18181b;">
+                  Never lose access to your photos
+                </p>
+                <p style="margin: 0 0 16px; font-size: 14px; color: #71717a; line-height: 1.6;">
+                  Create a free 12img account to save your galleries, organize your favorites, and access your memories anytime — on any device.
+                </p>
+                <a href="https://12img.com/sign-up?ref=archive" 
+                   style="display: inline-block; padding: 12px 24px; background-color: #ffffff; color: #18181b; font-size: 14px; font-weight: 500; text-decoration: none; border: 1px solid #e5e7eb; border-radius: 6px;">
+                  Create Free Account →
+                </a>
+              </div>
             </td>
           </tr>
           
@@ -439,6 +453,14 @@ Download your archive here:
 ${data.downloadUrl}
 
 ⚠️ IMPORTANT: This download link expires in ${data.expiresInDays} days. Please download and save your images before then.
+
+---
+
+Never lose access to your photos.
+
+Create a free 12img account to save your galleries, organize your favorites, and access your memories anytime — on any device.
+
+Create your free account: 12img.com/sign-up
 
 ---
 Powered by 12img
@@ -830,12 +852,17 @@ function generateGalleryInviteEmailHtml(data: GalleryInviteEmailData): string {
             </td>
           </tr>
           
-          <!-- Free Offer -->
+          <!-- Client Account CTA -->
           <tr>
-            <td align="center" style="padding-bottom: 32px;">
+            <td align="center" style="padding: 0 20px 32px;">
+              <p style="margin: 0 0 8px; font-size: 15px; color: #525252; line-height: 1.7;">
+                <strong style="color: #18181b;">Want to keep these memories safe?</strong>
+              </p>
               <p style="margin: 0; font-size: 14px; color: #737373; line-height: 1.7;">
-                Love how your photos look? Create your own galleries for free.<br/>
-                <a href="https://12img.com" style="color: #b45309; text-decoration: none;">Start with 3 free albums →</a>
+                Create a free account to save your gallery, mark your favorites, and access your photos anytime — on any device.
+              </p>
+              <p style="margin: 12px 0 0;">
+                <a href="https://12img.com/sign-up?ref=gallery" style="color: #18181b; font-size: 14px; font-weight: 500; text-decoration: underline;">Create your free account →</a>
               </p>
             </td>
           </tr>
@@ -885,8 +912,11 @@ ${data.galleryUrl}
 ${data.hasPassword ? `This gallery is protected.${data.password ? ` Your PIN: ${data.password}` : ' The PIN will be shared separately.'}\n` : ''}
 ---
 
-Love how your photos look? Create your own galleries for free.
-Start with 3 free albums at 12img.com
+Want to keep these memories safe?
+
+Create a free account to save your gallery, mark your favorites, and access your photos anytime — on any device.
+
+Create your free account: 12img.com/sign-up
 
 ---
 Delivered with 12img
@@ -1105,8 +1135,14 @@ function generateVendorShareEmailHtml(data: VendorShareEmailData): string {
           <!-- Footer -->
           <tr>
             <td style="padding: 24px 40px; background: #fafaf9; border-top: 1px solid #f5f5f4;">
-              <p style="margin: 0; font-size: 12px; color: #a8a29e; text-align: center;">
+              <p style="margin: 0 0 16px; font-size: 12px; color: #a8a29e; text-align: center;">
                 This link is private and unique to you.
+              </p>
+              <p style="margin: 0; font-size: 12px; color: #78716c; text-align: center; line-height: 1.6;">
+                <strong style="color: #44403c;">Build your own portfolio?</strong><br/>
+                Create a free 12img account to showcase your work beautifully.
+                <br/>
+                <a href="https://12img.com/sign-up?ref=vendor" style="color: #1c1917; text-decoration: underline;">Get started free →</a>
               </p>
             </td>
           </tr>
@@ -1151,6 +1187,13 @@ View Gallery: ${data.accessUrl}
 ━━━━━━━━━━━━━━
 This link is private and unique to you.
 
+---
+
+Build your own portfolio?
+Create a free 12img account to showcase your work beautifully.
+Get started free: 12img.com/sign-up
+
+━━━━━━━━━━━━━━
 12img.com
 `.trim()
 }
