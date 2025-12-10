@@ -36,6 +36,7 @@ import { SocialShareButtons, SocialShareButtonsDark } from '@/components/ui/Soci
 import { ImageDownloadButton, ImageDownloadButtonDark } from '@/components/ui/ImageDownloadButton'
 import { DownloadModal } from '@/components/ui/DownloadModal'
 import { getSeoAltText } from '@/lib/seo/image-urls'
+import { type PresentationData } from '@/lib/types/presentation'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // TYPES
@@ -65,6 +66,7 @@ interface MosaicViewProps {
   isOwner?: boolean
   coverImageId?: string | null
   onSetCover?: (imageId: string) => Promise<void>
+  presentation?: PresentationData | null
 }
 
 
@@ -399,6 +401,7 @@ export function MosaicView({
   isOwner = false,
   coverImageId: initialCoverImageId,
   onSetCover,
+  presentation,
 }: MosaicViewProps) {
   const [viewerOpen, setViewerOpen] = useState(false)
   const [viewerIndex, setViewerIndex] = useState(0)
@@ -635,23 +638,67 @@ export function MosaicView({
               )}
             </motion.div>
             
-            {/* Gallery Title - staggered entrance */}
+            {/* Gallery Title - Use presentation names if available */}
             <motion.h1 
-              className="text-2xl md:text-3xl lg:text-4xl font-extralight text-stone-800 tracking-wide mb-8"
+              className="text-2xl md:text-3xl lg:text-4xl font-extralight text-stone-800 tracking-wide mb-4"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.5, duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
             >
-              {title}
+              {presentation?.coupleNames?.partner1 
+                ? presentation.coupleNames.partner2 
+                  ? `${presentation.coupleNames.partner1} & ${presentation.coupleNames.partner2}`
+                  : presentation.coupleNames.partner1
+                : title}
             </motion.h1>
+
+            {/* Subtitle/Tagline from presentation */}
+            {presentation?.subtitle && (
+              <motion.p
+                className="text-sm md:text-base text-stone-500 font-light italic mb-4"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.6, duration: 0.6 }}
+              >
+                {presentation.subtitle}
+              </motion.p>
+            )}
+
+            {/* Event Date */}
+            {presentation?.eventDate && (
+              <motion.p
+                className="text-xs uppercase tracking-[0.2em] text-stone-400 mb-6"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.65, duration: 0.6 }}
+              >
+                {new Date(presentation.eventDate).toLocaleDateString('en-US', {
+                  month: 'long',
+                  day: 'numeric',
+                  year: 'numeric'
+                })}
+              </motion.p>
+            )}
             
             {/* Animated Divider */}
             <motion.div 
-              className="w-12 h-px bg-stone-200 mx-auto mb-8"
+              className="w-12 h-px bg-stone-200 mx-auto mb-6"
               initial={{ scaleX: 0 }}
               animate={{ scaleX: 1 }}
               transition={{ delay: 0.7, duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
             />
+
+            {/* Location from presentation */}
+            {(presentation?.venue || presentation?.location) && (
+              <motion.p
+                className="text-xs text-stone-400 mb-4"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.8, duration: 0.6 }}
+              >
+                {[presentation.venue, presentation.location].filter(Boolean).join(' · ')}
+              </motion.p>
+            )}
             
             {/* Photographer Attribution */}
             <motion.p 

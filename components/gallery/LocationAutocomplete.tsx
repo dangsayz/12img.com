@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { MapPin, Clock, ChevronDown } from 'lucide-react'
+import { ChevronDown } from 'lucide-react'
 
 interface LocationAutocompleteProps {
   value: string
@@ -102,11 +102,6 @@ export function LocationAutocomplete({
 
   return (
     <div ref={containerRef} className={`relative ${className}`}>
-      {label && (
-        <label className="block text-xs uppercase tracking-wider text-stone-400 mb-2">
-          {label}
-        </label>
-      )}
       <div className="relative">
         <input
           ref={inputRef}
@@ -120,7 +115,7 @@ export function LocationAutocomplete({
           }}
           onKeyDown={handleKeyDown}
           placeholder={placeholder}
-          className="w-full px-4 py-3 border border-stone-200 focus:border-stone-400 focus:ring-0 text-stone-900 placeholder:text-stone-300 pr-10"
+          className="w-full px-3 py-2.5 border border-neutral-200 focus:border-black focus:ring-0 text-black placeholder:text-neutral-300 text-sm pr-8"
           autoComplete="off"
         />
         {suggestions.length > 0 && (
@@ -132,9 +127,9 @@ export function LocationAutocomplete({
                 setFilteredSuggestions(suggestions.slice(0, 8))
               }
             }}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600 transition-colors"
+            className="absolute right-2 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-black transition-colors"
           >
-            <ChevronDown className={`w-4 h-4 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+            <ChevronDown className={`w-3.5 h-3.5 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
           </button>
         )}
       </div>
@@ -146,26 +141,21 @@ export function LocationAutocomplete({
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -4 }}
             transition={{ duration: 0.15 }}
-            className="absolute z-50 w-full mt-1 bg-white border border-stone-200 shadow-lg max-h-48 overflow-y-auto"
+            className="absolute z-50 w-full mt-0.5 bg-white border border-neutral-200 shadow-sm max-h-40 overflow-y-auto"
           >
             <div className="py-1">
-              <div className="px-3 py-1.5 text-[10px] uppercase tracking-wider text-stone-400 flex items-center gap-1.5">
-                <Clock className="w-3 h-3" />
-                Previously used
-              </div>
               {filteredSuggestions.map((suggestion, index) => (
                 <button
                   key={suggestion}
                   type="button"
                   onClick={() => handleSelect(suggestion)}
                   onMouseEnter={() => setHighlightedIndex(index)}
-                  className={`w-full px-3 py-2 text-left text-sm flex items-center gap-2 transition-colors ${
+                  className={`w-full px-3 py-1.5 text-left text-xs transition-colors ${
                     highlightedIndex === index
-                      ? 'bg-stone-100 text-stone-900'
-                      : 'text-stone-700 hover:bg-stone-50'
+                      ? 'bg-neutral-100 text-black'
+                      : 'text-neutral-600 hover:bg-neutral-50'
                   }`}
                 >
-                  <MapPin className="w-3.5 h-3.5 text-stone-400 flex-shrink-0" />
                   <span className="truncate">{suggestion}</span>
                 </button>
               ))}

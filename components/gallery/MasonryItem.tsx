@@ -127,10 +127,15 @@ export function MasonryItem({
     transform: `translateY(${displacement.y}px) rotate(${displacement.rotate}deg)`,
   } : {}
 
+  // Calculate true aspect ratio from image dimensions
+  const aspectRatio = image.width && image.height 
+    ? image.width / image.height 
+    : 0.75 // fallback to 3:4
+
   return (
     <div
-      className="overflow-hidden bg-zinc-50 relative group cursor-pointer aspect-[3/4] shadow-sm hover:shadow-lg transition-shadow duration-300"
-      style={displacementStyle}
+      className="overflow-hidden bg-zinc-50 relative group cursor-pointer shadow-sm hover:shadow-lg transition-shadow duration-300 break-inside-avoid mb-6 sm:mb-8 lg:mb-10"
+      style={{ ...displacementStyle, aspectRatio }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => {
         setIsHovered(false)

@@ -4,6 +4,7 @@ import { useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { MosaicView } from './MosaicView'
 import { setCoverImage } from '@/server/actions/gallery.actions'
+import { type PresentationData } from '@/lib/types/presentation'
 
 interface GalleryImage {
   id: string
@@ -28,6 +29,7 @@ interface MosaicViewWrapperProps {
   totalImages?: number
   isOwner?: boolean
   coverImageId?: string | null
+  presentation?: PresentationData | null
 }
 
 export function MosaicViewWrapper({
@@ -41,6 +43,7 @@ export function MosaicViewWrapper({
   totalImages,
   isOwner,
   coverImageId,
+  presentation,
 }: MosaicViewWrapperProps) {
   const router = useRouter()
 
@@ -67,6 +70,7 @@ export function MosaicViewWrapper({
       isOwner={isOwner}
       coverImageId={coverImageId}
       onSetCover={handleSetCover}
+      presentation={presentation}
     />
   )
 }

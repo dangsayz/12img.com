@@ -322,6 +322,7 @@ export default async function PublicViewPage({ params }: Props) {
           totalImages={images.length}
           isOwner={isOwner}
           coverImageId={gallery.cover_image_id}
+          presentation={presentation}
         />
       </>
     )
@@ -352,6 +353,7 @@ export default async function PublicViewPage({ params }: Props) {
         galleryId={gallery.id}
         gallerySlug={gallery.slug}
         template="clean-grid"
+        presentation={presentation}
       />
     </>
   )

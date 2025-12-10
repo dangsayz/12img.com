@@ -47,6 +47,7 @@ import Link from 'next/link'
 import { SocialShareButtons, SocialShareButtonsDark } from '@/components/ui/SocialShareButtons'
 import { ImageDownloadButton, ImageDownloadButtonDark } from '@/components/ui/ImageDownloadButton'
 import { getSeoAltText } from '@/lib/seo/image-urls'
+import type { PresentationData } from '@/lib/types/presentation'
 
 interface GalleryImage {
   id: string
@@ -68,6 +69,7 @@ interface PublicGalleryViewProps {
   galleryId?: string
   gallerySlug?: string
   template?: 'mosaic' | 'clean-grid'
+  presentation?: PresentationData | null
 }
 
 // Get aspect ratio category
@@ -358,6 +360,7 @@ export function PublicGalleryView({
   galleryId,
   gallerySlug,
   template = 'mosaic',
+  presentation,
 }: PublicGalleryViewProps) {
   const [isDownloading, setIsDownloading] = useState(false)
   const [showCopied, setShowCopied] = useState(false)
@@ -654,6 +657,24 @@ export function PublicGalleryView({
           )}
         </div>
       </section>
+
+      {/* ============================================
+          QUOTE SECTION
+          ============================================ */}
+      {presentation?.quote && (
+        <section className="py-16 md:py-24 px-6 border-t border-neutral-100">
+          <div className="max-w-2xl mx-auto text-center">
+            <blockquote className="font-serif text-xl md:text-2xl italic text-neutral-700 leading-relaxed">
+              "{presentation.quote}"
+            </blockquote>
+            {presentation.quoteAttribution && (
+              <cite className="block mt-6 text-sm text-neutral-400 not-italic tracking-wide">
+                — {presentation.quoteAttribution}
+              </cite>
+            )}
+          </div>
+        </section>
+      )}
 
       {/* ============================================
           FOOTER
