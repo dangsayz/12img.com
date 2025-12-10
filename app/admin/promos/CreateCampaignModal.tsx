@@ -248,15 +248,15 @@ export function CreateCampaignModal({
           className="bg-white w-full max-w-2xl mx-4 my-auto"
         >
           {/* Header */}
-          <div className="flex items-center justify-between p-6 border-b border-stone-200">
-            <h2 className="font-serif text-2xl text-stone-900">
+          <div className="flex items-center justify-between p-6 border-b border-[#E5E5E5]">
+            <h2 className="font-serif text-2xl text-[#141414]">
               {editingCampaign ? 'Edit Campaign' : 'Create Campaign'}
             </h2>
             <button
               onClick={onClose}
-              className="p-2 hover:bg-stone-100 transition-colors"
+              className="p-2 hover:bg-[#F5F5F7] rounded transition-colors"
             >
-              <X className="w-5 h-5 text-stone-500" />
+              <X className="w-5 h-5 text-[#737373]" />
             </button>
           </div>
           
@@ -264,7 +264,7 @@ export function CreateCampaignModal({
             {/* Templates */}
             {!editingCampaign && (
               <div>
-                <label className="block text-xs font-medium text-stone-500 uppercase tracking-wider mb-2">
+                <label className="block text-[10px] font-semibold text-[#737373] uppercase tracking-wider mb-2">
                   Quick Start Template
                 </label>
                 <div className="grid grid-cols-3 gap-2">
@@ -275,12 +275,12 @@ export function CreateCampaignModal({
                       onClick={() => applyTemplate(template.id)}
                       className={`p-3 text-left border transition-colors ${
                         selectedTemplate === template.id
-                          ? 'border-stone-900 bg-stone-50'
-                          : 'border-stone-200 hover:border-stone-400'
+                          ? 'border-[#141414] bg-[#F5F5F7]'
+                          : 'border-[#E5E5E5] hover:border-[#A3A3A3]'
                       }`}
                     >
-                      <p className="text-sm font-medium text-stone-900">{template.name}</p>
-                      <p className="text-xs text-stone-500 mt-0.5">{template.badge_text}</p>
+                      <p className="text-sm font-medium text-[#141414]">{template.name}</p>
+                      <p className="text-xs text-[#737373] mt-0.5">{template.badge_text}</p>
                     </button>
                   ))}
                 </div>
@@ -290,7 +290,7 @@ export function CreateCampaignModal({
             {/* Basic Info */}
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-medium text-stone-500 uppercase tracking-wider mb-2">
+                <label className="block text-[10px] font-semibold text-[#737373] uppercase tracking-wider mb-2">
                   Campaign Name
                 </label>
                 <input
@@ -298,12 +298,12 @@ export function CreateCampaignModal({
                   value={name}
                   onChange={e => setName(e.target.value)}
                   required
-                  className="w-full px-4 py-2.5 border border-stone-200 focus:border-stone-900 focus:outline-none"
+                  className="w-full px-4 py-2.5 border border-[#E5E5E5] focus:border-[#141414] focus:outline-none"
                   placeholder="Black Friday 2025"
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-stone-500 uppercase tracking-wider mb-2">
+                <label className="block text-[10px] font-semibold text-[#737373] uppercase tracking-wider mb-2">
                   URL Slug
                 </label>
                 <input
@@ -311,21 +311,21 @@ export function CreateCampaignModal({
                   value={slug}
                   onChange={e => setSlug(e.target.value)}
                   required
-                  className="w-full px-4 py-2.5 border border-stone-200 focus:border-stone-900 focus:outline-none font-mono text-sm"
+                  className="w-full px-4 py-2.5 border border-[#E5E5E5] focus:border-[#141414] focus:outline-none font-mono text-sm"
                   placeholder="black-friday-2025"
                 />
               </div>
             </div>
             
             <div>
-              <label className="block text-xs font-medium text-stone-500 uppercase tracking-wider mb-2">
+              <label className="block text-[10px] font-semibold text-[#737373] uppercase tracking-wider mb-2">
                 Description
               </label>
               <input
                 type="text"
                 value={description}
                 onChange={e => setDescription(e.target.value)}
-                className="w-full px-4 py-2.5 border border-stone-200 focus:border-stone-900 focus:outline-none"
+                className="w-full px-4 py-2.5 border border-[#E5E5E5] focus:border-[#141414] focus:outline-none"
                 placeholder="50% off all annual plans"
               />
             </div>
@@ -333,7 +333,7 @@ export function CreateCampaignModal({
             {/* Dates */}
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-medium text-stone-500 uppercase tracking-wider mb-2">
+                <label className="block text-[10px] font-semibold text-[#737373] uppercase tracking-wider mb-2">
                   <Calendar className="w-3 h-3 inline mr-1" />
                   Starts At
                 </label>
@@ -342,11 +342,11 @@ export function CreateCampaignModal({
                   value={startsAt}
                   onChange={e => setStartsAt(e.target.value)}
                   required
-                  className="w-full px-4 py-2.5 border border-stone-200 focus:border-stone-900 focus:outline-none"
+                  className="w-full px-4 py-2.5 border border-[#E5E5E5] focus:border-[#141414] focus:outline-none"
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-stone-500 uppercase tracking-wider mb-2">
+                <label className="block text-[10px] font-semibold text-[#737373] uppercase tracking-wider mb-2">
                   <Calendar className="w-3 h-3 inline mr-1" />
                   Ends At
                 </label>
@@ -355,7 +355,7 @@ export function CreateCampaignModal({
                   value={endsAt}
                   onChange={e => setEndsAt(e.target.value)}
                   required
-                  className="w-full px-4 py-2.5 border border-stone-200 focus:border-stone-900 focus:outline-none"
+                  className="w-full px-4 py-2.5 border border-[#E5E5E5] focus:border-[#141414] focus:outline-none"
                 />
               </div>
             </div>
@@ -363,13 +363,13 @@ export function CreateCampaignModal({
             {/* Discount */}
             <div className="grid grid-cols-3 gap-4">
               <div>
-                <label className="block text-xs font-medium text-stone-500 uppercase tracking-wider mb-2">
+                <label className="block text-[10px] font-semibold text-[#737373] uppercase tracking-wider mb-2">
                   Discount Type
                 </label>
                 <select
                   value={discountType}
                   onChange={e => setDiscountType(e.target.value as DiscountType)}
-                  className="w-full px-4 py-2.5 border border-stone-200 focus:border-stone-900 focus:outline-none"
+                  className="w-full px-4 py-2.5 border border-[#E5E5E5] focus:border-[#141414] focus:outline-none"
                 >
                   <option value="percent">Percent Off</option>
                   <option value="fixed">Fixed Amount Off</option>
@@ -377,7 +377,7 @@ export function CreateCampaignModal({
                 </select>
               </div>
               <div>
-                <label className="block text-xs font-medium text-stone-500 uppercase tracking-wider mb-2">
+                <label className="block text-[10px] font-semibold text-[#737373] uppercase tracking-wider mb-2">
                   {discountType === 'percent' ? 'Percent' : 'Amount (cents)'}
                 </label>
                 <div className="relative">
@@ -388,21 +388,21 @@ export function CreateCampaignModal({
                     required
                     min={0}
                     max={discountType === 'percent' ? 100 : undefined}
-                    className="w-full px-4 py-2.5 border border-stone-200 focus:border-stone-900 focus:outline-none"
+                    className="w-full px-4 py-2.5 border border-[#E5E5E5] focus:border-[#141414] focus:outline-none"
                   />
-                  <span className="absolute right-4 top-1/2 -translate-y-1/2 text-stone-400">
+                  <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[#A3A3A3]">
                     {discountType === 'percent' ? '%' : '¢'}
                   </span>
                 </div>
               </div>
               <div>
-                <label className="block text-xs font-medium text-stone-500 uppercase tracking-wider mb-2">
+                <label className="block text-[10px] font-semibold text-[#737373] uppercase tracking-wider mb-2">
                   Duration
                 </label>
                 <select
                   value={discountDuration}
                   onChange={e => setDiscountDuration(e.target.value as DiscountDuration)}
-                  className="w-full px-4 py-2.5 border border-stone-200 focus:border-stone-900 focus:outline-none"
+                  className="w-full px-4 py-2.5 border border-[#E5E5E5] focus:border-[#141414] focus:outline-none"
                 >
                   <option value="once">First Payment</option>
                   <option value="forever">Forever</option>
@@ -414,7 +414,7 @@ export function CreateCampaignModal({
             {/* Limits */}
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-medium text-stone-500 uppercase tracking-wider mb-2">
+                <label className="block text-[10px] font-semibold text-[#737373] uppercase tracking-wider mb-2">
                   Max Redemptions (optional)
                 </label>
                 <input
@@ -422,19 +422,19 @@ export function CreateCampaignModal({
                   value={maxRedemptions || ''}
                   onChange={e => setMaxRedemptions(e.target.value ? Number(e.target.value) : null)}
                   min={1}
-                  className="w-full px-4 py-2.5 border border-stone-200 focus:border-stone-900 focus:outline-none"
+                  className="w-full px-4 py-2.5 border border-[#E5E5E5] focus:border-[#141414] focus:outline-none"
                   placeholder="Unlimited"
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-stone-500 uppercase tracking-wider mb-2">
+                <label className="block text-[10px] font-semibold text-[#737373] uppercase tracking-wider mb-2">
                   Stripe Coupon ID
                 </label>
                 <input
                   type="text"
                   value={stripeCouponId}
                   onChange={e => setStripeCouponId(e.target.value)}
-                  className="w-full px-4 py-2.5 border border-stone-200 focus:border-stone-900 focus:outline-none font-mono text-sm"
+                  className="w-full px-4 py-2.5 border border-[#E5E5E5] focus:border-[#141414] focus:outline-none font-mono text-sm"
                   placeholder="FOUNDER100"
                 />
               </div>
@@ -442,7 +442,7 @@ export function CreateCampaignModal({
             
             {/* Target Plans */}
             <div>
-              <label className="block text-xs font-medium text-stone-500 uppercase tracking-wider mb-2">
+              <label className="block text-[10px] font-semibold text-[#737373] uppercase tracking-wider mb-2">
                 Target Plans
               </label>
               <div className="flex flex-wrap gap-2">
@@ -453,8 +453,8 @@ export function CreateCampaignModal({
                     onClick={() => togglePlan(plan)}
                     className={`px-3 py-1.5 text-sm font-medium capitalize border transition-colors ${
                       targetPlans.includes(plan)
-                        ? 'border-stone-900 bg-stone-900 text-white'
-                        : 'border-stone-200 text-stone-600 hover:border-stone-400'
+                        ? 'border-[#141414] bg-[#141414] text-white'
+                        : 'border-[#E5E5E5] text-[#525252] hover:border-[#A3A3A3]'
                     }`}
                   >
                     {plan}
@@ -464,38 +464,38 @@ export function CreateCampaignModal({
             </div>
             
             {/* Banner Display */}
-            <div className="border-t border-stone-200 pt-6">
-              <h3 className="text-sm font-medium text-stone-900 mb-4">Banner Display</h3>
+            <div className="border-t border-[#E5E5E5] pt-6">
+              <h3 className="text-sm font-medium text-[#141414] mb-4">Banner Display</h3>
               
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-medium text-stone-500 uppercase tracking-wider mb-2">
+                  <label className="block text-[10px] font-semibold text-[#737373] uppercase tracking-wider mb-2">
                     Badge Text
                   </label>
                   <input
                     type="text"
                     value={badgeText}
                     onChange={e => setBadgeText(e.target.value)}
-                    className="w-full px-4 py-2.5 border border-stone-200 focus:border-stone-900 focus:outline-none"
+                    className="w-full px-4 py-2.5 border border-[#E5E5E5] focus:border-[#141414] focus:outline-none"
                     placeholder="50% OFF"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-stone-500 uppercase tracking-wider mb-2">
+                  <label className="block text-[10px] font-semibold text-[#737373] uppercase tracking-wider mb-2">
                     CTA Button
                   </label>
                   <input
                     type="text"
                     value={bannerCta}
                     onChange={e => setBannerCta(e.target.value)}
-                    className="w-full px-4 py-2.5 border border-stone-200 focus:border-stone-900 focus:outline-none"
+                    className="w-full px-4 py-2.5 border border-[#E5E5E5] focus:border-[#141414] focus:outline-none"
                     placeholder="Claim Deal"
                   />
                 </div>
               </div>
               
               <div className="mt-4">
-                <label className="block text-xs font-medium text-stone-500 uppercase tracking-wider mb-2">
+                <label className="block text-[10px] font-semibold text-[#737373] uppercase tracking-wider mb-2">
                   Headline
                 </label>
                 <input
@@ -503,27 +503,27 @@ export function CreateCampaignModal({
                   value={bannerHeadline}
                   onChange={e => setBannerHeadline(e.target.value)}
                   required
-                  className="w-full px-4 py-2.5 border border-stone-200 focus:border-stone-900 focus:outline-none"
+                  className="w-full px-4 py-2.5 border border-[#E5E5E5] focus:border-[#141414] focus:outline-none"
                   placeholder="Black Friday: 50% off all plans"
                 />
               </div>
               
               <div className="mt-4">
-                <label className="block text-xs font-medium text-stone-500 uppercase tracking-wider mb-2">
+                <label className="block text-[10px] font-semibold text-[#737373] uppercase tracking-wider mb-2">
                   Subheadline
                 </label>
                 <input
                   type="text"
                   value={bannerSubheadline}
                   onChange={e => setBannerSubheadline(e.target.value)}
-                  className="w-full px-4 py-2.5 border border-stone-200 focus:border-stone-900 focus:outline-none"
+                  className="w-full px-4 py-2.5 border border-[#E5E5E5] focus:border-[#141414] focus:outline-none"
                   placeholder="Biggest sale of the year. Ends Monday."
                 />
               </div>
               
               {/* Preview */}
               <div className="mt-4">
-                <label className="block text-xs font-medium text-stone-500 uppercase tracking-wider mb-2">
+                <label className="block text-[10px] font-semibold text-[#737373] uppercase tracking-wider mb-2">
                   Preview
                 </label>
                 <div
@@ -545,7 +545,7 @@ export function CreateCampaignModal({
                   </div>
                   <button
                     type="button"
-                    className="px-4 py-2 text-sm font-medium bg-white text-stone-900"
+                    className="px-4 py-2 text-sm font-medium bg-white text-[#141414]"
                   >
                     {bannerCta}
                   </button>
@@ -561,7 +561,7 @@ export function CreateCampaignModal({
                     onChange={e => setShowCountdown(e.target.checked)}
                     className="w-4 h-4"
                   />
-                  <span className="text-sm text-stone-600">Show countdown timer</span>
+                  <span className="text-sm text-[#525252]">Show countdown timer</span>
                 </label>
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input
@@ -570,7 +570,7 @@ export function CreateCampaignModal({
                     onChange={e => setShowSpotsRemaining(e.target.checked)}
                     className="w-4 h-4"
                   />
-                  <span className="text-sm text-stone-600">Show spots remaining</span>
+                  <span className="text-sm text-[#525252]">Show spots remaining</span>
                 </label>
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input
@@ -579,7 +579,7 @@ export function CreateCampaignModal({
                     onChange={e => setShowOnLanding(e.target.checked)}
                     className="w-4 h-4"
                   />
-                  <span className="text-sm text-stone-600">Show on landing page</span>
+                  <span className="text-sm text-[#525252]">Show on landing page</span>
                 </label>
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input
@@ -588,7 +588,7 @@ export function CreateCampaignModal({
                     onChange={e => setIsFeatured(e.target.checked)}
                     className="w-4 h-4"
                   />
-                  <span className="text-sm text-stone-600">Featured campaign</span>
+                  <span className="text-sm text-[#525252]">Featured campaign</span>
                 </label>
               </div>
             </div>
@@ -602,18 +602,18 @@ export function CreateCampaignModal({
           </form>
           
           {/* Footer */}
-          <div className="flex items-center justify-end gap-3 p-6 border-t border-stone-200 bg-stone-50">
+          <div className="flex items-center justify-end gap-3 p-6 border-t border-[#E5E5E5] bg-[#FAFAFA]">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2.5 text-sm font-medium text-stone-600 hover:text-stone-900 transition-colors"
+              className="px-4 py-2.5 text-sm font-medium text-[#525252] hover:text-[#141414] transition-colors"
             >
               Cancel
             </button>
             <button
               onClick={handleSubmit}
               disabled={loading}
-              className="px-6 py-2.5 text-sm font-medium bg-stone-900 text-white hover:bg-stone-800 disabled:opacity-50 transition-colors"
+              className="px-6 py-2.5 text-sm font-medium bg-[#141414] text-white hover:bg-[#262626] disabled:opacity-50 transition-colors"
             >
               {loading ? 'Saving...' : editingCampaign ? 'Update Campaign' : 'Create Campaign'}
             </button>
