@@ -94,6 +94,9 @@ export function PromoModal() {
     async function fetchCampaign() {
       try {
         const res = await fetch('/api/promo/active')
+        if (!res.ok) return
+        const contentType = res.headers.get('content-type')
+        if (!contentType?.includes('application/json')) return
         const data = await res.json()
         if (data.campaign) {
           setCampaign(data.campaign)
@@ -103,8 +106,8 @@ export function PromoModal() {
             setTimeout(() => setVisible(true), 2500)
           }
         }
-      } catch (error) {
-        console.error('Error fetching active campaign:', error)
+      } catch {
+        // Silently fail - promo modal is non-essential
       }
     }
     

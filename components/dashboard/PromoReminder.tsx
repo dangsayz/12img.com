@@ -59,14 +59,17 @@ export function PromoReminder({ userPlan = 'free' }: PromoReminderProps) {
     async function fetchCampaign() {
       try {
         const res = await fetch('/api/promo/active')
+        if (!res.ok) return
+        const contentType = res.headers.get('content-type')
+        if (!contentType?.includes('application/json')) return
         const data = await res.json()
         if (data.campaign) {
           setCampaign(data.campaign)
           // Delay showing by 3 seconds so it doesn't feel aggressive
           setTimeout(() => setVisible(true), 3000)
         }
-      } catch (error) {
-        console.error('Error fetching active campaign:', error)
+      } catch {
+        // Silently fail - promo reminder is non-essential
       }
     }
     

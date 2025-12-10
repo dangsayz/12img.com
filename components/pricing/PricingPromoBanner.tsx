@@ -233,10 +233,13 @@ export function ActivePricingPromoBanner({ className = '' }: { className?: strin
     async function fetchCampaign() {
       try {
         const res = await fetch('/api/promo/active')
+        if (!res.ok) return
+        const contentType = res.headers.get('content-type')
+        if (!contentType?.includes('application/json')) return
         const data = await res.json()
         setCampaign(data.campaign)
-      } catch (error) {
-        console.error('Error fetching active campaign:', error)
+      } catch {
+        // Silently fail - promo banner is non-essential
       } finally {
         setLoading(false)
       }

@@ -33,6 +33,9 @@ export function PromoTopBar() {
     async function fetchCampaign() {
       try {
         const res = await fetch('/api/promo/active')
+        if (!res.ok) return // Silently fail if API errors
+        const contentType = res.headers.get('content-type')
+        if (!contentType?.includes('application/json')) return
         const data = await res.json()
         if (data.campaign && data.campaign.show_on_landing) {
           setCampaign(data.campaign)
@@ -41,7 +44,7 @@ export function PromoTopBar() {
           window.dispatchEvent(new CustomEvent('promo-bar-change', { detail: { visible: true } }))
         }
       } catch (error) {
-        console.error('Error fetching active campaign:', error)
+        // Silently fail - promo bar is non-essential
       }
     }
     

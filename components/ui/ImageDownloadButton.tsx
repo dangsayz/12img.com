@@ -60,8 +60,13 @@ export function ImageDownloadButton({
       const response = await fetch(`/api/image/${imageId}/download`)
       
       if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.error || 'Download failed')
+        // Try to parse as JSON, but handle HTML error pages gracefully
+        const contentType = response.headers.get('content-type')
+        if (contentType?.includes('application/json')) {
+          const error = await response.json()
+          throw new Error(error.error || 'Download failed')
+        }
+        throw new Error(`Download failed: ${response.status}`)
       }
       
       // Get filename from Content-Disposition header

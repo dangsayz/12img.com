@@ -678,8 +678,19 @@ export function GalleryEditor({
     year: 'numeric'
   })
 
-  // Get cover image (first image or null)
-  const coverImage = images[0] || null
+  // Get cover image - use explicit cover_image_id if set, otherwise first image
+  const getCoverImage = () => {
+    if (coverImageId) {
+      const explicitCover = images.find(img => img.id === coverImageId)
+      if (explicitCover && explicitCover.previewUrl) {
+        return explicitCover
+      }
+    }
+    // Fall back to first image with a valid preview URL
+    const firstWithUrl = images.find(img => img.previewUrl)
+    return firstWithUrl || images[0] || null
+  }
+  const coverImage = getCoverImage()
 
   return (
     <div className="min-h-screen bg-[#fafaf9]">
@@ -725,7 +736,7 @@ export function GalleryEditor({
           <div className="flex flex-col lg:flex-row gap-12 items-start">
             {/* Cover Image */}
             <div className="lg:w-1/2">
-              {coverImage ? (
+              {coverImage && coverImage.previewUrl ? (
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -737,6 +748,7 @@ export function GalleryEditor({
                     fill
                     className="object-cover"
                     priority
+                    unoptimized
                   />
                   {/* Social share on hover */}
                   <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10">
