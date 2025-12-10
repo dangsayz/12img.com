@@ -2417,6 +2417,10 @@ export function LandingPage() {
               <Check className="w-4 h-4 text-stone-900" />
               <span>Cancel anytime</span>
             </div>
+            <div className="flex items-center gap-2 text-sm text-stone-600">
+              <Lock className="w-4 h-4 text-stone-900" />
+              <span>Price locked on signup</span>
+            </div>
           </div>
 
           {/* Pricing Matrix */}
@@ -2430,6 +2434,91 @@ export function LandingPage() {
             <p className="text-xs text-stone-400">
               Annual plans save up to 30%. All prices in USD.
             </p>
+          </div>
+
+          {/* Why not just storage? - addresses hard drive objection */}
+          <div className="mt-16 pt-12 border-t border-stone-200">
+            <div className="max-w-3xl mx-auto">
+              <p className="text-center text-sm text-stone-500 mb-6">
+                "Why not just use a hard drive?"
+              </p>
+              <div className="grid sm:grid-cols-2 gap-6">
+                <div className="bg-white rounded-xl p-5 border border-stone-200">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-8 h-8 rounded-full bg-stone-100 flex items-center justify-center">
+                      <Globe className="w-4 h-4 text-stone-600" />
+                    </div>
+                    <span className="font-medium text-stone-800">Client Experience</span>
+                  </div>
+                  <p className="text-sm text-stone-500 leading-relaxed">
+                    Your clients get beautiful, branded galleries they can view on any device—not a Dropbox link.
+                  </p>
+                </div>
+                <div className="bg-white rounded-xl p-5 border border-stone-200">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-8 h-8 rounded-full bg-stone-100 flex items-center justify-center">
+                      <FileText className="w-4 h-4 text-stone-600" />
+                    </div>
+                    <span className="font-medium text-stone-800">Contracts & Messaging</span>
+                  </div>
+                  <p className="text-sm text-stone-500 leading-relaxed">
+                    E-signatures, client portal, messaging, milestone tracking—all included. No extra apps.
+                  </p>
+                </div>
+                <div className="bg-white rounded-xl p-5 border border-stone-200">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-8 h-8 rounded-full bg-stone-100 flex items-center justify-center">
+                      <TrendingUp className="w-4 h-4 text-stone-600" />
+                    </div>
+                    <span className="font-medium text-stone-800">Track Everything</span>
+                  </div>
+                  <p className="text-sm text-stone-500 leading-relaxed">
+                    Know when clients open emails, view galleries, download photos. A hard drive can't tell you that.
+                  </p>
+                </div>
+                <div className="bg-white rounded-xl p-5 border border-stone-200">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-8 h-8 rounded-full bg-stone-100 flex items-center justify-center">
+                      <Shield className="w-4 h-4 text-stone-600" />
+                    </div>
+                    <span className="font-medium text-stone-800">No IT Headaches</span>
+                  </div>
+                  <p className="text-sm text-stone-500 leading-relaxed">
+                    No backups to manage, no drives to replace, no "I lost the hard drive" disasters.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* --- Transparency Section - "We're new, and that's a feature" --- */}
+      <section className="py-12 md:py-16 px-4 sm:px-6 bg-white border-t border-stone-200">
+        <div className="max-w-3xl mx-auto text-center">
+          <p className="text-[10px] uppercase tracking-[0.25em] text-stone-400 mb-4">
+            Transparency
+          </p>
+          <h3 className="font-serif text-xl sm:text-2xl text-stone-900 mb-4">
+            Yes, we're new. Here's why that's good for you.
+          </h3>
+          <p className="text-stone-500 leading-relaxed mb-8">
+            We launched in 2024 because we saw photographers paying $50+/month for bloated software they barely use. 
+            Being new means we're hungry, responsive, and building features <em>you</em> actually need—not legacy cruft from 2015.
+          </p>
+          <div className="flex flex-wrap justify-center gap-4 text-sm">
+            <div className="flex items-center gap-2 px-4 py-2 bg-stone-50 rounded-full">
+              <Check className="w-4 h-4 text-stone-600" />
+              <span className="text-stone-600">Real humans answer support</span>
+            </div>
+            <div className="flex items-center gap-2 px-4 py-2 bg-stone-50 rounded-full">
+              <Check className="w-4 h-4 text-stone-600" />
+              <span className="text-stone-600">Feature requests ship fast</span>
+            </div>
+            <div className="flex items-center gap-2 px-4 py-2 bg-stone-50 rounded-full">
+              <Check className="w-4 h-4 text-stone-600" />
+              <span className="text-stone-600">Founder pricing locked forever</span>
+            </div>
           </div>
         </div>
       </section>

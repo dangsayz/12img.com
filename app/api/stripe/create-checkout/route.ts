@@ -6,6 +6,10 @@ import { getOrCreateUserByClerkId } from '@/server/queries/user.queries'
 import { getPromoFromCookies } from '@/lib/promo/persistence'
 import { headers } from 'next/headers'
 
+// Founder's deal: $30/year for Elite (normally $449/year)
+const FOUNDERS_PRICE_ID = 'price_1ScqDM8bvfxoPxbALJyCHttN'
+const FOUNDERS_PROMO_CODES = ['founders-100', 'FOUNDERS100', 'founders100', 'founder100']
+
 export async function POST(request: Request) {
   try {
     const { userId } = await auth()
@@ -19,16 +23,24 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Invalid plan' }, { status: 400 })
     }
 
-    const priceId = getStripePriceId(planId)
-    if (!priceId) {
-      return NextResponse.json({ error: 'Price not found for plan' }, { status: 400 })
-    }
-
     // Get promo code from request body, or from cookies
     const headersList = await headers()
     const cookieHeader = headersList.get('cookie')
     const storedPromo = getPromoFromCookies(cookieHeader)
     const couponCode = promoCode || storedPromo?.code
+
+    // Check if this is a Founder's deal - use special $30/year price
+    const isFoundersDeal = couponCode && FOUNDERS_PROMO_CODES.some(
+      code => code.toLowerCase() === couponCode.toLowerCase()
+    ) && planId === 'elite'
+
+    // Use Founder's price if applicable, otherwise regular price
+    const priceId = isFoundersDeal ? FOUNDERS_PRICE_ID : getStripePriceId(planId)
+    if (!priceId) {
+      return NextResponse.json({ error: 'Price not found for plan' }, { status: 400 })
+    }
+
+    console.log(`[Checkout] Plan: ${planId}, Promo: ${couponCode}, Founders Deal: ${isFoundersDeal}, Price: ${priceId}`)
 
     // Get user info
     const clerkUser = await currentUser()
@@ -86,8 +98,8 @@ export async function POST(request: Request) {
       },
     }
 
-    // Apply coupon if we have one
-    if (couponCode) {
+    // Apply coupon if we have one (but NOT for Founder's deal - price is already $30)
+    if (couponCode && !isFoundersDeal) {
       // Validate the coupon exists in Stripe
       try {
         const coupon = await stripe.coupons.retrieve(couponCode)
