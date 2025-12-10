@@ -88,23 +88,32 @@ export async function generateSignedUploadUrls(request: {
     }
   }
 
-  // Generate all signed URLs in parallel for speed
-  const responses = await Promise.all(
-    request.files.map(async (file) => {
-      const imageId = uuidv4()
-      const ext = MIME_TO_EXT[file.mimeType]
-      const storagePath = `${request.galleryId}/${imageId}.${ext}`
+  // Generate signed URLs in controlled chunks to prevent Supabase rate limiting
+  const CHUNK_SIZE = 20 // Process 20 at a time to avoid overwhelming Supabase
+  const responses: UploadUrlResponse[] = []
+  
+  for (let i = 0; i < request.files.length; i += CHUNK_SIZE) {
+    const chunk = request.files.slice(i, i + CHUNK_SIZE)
+    
+    const chunkResponses = await Promise.all(
+      chunk.map(async (file) => {
+        const imageId = uuidv4()
+        const ext = MIME_TO_EXT[file.mimeType]
+        const storagePath = `${request.galleryId}/${imageId}.${ext}`
 
-      const { signedUrl, token } = await getSignedUploadUrl(storagePath)
+        const { signedUrl, token } = await getSignedUploadUrl(storagePath)
 
-      return {
-        localId: file.localId,
-        storagePath,
-        signedUrl,
-        token,
-      }
-    })
-  )
+        return {
+          localId: file.localId,
+          storagePath,
+          signedUrl,
+          token,
+        }
+      })
+    )
+    
+    responses.push(...chunkResponses)
+  }
 
   return responses
 }

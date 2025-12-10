@@ -5,7 +5,7 @@
  * 
  * 1. WEB WORKER COMPRESSION - True parallel compression across CPU cores
  * 2. PIPELINE PARALLELISM - Compress batch N while uploading batch N-1
- * 3. AGGRESSIVE PREFLIGHT - Pre-generate 200+ signed URLs at once
+ * 3. SMART PREFLIGHT - Pre-generate signed URLs in resilient batches of 50
  * 4. SMART CHUNKING - Optimal batch sizes based on file sizes
  * 5. UPLOAD STREAMING - Start upload before compression finishes (for large files)
  * 6. EXPONENTIAL BACKOFF - Smart retry with jitter
@@ -17,8 +17,10 @@
 import { getCompressionWorkerPool, CompressionWorkerResult } from './compression-worker'
 import { generateSignedUploadUrls, confirmUploads } from '@/server/actions/upload.actions'
 
-// Aggressive constants for maximum throughput
-const PREFLIGHT_BATCH_SIZE = 200 // Pre-generate many URLs at once
+// Constants for maximum throughput (tuned to avoid server timeouts)
+const PREFLIGHT_BATCH_SIZE = 50 // Smaller batches prevent server-side timeouts
+const PREFLIGHT_RETRY_ATTEMPTS = 3 // Retry failed preflight batches
+const PREFLIGHT_TIMEOUT_MS = 30000 // 30s timeout per batch
 const UPLOAD_CONCURRENCY_MIN = 6
 const UPLOAD_CONCURRENCY_MAX = 24
 const COMPRESSION_QUALITY = 0.85
@@ -151,36 +153,78 @@ export class TurboUploadEngine {
    * This runs in parallel with compression
    */
   private async startPreflight(files: TurboFile[]) {
-    // Process in batches
+    // Process in batches with retry logic
     for (let i = 0; i < files.length; i += PREFLIGHT_BATCH_SIZE) {
       const batch = files.slice(i, i + PREFLIGHT_BATCH_SIZE)
       
       // Mark as pending
       batch.forEach(f => this.preflightPending.add(f.id))
       
-      try {
-        const responses = await generateSignedUploadUrls({
-          galleryId: this.options.galleryId,
-          files: batch.map(f => ({
-            localId: f.id,
-            mimeType: f.file.type,
-            fileSize: f.file.size, // Will be updated after compression
-            originalFilename: f.file.name
-          }))
-        })
-        
-        // Cache the URLs
-        responses.forEach(r => {
-          this.preflightCache.set(r.localId, {
-            signedUrl: r.signedUrl,
-            storagePath: r.storagePath,
-            token: r.token
+      // Retry loop for this batch
+      let attempt = 0
+      let success = false
+      
+      while (attempt < PREFLIGHT_RETRY_ATTEMPTS && !success) {
+        attempt++
+        try {
+          // Add timeout to prevent hanging forever
+          const controller = new AbortController()
+          const timeoutId = setTimeout(() => controller.abort(), PREFLIGHT_TIMEOUT_MS)
+          
+          const responses = await Promise.race([
+            generateSignedUploadUrls({
+              galleryId: this.options.galleryId,
+              files: batch.map(f => ({
+                localId: f.id,
+                mimeType: f.file.type,
+                fileSize: f.file.size, // Will be updated after compression
+                originalFilename: f.file.name
+              }))
+            }),
+            new Promise<never>((_, reject) => {
+              const checkAbort = () => {
+                if (controller.signal.aborted) reject(new Error('Preflight timeout'))
+              }
+              controller.signal.addEventListener('abort', checkAbort)
+            })
+          ])
+          
+          clearTimeout(timeoutId)
+          
+          // Cache the URLs
+          responses.forEach(r => {
+            this.preflightCache.set(r.localId, {
+              signedUrl: r.signedUrl,
+              storagePath: r.storagePath,
+              token: r.token
+            })
+            this.preflightPending.delete(r.localId)
           })
-          this.preflightPending.delete(r.localId)
+          
+          success = true
+          
+        } catch (error) {
+          console.error(`[TurboUpload] Preflight batch ${i}-${i+batch.length} failed (attempt ${attempt}/${PREFLIGHT_RETRY_ATTEMPTS}):`, error)
+          
+          if (attempt < PREFLIGHT_RETRY_ATTEMPTS) {
+            // Exponential backoff: 1s, 2s, 4s
+            await this.sleep(1000 * Math.pow(2, attempt - 1))
+          }
+        }
+      }
+      
+      // If all retries failed, mark files as failed
+      if (!success) {
+        console.error(`[TurboUpload] Preflight batch ${i}-${i+batch.length} exhausted all retries`)
+        batch.forEach(f => {
+          this.preflightPending.delete(f.id)
+          this.updateFile(f.id, { status: 'error', error: 'Failed to get upload URL' })
         })
-      } catch (error) {
-        console.error('[TurboUpload] Preflight failed:', error)
-        batch.forEach(f => this.preflightPending.delete(f.id))
+      }
+      
+      // Small delay between batches to prevent overwhelming the server
+      if (i + PREFLIGHT_BATCH_SIZE < files.length) {
+        await this.sleep(100)
       }
     }
   }
