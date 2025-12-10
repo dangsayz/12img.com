@@ -58,154 +58,156 @@ export async function sendContractEmail(options: SendContractEmailOptions) {
     : null
 
   const eventTypeCapitalized = eventType.charAt(0).toUpperCase() + eventType.slice(1)
-  const subject = `✨ Your ${eventTypeCapitalized} Photography Contract is Ready!`
+  const subject = `Your Photography Contract`
 
   const priceFormatted = packagePrice ? `$${packagePrice.toLocaleString()}` : null
 
   const html = `
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <meta charset="utf-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>${subject}</title>
-    </head>
-    <body style="font-family: system-ui, -apple-system, sans-serif; line-height: 1.6; color: #1c1917; max-width: 600px; margin: 0 auto; padding: 0; background: #fafaf9;">
-      <!-- Header with gradient -->
-      <div style="background: linear-gradient(135deg, #1c1917 0%, #44403c 100%); padding: 40px 24px; text-align: center;">
-        <h1 style="font-size: 28px; font-weight: 300; margin: 0; color: white; letter-spacing: -0.5px;">${photographerName}</h1>
-        <p style="margin: 8px 0 0; color: rgba(255,255,255,0.7); font-size: 14px;">Photography Services</p>
-      </div>
-      
-      <!-- Main content -->
-      <div style="padding: 32px 24px; background: white;">
-        <p style="margin: 0 0 24px; font-size: 18px;">Hi ${clientName},</p>
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Photography Contract</title>
+</head>
+<body style="margin: 0; padding: 0; background-color: #ffffff; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="min-height: 100vh;">
+    <tr>
+      <td align="center" style="padding: 60px 20px;">
         
-        <p style="margin: 0 0 24px; color: #44403c;">
-          We're excited to work with you! Your photography contract is ready for review and signature.
-        </p>
-        
-        <!-- Event Details Card -->
-        <div style="background: #fafaf9; border-radius: 0; padding: 24px; margin-bottom: 24px; border: 1px solid #1c1917;">
-          <p style="margin: 0 0 16px; font-size: 11px; text-transform: uppercase; letter-spacing: 2px; color: #78716c; font-weight: 600;">Your ${eventTypeCapitalized}</p>
+        <!-- Main Container -->
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width: 520px;">
           
-          ${eventDateFormatted ? `
-            <div style="display: flex; align-items: flex-start; margin-bottom: 16px;">
-              <div style="width: 20px; height: 20px; margin-right: 12px; flex-shrink: 0;">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1c1917" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter">
-                  <rect x="3" y="4" width="18" height="18" rx="0" ry="0"></rect>
-                  <line x1="16" y1="2" x2="16" y2="6"></line>
-                  <line x1="8" y1="2" x2="8" y2="6"></line>
-                  <line x1="3" y1="10" x2="21" y2="10"></line>
-                </svg>
-              </div>
-              <div>
-                <p style="margin: 0; font-weight: 600; font-size: 15px; color: #1c1917;">${eventDateFormatted}</p>
-                ${daysUntilEvent && daysUntilEvent > 0 ? `<p style="margin: 4px 0 0; font-size: 13px; color: #78716c;">${daysUntilEvent} days away</p>` : ''}
-              </div>
-            </div>
-          ` : ''}
+          <!-- Logo/Name -->
+          <tr>
+            <td style="padding-bottom: 48px; text-align: center;">
+              <p style="margin: 0; font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; color: #999999;">
+                Photography Contract
+              </p>
+            </td>
+          </tr>
           
-          ${eventVenue ? `
-            <div style="display: flex; align-items: flex-start; margin-bottom: 16px;">
-              <div style="width: 20px; height: 20px; margin-right: 12px; flex-shrink: 0;">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1c1917" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter">
-                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
-                  <circle cx="12" cy="10" r="3"></circle>
-                </svg>
-              </div>
-              <div>
-                <p style="margin: 0; font-weight: 500; color: #1c1917;">${eventVenue}</p>
-                ${eventLocation ? `<p style="margin: 4px 0 0; font-size: 13px; color: #78716c;">${eventLocation}</p>` : ''}
-              </div>
-            </div>
-          ` : eventLocation ? `
-            <div style="display: flex; align-items: flex-start; margin-bottom: 16px;">
-              <div style="width: 20px; height: 20px; margin-right: 12px; flex-shrink: 0;">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1c1917" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter">
-                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
-                  <circle cx="12" cy="10" r="3"></circle>
-                </svg>
-              </div>
-              <p style="margin: 0; font-weight: 500; color: #1c1917;">${eventLocation}</p>
-            </div>
-          ` : ''}
+          <!-- Photographer Name -->
+          <tr>
+            <td style="text-align: center; padding-bottom: 48px;">
+              <h1 style="margin: 0; font-size: 32px; font-weight: 300; color: #000000; letter-spacing: -0.02em; font-family: Georgia, 'Times New Roman', serif;">
+                ${photographerName}
+              </h1>
+            </td>
+          </tr>
           
-          ${packageName ? `
-            <div style="display: flex; align-items: flex-start;">
-              <div style="width: 20px; height: 20px; margin-right: 12px; flex-shrink: 0;">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1c1917" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter">
-                  <rect x="3" y="3" width="18" height="18" rx="0" ry="0"></rect>
-                  <circle cx="8.5" cy="8.5" r="1.5"></circle>
-                  <polyline points="21 15 16 10 5 21"></polyline>
-                </svg>
-              </div>
-              <div>
-                <p style="margin: 0; font-weight: 500; color: #1c1917;">${packageName}</p>
-                <p style="margin: 4px 0 0; font-size: 13px; color: #78716c;">
-                  ${packageHours ? `${packageHours} hours of coverage` : ''}
-                  ${packageHours && priceFormatted ? ' · ' : ''}
-                  ${priceFormatted ? priceFormatted : ''}
-                </p>
-              </div>
-            </div>
-          ` : ''}
-        </div>
+          <!-- Divider -->
+          <tr>
+            <td style="padding-bottom: 48px;">
+              <div style="width: 40px; height: 1px; background: #000000; margin: 0 auto;"></div>
+            </td>
+          </tr>
+          
+          <!-- Greeting -->
+          <tr>
+            <td style="padding-bottom: 32px;">
+              <p style="margin: 0; font-size: 16px; line-height: 1.7; color: #000000; text-align: center;">
+                ${clientName},
+              </p>
+              <p style="margin: 16px 0 0; font-size: 16px; line-height: 1.7; color: #666666; text-align: center;">
+                Your contract is ready for review.
+              </p>
+            </td>
+          </tr>
+          
+          <!-- Event Details Box -->
+          <tr>
+            <td style="padding: 32px 0;">
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border: 1px solid #e5e5e5;">
+                <tr>
+                  <td style="padding: 32px;">
+                    ${eventDateFormatted ? `
+                    <p style="margin: 0 0 8px; font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase; color: #999999;">
+                      Date
+                    </p>
+                    <p style="margin: 0 0 24px; font-size: 18px; color: #000000; font-family: Georgia, 'Times New Roman', serif;">
+                      ${eventDateFormatted}
+                    </p>
+                    ` : ''}
+                    
+                    ${eventVenue || eventLocation ? `
+                    <p style="margin: 0 0 8px; font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase; color: #999999;">
+                      Location
+                    </p>
+                    <p style="margin: 0 0 24px; font-size: 16px; color: #000000;">
+                      ${eventVenue || ''}${eventVenue && eventLocation ? '<br>' : ''}${eventLocation || ''}
+                    </p>
+                    ` : ''}
+                    
+                    ${packageName ? `
+                    <p style="margin: 0 0 8px; font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase; color: #999999;">
+                      Package
+                    </p>
+                    <p style="margin: 0; font-size: 16px; color: #000000;">
+                      ${packageName}${packageHours ? ` · ${packageHours}h` : ''}${priceFormatted ? ` · ${priceFormatted}` : ''}
+                    </p>
+                    ` : ''}
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          
+          <!-- CTA Button -->
+          <tr>
+            <td style="padding: 16px 0 48px; text-align: center;">
+              <a href="${portalUrl}" style="display: inline-block; padding: 18px 48px; background: #000000; color: #ffffff; text-decoration: none; font-size: 13px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase;">
+                Review & Sign
+              </a>
+            </td>
+          </tr>
+          
+          <!-- Footer Note -->
+          <tr>
+            <td style="padding-top: 32px; border-top: 1px solid #e5e5e5;">
+              <p style="margin: 0; font-size: 13px; line-height: 1.7; color: #999999; text-align: center;">
+                Questions? Reply directly to this email.
+              </p>
+            </td>
+          </tr>
+          
+          <!-- Branding -->
+          <tr>
+            <td style="padding-top: 48px; text-align: center;">
+              <p style="margin: 0; font-size: 10px; letter-spacing: 0.2em; color: #cccccc;">
+                POWERED BY 12IMG
+              </p>
+            </td>
+          </tr>
+          
+        </table>
         
-        <!-- CTA Button -->
-        <div style="text-align: center; margin: 32px 0;">
-          <a href="${portalUrl}" style="display: inline-block; background: #1c1917; color: white; padding: 16px 32px; border-radius: 0; text-decoration: none; font-weight: 600; font-size: 15px; letter-spacing: 0.5px;">
-            View & Sign Contract →
-          </a>
-        </div>
-        
-        <!-- What's Next -->
-        <div style="background: #fafaf9; border-radius: 0; padding: 20px; margin-top: 24px; border-left: 2px solid #1c1917;">
-          <p style="margin: 0 0 12px; font-weight: 600; color: #1c1917; font-size: 14px;">What happens next?</p>
-          <ol style="margin: 0; padding-left: 20px; color: #44403c; font-size: 14px;">
-            <li style="margin-bottom: 6px;">Review your contract details</li>
-            <li style="margin-bottom: 6px;">Sign electronically</li>
-            <li>We'll be in touch to plan the details</li>
-          </ol>
-        </div>
-        
-        <p style="font-size: 14px; color: #78716c; margin-top: 24px; text-align: center;">
-          Questions? Just reply to this email.
-        </p>
-      </div>
-      
-      <!-- Footer -->
-      <div style="padding: 24px; text-align: center; border-top: 1px solid #e7e5e4;">
-        <p style="font-size: 12px; color: #a8a29e; margin: 0;">
-          ${photographerEmail}
-        </p>
-        <p style="font-size: 11px; color: #d6d3d1; margin: 12px 0 0;">
-          Sent via <a href="https://12img.com" style="color: #a8a29e;">12IMG</a>
-        </p>
-      </div>
-    </body>
-    </html>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
   `
 
   const text = `
-Hi ${clientName}!
+${photographerName.toUpperCase()}
+Photography Contract
 
-We're so excited to work with you! Your photography contract is ready for review and signature.
+---
 
-YOUR ${eventTypeCapitalized.toUpperCase()}
-${eventDateFormatted ? `📅 ${eventDateFormatted}${daysUntilEvent && daysUntilEvent > 0 ? ` (${daysUntilEvent} days away)` : ''}\n` : ''}${eventVenue ? `📍 ${eventVenue}${eventLocation ? `, ${eventLocation}` : ''}\n` : eventLocation ? `📍 ${eventLocation}\n` : ''}${packageName ? `📸 ${packageName}${packageHours ? ` - ${packageHours} hours` : ''}${priceFormatted ? ` - ${priceFormatted}` : ''}\n` : ''}
+${clientName},
 
-View & Sign Contract: ${portalUrl}
+Your contract is ready for review.
 
-What happens next?
-1. Review your contract details
-2. Sign electronically  
-3. We'll be in touch to plan the details!
+${eventDateFormatted ? `Date: ${eventDateFormatted}\n` : ''}${eventVenue ? `Venue: ${eventVenue}\n` : ''}${eventLocation ? `Location: ${eventLocation}\n` : ''}${packageName ? `Package: ${packageName}${packageHours ? ` · ${packageHours}h` : ''}${priceFormatted ? ` · ${priceFormatted}` : ''}\n` : ''}
 
-Questions? Reply to this email — we're here to help!
+Review & Sign: ${portalUrl}
+
+---
+
+Questions? Reply directly to this email.
 
 ${photographerName}
-${photographerEmail}
   `.trim()
 
   try {
