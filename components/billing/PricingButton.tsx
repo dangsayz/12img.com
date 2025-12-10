@@ -3,24 +3,27 @@
 import { useState, useEffect } from 'react'
 import { useUser } from '@clerk/nextjs'
 import { Loader2 } from 'lucide-react'
-import { getStoredPromo } from '@/lib/promo/persistence'
+import { getStoredPromo, StoredPromo } from '@/lib/promo/persistence'
 
 interface PricingButtonProps {
   planId: string
   children: React.ReactNode
   className?: string
+  showPromoHint?: boolean // Show subtle promo indicator
 }
 
-export function PricingButton({ planId, children, className }: PricingButtonProps) {
+export function PricingButton({ planId, children, className, showPromoHint = false }: PricingButtonProps) {
   const { isSignedIn, isLoaded } = useUser()
   const [loading, setLoading] = useState(false)
   const [promoCode, setPromoCode] = useState<string | null>(null)
+  const [storedPromo, setStoredPromo] = useState<StoredPromo | null>(null)
   
   // Check for stored promo on mount
   useEffect(() => {
     const promo = getStoredPromo()
     if (promo?.code) {
       setPromoCode(promo.code)
+      setStoredPromo(promo)
     }
   }, [])
   
@@ -69,20 +72,46 @@ export function PricingButton({ planId, children, className }: PricingButtonProp
     }
   }
 
+  // Format discount for display
+  const getDiscountText = () => {
+    if (!storedPromo?.discount || !storedPromo?.discountType) return null
+    switch (storedPromo.discountType) {
+      case 'percent':
+        return `${storedPromo.discount}% off`
+      case 'fixed':
+        return `$${storedPromo.discount / 100} off`
+      case 'price_override':
+        return `Special price`
+      default:
+        return null
+    }
+  }
+
   return (
-    <button
-      onClick={handleClick}
-      disabled={isDisabled}
-      className={className}
-    >
-      {loading ? (
-        <span className="flex items-center justify-center gap-2">
-          <Loader2 className="w-4 h-4 animate-spin" />
-          Loading...
-        </span>
-      ) : (
-        children
+    <div className="relative">
+      <button
+        onClick={handleClick}
+        disabled={isDisabled}
+        className={className}
+      >
+        {loading ? (
+          <span className="flex items-center justify-center gap-2">
+            <Loader2 className="w-4 h-4 animate-spin" />
+            Loading...
+          </span>
+        ) : (
+          children
+        )}
+      </button>
+      
+      {/* Subtle promo hint below button */}
+      {showPromoHint && storedPromo && planId !== 'free' && (
+        <div className="absolute -bottom-5 left-0 right-0 text-center">
+          <span className="text-[10px] text-emerald-600 font-medium tracking-wide">
+            {getDiscountText() || 'Promo applied'}
+          </span>
+        </div>
       )}
-    </button>
+    </div>
   )
 }

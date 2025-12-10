@@ -201,7 +201,32 @@ function MasonryCard({
   const [isHovered, setIsHovered] = useState(false)
   const [isLoaded, setIsLoaded] = useState(false)
   const [hasError, setHasError] = useState(false)
+  const [isRetrying, setIsRetrying] = useState(false)
+  const [currentUrl, setCurrentUrl] = useState(image.thumbnailUrl)
   const [isSettingCover, setIsSettingCover] = useState(false)
+
+  // Handle image load error with retry
+  const handleImageError = async () => {
+    if (isRetrying) return
+    console.error('Failed to load image:', image.id, currentUrl)
+    setHasError(true)
+    
+    // Try to get a fresh URL if we have the storage path
+    if (image.storagePath) {
+      setIsRetrying(true)
+      try {
+        const { getThumbnailUrl } = await import('@/server/actions/image.actions')
+        const result = await getThumbnailUrl(image.storagePath)
+        if (result.url) {
+          setCurrentUrl(result.url)
+          setHasError(false)
+        }
+      } catch {
+        // Keep error state
+      }
+      setIsRetrying(false)
+    }
+  }
 
   const handleSetCover = async (e: React.MouseEvent) => {
     e.stopPropagation()
@@ -260,8 +285,17 @@ function MasonryCard({
           }}
         >
           <div className="text-center p-4">
-            <ImageIcon className="w-8 h-8 text-stone-300 mx-auto mb-2" />
-            <p className="text-xs text-stone-400">Image unavailable</p>
+            {isRetrying ? (
+              <>
+                <div className="w-6 h-6 border-2 border-stone-300 border-t-stone-500 rounded-full animate-spin mx-auto mb-2" />
+                <p className="text-xs text-stone-400">Retrying...</p>
+              </>
+            ) : (
+              <>
+                <ImageIcon className="w-8 h-8 text-stone-300 mx-auto mb-2" />
+                <p className="text-xs text-stone-400">Loading image...</p>
+              </>
+            )}
           </div>
         </div>
       )}
@@ -269,9 +303,9 @@ function MasonryCard({
       {/* Image - natural sizing for true masonry */}
       {/* Using unoptimized to bypass Vercel Image Optimization (402 quota errors) */}
       {/* Supabase already provides optimized transforms via signed URLs */}
-      {image.thumbnailUrl && !hasError && (
+      {currentUrl && !hasError && (
         <Image
-          src={image.thumbnailUrl}
+          src={currentUrl}
           alt={getSeoAltText(galleryTitle || 'Photo', undefined, index + 1)}
           width={image.width || 800}
           height={image.height || 600}
@@ -281,11 +315,11 @@ function MasonryCard({
           style={{ 
             objectPosition: `${image.focalX ?? 50}% ${image.focalY ?? 50}%`,
           }}
-          onLoad={() => setIsLoaded(true)}
-          onError={() => {
-            console.error('Failed to load image:', image.id, image.thumbnailUrl)
-            setHasError(true)
+          onLoad={() => {
+            setIsLoaded(true)
+            setHasError(false)
           }}
+          onError={handleImageError}
           loading={index < 9 ? 'eager' : 'lazy'}
           unoptimized
         />

@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { auth } from '@clerk/nextjs/server'
 import { AppNav } from '@/components/layout/AppNav'
 import { PricingMatrix } from '@/components/pricing/PricingMatrix'
+import { ActivePricingPromoBanner } from '@/components/pricing/PricingPromoBanner'
 import { getUserWithUsage, checkIsAdmin } from '@/server/queries/user.queries'
 import { PLAN_TIERS, type PlanTier } from '@/lib/config/pricing-v2'
 
@@ -52,6 +53,9 @@ export default async function PricingPage() {
               More storage than Pixieset. Lower prices than Pic-Time. All the features you need.
             </p>
           </div>
+
+          {/* Active Promo Banner - This is where we catch them! */}
+          <ActivePricingPromoBanner className="mb-8 lg:mb-12" />
 
           {/* Pricing Matrix */}
           <PricingMatrix showAllFeatures={true} currentPlan={userId ? plan : null} />

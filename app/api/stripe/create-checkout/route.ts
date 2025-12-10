@@ -8,7 +8,13 @@ import { headers } from 'next/headers'
 
 // Founder's deal: $30/year for Elite (normally $449/year)
 const FOUNDERS_PRICE_ID = 'price_1ScqDM8bvfxoPxbALJyCHttN'
-const FOUNDERS_PROMO_CODES = ['founders-100', 'FOUNDERS100', 'founders100', 'founder100']
+const FOUNDERS_PROMO_CODES = ['founders-100', 'FOUNDERS100', 'founders100', 'founder100', 'FOUNDER100']
+
+// Helper to check if a promo code is a Founder's code
+function isFoundersPromoCode(code: string | null | undefined): boolean {
+  if (!code) return false
+  return FOUNDERS_PROMO_CODES.some(c => c.toLowerCase() === code.toLowerCase())
+}
 
 export async function POST(request: Request) {
   try {
@@ -98,8 +104,12 @@ export async function POST(request: Request) {
       },
     }
 
-    // Apply coupon if we have one (but NOT for Founder's deal - price is already $30)
-    if (couponCode && !isFoundersDeal) {
+    // Apply coupon if we have one
+    // BUT: Founder's codes should ONLY work for Elite (price is already $30/year)
+    // Don't apply Founder's coupon to other plans - it would give 44% off everything!
+    const shouldApplyCoupon = couponCode && !isFoundersDeal && !isFoundersPromoCode(couponCode)
+    
+    if (shouldApplyCoupon) {
       // Validate the coupon exists in Stripe
       try {
         const coupon = await stripe.coupons.retrieve(couponCode)
@@ -113,6 +123,9 @@ export async function POST(request: Request) {
         // Coupon doesn't exist, continue without it
         console.log(`[Checkout] Coupon not found: ${couponCode}`, couponError)
       }
+    } else if (isFoundersPromoCode(couponCode) && planId !== 'elite') {
+      // User has Founder's code but is buying a different plan - don't apply it
+      console.log(`[Checkout] Founder's code ${couponCode} only valid for Elite, not ${planId}`)
     }
 
     // Create checkout session

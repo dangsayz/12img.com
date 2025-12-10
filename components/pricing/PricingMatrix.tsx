@@ -166,7 +166,7 @@ export function PricingMatrix({ showAllFeatures = true, className = '', currentP
                       </div>
                     )}
                     */}
-                    <div className="mt-5">
+                    <div className="mt-5 pb-2">
                       {getButtonState(plan.id) === 'current' ? (
                         <div className="w-full h-11 flex items-center justify-center text-[13px] font-medium text-stone-400">
                           Current Plan
@@ -174,6 +174,7 @@ export function PricingMatrix({ showAllFeatures = true, className = '', currentP
                       ) : (
                         <PricingButton
                           planId={plan.id}
+                          showPromoHint={true}
                           className={`w-full h-11 flex items-center justify-center text-[13px] font-medium tracking-wide transition-all duration-200 ${
                             plan.isPopular
                               ? 'bg-stone-900 text-white hover:bg-black'
@@ -402,7 +403,7 @@ function MobilePlanCard({
         </div>
 
         {/* CTA Button - Larger touch target (56px) */}
-        <div className="mt-6">
+        <div className="mt-6 pb-2">
           {buttonState === 'current' ? (
             <div className="w-full h-14 flex items-center justify-center text-[15px] font-medium text-stone-400">
               Current Plan
@@ -410,6 +411,7 @@ function MobilePlanCard({
           ) : (
             <PricingButton
               planId={plan.id}
+              showPromoHint={true}
               className={`w-full h-14 flex items-center justify-center text-[15px] font-medium tracking-wide transition-all duration-200 active:scale-[0.98] ${
                 plan.isPopular
                   ? 'bg-stone-900 text-white active:bg-black'

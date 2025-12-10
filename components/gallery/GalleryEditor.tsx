@@ -55,6 +55,7 @@ import type { PresentationData } from '@/lib/types/presentation'
 
 interface GalleryImage {
   id: string
+  storagePath?: string
   thumbnailUrl: string
   previewUrl: string
   originalUrl: string
@@ -90,9 +91,12 @@ function MasonryImageItem({
     image.width && image.height ? image.width / image.height : 1
   )
   const [loaded, setLoaded] = useState(false)
+  const [hasError, setHasError] = useState(false)
+  const [isRetrying, setIsRetrying] = useState(false)
+  const [currentUrl, setCurrentUrl] = useState(image.thumbnailUrl || image.previewUrl || image.originalUrl)
   const [isHovered, setIsHovered] = useState(false)
   
-  const imgSrc = image.originalUrl || image.previewUrl || image.thumbnailUrl
+  const imgSrc = currentUrl
   
   // Focal point for object-position (default to center)
   const focalX = image.focalX ?? 50
@@ -106,6 +110,29 @@ function MasonryImageItem({
       setAspectRatio(img.naturalWidth / img.naturalHeight)
     }
     setLoaded(true)
+    setHasError(false)
+  }
+
+  // Handle image load error with retry
+  const handleImageError = async () => {
+    if (isRetrying) return
+    setHasError(true)
+    
+    // Try to get a fresh URL if we have the storage path
+    if (image.storagePath) {
+      setIsRetrying(true)
+      try {
+        const { getThumbnailUrl } = await import('@/server/actions/image.actions')
+        const result = await getThumbnailUrl(image.storagePath)
+        if (result.url) {
+          setCurrentUrl(result.url)
+          setHasError(false)
+        }
+      } catch {
+        // Keep error state
+      }
+      setIsRetrying(false)
+    }
   }
 
   // Format image number with leading zeros
@@ -139,17 +166,34 @@ function MasonryImageItem({
             src={imgSrc}
             alt=""
             fill
-            className="object-cover"
+            className={`object-cover ${hasError ? 'opacity-0' : ''}`}
             style={{ objectPosition: `${focalX}% ${focalY}%` }}
             sizes={isHero ? "(max-width: 768px) 100vw, 50vw" : "(max-width: 768px) 50vw, 25vw"}
             quality={100}
             loading={index < 6 ? "eager" : "lazy"}
             onLoad={handleImageLoad}
+            onError={handleImageError}
           />
+          {/* Error state overlay */}
+          {hasError && (
+            <div className="absolute inset-0 flex flex-col items-center justify-center bg-stone-100">
+              {isRetrying ? (
+                <div className="w-5 h-5 border-2 border-stone-300 border-t-stone-500 rounded-full animate-spin" />
+              ) : (
+                <>
+                  <svg className="w-6 h-6 text-stone-400 mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                  <span className="text-[10px] text-stone-400">Loading...</span>
+                </>
+              )}
+            </div>
+          )}
         </motion.div>
       ) : (
-        <div className="absolute inset-0 flex items-center justify-center bg-stone-200 animate-pulse">
-          <div className="w-6 h-6 border-2 border-stone-300 border-t-stone-500 rounded-full animate-spin" />
+        <div className="absolute inset-0 flex flex-col items-center justify-center bg-stone-100">
+          <div className="w-5 h-5 border-2 border-stone-300 border-t-stone-500 rounded-full animate-spin mb-2" />
+          <span className="text-[10px] text-stone-400">Loading image...</span>
         </div>
       )}
       
