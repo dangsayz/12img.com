@@ -16,7 +16,6 @@ import {
   ChevronRight,
   ArrowLeft,
   ArrowRight,
-  Sparkles,
   X,
 } from 'lucide-react'
 import { type ClientWithStats, CONTRACT_STATUS_CONFIG, EVENT_TYPE_LABELS } from '@/lib/contracts/types'
@@ -261,8 +260,11 @@ export function ClientsPageContent({ clients }: ClientsPageContentProps) {
                   <X className="w-5 h-5" />
                 </button>
                 
+                {/* Custom Arrow Up Icon */}
                 <div className="w-14 h-14 bg-stone-900 flex items-center justify-center mx-auto mb-4">
-                  <Sparkles className="w-7 h-7 text-white" />
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5">
+                    <path d="M12 19V5M12 5L5 12M12 5L19 12" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
                 </div>
                 
                 <p className="text-[11px] tracking-[0.2em] uppercase text-stone-400 mb-2">
