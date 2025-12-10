@@ -27,7 +27,7 @@ import { deleteGallery, toggleGalleryVisibility } from '@/server/actions/gallery
 import { updateProfileVisibility } from '@/server/actions/profile.actions'
 import { VisibilityBadgeOverlay } from '@/components/ui/VisibilityBadge'
 import type { ProfileVisibilityMode } from '@/types/database'
-import { OnboardingHint } from '@/components/onboarding'
+import { OnboardingHint, FeatureBanner } from '@/components/onboarding'
 import { CountryFlag, hasCustomFlag } from '@/components/ui/CountryFlag'
 
 interface Gallery {
@@ -316,6 +316,16 @@ export function CleanDashboard({ galleries, photographerName, country, visibilit
         contest={activeContest || null}
         userPlan={userPlan}
       />
+
+      {/* First-time user hint */}
+      <div className="max-w-7xl mx-auto px-6 pt-8">
+        <FeatureBanner
+          id="dashboard-welcome"
+          title="Welcome to 12img"
+          description="Create galleries to share with clients, manage contracts and messaging in the Clients section, and customize your public profile in Settings."
+          icon={<Plus className="w-5 h-5 text-white" />}
+        />
+      </div>
 
       {/* Gallery Grid */}
       <div className="max-w-7xl mx-auto px-6 py-16" data-onboarding="dashboard-galleries">

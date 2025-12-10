@@ -61,7 +61,7 @@ export function PricingMatrix({ showAllFeatures = true, className = '', currentP
     switch (state) {
       case 'current': return 'Current Plan'
       case 'upgrade': return `Upgrade to ${plan.name}`
-      case 'downgrade': return `Downgrade to ${plan.name}`
+      case 'downgrade': return `Switch to ${plan.name}` // Neutral language for downgrades
       default: return plan.monthlyPrice === 0 ? 'Start Free' : `Get ${plan.name}`
     }
   }

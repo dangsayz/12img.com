@@ -710,7 +710,7 @@ export function LandingPage() {
                               Services & Coverage
                             </div>
                             <p className="text-sm leading-relaxed pl-9">
-                              Photographer agrees to provide 8 hours of wedding photography coverage on the event date, including ceremony, reception, and formal portraits...
+                              Provider agrees to deliver 8 hours of professional services on the event date, including all agreed-upon deliverables as outlined in this agreement...
                             </p>
                             
                             <div className="flex items-center gap-3 text-[#141414] font-medium pt-2">
@@ -1729,7 +1729,7 @@ export function LandingPage() {
                             <div className="w-5 h-5 rounded-full bg-stone-200 border-2 border-white" />
                             <div className="w-5 h-5 rounded-full bg-stone-300 border-2 border-white" />
                           </div>
-                          <span>Used by 2,400+ photographers</span>
+                          <span>Used by 2,400+ creatives</span>
                         </div>
                       </div>
                     </div>
@@ -1933,7 +1933,7 @@ export function LandingPage() {
                     <div className="relative z-10 max-w-[55%] sm:max-w-[50%]">
                       <Globe className="w-8 h-8 text-stone-700 mb-4" />
                       <h4 className="font-serif text-2xl lg:text-3xl text-stone-900 mb-3">Public Profile</h4>
-                      <p className="text-stone-600 text-sm lg:text-base leading-relaxed">Your own photographer profile page. Showcase your work and let clients find you.</p>
+                      <p className="text-stone-600 text-sm lg:text-base leading-relaxed">Your own professional profile page. Showcase your work and let clients find you.</p>
                     </div>
                   </div>
                   
@@ -2089,7 +2089,7 @@ export function LandingPage() {
         <div className="max-w-[1280px] mx-auto text-center">
           <h2 className="font-serif text-2xl sm:text-3xl lg:text-[36px] mb-4">Built different.</h2>
           <p className="text-[#525252] text-lg max-w-2xl mx-auto">
-            No bloat. No complexity. Just the features photographers actually need, 
+            No bloat. No complexity. Just the features creative professionals actually need, 
             at a price that makes sense.
           </p>
         </div>
@@ -2099,7 +2099,7 @@ export function LandingPage() {
       <section className="py-12 md:py-20 lg:py-32 px-4 sm:px-6 bg-[#F5F5F7]">
         <div className="max-w-[1280px] mx-auto">
           <div className="text-center mb-12 lg:mb-16">
-            <h2 className="font-serif text-2xl sm:text-3xl lg:text-[42px] mb-4">What photographers are saying</h2>
+            <h2 className="font-serif text-2xl sm:text-3xl lg:text-[42px] mb-4">What creatives are saying</h2>
             <p className="text-[#525252] text-lg">Real feedback from real creatives.</p>
           </div>
 
@@ -2121,7 +2121,7 @@ export function LandingPage() {
                 </div>
                 <div>
                   <p className="font-medium text-sm">Jessica Martinez</p>
-                  <p className="text-xs text-[#525252]">Wedding Photographer, Austin TX</p>
+                  <p className="text-xs text-[#525252]">Wedding Creative, Austin TX</p>
                 </div>
               </div>
             </div>
@@ -2143,7 +2143,7 @@ export function LandingPage() {
                 </div>
                 <div>
                   <p className="font-medium text-sm">David Kim</p>
-                  <p className="text-xs text-[#525252]">Portrait Photographer, Seattle WA</p>
+                  <p className="text-xs text-[#525252]">Portrait Artist, Seattle WA</p>
                 </div>
               </div>
             </div>
@@ -2165,7 +2165,7 @@ export function LandingPage() {
                 </div>
                 <div>
                   <p className="font-medium text-sm">Sarah Rodriguez</p>
-                  <p className="text-xs text-[#525252]">Destination Wedding Photographer</p>
+                  <p className="text-xs text-[#525252]">Destination Wedding Professional</p>
                 </div>
               </div>
             </div>
@@ -2184,7 +2184,7 @@ export function LandingPage() {
               From upload to delivery in minutes
             </h2>
             <p className="text-[#525252] text-lg max-w-2xl mx-auto">
-              A streamlined workflow designed for busy photographers. No complexity, just results.
+              A streamlined workflow designed for busy professionals. No complexity, just results.
             </p>
           </div>
 
@@ -2353,18 +2353,44 @@ export function LandingPage() {
       <section id="pricing" className="py-12 md:py-20 lg:py-32 px-4 sm:px-6 bg-[#F5F5F7]">
         <div className="max-w-[1400px] mx-auto">
           <div className="text-center mb-8 lg:mb-12">
-            <h2 className="font-serif text-2xl sm:text-3xl lg:text-[42px] mb-4">Simple, honest pricing.</h2>
-            <p className="text-[#525252] text-lg">No hidden fees. Change plans anytime.</p>
+            <p className="text-sm text-stone-500 mb-3 tracking-wide">
+              Stop overpaying for features you don't use
+            </p>
+            <h2 className="font-serif text-2xl sm:text-3xl lg:text-[42px] mb-4">
+              Pricing that <span className="italic">actually</span> makes sense.
+            </h2>
+            <p className="text-[#525252] text-lg max-w-2xl mx-auto">
+              More storage than Pixieset. Lower prices than Pic-Time. All the features you need.
+            </p>
+          </div>
+
+          {/* Value Props */}
+          <div className="flex flex-wrap justify-center gap-6 mb-10">
+            <div className="flex items-center gap-2 text-sm text-stone-600">
+              <Check className="w-4 h-4 text-stone-900" />
+              <span>5GB free forever</span>
+            </div>
+            <div className="flex items-center gap-2 text-sm text-stone-600">
+              <Check className="w-4 h-4 text-stone-900" />
+              <span>No credit card required</span>
+            </div>
+            <div className="flex items-center gap-2 text-sm text-stone-600">
+              <Check className="w-4 h-4 text-stone-900" />
+              <span>Cancel anytime</span>
+            </div>
           </div>
 
           {/* Pricing Matrix */}
           <PricingMatrix showAllFeatures={false} />
           
-          <div className="text-center mt-10">
+          <div className="text-center mt-10 space-y-4">
             <Link href="/pricing" className="inline-flex items-center gap-2 text-sm font-medium text-[#141414] hover:text-gray-600 transition-colors">
               View full feature comparison
               <ArrowRight className="w-4 h-4" />
             </Link>
+            <p className="text-xs text-stone-400">
+              Annual plans save up to 30%. All prices in USD.
+            </p>
           </div>
         </div>
       </section>
@@ -2376,7 +2402,7 @@ export function LandingPage() {
             Ready to send your next <br /> gallery with 12IMG?
           </h2>
           <p className="text-lg text-[#525252] mb-10">
-            Join thousands of photographers who have simplified their workflow.
+            Join thousands of creatives who have simplified their workflow.
           </p>
           <Link href="/sign-up" className="inline-block bg-[#141414] text-white px-10 py-4 text-center font-medium hover:bg-black transition-colors rounded-[2px] min-w-[200px]">
             Start for free
@@ -2395,7 +2421,7 @@ export function LandingPage() {
                 <span className="font-serif text-lg font-medium tracking-tight">img</span>
              </div>
              <p className="text-sm leading-relaxed mb-6">
-               Minimal gallery delivery for professional photographers.
+               Beautiful client experiences for creative professionals.
              </p>
           </div>
           
@@ -2429,7 +2455,7 @@ export function LandingPage() {
         </div>
         <div className="max-w-[1280px] mx-auto mt-20 pt-8 border-t border-white/10 text-xs flex justify-between">
            <p>© {new Date().getFullYear()} 12IMG. All rights reserved.</p>
-           <p>Made for photographers.</p>
+           <p>Made for creatives.</p>
         </div>
       </footer>
 

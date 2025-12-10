@@ -1,11 +1,14 @@
 /**
- * Centralized Pricing Configuration
+ * Centralized Pricing Configuration v3
  * 
- * SIMPLE STORAGE-ONLY PRICING
- * No video bloat, no hidden fees
- * Just storage for photographers who need it
+ * COMPETITIVE PRICING WITH VALUE FOCUS
+ * - Free: 5GB (matches CloudSpot)
+ * - Starter: $7/mo, 20GB (beats Pic-Time)
+ * - Pro: $19/mo, 100GB (undercuts everyone)
+ * - Studio: $34/mo, 500GB (feature-rich)
+ * - Elite: $54/mo, 2TB (unlimited everything)
  * 
- * Up to 40% more affordable than competitors
+ * Psychology: Charm pricing, anchoring, value framing
  */
 
 export type PlanId = 'free' | 'essential' | 'pro' | 'studio' | 'elite'
@@ -41,44 +44,44 @@ export interface PricingPlan {
   popular?: boolean
 }
 
-// Core pricing values
+// Core pricing values (charm pricing: $7, $19, $34, $54)
 export const PRICING = {
   free: { monthly: 0, yearly: 0 },
-  essential: { monthly: 6, yearly: 60 },
-  pro: { monthly: 12, yearly: 120 },
-  studio: { monthly: 18, yearly: 180 },
-  elite: { monthly: 30, yearly: 300 },
+  essential: { monthly: 7, yearly: 59 },      // "Starter" in UI
+  pro: { monthly: 19, yearly: 159 },          // Most popular
+  studio: { monthly: 34, yearly: 289 },       // For teams
+  elite: { monthly: 54, yearly: 449 },        // Unlimited
 } as const
 
 // Plan limits for enforcement
 export const PLAN_LIMITS: Record<PlanId, PlanLimits> = {
   free: {
-    storage_gb: 2,
-    image_limit: 1300,
-    gallery_limit: 3,
-    expiry_days: 7,
+    storage_gb: 5,           // Matches CloudSpot, beats Pixieset
+    image_limit: 3000,
+    gallery_limit: 5,
+    expiry_days: 30,         // 30 days creates upgrade urgency
   },
   essential: {
-    storage_gb: 10,
-    image_limit: 4000,
+    storage_gb: 20,          // Beats Pic-Time Beginner
+    image_limit: 8000,
     gallery_limit: 'unlimited',
     expiry_days: 'unlimited',
   },
   pro: {
-    storage_gb: 100,
-    image_limit: 31000,
+    storage_gb: 100,         // Industry standard at this tier
+    image_limit: 40000,
     gallery_limit: 'unlimited',
     expiry_days: 'unlimited',
   },
   studio: {
-    storage_gb: 500,
-    image_limit: 151000,
+    storage_gb: 500,         // Matches CloudSpot Pro
+    image_limit: 200000,
     gallery_limit: 'unlimited',
     expiry_days: 'unlimited',
   },
   elite: {
-    storage_gb: 2000, // 2TB cap - sustainable "unlimited"
-    image_limit: 600000,
+    storage_gb: 2000,        // 2TB - sustainable "unlimited"
+    image_limit: 'unlimited',
     gallery_limit: 'unlimited',
     expiry_days: 'unlimited',
   },
@@ -89,31 +92,32 @@ export const PLANS: PricingPlan[] = [
   {
     id: 'free',
     name: 'Free',
-    description: 'Test drive',
+    description: 'Try everything free',
     monthlyPrice: PRICING.free.monthly,
     yearlyPrice: PRICING.free.yearly,
     limits: PLAN_LIMITS.free,
     features: [
-      '2GB storage',
-      'Up to 1,300 images',
-      '3 galleries',
-      'JPG uploads',
+      '5GB storage',
+      '5 galleries',
+      'Client portal',
+      '30-day gallery expiry',
     ],
     cta: 'Start free',
   },
   {
     id: 'essential',
-    name: 'Essential',
-    description: 'For part-time photographers',
+    name: 'Starter',  // Display name changed, ID stays for compatibility
+    description: 'Everything you need',
     monthlyPrice: PRICING.essential.monthly,
     yearlyPrice: PRICING.essential.yearly,
     limits: PLAN_LIMITS.essential,
     features: [
-      '10GB storage',
-      'Up to 4,000 images',
+      '20GB storage',
       'Unlimited galleries',
+      '3 contracts/month',
+      'Email tracking',
     ],
-    cta: 'Get Essential',
+    cta: 'Get Starter',
   },
   {
     id: 'pro',
@@ -124,8 +128,9 @@ export const PLANS: PricingPlan[] = [
     limits: PLAN_LIMITS.pro,
     features: [
       '100GB storage',
-      'Up to 31,000 images',
-      'Unlimited galleries',
+      '15 contracts/month',
+      'Automated workflows',
+      'Vendor network',
     ],
     cta: 'Get Pro',
     popular: true,
@@ -133,29 +138,30 @@ export const PLANS: PricingPlan[] = [
   {
     id: 'studio',
     name: 'Studio',
-    description: 'For busy studios',
+    description: 'For busy teams',
     monthlyPrice: PRICING.studio.monthly,
     yearlyPrice: PRICING.studio.yearly,
     limits: PLAN_LIMITS.studio,
     features: [
       '500GB storage',
-      'Up to 151,000 images',
-      'Unlimited galleries',
+      '50 contracts/month',
+      'Priority support',
+      'Advanced analytics',
     ],
     cta: 'Get Studio',
   },
   {
     id: 'elite',
     name: 'Elite',
-    description: 'For power users',
+    description: 'Unlimited everything',
     monthlyPrice: PRICING.elite.monthly,
     yearlyPrice: PRICING.elite.yearly,
     limits: PLAN_LIMITS.elite,
     features: [
       '2TB storage',
-      'Up to 600,000 images',
-      'Unlimited galleries',
-      'Priority support',
+      'Unlimited contracts',
+      'White-glove support',
+      'Custom integrations',
     ],
     cta: 'Get Elite',
   },

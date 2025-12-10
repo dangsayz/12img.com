@@ -18,7 +18,8 @@ import {
   ChevronDown,
   FolderPlus,
   UserPlus,
-  LayoutDashboard
+  LayoutDashboard,
+  Shield
 } from 'lucide-react'
 
 export type UserRole = 'user' | 'support' | 'admin' | 'super_admin'
@@ -217,6 +218,21 @@ export function AppNav({
                         <LayoutDashboard className="w-4 h-4" />
                         <span className="text-sm">Dashboard</span>
                       </Link>
+                      
+                      {/* Admin Panel - Only visible to admins */}
+                      {isAdmin && (
+                        <>
+                          <div className="my-1 mx-2 border-t border-stone-100" />
+                          <Link
+                            href="/admin"
+                            onClick={() => setNewMenuOpen(false)}
+                            className="flex items-center gap-3 px-3 py-2 rounded-lg text-stone-500 hover:bg-stone-100 hover:text-stone-900 transition-colors"
+                          >
+                            <Shield className="w-4 h-4" />
+                            <span className="text-sm font-medium">Admin Panel</span>
+                          </Link>
+                        </>
+                      )}
                     </div>
                   </motion.div>
                 )}

@@ -51,6 +51,7 @@ import { DeliveryCountdown } from '@/components/milestones'
 import { ContractStatusBadge } from '@/components/contracts/ContractStatusBadge'
 import { DownloadOverview } from '@/components/ui/DownloadOverview'
 import { WorkflowList, WorkflowScheduler } from '@/components/workflows'
+import { FeatureBanner } from '@/components/onboarding'
 
 // Helper component to parse and display notes elegantly
 function FormattedNotes({ notes }: { notes: string }) {
@@ -481,6 +482,14 @@ export function ClientDetailContent({
         <ArrowLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" />
         Back to Clients
       </Link>
+
+      {/* First-time user hint about messaging */}
+      <FeatureBanner
+        id="client-portal-messaging"
+        title="Client Portal & Messaging"
+        description="Share the Portal Link with your client so they can message you directly, view contracts, and check project status. No more phone calls or scattered emails — everything in one place."
+        icon={<MessageSquare className="w-5 h-5 text-white" />}
+      />
 
       {/* Capturable Overview Section */}
       <div ref={overviewRef} className="bg-white">

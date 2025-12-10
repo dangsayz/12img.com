@@ -1,7 +1,7 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { UploadZone } from '@/components/upload/UploadZone'
+import { UploadZoneV2 } from '@/components/upload/UploadZoneV2'
 
 interface PhotosStepProps {
   galleryId: string
@@ -31,7 +31,7 @@ export function PhotosStep({ galleryId, gallerySlug, onComplete }: PhotosStepPro
 
       {/* Upload Zone - Uses the existing fast upload system */}
       <div className="bg-white rounded-2xl border border-stone-200 p-6">
-        <UploadZone 
+        <UploadZoneV2 
           galleryId={galleryId} 
           onUploadComplete={handleUploadComplete}
         />

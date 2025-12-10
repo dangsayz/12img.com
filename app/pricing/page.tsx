@@ -7,10 +7,10 @@ import { PLAN_TIERS, type PlanTier } from '@/lib/config/pricing-v2'
 
 export const metadata: Metadata = {
   title: 'Pricing',
-  description: 'Simple storage-only pricing for photographers. Start free with 2GB, upgrade as you grow. Plans from $0 to $30/month.',
+  description: 'Simple, honest pricing for creative professionals. Start free with 5GB, upgrade as you grow. Plans from $0 to $54/month.',
   openGraph: {
-    title: 'Pricing — 12img Photo Gallery Platform',
-    description: 'Simple storage-only pricing for photographers. Start free, upgrade as you grow.',
+    title: 'Pricing — 12img Client Experience Platform',
+    description: 'More storage than Pixieset. Lower prices than Pic-Time. Start free, upgrade as you grow.',
   },
 }
 
@@ -49,7 +49,7 @@ export default async function PricingPage() {
               Simple, honest pricing
             </h1>
             <p className="text-base lg:text-lg text-stone-500 max-w-2xl mx-auto px-4">
-              No hidden fees. No video bloat. Just storage for photographers who need it.
+              More storage than Pixieset. Lower prices than Pic-Time. All the features you need.
             </p>
           </div>
 

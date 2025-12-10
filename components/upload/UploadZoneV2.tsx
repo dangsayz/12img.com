@@ -17,6 +17,7 @@ import { Plus, Zap, ZapOff } from 'lucide-react'
 import { generateSignedUploadUrls, confirmUploads } from '@/server/actions/upload.actions'
 import { compressImage, getImageDimensions } from '@/lib/upload/image-compressor'
 import { getAdaptiveConcurrencyController } from '@/lib/upload/adaptive-concurrency'
+import { getCompressionWorkerPool } from '@/lib/upload/compression-worker'
 import { 
   ALLOWED_MIME_TYPES, 
   MAX_FILE_SIZE, 
@@ -270,6 +271,7 @@ export function UploadZoneV2({ galleryId, onUploadComplete }: UploadZoneProps) {
         const batch = pendingItems.slice(i, i + SIGNED_URL_BATCH_SIZE)
         
         // Step 1: Compress images in this batch (if enabled)
+        // Uses Web Worker pool for TRUE parallel compression across CPU cores
         const compressedBlobs: Map<string, { blob: Blob; width: number; height: number }> = new Map()
         
         if (compressionEnabled) {
@@ -279,40 +281,106 @@ export function UploadZoneV2({ galleryId, onUploadComplete }: UploadZoneProps) {
             return inBatch ? { ...u, status: 'compressing' as const } : u
           }))
           
-          // Compress in parallel (limited concurrency)
-          const compressionTasks = batch.map(async (item) => {
-            const startTime = Date.now()
-            const result = await compressImage(item.file, {
-              maxWidth: COMPRESSION_MAX_DIMENSION,
-              maxHeight: COMPRESSION_MAX_DIMENSION,
-              quality: COMPRESSION_QUALITY,
+          // Try Web Worker compression first (parallel across CPU cores)
+          // Falls back to main thread if workers unavailable
+          let useWorkers = true
+          try {
+            const workerPool = getCompressionWorkerPool()
+            
+            // Compress ALL images in batch simultaneously using worker pool
+            const compressionTasks = batch.map(async (item) => {
+              try {
+                const result = await workerPool.compress(item.file, {
+                  maxWidth: COMPRESSION_MAX_DIMENSION,
+                  maxHeight: COMPRESSION_MAX_DIMENSION,
+                  quality: COMPRESSION_QUALITY,
+                })
+                
+                compressedBlobs.set(item.id, {
+                  blob: result.blob!,
+                  width: result.width || 0,
+                  height: result.height || 0,
+                })
+                
+                setTotalCompressedBytes(prev => prev + result.compressedSize)
+                
+                setUploads(prev => prev.map(u => 
+                  u.id === item.id 
+                    ? { 
+                        ...u, 
+                        compressedSize: result.compressedSize,
+                        compressionRatio: result.compressionRatio,
+                        width: result.width,
+                        height: result.height,
+                      } 
+                    : u
+                ))
+                
+                return result
+              } catch (err) {
+                // Fallback to main thread compression for this file
+                const result = await compressImage(item.file, {
+                  maxWidth: COMPRESSION_MAX_DIMENSION,
+                  maxHeight: COMPRESSION_MAX_DIMENSION,
+                  quality: COMPRESSION_QUALITY,
+                })
+                
+                compressedBlobs.set(item.id, {
+                  blob: result.blob,
+                  width: result.width,
+                  height: result.height,
+                })
+                
+                setTotalCompressedBytes(prev => prev + result.compressedSize)
+                
+                setUploads(prev => prev.map(u => 
+                  u.id === item.id 
+                    ? { 
+                        ...u, 
+                        compressedSize: result.compressedSize,
+                        compressionRatio: result.compressionRatio,
+                        width: result.width,
+                        height: result.height,
+                      } 
+                    : u
+                ))
+                
+                return result
+              }
             })
             
-            compressedBlobs.set(item.id, {
-              blob: result.blob,
-              width: result.width,
-              height: result.height,
-            })
-            
-            // Update compression stats
-            setTotalCompressedBytes(prev => prev + result.compressedSize)
-            
-            setUploads(prev => prev.map(u => 
-              u.id === item.id 
-                ? { 
-                    ...u, 
-                    compressedSize: result.compressedSize,
-                    compressionRatio: result.compressionRatio,
-                    width: result.width,
-                    height: result.height,
-                  } 
-                : u
-            ))
-            
-            return result
-          })
-          
-          await Promise.all(compressionTasks)
+            await Promise.all(compressionTasks)
+          } catch (workerError) {
+            // Workers not available, fall back to sequential main thread
+            console.warn('[UploadZoneV2] Workers unavailable, using main thread:', workerError)
+            for (const item of batch) {
+              const result = await compressImage(item.file, {
+                maxWidth: COMPRESSION_MAX_DIMENSION,
+                maxHeight: COMPRESSION_MAX_DIMENSION,
+                quality: COMPRESSION_QUALITY,
+              })
+              
+              compressedBlobs.set(item.id, {
+                blob: result.blob,
+                width: result.width,
+                height: result.height,
+              })
+              
+              setTotalCompressedBytes(prev => prev + result.compressedSize)
+              
+              setUploads(prev => prev.map(u => 
+                u.id === item.id 
+                  ? { 
+                      ...u, 
+                      compressedSize: result.compressedSize,
+                      compressionRatio: result.compressionRatio,
+                      width: result.width,
+                      height: result.height,
+                    } 
+                  : u
+              ))
+            }
+          }
         } else {
           // No compression - use original files
           for (const item of batch) {

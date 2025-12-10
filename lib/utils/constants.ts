@@ -32,9 +32,14 @@ export const ALLOWED_MIME_TYPES = [
 
 export const MAX_FILE_SIZE = 50 * 1024 * 1024 // 50MB (photographers use large files)
 export const MAX_FILES_PER_UPLOAD = 5000 // Support massive wedding galleries
-export const MAX_CONCURRENT_UPLOADS = 12 // Aggressive parallel uploads (adaptive will tune)
-export const SIGNED_URL_BATCH_SIZE = 50 // Smaller batches = faster first response
-export const PREFETCH_AHEAD = 30 // Pre-generate this many signed URLs ahead
+export const MAX_CONCURRENT_UPLOADS = 16 // Aggressive parallel uploads (adaptive will tune up to 24)
+export const SIGNED_URL_BATCH_SIZE = 100 // Larger batches = fewer round trips (was 50)
+export const PREFETCH_AHEAD = 200 // Pre-generate many signed URLs ahead (was 30)
+
+// Turbo upload settings
+export const TURBO_UPLOAD_CONCURRENCY_MIN = 6
+export const TURBO_UPLOAD_CONCURRENCY_MAX = 24
+export const TURBO_CONFIRM_BATCH_SIZE = 50
 
 // Large upload thresholds for UI
 export const LARGE_UPLOAD_THRESHOLD = 20 // Show large upload overlay after 20 files

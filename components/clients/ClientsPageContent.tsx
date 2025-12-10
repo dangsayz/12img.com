@@ -23,7 +23,7 @@ import {
 import { type ClientWithStats, CONTRACT_STATUS_CONFIG, EVENT_TYPE_LABELS } from '@/lib/contracts/types'
 import { parseLocalDate } from '@/lib/contracts/merge-fields'
 import { CreateClientModal } from './CreateClientModal'
-import { OnboardingHint } from '@/components/onboarding'
+import { OnboardingHint, FeatureBanner } from '@/components/onboarding'
 import { checkContractLimits, type ContractLimitStatus } from '@/server/actions/contract.actions'
 import { archiveClientProfile } from '@/server/actions/client.actions'
 import { useRouter } from 'next/navigation'
@@ -40,12 +40,21 @@ export function ClientsPageContent({ clients }: ClientsPageContentProps) {
   const [contractLimits, setContractLimits] = useState<ContractLimitStatus | null>(null)
   const [filter, setFilter] = useState<'all' | 'upcoming' | 'needs_attention'>('all')
 
-  // Check if user came from "New Contract" button
+  // Check if user came from "New Contract" button - only once on mount
+  const hasHandledNewParam = useState(() => {
+    // Check on initial render only
+    if (typeof window !== 'undefined' && searchParams.get('new') === 'true') {
+      window.history.replaceState({}, '', '/dashboard/clients')
+      return true
+    }
+    return false
+  })[0]
+
   useEffect(() => {
-    if (searchParams.get('new') === 'true') {
+    if (hasHandledNewParam) {
       handleNewContract()
     }
-  }, [searchParams])
+  }, [hasHandledNewParam])
 
   // Check contract limits and show appropriate modal
   const handleNewContract = async () => {
@@ -135,6 +144,14 @@ export function ClientsPageContent({ clients }: ClientsPageContentProps) {
           <span className="hidden sm:inline">Add Client</span>
         </button>
       </div>
+
+      {/* First-time user hint */}
+      <FeatureBanner
+        id="clients-getting-started"
+        title="Getting Started with Clients"
+        description="Add a client, send them a contract, and they'll get a secure portal link to sign, message you, and track their project — all in one place."
+        icon={<Users className="w-5 h-5 text-white" />}
+      />
 
       {/* Stats */}
       <div className="grid grid-cols-3 gap-4 mb-6" data-onboarding="clients-stats">

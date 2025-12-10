@@ -1,4 +1,5 @@
 export { OnboardingHint } from './OnboardingHint'
+export { FeatureHint, FeatureBanner, resetAllHints } from './FeatureHint'
 export { 
   hasCompletedOnboarding, 
   markOnboardingComplete, 

@@ -13,7 +13,6 @@ import {
   HardDrive,
   CreditCard,
   Mail,
-  ScrollText,
   Settings,
   Flag,
   HeadphonesIcon,
@@ -25,6 +24,7 @@ import {
   X,
   Trophy,
   Lightbulb,
+  Bell,
 } from 'lucide-react'
 import { RealtimeIndicator } from './RealtimeIndicator'
 
@@ -32,6 +32,7 @@ interface AdminShellProps {
   children: React.ReactNode
   adminEmail: string
   adminRole: string
+  unreadNotifications?: number
 }
 
 const NAV_ITEMS = [
@@ -81,11 +82,6 @@ const NAV_ITEMS = [
     icon: Lightbulb,
   },
   {
-    title: 'Audit Logs',
-    href: '/admin/logs',
-    icon: ScrollText,
-  },
-  {
     title: 'Feature Flags',
     href: '/admin/flags',
     icon: Flag,
@@ -115,7 +111,7 @@ const ROLE_CONFIG = {
   },
 }
 
-export function AdminShell({ children, adminEmail, adminRole }: AdminShellProps) {
+export function AdminShell({ children, adminEmail, adminRole, unreadNotifications = 0 }: AdminShellProps) {
   const pathname = usePathname()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const roleConfig = ROLE_CONFIG[adminRole as keyof typeof ROLE_CONFIG] || ROLE_CONFIG.support
@@ -167,9 +163,23 @@ export function AdminShell({ children, adminEmail, adminRole }: AdminShellProps)
           </div>
           
           <div className="flex items-center gap-2 md:gap-4">
-            {/* Real-time indicator - hide on mobile */}
+            {/* Notifications bell */}
+            <Link
+              href="/admin/users"
+              className="relative p-1.5 text-[#525252] hover:text-[#141414] border border-[#E5E5E5] hover:border-[#141414] transition-colors"
+              title="New signups"
+            >
+              <Bell className="w-4 h-4" />
+              {unreadNotifications > 0 && (
+                <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] flex items-center justify-center px-1 text-[10px] font-bold bg-red-500 text-white rounded-full">
+                  {unreadNotifications > 99 ? '99+' : unreadNotifications}
+                </span>
+              )}
+            </Link>
+
+            {/* Manual refresh */}
             <div className="hidden sm:block">
-              <RealtimeIndicator refreshInterval={30} />
+              <RealtimeIndicator />
             </div>
             
             {/* Role badge - compact on mobile */}

@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server'
 import { stripe } from '@/lib/stripe/client'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 import { clerkClient } from '@clerk/nextjs/server'
+import { createAdminNotification } from '@/server/admin/notifications'
 import Stripe from 'stripe'
 
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET!
@@ -104,6 +105,14 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   })
 
   console.log(`✅ User ${clerkUserId} upgraded to ${planId}`)
+
+  // Create admin notification
+  await createAdminNotification(
+    'new_subscription',
+    'New Subscription',
+    `User subscribed to ${planId.charAt(0).toUpperCase() + planId.slice(1)} plan`,
+    { user_id: dbUserId, plan: planId, customer_id: session.customer }
+  )
 }
 
 async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
@@ -182,6 +191,14 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
   }
 
   console.log(`✅ Subscription canceled, user downgraded to free`)
+
+  // Create admin notification
+  await createAdminNotification(
+    'subscription_cancelled',
+    'Subscription Cancelled',
+    user?.clerk_id ? `User cancelled their subscription` : 'A subscription was cancelled',
+    { customer_id: subscription.customer }
+  )
 }
 
 async function handlePaymentFailed(invoice: Stripe.Invoice) {
