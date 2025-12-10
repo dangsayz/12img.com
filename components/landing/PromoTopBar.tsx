@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X } from 'lucide-react'
-import { PromotionalCampaign, getSpotsRemaining } from '@/lib/promos/types'
+import { PromotionalCampaign } from '@/lib/promos/types'
 
 const STORAGE_KEY = 'promo_bar_dismissed'
 
@@ -43,8 +43,6 @@ export function PromoTopBar() {
   
   if (!campaign) return null
   
-  const spotsRemaining = getSpotsRemaining(campaign)
-  
   return (
     <AnimatePresence>
       {visible && (
@@ -72,11 +70,6 @@ export function PromoTopBar() {
                 <span className="font-medium">{campaign.badge_text || campaign.name}</span>
                 <span className="hidden sm:inline text-white/70 mx-2">—</span>
                 <span className="hidden sm:inline text-white/70">{campaign.banner_headline}</span>
-                {spotsRemaining !== null && (
-                  <span className="ml-2 text-white/50">
-                    ({spotsRemaining} left)
-                  </span>
-                )}
               </span>
               
               {/* Arrow */}
