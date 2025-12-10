@@ -181,6 +181,11 @@ export default async function BillingDashboardPage() {
             <div>
               <p className="text-[#525252] text-xs uppercase tracking-wider">Paid Users</p>
               <p className="text-2xl font-serif text-[#141414] mt-1">{metrics.paidUsers}</p>
+              {metrics.paidUsersManual > 0 && (
+                <p className="text-[10px] text-amber-600 mt-0.5">
+                  {metrics.paidUsersStripe} Stripe · {metrics.paidUsersManual} comp
+                </p>
+              )}
             </div>
             <div>
               <p className="text-[#525252] text-xs uppercase tracking-wider">Free Users</p>

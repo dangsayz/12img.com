@@ -2,12 +2,72 @@
 
 import Link from 'next/link'
 import Image from 'next/image'
-import { useState } from 'react'
-import { Menu, X, ArrowRight, Upload, Lock, Shield, Zap, Check, Instagram, Quote, Star, Image as ImageIcon, Palette, Mail, LayoutDashboard, FileText, MessageCircle, Users, PenTool, Calendar, TrendingUp, Layers, Globe, Camera, Send } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { Menu, X, ArrowRight, Upload, Lock, Shield, Zap, Check, Instagram, Quote, Star, Image as ImageIcon, Palette, Mail, LayoutDashboard, FileText, MessageCircle, Users, PenTool, Calendar, TrendingUp, Layers, Globe, Camera, Send, Download, Eye, Heart } from 'lucide-react'
 import { PricingMatrix } from '@/components/pricing/PricingMatrix'
 import { useAuthModal } from '@/components/auth/AuthModal'
 import { useAuth, UserButton } from '@clerk/nextjs'
 import { CommunitySpotlightCardClient } from '@/components/spotlight/CommunitySpotlightCardClient'
+import { PromoModal } from './PromoHint'
+import { PromoTopBar } from './PromoTopBar'
+import { FeatureGrid } from './FeatureGrid'
+import { FeatureBento } from './FeatureBento'
+import { AnimatePresence, motion } from 'framer-motion'
+
+// Notification data for rotating cards
+const leftNotifications = [
+  { icon: Check, iconBg: 'bg-emerald-100', iconColor: 'text-emerald-600', title: 'Contract Signed', subtitle: 'Sarah Johnson • Just now' },
+  { icon: MessageCircle, iconBg: 'bg-violet-100', iconColor: 'text-violet-600', title: 'New Message', subtitle: 'Client Portal • 1m ago' },
+  { icon: Calendar, iconBg: 'bg-amber-100', iconColor: 'text-amber-600', title: 'Reminder Sent', subtitle: 'Automation • 3m ago' },
+  { icon: Users, iconBg: 'bg-rose-100', iconColor: 'text-rose-600', title: 'Vendor Downloaded', subtitle: 'Bloom Florals • 5m ago' },
+  { icon: Heart, iconBg: 'bg-pink-100', iconColor: 'text-pink-600', title: 'Favorited 12 Photos', subtitle: 'Emma & James • 8m ago' },
+]
+
+const rightNotifications = [
+  { icon: Mail, iconBg: 'bg-blue-100', iconColor: 'text-blue-600', title: 'Gallery Opened', subtitle: 'john@email.com • 2m ago' },
+  { icon: Download, iconBg: 'bg-teal-100', iconColor: 'text-teal-600', title: 'Gallery Downloaded', subtitle: 'Full resolution • 4m ago' },
+  { icon: Eye, iconBg: 'bg-indigo-100', iconColor: 'text-indigo-600', title: '47 Views Today', subtitle: 'Wedding Gallery • Live' },
+  { icon: Send, iconBg: 'bg-cyan-100', iconColor: 'text-cyan-600', title: 'Email Delivered', subtitle: 'Gallery invite • 6m ago' },
+  { icon: FileText, iconBg: 'bg-orange-100', iconColor: 'text-orange-600', title: 'Contract Viewed', subtitle: 'Mike Chen • 10m ago' },
+]
+
+function RotatingNotification({ position }: { position: 'left' | 'right' }) {
+  const [index, setIndex] = useState(0)
+  const notifications = position === 'left' ? leftNotifications : rightNotifications
+  
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setIndex((prev) => (prev + 1) % notifications.length)
+    }, 3000)
+    return () => clearInterval(interval)
+  }, [notifications.length])
+  
+  const current = notifications[index]
+  const Icon = current.icon
+  
+  return (
+    <div className={`absolute -bottom-6 ${position === 'left' ? 'left-4 lg:left-8' : 'right-4 lg:right-8'} z-20 hidden md:block`}>
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={index}
+          initial={{ opacity: 0, y: 10, scale: 0.95 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0, y: -10, scale: 0.95 }}
+          transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+          className="bg-white p-4 shadow-xl border border-gray-100 rounded-xl flex items-center gap-3"
+        >
+          <div className={`w-10 h-10 rounded-full ${current.iconBg} flex items-center justify-center`}>
+            <Icon className={`w-5 h-5 ${current.iconColor}`} />
+          </div>
+          <div>
+            <p className="font-medium text-sm text-[#141414]">{current.title}</p>
+            <p className="text-xs text-stone-500">{current.subtitle}</p>
+          </div>
+        </motion.div>
+      </AnimatePresence>
+    </div>
+  )
+}
 
 // --- Landing Page Component ---
 
@@ -64,6 +124,12 @@ export function LandingPage() {
   return (
     <div className="min-h-screen bg-[#F5F5F7] text-[#141414] font-sans selection:bg-black selection:text-white">
       
+      {/* Promo Top Bar - Flash sale announcement */}
+      <PromoTopBar />
+      
+      {/* Promo Modal - Subtle popup on visit */}
+      <PromoModal />
+      
       {/* --- Navigation (Floating Pill - matches AppNav) --- */}
       <nav className="fixed top-0 left-0 right-0 z-50 px-4 py-3 pointer-events-none">
         <div className="max-w-screen-xl mx-auto flex items-center justify-between">
@@ -81,27 +147,14 @@ export function LandingPage() {
             {/* Divider */}
             <div className="w-px h-5 bg-stone-200 mx-1 hidden md:block" />
             
-            {/* Nav Links - Desktop */}
+            {/* Nav Links - Desktop (simplified) */}
             <div className="hidden md:flex items-center">
-              <Link href="#features" className="px-3 py-1.5 rounded-full text-sm font-medium text-stone-500 hover:text-stone-900 hover:bg-stone-50 transition-all">
+              <a href="#features" className="px-3 py-1.5 rounded-full text-sm font-medium text-stone-500 hover:text-stone-900 hover:bg-stone-50 transition-all">
                 Features
-              </Link>
-              <Link href="#contracts" className="px-3 py-1.5 rounded-full text-sm font-medium text-stone-500 hover:text-stone-900 hover:bg-stone-50 transition-all">
-                Contracts
-              </Link>
-              <Link href="#vendors" className="px-3 py-1.5 rounded-full text-sm font-medium text-stone-500 hover:text-stone-900 hover:bg-stone-50 transition-all flex items-center gap-1">
-                Vendors
-                <span className="px-1 py-0.5 bg-stone-900 text-white text-[9px] font-bold uppercase tracking-wider rounded">New</span>
-              </Link>
-              <Link href="#automations" className="px-3 py-1.5 rounded-full text-sm font-medium text-stone-500 hover:text-stone-900 hover:bg-stone-50 transition-all">
-                Automations
-              </Link>
-              <Link href="#pricing" className="px-3 py-1.5 rounded-full text-sm font-medium text-stone-500 hover:text-stone-900 hover:bg-stone-50 transition-all">
+              </a>
+              <a href="#pricing" className="px-3 py-1.5 rounded-full text-sm font-medium text-stone-500 hover:text-stone-900 hover:bg-stone-50 transition-all">
                 Pricing
-              </Link>
-              <Link href="/profiles" className="px-3 py-1.5 rounded-full text-sm font-medium text-stone-500 hover:text-stone-900 hover:bg-stone-50 transition-all">
-                Profiles
-              </Link>
+              </a>
               <Link href="/help" className="px-3 py-1.5 rounded-full text-sm font-medium text-stone-500 hover:text-stone-900 hover:bg-stone-50 transition-all">
                 Help
               </Link>
@@ -172,22 +225,12 @@ export function LandingPage() {
           <div className="fixed top-20 left-4 right-4 z-50 md:hidden">
             <div className="bg-white rounded-2xl border border-stone-200 shadow-xl overflow-hidden">
               <div className="p-2">
-                <Link href="#features" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 rounded-xl text-stone-600 hover:bg-stone-50 transition-all">
+                <a href="#features" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 rounded-xl text-stone-600 hover:bg-stone-50 transition-all">
                   <span className="font-medium">Features</span>
-                </Link>
-                <Link href="#contracts" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 rounded-xl text-stone-600 hover:bg-stone-50 transition-all">
-                  <span className="font-medium">Contracts</span>
-                </Link>
-                <Link href="#automations" onClick={() => setMobileMenuOpen(false)} className="flex items-center justify-between px-4 py-3 rounded-xl text-stone-600 hover:bg-stone-50 transition-all">
-                  <span className="font-medium">Automations</span>
-                  <span className="px-1.5 py-0.5 bg-violet-100 text-violet-700 text-[9px] font-bold uppercase tracking-wider rounded">New</span>
-                </Link>
-                <Link href="#pricing" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 rounded-xl text-stone-600 hover:bg-stone-50 transition-all">
+                </a>
+                <a href="#pricing" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 rounded-xl text-stone-600 hover:bg-stone-50 transition-all">
                   <span className="font-medium">Pricing</span>
-                </Link>
-                <Link href="/profiles" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 rounded-xl text-stone-600 hover:bg-stone-50 transition-all">
-                  <span className="font-medium">Profiles</span>
-                </Link>
+                </a>
                 <Link href="/help" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 rounded-xl text-stone-600 hover:bg-stone-50 transition-all">
                   <span className="font-medium">Help</span>
                 </Link>
@@ -271,13 +314,6 @@ export function LandingPage() {
               </button>
             </div>
             
-            {/* Feature Request - Subtle, confident */}
-            <button 
-              onClick={() => setFeatureModalOpen(true)}
-              className="mt-6 text-sm text-stone-400 hover:text-stone-600 transition-colors cursor-pointer group"
-            >
-              Missing a feature? <span className="text-stone-500 group-hover:text-stone-900 underline underline-offset-2 decoration-stone-300 group-hover:decoration-stone-500 transition-colors">Tell us</span> — we ship fast.
-            </button>
           </div>
 
           {/* Visual Showcase */}
@@ -297,26 +333,9 @@ export function LandingPage() {
               </div>
             </div>
             
-            {/* Floating feature cards */}
-            <div className="absolute -bottom-6 left-4 lg:left-8 z-20 bg-white p-4 shadow-xl border border-gray-100 rounded-xl hidden md:flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center">
-                <Check className="w-5 h-5 text-emerald-600" />
-              </div>
-              <div>
-                <p className="font-medium text-sm text-[#141414]">Contract Signed</p>
-                <p className="text-xs text-stone-500">Sarah Johnson • Just now</p>
-              </div>
-            </div>
-            
-            <div className="absolute -bottom-6 right-4 lg:right-8 z-20 bg-white p-4 shadow-xl border border-gray-100 rounded-xl hidden md:flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
-                <Mail className="w-5 h-5 text-blue-600" />
-              </div>
-              <div>
-                <p className="font-medium text-sm text-[#141414]">Gallery Opened</p>
-                <p className="text-xs text-stone-500">john@email.com • 2m ago</p>
-              </div>
-            </div>
+            {/* Floating feature cards - Rotating */}
+            <RotatingNotification position="left" />
+            <RotatingNotification position="right" />
             
             {/* Mobile phone mockup */}
             <div className="absolute -top-8 -right-4 lg:right-12 z-20 w-32 lg:w-40 hidden lg:block">
@@ -335,8 +354,14 @@ export function LandingPage() {
         </div>
       </section>
 
+      {/* --- Compact Feature Grid --- */}
+      <FeatureGrid />
+
+      {/* --- Feature Bento Grid --- */}
+      <FeatureBento />
+
       {/* --- 2. End the "When will my gallery be ready?" texts --- */}
-      <section className="py-12 md:py-20 lg:py-32 px-4 sm:px-6 bg-white border-t border-[#E5E5E5]">
+      <section className="py-12 md:py-20 lg:py-32 px-4 sm:px-6 bg-white border-t border-[#E5E5E5] hidden">
         <div className="max-w-[1280px] mx-auto grid lg:grid-cols-2 gap-8 lg:gap-16 items-center">
           
           {/* Left: Before/After comparison */}
@@ -495,7 +520,7 @@ export function LandingPage() {
       </section>
 
       {/* --- 3. Client Galleries Experience --- */}
-      <section className="py-12 md:py-20 lg:py-32 px-4 sm:px-6 bg-[#F5F5F7]">
+      <section className="py-12 md:py-20 lg:py-32 px-4 sm:px-6 bg-[#F5F5F7] hidden">
         <div className="max-w-[1280px] mx-auto grid lg:grid-cols-2 gap-8 lg:gap-32 items-center">
           
           {/* Left: Visual */}
@@ -544,7 +569,7 @@ export function LandingPage() {
 
 
       {/* --- 4. Auto Zip & Backups --- */}
-      <section id="backup" className="py-12 md:py-20 lg:py-32 px-4 sm:px-6 bg-white border-y border-[#E5E5E5]">
+      <section id="backup" className="py-12 md:py-20 lg:py-32 px-4 sm:px-6 bg-white border-y border-[#E5E5E5] hidden">
         <div className="max-w-[1280px] mx-auto grid lg:grid-cols-2 gap-8 lg:gap-32 items-center">
           
           <div>
@@ -580,7 +605,7 @@ export function LandingPage() {
       </section>
 
       {/* --- 5. Email Tracking Feature --- */}
-      <section className="py-12 md:py-20 lg:py-32 px-4 sm:px-6 bg-[#141414] text-white">
+      <section className="py-12 md:py-20 lg:py-32 px-4 sm:px-6 bg-[#141414] text-white hidden">
         <div className="max-w-[1280px] mx-auto grid lg:grid-cols-2 gap-8 lg:gap-16 items-center">
           <div>
             <span className="inline-block px-3 py-1 border border-white/30 text-xs font-medium uppercase tracking-wider mb-6">
@@ -650,7 +675,7 @@ export function LandingPage() {
       </section>
 
       {/* --- 6. Smart Contracts Feature --- */}
-      <section id="contracts" className="py-16 md:py-24 lg:py-40 px-4 sm:px-6 bg-white relative overflow-hidden">
+      <section id="contracts" className="py-16 md:py-24 lg:py-40 px-4 sm:px-6 bg-white relative overflow-hidden hidden">
         {/* Subtle background texture */}
         <div className="absolute inset-0 opacity-[0.02]" style={{
           backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23000000' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
@@ -1162,7 +1187,7 @@ export function LandingPage() {
       </section>
 
       {/* --- Vendor Network - Ultra Minimal Editorial Section --- */}
-      <section id="vendors" className="py-24 lg:py-40 px-4 sm:px-6 bg-[#FAFAFA] scroll-mt-20 relative overflow-hidden">
+      <section id="vendors" className="py-24 lg:py-40 px-4 sm:px-6 bg-[#FAFAFA] scroll-mt-20 relative overflow-hidden hidden">
         {/* Subtle texture */}
         <div className="absolute inset-0 opacity-[0.02]" style={{
           backgroundImage: `radial-gradient(circle at 1px 1px, #000 0.5px, transparent 0)`,
@@ -1334,7 +1359,7 @@ export function LandingPage() {
       </section>
 
       {/* --- Automated Workflows - Ultra Minimal White Section --- */}
-      <section id="automations" className="py-24 lg:py-40 px-4 sm:px-6 bg-white scroll-mt-20 relative overflow-hidden">
+      <section id="automations" className="py-24 lg:py-40 px-4 sm:px-6 bg-white scroll-mt-20 relative overflow-hidden hidden">
         {/* Subtle grid texture */}
         <div className="absolute inset-0 opacity-[0.015]" style={{
           backgroundImage: `linear-gradient(to right, #000 1px, transparent 1px), linear-gradient(to bottom, #000 1px, transparent 1px)`,
@@ -1473,7 +1498,7 @@ export function LandingPage() {
       </section>
 
       {/* --- 7. All Features Grid - Jaw-Dropping Redesign --- */}
-      <section className="py-16 md:py-24 lg:py-40 px-4 sm:px-6 bg-white border-t border-[#E5E5E5] overflow-hidden">
+      <section className="py-16 md:py-24 lg:py-40 px-4 sm:px-6 bg-white border-t border-[#E5E5E5] overflow-hidden hidden">
         <div className="max-w-[1400px] mx-auto">
           {/* Section Header - Pain Point Focused */}
           <div className="text-center mb-20 lg:mb-32">
@@ -2085,7 +2110,7 @@ export function LandingPage() {
       </section>
 
       {/* --- 7. Why 12img --- */}
-      <section className="py-12 md:py-20 px-4 sm:px-6 border-t border-[#E5E5E5] bg-white">
+      <section className="py-12 md:py-20 px-4 sm:px-6 border-t border-[#E5E5E5] bg-white hidden">
         <div className="max-w-[1280px] mx-auto text-center">
           <h2 className="font-serif text-2xl sm:text-3xl lg:text-[36px] mb-4">Built different.</h2>
           <p className="text-[#525252] text-lg max-w-2xl mx-auto">
@@ -2096,7 +2121,7 @@ export function LandingPage() {
       </section>
 
       {/* --- 8. Testimonials --- */}
-      <section className="py-12 md:py-20 lg:py-32 px-4 sm:px-6 bg-[#F5F5F7]">
+      <section className="py-12 md:py-20 lg:py-32 px-4 sm:px-6 bg-[#F5F5F7] hidden">
         <div className="max-w-[1280px] mx-auto">
           <div className="text-center mb-12 lg:mb-16">
             <h2 className="font-serif text-2xl sm:text-3xl lg:text-[42px] mb-4">What creatives are saying</h2>
@@ -2174,7 +2199,7 @@ export function LandingPage() {
       </section>
 
       {/* --- 9. How It Works --- */}
-      <section id="features" className="py-12 md:py-20 lg:py-32 px-4 sm:px-6 bg-white border-t border-[#E5E5E5]">
+      <section className="py-12 md:py-20 lg:py-32 px-4 sm:px-6 bg-white border-t border-[#E5E5E5] hidden">
         <div className="max-w-[1280px] mx-auto">
           <div className="text-center mb-12 lg:mb-20">
             <span className="inline-block px-3 py-1 border border-[#141414] text-xs font-medium uppercase tracking-wider mb-6">
@@ -2350,7 +2375,7 @@ export function LandingPage() {
       <CommunitySpotlightCardClient />
 
       {/* --- 10. Pricing Preview --- */}
-      <section id="pricing" className="py-12 md:py-20 lg:py-32 px-4 sm:px-6 bg-[#F5F5F7]">
+      <section id="pricing" className="py-12 md:py-20 lg:py-32 px-4 sm:px-6 bg-[#F5F5F7] scroll-mt-20">
         <div className="max-w-[1400px] mx-auto">
           <div className="text-center mb-8 lg:mb-12">
             <p className="text-sm text-stone-500 mb-3 tracking-wide">
@@ -2439,6 +2464,7 @@ export function LandingPage() {
             <ul className="space-y-4 text-sm">
               <li><Link href="#" className="hover:text-white transition-colors">Help Center</Link></li>
               <li><Link href="#" className="hover:text-white transition-colors">Blog</Link></li>
+              <li><button onClick={() => setFeatureModalOpen(true)} className="hover:text-white transition-colors">Request a Feature</button></li>
               <li><Link href="#" className="hover:text-white transition-colors">Terms of Service</Link></li>
             </ul>
           </div>

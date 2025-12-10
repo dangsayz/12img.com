@@ -433,3 +433,162 @@ export async function getPromoOverviewStats(): Promise<{
     totalSavings,
   }
 }
+
+/**
+ * Get enhanced campaign stats with per-campaign breakdown
+ */
+export async function getEnhancedCampaignStats(campaignId: string): Promise<{
+  totalRevenue: number
+  totalSavings: number
+  redemptionCount: number
+  conversionRate: number
+  avgOrderValue: number
+  topPlan: string | null
+  recentRedemptions: CampaignRedemption[]
+  dailyRedemptions: { date: string; count: number; revenue: number }[]
+}> {
+  const [statsResult, redemptionsResult, linksResult] = await Promise.all([
+    supabaseAdmin
+      .from('campaign_redemptions')
+      .select('*')
+      .eq('campaign_id', campaignId)
+      .order('redeemed_at', { ascending: false }),
+    supabaseAdmin
+      .from('campaign_redemptions')
+      .select('*')
+      .eq('campaign_id', campaignId)
+      .order('redeemed_at', { ascending: false })
+      .limit(5),
+    supabaseAdmin
+      .from('promo_links')
+      .select('unique_clicks')
+      .eq('campaign_id', campaignId),
+  ])
+  
+  const allRedemptions = statsResult.data || []
+  const recentRedemptions = redemptionsResult.data || []
+  const links = linksResult.data || []
+  
+  const totalRevenue = allRedemptions.reduce((sum, r) => sum + (r.discounted_price || 0), 0)
+  const totalSavings = allRedemptions.reduce((sum, r) => sum + (r.amount_saved || 0), 0)
+  const totalClicks = links.reduce((sum, l) => sum + (l.unique_clicks || 0), 0)
+  const conversionRate = totalClicks > 0 ? (allRedemptions.length / totalClicks) * 100 : 0
+  const avgOrderValue = allRedemptions.length > 0 ? Math.round(totalRevenue / allRedemptions.length) : 0
+  
+  // Find top plan
+  const planCounts: Record<string, number> = {}
+  allRedemptions.forEach(r => {
+    planCounts[r.plan] = (planCounts[r.plan] || 0) + 1
+  })
+  const topPlan = Object.entries(planCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || null
+  
+  // Group by day for chart
+  const dailyMap: Record<string, { count: number; revenue: number }> = {}
+  allRedemptions.forEach(r => {
+    const date = new Date(r.redeemed_at).toISOString().split('T')[0]
+    if (!dailyMap[date]) {
+      dailyMap[date] = { count: 0, revenue: 0 }
+    }
+    dailyMap[date].count++
+    dailyMap[date].revenue += r.discounted_price || 0
+  })
+  
+  const dailyRedemptions = Object.entries(dailyMap)
+    .map(([date, data]) => ({ date, ...data }))
+    .sort((a, b) => a.date.localeCompare(b.date))
+  
+  return {
+    totalRevenue,
+    totalSavings,
+    redemptionCount: allRedemptions.length,
+    conversionRate,
+    avgOrderValue,
+    topPlan,
+    recentRedemptions: recentRedemptions as CampaignRedemption[],
+    dailyRedemptions,
+  }
+}
+
+/**
+ * Get revenue milestones data
+ */
+export async function getRevenueMilestones(): Promise<{
+  currentRevenue: number
+  milestones: { amount: number; label: string; reached: boolean; reachedAt: string | null }[]
+  revenueByDay: { date: string; revenue: number; cumulative: number }[]
+  signUpsByDay: { date: string; count: number; cumulative: number }[]
+}> {
+  const { data: redemptions } = await supabaseAdmin
+    .from('campaign_redemptions')
+    .select('discounted_price, redeemed_at')
+    .order('redeemed_at', { ascending: true })
+  
+  const allRedemptions = redemptions || []
+  const currentRevenue = allRedemptions.reduce((sum, r) => sum + (r.discounted_price || 0), 0)
+  
+  // Define milestones
+  const milestoneAmounts = [
+    { amount: 10000, label: '$100' },      // $100
+    { amount: 50000, label: '$500' },      // $500
+    { amount: 100000, label: '$1K' },      // $1,000
+    { amount: 250000, label: '$2.5K' },    // $2,500
+    { amount: 500000, label: '$5K' },      // $5,000
+    { amount: 1000000, label: '$10K' },    // $10,000
+    { amount: 2500000, label: '$25K' },    // $25,000
+    { amount: 5000000, label: '$50K' },    // $50,000
+    { amount: 10000000, label: '$100K' },  // $100,000
+  ]
+  
+  // Calculate when each milestone was reached
+  let runningTotal = 0
+  const milestoneReachedAt: Record<number, string | null> = {}
+  
+  for (const r of allRedemptions) {
+    runningTotal += r.discounted_price || 0
+    for (const m of milestoneAmounts) {
+      if (runningTotal >= m.amount && !milestoneReachedAt[m.amount]) {
+        milestoneReachedAt[m.amount] = r.redeemed_at
+      }
+    }
+  }
+  
+  const milestones = milestoneAmounts.map(m => ({
+    amount: m.amount,
+    label: m.label,
+    reached: currentRevenue >= m.amount,
+    reachedAt: milestoneReachedAt[m.amount] || null,
+  }))
+  
+  // Group by day for charts
+  const dailyMap: Record<string, { revenue: number; count: number }> = {}
+  allRedemptions.forEach(r => {
+    const date = new Date(r.redeemed_at).toISOString().split('T')[0]
+    if (!dailyMap[date]) {
+      dailyMap[date] = { revenue: 0, count: 0 }
+    }
+    dailyMap[date].revenue += r.discounted_price || 0
+    dailyMap[date].count++
+  })
+  
+  // Build cumulative arrays
+  const sortedDays = Object.keys(dailyMap).sort()
+  let cumulativeRevenue = 0
+  let cumulativeCount = 0
+  
+  const revenueByDay = sortedDays.map(date => {
+    cumulativeRevenue += dailyMap[date].revenue
+    return { date, revenue: dailyMap[date].revenue, cumulative: cumulativeRevenue }
+  })
+  
+  const signUpsByDay = sortedDays.map(date => {
+    cumulativeCount += dailyMap[date].count
+    return { date, count: dailyMap[date].count, cumulative: cumulativeCount }
+  })
+  
+  return {
+    currentRevenue,
+    milestones,
+    revenueByDay,
+    signUpsByDay,
+  }
+}

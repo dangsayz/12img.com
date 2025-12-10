@@ -28,7 +28,9 @@ export interface RevenueMetrics {
   newSubscriptionsThisMonth: number
   
   // Users
-  paidUsers: number
+  paidUsers: number // Total users on paid plans
+  paidUsersStripe: number // Users with active Stripe subscriptions
+  paidUsersManual: number // Users upgraded manually (no Stripe)
   freeUsers: number
   conversionRate: number // paid / total * 100
   
@@ -167,6 +169,16 @@ export async function getRevenueMetrics(): Promise<RevenueMetrics> {
     .select('*', { count: 'exact', head: true })
     .neq('plan', 'free')
   
+  // Count users with active Stripe subscriptions (actually paying)
+  const { count: paidUsersStripe } = await supabaseAdmin
+    .from('users')
+    .select('*', { count: 'exact', head: true })
+    .neq('plan', 'free')
+    .not('stripe_subscription_id', 'is', null)
+  
+  // Manual upgrades = paid plan but no Stripe subscription
+  const paidUsersManual = (paidUsers || 0) - (paidUsersStripe || 0)
+  
   const freeUsers = (totalUsers || 0) - (paidUsers || 0)
   const conversionRate = totalUsers ? ((paidUsers || 0) / totalUsers) * 100 : 0
   
@@ -182,6 +194,8 @@ export async function getRevenueMetrics(): Promise<RevenueMetrics> {
     canceledThisMonth: canceledSubs.data.length,
     newSubscriptionsThisMonth: newSubs.data.filter(s => s.status === 'active').length,
     paidUsers: paidUsers || 0,
+    paidUsersStripe: paidUsersStripe || 0,
+    paidUsersManual,
     freeUsers,
     conversionRate: Math.round(conversionRate * 10) / 10,
     planBreakdown: Object.entries(planMrr).map(([plan, data]) => ({

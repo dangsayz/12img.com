@@ -1,7 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Loader2 } from 'lucide-react'
+import { getStoredPromo } from '@/lib/promo/persistence'
 
 interface UpgradeButtonProps {
   planId: string
@@ -11,6 +12,15 @@ interface UpgradeButtonProps {
 
 export function UpgradeButton({ planId, children, className }: UpgradeButtonProps) {
   const [loading, setLoading] = useState(false)
+  const [promoCode, setPromoCode] = useState<string | null>(null)
+  
+  // Check for stored promo on mount
+  useEffect(() => {
+    const promo = getStoredPromo()
+    if (promo?.code) {
+      setPromoCode(promo.code)
+    }
+  }, [])
 
   const handleUpgrade = async () => {
     if (planId === 'free') return
@@ -20,7 +30,7 @@ export function UpgradeButton({ planId, children, className }: UpgradeButtonProp
       const response = await fetch('/api/stripe/create-checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ planId }),
+        body: JSON.stringify({ planId, promoCode }),
       })
 
       const data = await response.json()

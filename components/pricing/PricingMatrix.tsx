@@ -60,8 +60,8 @@ export function PricingMatrix({ showAllFeatures = true, className = '', currentP
     const state = getButtonState(plan.id)
     switch (state) {
       case 'current': return 'Current Plan'
-      case 'upgrade': return `Upgrade to ${plan.name}`
-      case 'downgrade': return `Switch to ${plan.name}` // Neutral language for downgrades
+      case 'upgrade': return `Upgrade`
+      case 'downgrade': return `Switch`
       default: return plan.monthlyPrice === 0 ? 'Start Free' : `Get ${plan.name}`
     }
   }
@@ -168,16 +168,16 @@ export function PricingMatrix({ showAllFeatures = true, className = '', currentP
                     */}
                     <div className="mt-5">
                       {getButtonState(plan.id) === 'current' ? (
-                        <div className="w-full px-4 py-2.5 text-sm font-medium text-[#525252] cursor-default">
+                        <div className="w-full h-11 flex items-center justify-center text-[13px] font-medium text-stone-400">
                           Current Plan
                         </div>
                       ) : (
                         <PricingButton
                           planId={plan.id}
-                          className={`w-full px-4 py-2.5 text-sm font-semibold transition-all border ${
+                          className={`w-full h-11 flex items-center justify-center text-[13px] font-medium tracking-wide transition-all duration-200 ${
                             plan.isPopular
-                              ? 'bg-[#141414] text-white border-[#141414] hover:bg-black'
-                              : 'bg-transparent text-[#141414] border-[#141414] hover:bg-[#141414] hover:text-white'
+                              ? 'bg-stone-900 text-white hover:bg-black'
+                              : 'bg-white text-stone-900 border border-stone-300 hover:border-stone-900 hover:bg-stone-50'
                           }`}
                         >
                           {getButtonText(plan)}
@@ -404,19 +404,19 @@ function MobilePlanCard({
         {/* CTA Button - Larger touch target (56px) */}
         <div className="mt-6">
           {buttonState === 'current' ? (
-            <div className="w-full h-14 flex items-center justify-center text-sm font-medium text-stone-400 border border-stone-200 rounded-xl">
+            <div className="w-full h-14 flex items-center justify-center text-[15px] font-medium text-stone-400">
               Current Plan
             </div>
           ) : (
             <PricingButton
               planId={plan.id}
-              className={`w-full h-14 flex items-center justify-center text-sm font-semibold transition-all rounded-xl active:scale-[0.98] ${
+              className={`w-full h-14 flex items-center justify-center text-[15px] font-medium tracking-wide transition-all duration-200 active:scale-[0.98] ${
                 plan.isPopular
-                  ? 'bg-[#141414] text-white active:bg-black'
-                  : 'bg-white text-[#141414] border border-[#141414] active:bg-stone-50'
+                  ? 'bg-stone-900 text-white active:bg-black'
+                  : 'bg-white text-stone-900 border border-stone-300 active:bg-stone-50'
               }`}
             >
-              {buttonText}
+              {buttonState === 'upgrade' ? 'Upgrade' : buttonState === 'downgrade' ? 'Switch' : buttonText}
             </PricingButton>
           )}
         </div>

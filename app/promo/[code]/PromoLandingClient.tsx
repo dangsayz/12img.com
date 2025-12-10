@@ -1,9 +1,11 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { storePromo } from '@/lib/promo/persistence'
-import { Check, Users, ArrowRight, Clock, Shield, Zap } from 'lucide-react'
+import { motion } from 'framer-motion'
+import Link from 'next/link'
+import { PromoShareButtons } from '@/components/ui/PromoShareButtons'
 
 interface PromoLandingClientProps {
   campaign: {
@@ -27,7 +29,10 @@ interface PromoLandingClientProps {
 
 export function PromoLandingClient({ campaign, redirectUrl, utmParams }: PromoLandingClientProps) {
   const router = useRouter()
-  const [saved, setSaved] = useState(false)
+
+  const shareUrl = typeof window !== 'undefined' 
+    ? `${window.location.origin}/promo/${campaign.campaignSlug}`
+    : `https://12img.com/promo/${campaign.campaignSlug}`
 
   useEffect(() => {
     // Store the promo in cookie + localStorage immediately
@@ -42,23 +47,16 @@ export function PromoLandingClient({ campaign, redirectUrl, utmParams }: PromoLa
         medium: utmParams.medium,
         campaign: utmParams.campaign,
       })
-      setSaved(true)
     } catch (error) {
       console.error('Failed to store promo:', error)
     }
   }, [campaign, utmParams])
 
-  const formatDiscount = () => {
-    switch (campaign.discountType) {
-      case 'percent':
-        return `${campaign.discount}% OFF`
-      case 'fixed':
-        return `$${(campaign.discount / 100).toFixed(0)} OFF`
-      case 'price_override':
-        return `$${(campaign.discount / 100).toFixed(0)}/year`
-      default:
-        return ''
+  const formatPrice = () => {
+    if (campaign.discountType === 'price_override') {
+      return `$${(campaign.discount / 100).toFixed(0)}`
     }
+    return `${campaign.discount}% off`
   }
 
   const handleClaim = () => {
@@ -66,92 +64,111 @@ export function PromoLandingClient({ campaign, redirectUrl, utmParams }: PromoLa
   }
 
   return (
-    <div className="min-h-screen bg-stone-50 flex items-center justify-center p-4">
-      <div className="max-w-lg w-full">
-        {/* Logo */}
-        <div className="flex items-center justify-center gap-2 mb-10">
-          <div className="w-10 h-10 bg-stone-900 rounded-full flex items-center justify-center">
-            <span className="text-white text-sm font-bold">12</span>
+    <div className="min-h-screen bg-[#FAFAFA] flex flex-col">
+      {/* Minimal nav */}
+      <nav className="p-6">
+        <Link href="/" className="inline-flex items-center gap-2">
+          <div className="w-8 h-8 bg-stone-900 rounded-full flex items-center justify-center">
+            <span className="text-white text-[10px] font-bold">12</span>
           </div>
-          <span className="text-xl font-semibold text-stone-900">img</span>
-        </div>
+          <span className="text-sm font-semibold text-stone-900">img</span>
+        </Link>
+      </nav>
 
-        {/* Main Card */}
-        <div className="bg-white border border-stone-200 overflow-hidden">
-          {/* Badge Header */}
+      {/* Centered content */}
+      <div className="flex-1 flex items-center justify-center px-6 pb-20">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+          className="max-w-sm w-full text-center"
+        >
+          {/* Badge */}
           {campaign.badgeText && (
-            <div className="bg-stone-900 text-white text-center py-3 px-4">
-              <span className="text-xs font-bold uppercase tracking-wider">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.1, duration: 0.4 }}
+              className="inline-flex items-center gap-2 mb-8"
+            >
+              <span className="relative flex h-1.5 w-1.5">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-stone-400 opacity-50" />
+                <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-stone-900" />
+              </span>
+              <span className="text-[10px] uppercase tracking-[0.25em] text-stone-400 font-medium">
                 {campaign.badgeText}
               </span>
-            </div>
+            </motion.div>
           )}
 
-          <div className="p-8 text-center">
-            {/* Headline */}
-            <h1 className="text-3xl font-serif text-stone-900 mb-3">
-              {campaign.headline}
-            </h1>
-
-            {/* Subheadline */}
-            {campaign.subheadline && (
-              <p className="text-stone-500 mb-8">
-                {campaign.subheadline}
-              </p>
+          {/* Price - big and bold */}
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2, duration: 0.5 }}
+            className="mb-4"
+          >
+            <span className="text-6xl sm:text-7xl font-light tracking-tight text-stone-900">
+              {formatPrice()}
+            </span>
+            {campaign.discountType === 'price_override' && (
+              <span className="text-2xl text-stone-400 font-light">/year</span>
             )}
+          </motion.div>
 
-            {/* Discount Display */}
-            <div className="bg-stone-50 border border-stone-100 p-6 mb-6">
-              <p className="text-xs text-stone-400 uppercase tracking-wider mb-2">Your Exclusive Discount</p>
-              <p className="text-5xl font-serif text-stone-900 mb-2">{formatDiscount()}</p>
-              {campaign.spotsRemaining !== null && (
-                <div className="flex items-center justify-center gap-2 text-sm text-amber-700 font-medium">
-                  <Users className="w-4 h-4" />
-                  <span>Only {campaign.spotsRemaining} spots left</span>
-                </div>
-              )}
-            </div>
+          {/* Headline */}
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.3, duration: 0.5 }}
+            className="text-stone-500 text-sm leading-relaxed mb-8 max-w-xs mx-auto"
+          >
+            {campaign.subheadline || campaign.headline}
+          </motion.p>
 
-            {/* Benefits */}
-            <div className="grid grid-cols-3 gap-4 mb-8 text-center">
-              <div className="p-3">
-                <Zap className="w-5 h-5 mx-auto mb-2 text-stone-400" />
-                <p className="text-xs text-stone-500">2TB Storage</p>
-              </div>
-              <div className="p-3">
-                <Shield className="w-5 h-5 mx-auto mb-2 text-stone-400" />
-                <p className="text-xs text-stone-500">Unlimited Galleries</p>
-              </div>
-              <div className="p-3">
-                <Clock className="w-5 h-5 mx-auto mb-2 text-stone-400" />
-                <p className="text-xs text-stone-500">Locked Forever</p>
-              </div>
-            </div>
-
-            {/* CTA Button */}
-            <button
-              onClick={handleClaim}
-              className="w-full bg-stone-900 hover:bg-stone-800 text-white py-4 px-6 text-sm font-medium uppercase tracking-wider transition-colors flex items-center justify-center gap-2"
+          {/* Spots remaining */}
+          {campaign.spotsRemaining !== null && (
+            <motion.p
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.4, duration: 0.5 }}
+              className="text-xs text-stone-400 mb-8"
             >
-              Claim Your Spot
-              <ArrowRight className="w-4 h-4" />
-            </button>
+              {campaign.spotsRemaining} of 100 spots remaining
+            </motion.p>
+          )}
 
-            {/* Saved indicator */}
-            {saved && (
-              <div className="flex items-center justify-center gap-2 mt-4 text-sm text-emerald-600">
-                <Check className="w-4 h-4" />
-                <span>Discount saved to your session</span>
-              </div>
-            )}
-          </div>
-        </div>
+          {/* CTA */}
+          <motion.button
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5, duration: 0.5 }}
+            onClick={handleClaim}
+            className="w-full bg-stone-900 hover:bg-stone-800 text-white py-4 px-8 text-sm font-medium transition-colors rounded-lg"
+          >
+            Continue
+          </motion.button>
 
-        {/* Fine print */}
-        <p className="mt-6 text-center text-xs text-stone-400">
-          Your discount will be automatically applied at checkout.<br />
-          No credit card required to sign up.
-        </p>
+          {/* Fine print */}
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.6, duration: 0.5 }}
+            className="mt-6 text-[11px] text-stone-300"
+          >
+            Discount auto-applied · No credit card required
+          </motion.p>
+
+          {/* Share buttons */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.7, duration: 0.5 }}
+            className="mt-8"
+          >
+            <PromoShareButtons shareUrl={shareUrl} />
+          </motion.div>
+        </motion.div>
       </div>
     </div>
   )

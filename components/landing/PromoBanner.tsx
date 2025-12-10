@@ -4,7 +4,8 @@ import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, Clock, Users } from 'lucide-react'
 import Link from 'next/link'
-import { PromotionalCampaign, getSpotsRemaining, getTimeRemaining } from '@/lib/promos/types'
+import { PromotionalCampaign, getSpotsRemaining, getTimeRemaining, calculateSavings } from '@/lib/promos/types'
+import { PRICING } from '@/lib/config/pricing'
 
 interface PromoBannerProps {
   campaign: PromotionalCampaign
@@ -72,6 +73,12 @@ export function PromoBanner({ campaign, position = 'floating', onDismiss }: Prom
   
   const signupUrl = `/sign-up?plan=${campaign.target_plans[0] || 'pro'}&promo=${campaign.stripe_coupon_id || campaign.slug}`
   
+  // Calculate savings for positive framing
+  const targetPlan = campaign.target_plans[0] || 'elite'
+  const originalPriceCents = (PRICING[targetPlan as keyof typeof PRICING]?.yearly || PRICING.elite.yearly) * 100
+  const savingsAmount = Math.round(calculateSavings(originalPriceCents, campaign) / 100)
+  const savingsHeadline = savingsAmount > 0 ? `Save $${savingsAmount} this year` : campaign.banner_headline
+  
   if (position === 'top') {
     return (
       <div
@@ -85,7 +92,7 @@ export function PromoBanner({ campaign, position = 'floating', onDismiss }: Prom
                 {campaign.badge_text}
               </span>
             )}
-            <p className="font-medium">{campaign.banner_headline}</p>
+            <p className="font-medium">{savingsHeadline}</p>
             {campaign.show_countdown && <CountdownTimer campaign={campaign} />}
             {campaign.show_spots_remaining && <SpotsRemaining campaign={campaign} />}
           </div>
@@ -138,7 +145,7 @@ export function PromoBanner({ campaign, position = 'floating', onDismiss }: Prom
                 {campaign.badge_text}
               </span>
             )}
-            <p className="font-medium text-lg">{campaign.banner_headline}</p>
+            <p className="font-medium text-lg">{savingsHeadline}</p>
             {campaign.banner_subheadline && (
               <p className="text-sm opacity-80 mt-1">{campaign.banner_subheadline}</p>
             )}

@@ -1,8 +1,9 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useUser } from '@clerk/nextjs'
 import { Loader2 } from 'lucide-react'
+import { getStoredPromo } from '@/lib/promo/persistence'
 
 interface PricingButtonProps {
   planId: string
@@ -13,14 +14,26 @@ interface PricingButtonProps {
 export function PricingButton({ planId, children, className }: PricingButtonProps) {
   const { isSignedIn, isLoaded } = useUser()
   const [loading, setLoading] = useState(false)
+  const [promoCode, setPromoCode] = useState<string | null>(null)
+  
+  // Check for stored promo on mount
+  useEffect(() => {
+    const promo = getStoredPromo()
+    if (promo?.code) {
+      setPromoCode(promo.code)
+    }
+  }, [])
   
   // Determine disabled state - use undefined instead of false to avoid hydration mismatch
   const isDisabled = loading || !isLoaded ? true : undefined
 
   const handleClick = async () => {
-    // If not signed in, redirect to sign-up with plan
+    // If not signed in, redirect to sign-up with plan and promo
     if (!isSignedIn) {
-      window.location.href = `/sign-up?plan=${planId}`
+      const url = promoCode 
+        ? `/sign-up?plan=${planId}&promo=${promoCode}`
+        : `/sign-up?plan=${planId}`
+      window.location.href = url
       return
     }
 
@@ -36,7 +49,7 @@ export function PricingButton({ planId, children, className }: PricingButtonProp
       const response = await fetch('/api/stripe/create-checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ planId }),
+        body: JSON.stringify({ planId, promoCode }),
       })
 
       const data = await response.json()

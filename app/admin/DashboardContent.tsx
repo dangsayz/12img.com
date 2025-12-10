@@ -178,6 +178,8 @@ interface RevenueMetrics {
   activeSubscriptions: number
   conversionRate: number
   paidUsers: number
+  paidUsersStripe: number
+  paidUsersManual: number
   freeUsers: number
 }
 
@@ -320,14 +322,21 @@ export function DashboardContent({ stats, revenue }: Props) {
                 <ArrowUpRight className="w-6 h-6 text-[#525252]" />
               </div>
             </div>
-            <div className="mt-8 pt-6 border-t border-[#E5E5E5] grid grid-cols-2 gap-6">
-              <div>
-                <p className="text-[#737373] text-[10px] uppercase tracking-[0.2em]">Paid</p>
-                <p className="text-2xl font-light text-[#141414] mt-1 tabular-nums">{revenue.paidUsers}</p>
-              </div>
-              <div>
-                <p className="text-[#737373] text-[10px] uppercase tracking-[0.2em]">Free</p>
-                <p className="text-2xl font-light text-[#141414] mt-1 tabular-nums">{revenue.freeUsers}</p>
+            <div className="mt-8 pt-6 border-t border-[#E5E5E5]">
+              <div className="grid grid-cols-2 gap-6">
+                <div>
+                  <p className="text-[#737373] text-[10px] uppercase tracking-[0.2em]">Paid</p>
+                  <p className="text-2xl font-light text-[#141414] mt-1 tabular-nums">{revenue.paidUsers}</p>
+                  {revenue.paidUsersManual > 0 && (
+                    <p className="text-[9px] text-amber-600 mt-0.5">
+                      {revenue.paidUsersStripe} Stripe · {revenue.paidUsersManual} comp
+                    </p>
+                  )}
+                </div>
+                <div>
+                  <p className="text-[#737373] text-[10px] uppercase tracking-[0.2em]">Free</p>
+                  <p className="text-2xl font-light text-[#141414] mt-1 tabular-nums">{revenue.freeUsers}</p>
+                </div>
               </div>
             </div>
           </motion.div>

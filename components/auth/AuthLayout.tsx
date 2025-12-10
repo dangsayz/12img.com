@@ -82,9 +82,9 @@ export function AuthLayout({ children, mode }: AuthLayoutProps) {
           background: #292524 !important;
         }
         
-        /* Divider */
+        /* Divider - hide the lines, keep only text */
         .cl-dividerLine {
-          background: #e7e5e4 !important;
+          display: none !important;
         }
         
         .cl-dividerText {
