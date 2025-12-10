@@ -1,23 +1,24 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion, AnimatePresence, useMotionValue, useTransform, useSpring } from 'framer-motion'
 import { 
   ArrowLeft, 
   ArrowRight,
-  Check,
   Loader2,
   Lock,
   Download,
   ChevronDown,
-  Save
 } from 'lucide-react'
 import { createGallery } from '@/server/actions/gallery.actions'
 import { PhotosStep } from './steps/PhotosStep'
 import { TemplateSelector } from '@/components/gallery/templates/TemplateSelector'
 import { type GalleryTemplate, DEFAULT_TEMPLATE } from '@/components/gallery/templates'
+
+// Apple-style easing
+const EASE = [0.22, 1, 0.36, 1] as const
 
 // Auto-save key for localStorage
 const AUTOSAVE_KEY = '12img_gallery_draft'
@@ -144,59 +145,79 @@ export function SimpleWizard() {
     }
   }
 
+  // Input focus state for visual feedback
+  const inputRef = useRef<HTMLInputElement>(null)
+  const [inputFocused, setInputFocused] = useState(false)
+  
+  // Subtle cursor animation
+  const cursorOpacity = useMotionValue(1)
+  
+  useEffect(() => {
+    if (inputFocused && !galleryName) {
+      const interval = setInterval(() => {
+        cursorOpacity.set(cursorOpacity.get() === 1 ? 0 : 1)
+      }, 530)
+      return () => clearInterval(interval)
+    }
+  }, [inputFocused, galleryName, cursorOpacity])
+
   return (
-    <div className="min-h-screen bg-[#F5F5F7]">
-      {/* Minimal Header */}
-      <header className="border-b border-[#E5E5E5] bg-white">
-        <div className="max-w-4xl mx-auto px-6 h-16 flex items-center justify-between">
+    <div className="min-h-screen bg-stone-50">
+      {/* Ultra-minimal Header */}
+      <header className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-xl border-b border-stone-100">
+        <div className="max-w-screen-xl mx-auto px-6 h-14 flex items-center justify-between">
           <Link 
             href="/"
-            className="flex items-center gap-2 text-[#525252] hover:text-[#141414] transition-colors"
+            className="group flex items-center gap-2 text-stone-400 hover:text-stone-900 transition-colors duration-300"
           >
-            <ArrowLeft className="w-4 h-4" />
-            <span className="text-sm font-medium">Back</span>
+            <ArrowLeft className="w-4 h-4 transition-transform duration-300 group-hover:-translate-x-0.5" />
+            <span className="text-[11px] font-medium tracking-[0.15em] uppercase">Back</span>
           </Link>
           
-          {/* Step Indicator - Super minimal */}
-          <div className="flex items-center gap-2">
-            {[0, 1].map((step) => (
-              <div
-                key={step}
-                className={`h-1.5 rounded-full transition-all ${
-                  step === currentStep 
-                    ? 'w-8 bg-[#141414]' 
-                    : step < currentStep 
-                      ? 'w-1.5 bg-emerald-500' 
-                      : 'w-1.5 bg-[#E5E5E5]'
-                }`}
-              />
-            ))}
+          {/* Step Indicator - Elegant line */}
+          <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-3">
+            <motion.div
+              className="h-px bg-stone-900 origin-left"
+              initial={{ width: 0 }}
+              animate={{ width: currentStep === 0 ? 24 : 48 }}
+              transition={{ duration: 0.6, ease: EASE }}
+            />
+            <span className="text-[10px] font-medium tracking-[0.2em] text-stone-400 uppercase">
+              {currentStep === 0 ? 'Name' : 'Photos'}
+            </span>
           </div>
 
-          <div className="w-16" /> {/* Spacer for centering */}
+          <div className="w-16" />
         </div>
       </header>
 
       {/* Content */}
-      <main className="max-w-2xl mx-auto px-6 py-12 md:py-16">
+      <main className="min-h-screen flex flex-col items-center justify-center px-6 pt-14">
         <AnimatePresence mode="wait">
           {/* Step 1: Name Your Gallery */}
           {currentStep === 0 && (
             <motion.div
               key="step-1"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              className="space-y-8"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.5, ease: EASE }}
+              className="w-full max-w-xl"
             >
-              <div className="text-center">
-                <h1 className="text-3xl font-serif text-[#141414] mb-2">
+              {/* Title Section */}
+              <motion.div 
+                className="text-center mb-16"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.7, ease: EASE, delay: 0.1 }}
+              >
+                <h1 className="text-[32px] md:text-[40px] font-light text-stone-900 tracking-[-0.02em] mb-3">
                   Name your gallery
                 </h1>
-                <p className="text-[#525252]">
+                <p className="text-[13px] text-stone-400 tracking-[0.02em]">
                   This is what your clients will see
                 </p>
-              </div>
+              </motion.div>
 
               {/* Draft Restored Notification */}
               <AnimatePresence>
@@ -205,10 +226,10 @@ export function SimpleWizard() {
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -10 }}
-                    className="p-3 bg-emerald-50 text-emerald-700 text-sm text-center border border-emerald-200 flex items-center justify-center gap-2"
+                    transition={{ duration: 0.3, ease: EASE }}
+                    className="mb-8 p-3 bg-stone-100 text-stone-600 text-[11px] tracking-[0.05em] text-center"
                   >
-                    <Save className="w-4 h-4" />
-                    Draft restored! Your previous work was saved automatically.
+                    Draft restored from your previous session
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -217,36 +238,65 @@ export function SimpleWizard() {
               <AnimatePresence>
                 {error && (
                   <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: 'auto' }}
-                    exit={{ opacity: 0, height: 0 }}
-                    className="p-4 bg-red-50 text-red-600 rounded-[2px] text-sm text-center border border-red-200"
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    transition={{ duration: 0.3, ease: EASE }}
+                    className="mb-8 p-4 bg-red-50 text-red-600 text-[12px] text-center border border-red-100"
                   >
                     {error}
                   </motion.div>
                 )}
               </AnimatePresence>
 
-              {/* Gallery Name Input - Big and prominent */}
-              <div className="bg-white p-8 border border-[#E5E5E5]">
+              {/* Gallery Name Input - Editorial style */}
+              <motion.div 
+                className="relative mb-12"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.7, ease: EASE, delay: 0.2 }}
+              >
                 <input
+                  ref={inputRef}
                   type="text"
                   value={galleryName}
                   onChange={(e) => setGalleryName(e.target.value)}
+                  onFocus={() => setInputFocused(true)}
+                  onBlur={() => setInputFocused(false)}
                   placeholder="Sarah & James Wedding"
-                  className="w-full text-center text-2xl font-medium text-[#141414] placeholder:text-[#E5E5E5] border-0 border-b-2 border-[#E5E5E5] focus:border-[#141414] focus:ring-0 pb-4 bg-transparent transition-colors"
+                  className="w-full text-center text-[24px] md:text-[28px] font-light text-stone-900 placeholder:text-stone-200 border-0 border-b border-stone-200 focus:border-stone-900 focus:ring-0 pb-4 bg-transparent transition-colors duration-500 tracking-[-0.01em]"
                   autoFocus
                 />
-              </div>
+                {/* Animated underline */}
+                <motion.div
+                  className="absolute bottom-0 left-1/2 h-px bg-stone-900"
+                  initial={{ width: 0, x: '-50%' }}
+                  animate={{ 
+                    width: inputFocused ? '100%' : 0,
+                    x: '-50%'
+                  }}
+                  transition={{ duration: 0.4, ease: EASE }}
+                />
+              </motion.div>
 
               {/* Optional Settings - Collapsed by default */}
-              <div className="pt-4">
+              <motion.div 
+                className="mb-12"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.7, ease: EASE, delay: 0.3 }}
+              >
                 <button
                   onClick={() => setShowOptions(!showOptions)}
-                  className="flex items-center gap-2 mx-auto text-sm text-[#525252] hover:text-[#141414] transition-colors"
+                  className="flex items-center gap-2 mx-auto text-[11px] tracking-[0.15em] uppercase text-stone-400 hover:text-stone-600 transition-colors duration-300"
                 >
                   <span>More options</span>
-                  <ChevronDown className={`w-4 h-4 transition-transform ${showOptions ? 'rotate-180' : ''}`} />
+                  <motion.div
+                    animate={{ rotate: showOptions ? 180 : 0 }}
+                    transition={{ duration: 0.3, ease: EASE }}
+                  >
+                    <ChevronDown className="w-3.5 h-3.5" />
+                  </motion.div>
                 </button>
 
                 <AnimatePresence>
@@ -255,15 +305,18 @@ export function SimpleWizard() {
                       initial={{ opacity: 0, height: 0 }}
                       animate={{ opacity: 1, height: 'auto' }}
                       exit={{ opacity: 0, height: 0 }}
-                      className="mt-6 space-y-4"
+                      transition={{ duration: 0.4, ease: EASE }}
+                      className="mt-8 space-y-3 overflow-hidden"
                     >
                       {/* Password */}
-                      <div className="flex items-center justify-between p-4 bg-white border border-[#E5E5E5]">
-                        <div className="flex items-center gap-3">
-                          <Lock className="w-5 h-5 text-[#525252]" />
+                      <div className="flex items-center justify-between p-5 bg-white border border-stone-100 hover:border-stone-200 transition-colors duration-300">
+                        <div className="flex items-center gap-4">
+                          <div className="w-10 h-10 rounded-full bg-stone-50 flex items-center justify-center">
+                            <Lock className="w-4 h-4 text-stone-400" />
+                          </div>
                           <div>
-                            <p className="font-medium text-[#141414]">Password protect</p>
-                            <p className="text-xs text-[#525252]">Require a password to view</p>
+                            <p className="text-[13px] font-medium text-stone-900">Password protect</p>
+                            <p className="text-[11px] text-stone-400 mt-0.5">Require a password to view</p>
                           </div>
                         </div>
                         <input
@@ -271,62 +324,76 @@ export function SimpleWizard() {
                           value={password}
                           onChange={(e) => setPassword(e.target.value)}
                           placeholder="Optional"
-                          className="w-36 text-right text-sm px-3 py-2 border border-stone-200 bg-stone-50 focus:ring-1 focus:ring-stone-400 focus:border-stone-400 text-[#141414] placeholder:text-stone-400"
+                          className="w-32 text-right text-[13px] px-3 py-2 border-0 border-b border-stone-100 bg-transparent focus:ring-0 focus:border-stone-300 text-stone-900 placeholder:text-stone-300 transition-colors duration-300"
                         />
                       </div>
 
                       {/* Downloads */}
-                      <div className="flex items-center justify-between p-4 bg-white border border-[#E5E5E5]">
-                        <div className="flex items-center gap-3">
-                          <Download className="w-5 h-5 text-[#525252]" />
+                      <div className="flex items-center justify-between p-5 bg-white border border-stone-100 hover:border-stone-200 transition-colors duration-300">
+                        <div className="flex items-center gap-4">
+                          <div className="w-10 h-10 rounded-full bg-stone-50 flex items-center justify-center">
+                            <Download className="w-4 h-4 text-stone-400" />
+                          </div>
                           <div>
-                            <p className="font-medium text-[#141414]">Allow downloads</p>
-                            <p className="text-xs text-[#525252]">Let clients download photos</p>
+                            <p className="text-[13px] font-medium text-stone-900">Allow downloads</p>
+                            <p className="text-[11px] text-stone-400 mt-0.5">Let clients download photos</p>
                           </div>
                         </div>
                         <button
                           onClick={() => setDownloadEnabled(!downloadEnabled)}
-                          className={`w-12 h-7 rounded-full transition-colors ${
-                            downloadEnabled ? 'bg-emerald-500' : 'bg-[#E5E5E5]'
+                          className={`relative w-11 h-6 rounded-full transition-colors duration-300 ${
+                            downloadEnabled ? 'bg-stone-900' : 'bg-stone-200'
                           }`}
                         >
                           <motion.div
                             animate={{ x: downloadEnabled ? 22 : 4 }}
-                            className="w-5 h-5 bg-white rounded-full shadow-sm"
+                            transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                            className="absolute top-1 w-4 h-4 bg-white rounded-full shadow-sm"
                           />
                         </button>
                       </div>
 
                       {/* Template Selection */}
-                      <div className="pt-4">
-                        <p className="font-medium text-[#141414] mb-3">Gallery Style</p>
+                      <div className="pt-6">
+                        <p className="text-[11px] tracking-[0.15em] uppercase text-stone-400 mb-4">Gallery Style</p>
                         <TemplateSelector selected={template} onSelect={setTemplate} />
                       </div>
                     </motion.div>
                   )}
                 </AnimatePresence>
-              </div>
+              </motion.div>
 
               {/* Continue Button */}
-              <div className="pt-8">
-                <button
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.7, ease: EASE, delay: 0.4 }}
+              >
+                <motion.button
                   onClick={handleCreateGallery}
                   disabled={!galleryName.trim() || isCreating}
-                  className="w-full h-14 bg-[#141414] hover:bg-black disabled:bg-[#E5E5E5] disabled:text-[#525252] text-white rounded-[2px] font-medium text-lg transition-all flex items-center justify-center gap-2"
+                  whileHover={{ scale: galleryName.trim() && !isCreating ? 1.01 : 1 }}
+                  whileTap={{ scale: galleryName.trim() && !isCreating ? 0.99 : 1 }}
+                  className="w-full h-14 bg-stone-900 hover:bg-stone-800 disabled:bg-stone-200 disabled:text-stone-400 text-white text-[13px] font-medium tracking-[0.05em] transition-colors duration-300 flex items-center justify-center gap-3"
                 >
                   {isCreating ? (
                     <>
-                      <Loader2 className="w-5 h-5 animate-spin" />
-                      Creating...
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span>Creating...</span>
                     </>
                   ) : (
                     <>
-                      Continue
-                      <ArrowRight className="w-5 h-5" />
+                      <span>Continue</span>
+                      <ArrowRight className="w-4 h-4" />
                     </>
                   )}
-                </button>
-              </div>
+                </motion.button>
+                
+                {/* Subtle hint */}
+                <p className="text-center text-[10px] text-stone-300 mt-6 tracking-[0.05em]">
+                  You can add photos in the next step
+                </p>
+              </motion.div>
             </motion.div>
           )}
 
@@ -334,10 +401,11 @@ export function SimpleWizard() {
           {currentStep === 1 && galleryId && gallerySlug && (
             <motion.div
               key="step-2"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              className="space-y-8"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.5, ease: EASE }}
+              className="w-full max-w-4xl"
             >
               <PhotosStep 
                 galleryId={galleryId}

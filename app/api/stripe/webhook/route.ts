@@ -4,6 +4,7 @@ import { stripe } from '@/lib/stripe/client'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 import { clerkClient } from '@clerk/nextjs/server'
 import { createAdminNotification } from '@/server/admin/notifications'
+import { recordRedemption } from '@/server/actions/promo.actions'
 import Stripe from 'stripe'
 
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET!
@@ -78,6 +79,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   const clerkUserId = session.metadata?.clerk_user_id
   const dbUserId = session.metadata?.db_user_id
   const planId = session.metadata?.plan_id
+  const promoCode = session.metadata?.promo_code
 
   if (!clerkUserId || !dbUserId || !planId) {
     console.error('Missing metadata in checkout session')
@@ -106,12 +108,38 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
 
   console.log(`✅ User ${clerkUserId} upgraded to ${planId}`)
 
+  // Record promo redemption if a promo code was used
+  if (promoCode) {
+    try {
+      // Get user email for redemption record
+      const { data: userData } = await supabaseAdmin
+        .from('users')
+        .select('email')
+        .eq('id', dbUserId)
+        .single()
+      
+      await recordRedemption({
+        campaignSlug: promoCode.toLowerCase(),
+        userId: dbUserId,
+        email: userData?.email || '',
+        plan: planId,
+        originalPriceCents: session.amount_total || 0, // This is already discounted
+        discountedPriceCents: session.amount_total || 0,
+        stripeSubscriptionId: session.subscription as string,
+      })
+      console.log(`✅ Promo redemption recorded: ${promoCode} for user ${dbUserId}`)
+    } catch (error) {
+      console.error('Failed to record promo redemption:', error)
+      // Don't fail the webhook for this
+    }
+  }
+
   // Create admin notification
   await createAdminNotification(
     'new_subscription',
     'New Subscription',
-    `User subscribed to ${planId.charAt(0).toUpperCase() + planId.slice(1)} plan`,
-    { user_id: dbUserId, plan: planId, customer_id: session.customer }
+    `User subscribed to ${planId.charAt(0).toUpperCase() + planId.slice(1)} plan${promoCode ? ` (promo: ${promoCode})` : ''}`,
+    { user_id: dbUserId, plan: planId, customer_id: session.customer, promo_code: promoCode }
   )
 }
 

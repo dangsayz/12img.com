@@ -560,6 +560,53 @@ export async function getEmailEvents(emailLogId: string) {
 }
 
 /**
+ * Get quick user stats for the users page header
+ */
+export async function getUserPageStats() {
+  await requireCapability('users.list')
+  
+  const now = new Date()
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+  const weekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000)
+  
+  // Run all queries in parallel
+  const [
+    totalResult,
+    activeResult,
+    suspendedResult,
+    newTodayResult,
+    newWeekResult,
+    paidResult,
+    planBreakdownResult,
+  ] = await Promise.all([
+    supabaseAdmin.from('users').select('*', { count: 'exact', head: true }),
+    supabaseAdmin.from('users').select('*', { count: 'exact', head: true }).eq('is_suspended', false),
+    supabaseAdmin.from('users').select('*', { count: 'exact', head: true }).eq('is_suspended', true),
+    supabaseAdmin.from('users').select('*', { count: 'exact', head: true }).gte('created_at', today.toISOString()),
+    supabaseAdmin.from('users').select('*', { count: 'exact', head: true }).gte('created_at', weekAgo.toISOString()),
+    supabaseAdmin.from('users').select('*', { count: 'exact', head: true }).neq('plan', 'free'),
+    supabaseAdmin.from('users').select('plan'),
+  ])
+  
+  // Calculate plan breakdown
+  const planBreakdown: Record<string, number> = { free: 0, starter: 0, pro: 0, studio: 0, elite: 0 }
+  planBreakdownResult.data?.forEach(user => {
+    const plan = user.plan || 'free'
+    planBreakdown[plan] = (planBreakdown[plan] || 0) + 1
+  })
+  
+  return {
+    total: totalResult.count || 0,
+    active: activeResult.count || 0,
+    suspended: suspendedResult.count || 0,
+    newToday: newTodayResult.count || 0,
+    newThisWeek: newWeekResult.count || 0,
+    paid: paidResult.count || 0,
+    planBreakdown,
+  }
+}
+
+/**
  * Get dashboard statistics
  */
 export async function getDashboardStats() {
