@@ -775,34 +775,135 @@ function GalleryCard({
 }
 
 function EmptyState({ hasSearch, onClearSearch }: { hasSearch: boolean; onClearSearch: () => void }) {
+  if (hasSearch) {
+    return (
+      <div className="text-center py-24">
+        <p className="text-stone-400 mb-4">No galleries match your search</p>
+        <button 
+          onClick={onClearSearch}
+          className="text-sm text-stone-900 underline underline-offset-4"
+        >
+          Clear search
+        </button>
+      </div>
+    )
+  }
+
   return (
-    <div className="text-center py-24">
-      {hasSearch ? (
-        <>
-          <p className="text-stone-400 mb-4">No galleries match your search</p>
-          <button 
-            onClick={onClearSearch}
-            className="text-sm text-stone-900 underline underline-offset-4"
-          >
-            Clear search
-          </button>
-        </>
-      ) : (
-        <>
-          <div className="w-20 h-20 bg-stone-50 flex items-center justify-center mx-auto mb-6">
-            <Plus className="w-8 h-8 text-stone-300" />
+    <div className="flex flex-col items-center justify-center py-32 px-6">
+      {/* Floating gallery cards - Apple-style stacked effect */}
+      <motion.div 
+        className="relative w-full max-w-md h-64 mb-16"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+      >
+        {/* Back card */}
+        <motion.div
+          initial={{ opacity: 0, y: 40, rotate: -3 }}
+          animate={{ opacity: 1, y: 0, rotate: -3 }}
+          transition={{ duration: 0.9, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
+          className="absolute left-1/2 -translate-x-1/2 w-48 h-56 bg-stone-100 rounded-sm shadow-sm"
+          style={{ top: '8px' }}
+        >
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="w-16 h-16 rounded-full border border-stone-200 flex items-center justify-center">
+              <div className="w-8 h-px bg-stone-200" />
+            </div>
           </div>
-          <h3 className="text-xl font-light text-stone-900 mb-2">No galleries yet</h3>
-          <p className="text-stone-400 mb-8">Create your first gallery to get started</p>
-          <Link
-            href="/gallery/create"
-            className="inline-flex items-center gap-2 px-6 py-3 bg-stone-900 hover:bg-stone-800 text-white text-sm font-medium transition-colors"
-          >
-            <Plus className="w-4 h-4" />
-            Create Gallery
+        </motion.div>
+        
+        {/* Middle card */}
+        <motion.div
+          initial={{ opacity: 0, y: 40, rotate: 2 }}
+          animate={{ opacity: 1, y: 0, rotate: 2 }}
+          transition={{ duration: 0.9, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
+          className="absolute left-1/2 -translate-x-1/2 w-52 h-60 bg-stone-50 rounded-sm shadow-md"
+          style={{ top: '4px' }}
+        >
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="w-20 h-20 rounded-full border border-stone-150 flex items-center justify-center">
+              <div className="w-10 h-px bg-stone-200" />
+            </div>
+          </div>
+        </motion.div>
+        
+        {/* Front card - interactive */}
+        <motion.div
+          initial={{ opacity: 0, y: 40 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.9, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}
+          whileHover={{ y: -8, scale: 1.02 }}
+          className="absolute left-1/2 -translate-x-1/2 w-56 h-64 bg-white rounded-sm shadow-lg cursor-pointer group"
+          style={{ top: '0px' }}
+        >
+          <Link href="/gallery/create" className="block w-full h-full">
+            <div className="absolute inset-0 flex flex-col items-center justify-center">
+              {/* Minimal plus icon */}
+              <motion.div 
+                className="relative w-12 h-12 mb-4"
+                whileHover={{ scale: 1.1 }}
+                transition={{ duration: 0.2 }}
+              >
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-6 h-px bg-stone-300 group-hover:bg-stone-400 transition-colors" />
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-px h-6 bg-stone-300 group-hover:bg-stone-400 transition-colors" />
+              </motion.div>
+              <span className="text-[10px] tracking-[0.25em] text-stone-400 uppercase group-hover:text-stone-500 transition-colors">
+                New Gallery
+              </span>
+            </div>
+            
+            {/* Subtle corner accent */}
+            <div className="absolute bottom-4 right-4 w-8 h-8 border-r border-b border-stone-100 group-hover:border-stone-200 transition-colors" />
           </Link>
-        </>
-      )}
+        </motion.div>
+      </motion.div>
+      
+      {/* Typography - editorial style */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8, delay: 0.5, ease: [0.22, 1, 0.36, 1] }}
+        className="text-center max-w-sm"
+      >
+        <h3 className="text-2xl font-light text-stone-900 tracking-[-0.02em] mb-3">
+          Begin your collection
+        </h3>
+        <p className="text-sm text-stone-400 font-light leading-relaxed mb-8">
+          Every great portfolio starts with a single gallery.
+          <br />
+          <span className="text-stone-300">Yours is waiting.</span>
+        </p>
+        
+        {/* Minimal CTA */}
+        <Link href="/gallery/create">
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            className="group inline-flex items-center gap-3 px-8 py-4 bg-stone-900 text-white text-sm tracking-wide hover:bg-stone-800 transition-colors"
+          >
+            <span>Create Gallery</span>
+            <motion.span
+              className="inline-block"
+              initial={{ x: 0 }}
+              whileHover={{ x: 4 }}
+              transition={{ duration: 0.2 }}
+            >
+              →
+            </motion.span>
+          </motion.button>
+        </Link>
+        
+        {/* Subtle hint */}
+        <motion.p
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.6, delay: 0.8 }}
+          className="mt-8 text-[11px] text-stone-300 tracking-wide"
+        >
+          Drag & drop images or click to upload
+        </motion.p>
+      </motion.div>
     </div>
   )
 }

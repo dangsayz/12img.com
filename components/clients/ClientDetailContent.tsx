@@ -518,13 +518,13 @@ export function ClientDetailContent({
       </div>
 
       {/* Tabs */}
-      <div className="flex items-center gap-1 mb-6">
-        <div className="flex gap-1 p-1 bg-stone-100/80 rounded-xl">
+      <div className="flex items-center gap-2 mb-6 overflow-x-auto scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0">
+        <div className="flex gap-1 p-1 bg-stone-100/80 rounded-xl flex-shrink-0">
           {(['overview', 'contracts', 'automations'] as const).map(tab => (
             <button
               key={tab}
               onClick={() => handleTabChange(tab)}
-              className={`relative px-4 py-2 text-sm font-medium rounded-lg transition-all ${
+              className={`relative px-3 sm:px-4 py-2 text-sm font-medium rounded-lg transition-all whitespace-nowrap ${
                 activeTab === tab
                   ? 'bg-white text-stone-900 shadow-sm'
                   : 'text-stone-500 hover:text-stone-700'
@@ -562,12 +562,12 @@ export function ClientDetailContent({
         {/* Message Button - Opens Modal */}
         <button
           onClick={() => setIsMessageModalOpen(true)}
-          className="ml-auto flex items-center gap-2 px-4 py-2.5 bg-stone-900 text-white text-sm font-medium rounded-xl hover:bg-stone-800 transition-colors shadow-sm"
+          className="ml-auto flex-shrink-0 flex items-center gap-2 px-3 sm:px-4 py-2.5 bg-stone-900 text-white text-sm font-medium rounded-xl hover:bg-stone-800 transition-colors shadow-sm"
         >
           <MessageSquare className="w-4 h-4" />
-          Messages
+          <span className="hidden sm:inline">Messages</span>
           {messages.length > 0 && (
-            <span className="ml-1 px-1.5 py-0.5 bg-white/20 rounded-md text-xs">
+            <span className="sm:ml-1 px-1.5 py-0.5 bg-white/20 rounded-md text-xs">
               {messages.length}
             </span>
           )}

@@ -208,7 +208,7 @@ export function ProfileCoverUpload({ currentCoverUrl, displayName }: ProfileCove
 
       {/* Help text */}
       <p className="text-xs text-stone-400">
-        Recommended: 600×800px or larger. JPEG, PNG, or WebP. Max 10MB.
+        Recommended: 600×800px or larger. JPEG, PNG, or WebP. Max 50MB.
       </p>
     </div>
   )

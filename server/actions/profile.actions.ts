@@ -374,9 +374,9 @@ export async function uploadProfileCover(formData: FormData): Promise<{ success?
       return { error: 'Invalid file type. Use JPEG, PNG, or WebP.' }
     }
 
-    // Validate file size (max 10MB)
-    if (file.size > 10 * 1024 * 1024) {
-      return { error: 'File too large. Maximum 10MB.' }
+    // Validate file size (max 50MB - supports full-frame camera exports)
+    if (file.size > 50 * 1024 * 1024) {
+      return { error: 'File too large. Maximum 50MB.' }
     }
 
     // Generate unique filename

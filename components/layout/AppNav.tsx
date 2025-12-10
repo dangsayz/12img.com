@@ -73,7 +73,7 @@ export function AppNav({
         <div className="max-w-screen-xl mx-auto flex items-center justify-between">
           
           {/* Left: Logo + Nav Links */}
-          <div className="flex items-center gap-1 bg-white/95 backdrop-blur-xl border border-stone-200/60 rounded-full px-2 py-1.5 shadow-sm shadow-stone-900/5 pointer-events-auto">
+          <div className="flex items-center gap-1 bg-white/95 backdrop-blur-xl rounded-full px-2 py-1.5 pointer-events-auto">
             {/* Logo */}
             <Link href="/" className="flex items-center gap-1.5 px-2 py-1">
               <div className="w-7 h-7 rounded-full bg-stone-900 flex items-center justify-center">
@@ -118,7 +118,7 @@ export function AppNav({
           </div>
           
           {/* Right: Actions */}
-          <div className="flex items-center gap-2 bg-white/95 backdrop-blur-xl border border-stone-200/60 rounded-full px-2 py-1.5 shadow-sm shadow-stone-900/5 pointer-events-auto">
+          <div className="flex items-center gap-2 bg-white/95 backdrop-blur-xl rounded-full px-2 py-1.5 pointer-events-auto">
             
             {/* Plan Badge + Storage Indicator - Desktop */}
             <div className="hidden lg:flex items-center gap-2 px-2 py-1">

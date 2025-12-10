@@ -16,7 +16,7 @@ import type { LegacyPlanId } from '@/lib/config/pricing'
 // ═══════════════════════════════════════════════════════════════
 
 function SectionWrapper({ children }: { children: React.ReactNode }) {
-  return <div className="p-6 lg:p-8">{children}</div>
+  return <div className="p-0 lg:p-8">{children}</div>
 }
 
 // ═══════════════════════════════════════════════════════════════

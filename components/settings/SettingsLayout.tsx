@@ -258,7 +258,7 @@ export function SettingsLayout({ sections }: SettingsLayoutProps) {
   return (
     <div className="min-h-screen bg-[#FAFAFA]">
       {/* Mobile Header */}
-      <div className="lg:hidden sticky top-16 z-30 bg-white/95 backdrop-blur-xl border-b border-stone-200/50">
+      <div className="lg:hidden sticky top-14 z-40 bg-white/98 backdrop-blur-xl border-b border-stone-200/50 shadow-sm">
         <div className="px-5 py-4">
           <h1 className="text-xl font-semibold text-stone-900 tracking-tight">Settings</h1>
         </div>
@@ -336,7 +336,7 @@ export function SettingsLayout({ sections }: SettingsLayoutProps) {
       </div>
 
       {/* Desktop Layout */}
-      <div className="max-w-6xl mx-auto px-6 pt-8 lg:pt-12 pb-24">
+      <div className="max-w-6xl mx-auto px-4 lg:px-6 pt-4 lg:pt-12 pb-24">
         <div className="lg:grid lg:grid-cols-[280px_1fr] lg:gap-12">
           
           {/* Desktop Sidebar */}
@@ -459,7 +459,7 @@ export function SettingsLayout({ sections }: SettingsLayoutProps) {
                   onDragEnd={handleDragEnd}
                   className="touch-pan-y"
                 >
-                  <div className="bg-white rounded-2xl border border-stone-200/50 shadow-sm overflow-hidden lg:rounded-2xl rounded-xl">
+                  <div className="lg:bg-white lg:rounded-2xl lg:border lg:border-stone-200/50 lg:shadow-sm overflow-hidden">
                     {currentContent}
                   </div>
                   
