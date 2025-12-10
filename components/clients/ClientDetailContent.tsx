@@ -38,6 +38,7 @@ import { type ClientProfile, type ContractWithDetails, type Milestone, type Deli
 import { type Message } from '@/server/actions/message.actions'
 import { generatePortalToken, type PortalToken } from '@/server/actions/portal.actions'
 import { archiveClientProfile, updateClientProfile } from '@/server/actions/client.actions'
+import { deleteContract } from '@/server/actions/contract.actions'
 import { getClientWorkflows } from '@/server/actions/workflow.actions'
 import { type ScheduledWorkflow } from '@/lib/workflows/types'
 import { parseLocalDate } from '@/lib/contracts/merge-fields'
@@ -231,6 +232,152 @@ function FormattedNotes({ notes }: { notes: string }) {
   )
 }
 
+// Contract row with delete functionality
+function ContractRow({ 
+  contract, 
+  onDelete 
+}: { 
+  contract: ContractWithDetails
+  onDelete: () => void 
+}) {
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
+  const canDelete = contract.status !== 'signed' && contract.status !== 'archived'
+
+  const handleDelete = async () => {
+    setIsDeleting(true)
+    const result = await deleteContract(contract.id)
+    if (result.success) {
+      onDelete()
+    } else {
+      alert(result.error?.message || 'Failed to delete contract')
+    }
+    setIsDeleting(false)
+    setShowDeleteConfirm(false)
+  }
+
+  return (
+    <>
+      <div className="flex items-center justify-between p-5 hover:bg-stone-50/50 transition-colors group">
+        <div className="flex items-center gap-4">
+          <div className={`w-11 h-11 rounded-xl flex items-center justify-center ${
+            contract.status === 'signed' 
+              ? 'bg-emerald-50' 
+              : contract.status === 'sent' 
+                ? 'bg-blue-50' 
+                : 'bg-stone-100'
+          }`}>
+            <FileText className={`w-5 h-5 ${
+              contract.status === 'signed' 
+                ? 'text-emerald-600' 
+                : contract.status === 'sent' 
+                  ? 'text-blue-600' 
+                  : 'text-stone-500'
+            }`} />
+          </div>
+          <div>
+            <p className="font-medium text-stone-900">
+              Contract #{contract.id.slice(0, 8).toUpperCase()}
+            </p>
+            <p className="text-sm text-stone-500 mt-0.5">
+              Created{' '}
+              {new Date(contract.createdAt).toLocaleDateString('en-US', {
+                month: 'short',
+                day: 'numeric',
+                year: 'numeric',
+              })}
+              {contract.signedAt && (
+                <span className="text-emerald-600 ml-2 font-medium">
+                  • Signed {new Date(contract.signedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                </span>
+              )}
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <div
+            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium ${
+              CONTRACT_STATUS_CONFIG[contract.status].bgColor
+            } ${CONTRACT_STATUS_CONFIG[contract.status].color}`}
+          >
+            {CONTRACT_STATUS_CONFIG[contract.status].label}
+          </div>
+          <Link
+            href={`/dashboard/contracts/${contract.id}`}
+            className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-stone-600 hover:text-stone-900 bg-white border border-stone-200 hover:border-stone-300 rounded-xl transition-all shadow-sm opacity-0 group-hover:opacity-100"
+          >
+            {contract.status === 'draft' ? 'Edit' : 'View'}
+            <ExternalLink className="w-3.5 h-3.5" />
+          </Link>
+          {canDelete && (
+            <button
+              onClick={() => setShowDeleteConfirm(true)}
+              className="p-2 text-stone-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all opacity-0 group-hover:opacity-100"
+              title="Delete contract"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Delete Confirmation Modal */}
+      <AnimatePresence>
+        {showDeleteConfirm && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+            onClick={() => setShowDeleteConfirm(false)}
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              onClick={(e) => e.stopPropagation()}
+              className="bg-white w-full max-w-sm p-6 shadow-2xl rounded-2xl"
+            >
+              <div className="w-12 h-12 bg-red-50 rounded-xl flex items-center justify-center mx-auto mb-4">
+                <Trash2 className="w-6 h-6 text-red-500" />
+              </div>
+              <h3 className="text-lg font-medium text-stone-900 text-center mb-2">
+                Delete Contract?
+              </h3>
+              <p className="text-sm text-stone-500 text-center mb-6">
+                Contract #{contract.id.slice(0, 8).toUpperCase()} will be permanently deleted. This action cannot be undone.
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowDeleteConfirm(false)}
+                  disabled={isDeleting}
+                  className="flex-1 px-4 py-2.5 text-sm font-medium text-stone-700 bg-stone-100 hover:bg-stone-200 rounded-xl transition-colors disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleDelete}
+                  disabled={isDeleting}
+                  className="flex-1 px-4 py-2.5 text-sm font-medium text-white bg-red-500 hover:bg-red-600 rounded-xl transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  {isDeleting ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Deleting...
+                    </>
+                  ) : (
+                    'Delete'
+                  )}
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </>
+  )
+}
+
 interface ClientDetailContentProps {
   client: ClientProfile
   contracts: ContractWithDetails[]
@@ -260,6 +407,8 @@ export function ClientDetailContent({
   const [showEditModal, setShowEditModal] = useState(false)
   const [showArchiveConfirm, setShowArchiveConfirm] = useState(false)
   const [showCreateContractModal, setShowCreateContractModal] = useState(false)
+  const [showDeleteContractConfirm, setShowDeleteContractConfirm] = useState(false)
+  const [isDeletingContract, setIsDeletingContract] = useState(false)
   const overviewRef = useRef<HTMLDivElement>(null)
 
   const activeToken = portalTokens.find(t => !t.isRevoked && new Date(t.expiresAt) > new Date())
@@ -297,6 +446,20 @@ export function ClientDetailContent({
     } finally {
       setIsLoadingWorkflows(false)
     }
+  }
+
+  // Handle deleting the latest contract
+  const handleDeleteContract = async () => {
+    if (!latestContract) return
+    setIsDeletingContract(true)
+    const result = await deleteContract(latestContract.id)
+    if (result.success) {
+      router.refresh()
+    } else {
+      alert(result.error?.message || 'Failed to delete contract')
+    }
+    setIsDeletingContract(false)
+    setShowDeleteContractConfirm(false)
   }
 
   // Load workflows on tab switch
@@ -486,6 +649,18 @@ export function ClientDetailContent({
                           <Edit className="w-4 h-4 text-stone-400" />
                           Edit Client
                         </button>
+                        {latestContract && latestContract.status !== 'signed' && (
+                          <button
+                            onClick={() => {
+                              setShowDropdown(false)
+                              setShowDeleteContractConfirm(true)
+                            }}
+                            className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-stone-700 hover:bg-stone-50 transition-colors"
+                          >
+                            <Trash2 className="w-4 h-4 text-stone-400" />
+                            Remove Contract
+                          </button>
+                        )}
                         <div className="my-1 border-t border-stone-100" />
                         <button
                           onClick={() => {
@@ -856,63 +1031,12 @@ export function ClientDetailContent({
             </div>
           ) : (
             <div className="divide-y divide-stone-100">
-              {contracts.map((contract, index) => (
-                <div
-                  key={contract.id}
-                  className="flex items-center justify-between p-5 hover:bg-stone-50/50 transition-colors group"
-                >
-                  <div className="flex items-center gap-4">
-                    <div className={`w-11 h-11 rounded-xl flex items-center justify-center ${
-                      contract.status === 'signed' 
-                        ? 'bg-emerald-50' 
-                        : contract.status === 'sent' 
-                          ? 'bg-blue-50' 
-                          : 'bg-stone-100'
-                    }`}>
-                      <FileText className={`w-5 h-5 ${
-                        contract.status === 'signed' 
-                          ? 'text-emerald-600' 
-                          : contract.status === 'sent' 
-                            ? 'text-blue-600' 
-                            : 'text-stone-500'
-                      }`} />
-                    </div>
-                    <div>
-                      <p className="font-medium text-stone-900">
-                        Contract #{contract.id.slice(0, 8).toUpperCase()}
-                      </p>
-                      <p className="text-sm text-stone-500 mt-0.5">
-                        Created{' '}
-                        {new Date(contract.createdAt).toLocaleDateString('en-US', {
-                          month: 'short',
-                          day: 'numeric',
-                          year: 'numeric',
-                        })}
-                        {contract.signedAt && (
-                          <span className="text-emerald-600 ml-2 font-medium">
-                            • Signed {new Date(contract.signedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                          </span>
-                        )}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <div
-                      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium ${
-                        CONTRACT_STATUS_CONFIG[contract.status].bgColor
-                      } ${CONTRACT_STATUS_CONFIG[contract.status].color}`}
-                    >
-                      {CONTRACT_STATUS_CONFIG[contract.status].label}
-                    </div>
-                    <Link
-                      href={`/dashboard/contracts/${contract.id}`}
-                      className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-stone-600 hover:text-stone-900 bg-white border border-stone-200 hover:border-stone-300 rounded-xl transition-all shadow-sm opacity-0 group-hover:opacity-100"
-                    >
-                      {contract.status === 'draft' ? 'Edit' : 'View'}
-                      <ExternalLink className="w-3.5 h-3.5" />
-                    </Link>
-                  </div>
-                </div>
+              {contracts.map((contract) => (
+                <ContractRow 
+                  key={contract.id} 
+                  contract={contract} 
+                  onDelete={() => router.refresh()}
+                />
               ))}
             </div>
           )}
@@ -991,6 +1115,60 @@ export function ClientDetailContent({
         onClose={() => setShowCreateContractModal(false)}
         client={client}
       />
+
+      {/* Delete Contract Confirmation Modal */}
+      <AnimatePresence>
+        {showDeleteContractConfirm && latestContract && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+            onClick={() => setShowDeleteContractConfirm(false)}
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              onClick={(e) => e.stopPropagation()}
+              className="bg-white w-full max-w-sm p-6 shadow-2xl rounded-2xl"
+            >
+              <div className="w-12 h-12 bg-red-50 rounded-xl flex items-center justify-center mx-auto mb-4">
+                <Trash2 className="w-6 h-6 text-red-500" />
+              </div>
+              <h3 className="text-lg font-medium text-stone-900 text-center mb-2">
+                Remove Contract?
+              </h3>
+              <p className="text-sm text-stone-500 text-center mb-6">
+                Contract #{latestContract.id.slice(0, 8).toUpperCase()} will be permanently deleted. This will free up your contract quota for this month.
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowDeleteContractConfirm(false)}
+                  disabled={isDeletingContract}
+                  className="flex-1 px-4 py-2.5 text-sm font-medium text-stone-700 bg-stone-100 hover:bg-stone-200 rounded-xl transition-colors disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleDeleteContract}
+                  disabled={isDeletingContract}
+                  className="flex-1 px-4 py-2.5 text-sm font-medium text-white bg-red-500 hover:bg-red-600 rounded-xl transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  {isDeletingContract ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Removing...
+                    </>
+                  ) : (
+                    'Remove'
+                  )}
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Archive Confirmation Modal */}
       <AnimatePresence>

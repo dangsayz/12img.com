@@ -1111,9 +1111,9 @@ export async function deleteContract(
       return { success: false, error: userError('NOT_FOUND', 'Contract not found') }
     }
 
-    // Only allow deleting draft contracts
-    if (contract.status !== 'draft') {
-      return { success: false, error: userError('INVALID_STATE', 'Only draft contracts can be deleted. Sent or signed contracts must be archived.') }
+    // Only allow deleting non-signed contracts (drafts, sent, viewed can be deleted)
+    if (contract.status === 'signed' || contract.status === 'archived') {
+      return { success: false, error: userError('INVALID_STATE', 'Signed or archived contracts cannot be deleted.') }
     }
 
     // Delete the contract

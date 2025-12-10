@@ -17,12 +17,16 @@ import {
   ArrowLeft,
   ArrowRight,
   X,
+  Trash2,
+  Loader2,
 } from 'lucide-react'
 import { type ClientWithStats, CONTRACT_STATUS_CONFIG, EVENT_TYPE_LABELS } from '@/lib/contracts/types'
 import { parseLocalDate } from '@/lib/contracts/merge-fields'
 import { CreateClientModal } from './CreateClientModal'
 import { OnboardingHint } from '@/components/onboarding'
 import { checkContractLimits, type ContractLimitStatus } from '@/server/actions/contract.actions'
+import { archiveClientProfile } from '@/server/actions/client.actions'
+import { useRouter } from 'next/navigation'
 
 interface ClientsPageContentProps {
   clients: ClientWithStats[]
@@ -325,6 +329,10 @@ export function ClientsPageContent({ clients }: ClientsPageContentProps) {
 }
 
 function ClientRow({ client }: { client: ClientWithStats }) {
+  const router = useRouter()
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
+  
   const eventDate = parseLocalDate(client.eventDate)
   const isUpcoming = eventDate && eventDate >= new Date()
   const daysUntil = eventDate
@@ -335,92 +343,175 @@ function ClientRow({ client }: { client: ClientWithStats }) {
     ? CONTRACT_STATUS_CONFIG[client.contractStatus]
     : null
 
+  const handleDelete = async (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setShowDeleteConfirm(true)
+  }
+
+  const confirmDelete = async () => {
+    setIsDeleting(true)
+    const result = await archiveClientProfile(client.id)
+    if (result.success) {
+      router.refresh()
+    } else {
+      alert(result.error?.message || 'Failed to delete client')
+    }
+    setIsDeleting(false)
+    setShowDeleteConfirm(false)
+  }
+
   return (
-    <motion.div
-      layout
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -10 }}
-    >
-      <Link
-        href={`/dashboard/clients/${client.id}`}
-        className="flex items-center gap-3 sm:gap-4 p-4 hover:bg-stone-50 transition-colors group active:bg-stone-100"
+    <>
+      <motion.div
+        layout
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -10 }}
       >
-        {/* Avatar */}
-        <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-stone-100 flex items-center justify-center flex-shrink-0">
-          <span className="text-base sm:text-lg font-medium text-stone-600">
-            {client.firstName[0]}
-            {client.lastName[0]}
-          </span>
-        </div>
-
-        {/* Info - Mobile optimized */}
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2">
-            <h3 className="font-medium text-stone-900 truncate text-[15px] sm:text-base">
-              {client.firstName}
-              {client.partnerFirstName && (
-                <span className="text-stone-400 font-normal"> & {client.partnerFirstName}</span>
-              )}
-            </h3>
-            {client.unreadMessages > 0 && (
-              <span className="w-5 h-5 text-[11px] font-semibold bg-blue-500 text-white rounded-full flex items-center justify-center flex-shrink-0">
-                {client.unreadMessages}
-              </span>
-            )}
+        <Link
+          href={`/dashboard/clients/${client.id}`}
+          className="flex items-center gap-3 sm:gap-4 p-4 hover:bg-stone-50 transition-colors group active:bg-stone-100"
+        >
+          {/* Avatar */}
+          <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-stone-100 flex items-center justify-center flex-shrink-0">
+            <span className="text-base sm:text-lg font-medium text-stone-600">
+              {client.firstName[0]}
+              {client.lastName[0]}
+            </span>
           </div>
-          {/* Mobile: single line with email only, truncated */}
-          <p className="text-sm text-stone-500 truncate mt-0.5 flex items-center gap-1.5">
-            <Mail className="w-3.5 h-3.5 flex-shrink-0 text-stone-400" />
-            <span className="truncate">{client.email}</span>
-          </p>
-        </div>
 
-        {/* Right side - Phone on mobile, more info on desktop */}
-        <div className="flex items-center gap-3 flex-shrink-0">
-          {/* Phone - compact on mobile */}
-          {client.phone && (
-            <div className="text-right hidden xs:block sm:hidden">
-              <p className="text-xs text-stone-400 tabular-nums">{client.phone}</p>
-            </div>
-          )}
-          
-          {/* Desktop: Event Info + Phone */}
-          <div className="hidden sm:block text-right min-w-[100px]">
-            <p className="text-sm font-medium text-stone-700">
-              {EVENT_TYPE_LABELS[client.eventType]}
-            </p>
-            {eventDate && (
-              <p className="text-xs text-stone-500">
-                {eventDate.toLocaleDateString('en-US', {
-                  month: 'short',
-                  day: 'numeric',
-                })}
-                {isUpcoming && daysUntil !== null && daysUntil <= 30 && (
-                  <span className="ml-1 text-amber-600">({daysUntil}d)</span>
+          {/* Info - Mobile optimized */}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2">
+              <h3 className="font-medium text-stone-900 truncate text-[15px] sm:text-base">
+                {client.firstName}
+                {client.partnerFirstName && (
+                  <span className="text-stone-400 font-normal"> & {client.partnerFirstName}</span>
                 )}
+              </h3>
+              {client.unreadMessages > 0 && (
+                <span className="w-5 h-5 text-[11px] font-semibold bg-blue-500 text-white rounded-full flex items-center justify-center flex-shrink-0">
+                  {client.unreadMessages}
+                </span>
+              )}
+            </div>
+            {/* Mobile: single line with email only, truncated */}
+            <p className="text-sm text-stone-500 truncate mt-0.5 flex items-center gap-1.5">
+              <Mail className="w-3.5 h-3.5 flex-shrink-0 text-stone-400" />
+              <span className="truncate">{client.email}</span>
+            </p>
+          </div>
+
+          {/* Right side - Phone on mobile, more info on desktop */}
+          <div className="flex items-center gap-3 flex-shrink-0">
+            {/* Phone - compact on mobile */}
+            {client.phone && (
+              <div className="text-right hidden xs:block sm:hidden">
+                <p className="text-xs text-stone-400 tabular-nums">{client.phone}</p>
+              </div>
+            )}
+            
+            {/* Desktop: Event Info + Phone */}
+            <div className="hidden sm:block text-right min-w-[100px]">
+              <p className="text-sm font-medium text-stone-700">
+                {EVENT_TYPE_LABELS[client.eventType]}
               </p>
-            )}
-          </div>
+              {eventDate && (
+                <p className="text-xs text-stone-500">
+                  {eventDate.toLocaleDateString('en-US', {
+                    month: 'short',
+                    day: 'numeric',
+                  })}
+                  {isUpcoming && daysUntil !== null && daysUntil <= 30 && (
+                    <span className="ml-1 text-amber-600">({daysUntil}d)</span>
+                  )}
+                </p>
+              )}
+            </div>
 
-          {/* Contract Status - Desktop only */}
-          <div className="hidden md:block min-w-[90px]">
-            {statusConfig ? (
-              <span
-                className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${statusConfig.bgColor} ${statusConfig.color}`}
-              >
-                <FileText className="w-3 h-3" />
-                {statusConfig.label}
-              </span>
-            ) : (
-              <span className="text-xs text-stone-400">No contract</span>
-            )}
-          </div>
+            {/* Contract Status - Desktop only */}
+            <div className="hidden md:block min-w-[90px]">
+              {statusConfig ? (
+                <span
+                  className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${statusConfig.bgColor} ${statusConfig.color}`}
+                >
+                  <FileText className="w-3 h-3" />
+                  {statusConfig.label}
+                </span>
+              ) : (
+                <span className="text-xs text-stone-400">No contract</span>
+              )}
+            </div>
 
-          {/* Arrow */}
-          <ChevronRight className="w-5 h-5 text-stone-300 group-hover:text-stone-500 transition-colors flex-shrink-0" />
-        </div>
-      </Link>
-    </motion.div>
+            {/* Delete Button - appears on hover */}
+            <button
+              onClick={handleDelete}
+              className="p-2 text-stone-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all opacity-0 group-hover:opacity-100"
+              title="Remove client"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+
+            {/* Arrow */}
+            <ChevronRight className="w-5 h-5 text-stone-300 group-hover:text-stone-500 transition-colors flex-shrink-0" />
+          </div>
+        </Link>
+      </motion.div>
+
+      {/* Delete Confirmation Modal */}
+      <AnimatePresence>
+        {showDeleteConfirm && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+            onClick={() => setShowDeleteConfirm(false)}
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              onClick={(e) => e.stopPropagation()}
+              className="bg-white w-full max-w-sm p-6 shadow-2xl rounded-2xl"
+            >
+              <div className="w-12 h-12 bg-red-50 rounded-xl flex items-center justify-center mx-auto mb-4">
+                <Trash2 className="w-6 h-6 text-red-500" />
+              </div>
+              <h3 className="text-lg font-medium text-stone-900 text-center mb-2">
+                Remove Client?
+              </h3>
+              <p className="text-sm text-stone-500 text-center mb-6">
+                <span className="font-medium text-stone-700">{client.firstName} {client.lastName}</span> and all associated contracts will be archived. This action can be undone from settings.
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowDeleteConfirm(false)}
+                  disabled={isDeleting}
+                  className="flex-1 px-4 py-2.5 text-sm font-medium text-stone-700 bg-stone-100 hover:bg-stone-200 rounded-xl transition-colors disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={confirmDelete}
+                  disabled={isDeleting}
+                  className="flex-1 px-4 py-2.5 text-sm font-medium text-white bg-red-500 hover:bg-red-600 rounded-xl transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  {isDeleting ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Removing...
+                    </>
+                  ) : (
+                    'Remove'
+                  )}
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </>
   )
 }
