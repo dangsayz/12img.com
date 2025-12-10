@@ -797,10 +797,20 @@ export function ContractEditor({ contract, clientName, clientId }: ContractEdito
               </Link>
               
               <div className="min-w-0">
-                <h1 className="text-base font-semibold text-stone-900 truncate">
-                  Contract
-                </h1>
+                {/* Breadcrumb */}
+                <div className="flex items-center gap-1.5 text-xs text-stone-400 mb-0.5">
+                  <Link href="/dashboard" className="hover:text-stone-600 transition-colors">
+                    Dashboard
+                  </Link>
+                  <span>/</span>
+                  <Link href={`/dashboard/clients/${clientId}`} className="hover:text-stone-600 transition-colors truncate max-w-[120px]">
+                    {clientName}
+                  </Link>
+                </div>
                 <div className="flex items-center gap-2">
+                  <h1 className="text-base font-semibold text-stone-900 truncate">
+                    Contract
+                  </h1>
                   <span
                     className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium ${statusConfig.bgColor} ${statusConfig.color}`}
                   >
@@ -1008,17 +1018,17 @@ export function ContractEditor({ contract, clientName, clientId }: ContractEdito
               onClick={e => e.stopPropagation()}
             >
               {/* Success Header */}
-              <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 px-6 py-8 text-center">
+              <div className="bg-gradient-to-br from-stone-900 to-stone-800 px-6 py-8 text-center">
                 <motion.div
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
                   transition={{ delay: 0.1, type: 'spring', damping: 15 }}
                   className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg"
                 >
-                  <CheckCircle2 className="w-8 h-8 text-emerald-500" />
+                  <CheckCircle2 className="w-8 h-8 text-stone-900" />
                 </motion.div>
                 <h2 className="text-xl font-semibold text-white mb-1">Contract Sent!</h2>
-                <p className="text-emerald-100 text-sm">Your client has been notified</p>
+                <p className="text-stone-300 text-sm">Your client has been notified</p>
               </div>
 
               {/* Details */}
