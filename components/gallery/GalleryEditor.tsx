@@ -5,7 +5,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
-import { updateGalleryTemplate, updateGallery, toggleGalleryVisibility, toggleGalleryDownloads, updateGalleryPassword, setCoverImage } from '@/server/actions/gallery.actions'
+import { updateGalleryTemplate, updateGallery, toggleGalleryVisibility, toggleGalleryDownloads, updateGalleryPassword, setCoverImage, deleteGallery } from '@/server/actions/gallery.actions'
 import { 
   ArrowLeft,
   ArrowDownToLine,
@@ -96,6 +96,21 @@ function MasonryImageItem({
   const [currentUrl, setCurrentUrl] = useState(image.thumbnailUrl || image.previewUrl || image.originalUrl)
   const [isHovered, setIsHovered] = useState(false)
   
+  // Auto-fetch URL if missing
+  useEffect(() => {
+    if (!currentUrl && image.storagePath && !isRetrying) {
+      setIsRetrying(true)
+      import('@/server/actions/image.actions').then(({ getThumbnailUrl }) => {
+        getThumbnailUrl(image.storagePath!).then(result => {
+          if (result.url) {
+            setCurrentUrl(result.url)
+          }
+          setIsRetrying(false)
+        }).catch(() => setIsRetrying(false))
+      })
+    }
+  }, [currentUrl, image.storagePath, isRetrying])
+  
   const imgSrc = currentUrl
   
   // Focal point for object-position (default to center)
@@ -169,10 +184,10 @@ function MasonryImageItem({
             className={`object-cover ${hasError ? 'opacity-0' : ''}`}
             style={{ objectPosition: `${focalX}% ${focalY}%` }}
             sizes={isHero ? "(max-width: 768px) 100vw, 50vw" : "(max-width: 768px) 50vw, 25vw"}
-            quality={100}
             loading={index < 6 ? "eager" : "lazy"}
             onLoad={handleImageLoad}
             onError={handleImageError}
+            unoptimized
           />
           {/* Error state overlay */}
           {hasError && (
@@ -367,6 +382,8 @@ export function GalleryEditor({
   
   const [copied, setCopied] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
   const [showTemplates, setShowTemplates] = useState(false)
   const [currentTemplate, setCurrentTemplate] = useState<GalleryTemplate>(
     (gallery.template as GalleryTemplate) || DEFAULT_TEMPLATE
@@ -509,6 +526,25 @@ export function GalleryEditor({
       console.error('Failed to remove password:', error)
     } finally {
       setIsSavingPassword(false)
+    }
+  }
+
+  // Handle gallery deletion
+  const handleDeleteGallery = async () => {
+    setIsDeleting(true)
+    try {
+      const result = await deleteGallery(gallery.id)
+      if (result.error) {
+        console.error('Failed to delete gallery:', result.error)
+        alert('Failed to delete album. Please try again.')
+      } else {
+        router.push('/')
+      }
+    } catch (error) {
+      console.error('Failed to delete gallery:', error)
+      alert('Failed to delete album. Please try again.')
+    } finally {
+      setIsDeleting(false)
     }
   }
 
@@ -720,11 +756,11 @@ export function GalleryEditor({
                   Presentation
                 </button>
                 <button
-                  onClick={() => setShowSettings(!showSettings)}
-                  className="flex items-center gap-2 px-4 py-2 text-sm text-stone-600 hover:text-stone-900 transition-colors"
+                  onClick={() => setShowDeleteConfirm(true)}
+                  className="flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:text-red-700 hover:bg-red-50 transition-colors"
                 >
-                  <Settings className="w-4 h-4" />
-                  Settings
+                  <Trash2 className="w-4 h-4" />
+                  Remove Album
                 </button>
               </div>
             </div>
@@ -1454,6 +1490,52 @@ export function GalleryEditor({
             onClose={() => setShowPresentationSettings(false)}
             isModal
           />
+        )}
+      </AnimatePresence>
+
+      {/* Delete Confirmation Modal */}
+      <AnimatePresence>
+        {showDeleteConfirm && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+            onClick={() => setShowDeleteConfirm(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+              className="bg-white rounded-xl p-6 max-w-md w-full shadow-2xl"
+            >
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
+                  <Trash2 className="w-5 h-5 text-red-600" />
+                </div>
+                <h3 className="text-lg font-semibold text-stone-900">Remove Album</h3>
+              </div>
+              <p className="text-stone-600 mb-6">
+                Are you sure you want to remove <strong>{currentTitle}</strong>? This action cannot be undone and all images will be permanently deleted.
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowDeleteConfirm(false)}
+                  className="flex-1 px-4 py-2 text-sm font-medium text-stone-700 bg-stone-100 hover:bg-stone-200 rounded-lg transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleDeleteGallery}
+                  disabled={isDeleting}
+                  className="flex-1 px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors disabled:opacity-50"
+                >
+                  {isDeleting ? 'Removing...' : 'Yes, Remove Album'}
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
         )}
       </AnimatePresence>
 

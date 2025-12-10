@@ -143,7 +143,32 @@ export function PresentationSettings({
   ]
 
   const content = (
-    <div className="space-y-1">
+    <div className="space-y-4">
+      {/* Quick Start Guide */}
+      <div className="bg-gradient-to-r from-stone-50 to-stone-100/50 border border-stone-200 rounded-lg p-4 mb-2">
+        <div className="flex gap-3">
+          <div className="w-8 h-8 rounded-full bg-stone-900 flex items-center justify-center flex-shrink-0">
+            <Info className="w-4 h-4 text-white" />
+          </div>
+          <div>
+            <h4 className="text-sm font-semibold text-stone-900 mb-1">Customize Your Client Gallery</h4>
+            <p className="text-xs text-stone-600 leading-relaxed">
+              Add details to create a beautiful, personalized presentation for your clients. 
+              Only fill in what you need — everything is optional!
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Progress Indicator */}
+      <div className="flex items-center gap-2 text-xs text-stone-400 pb-2">
+        <span className="flex items-center gap-1">
+          <Check className="w-3 h-3" />
+          All fields optional
+        </span>
+        <span className="text-stone-300">•</span>
+        <span>Changes save when you click "Save & Preview"</span>
+      </div>
       {/* Story Details Section */}
       <CollapsibleSection
         id="story"
@@ -151,13 +176,15 @@ export function PresentationSettings({
         icon={Heart}
         isOpen={activeSection === 'story'}
         onToggle={() => setActiveSection(activeSection === 'story' ? null : 'story')}
+        hint="Names, date, and event type"
       >
         <div className="space-y-6">
           {/* Event Type */}
           <div>
-            <label className="block text-xs uppercase tracking-wider text-stone-400 mb-2">
+            <label className="block text-xs uppercase tracking-wider text-stone-500 mb-2 font-medium">
               Event Type
             </label>
+            <p className="text-xs text-stone-400 mb-3">What kind of session was this?</p>
             <div className="grid grid-cols-3 gap-2">
               {(Object.entries(EVENT_TYPE_LABELS) as [EventType, string][]).slice(0, 6).map(([value, label]) => (
                 <button
@@ -186,9 +213,15 @@ export function PresentationSettings({
           </div>
 
           {/* Names */}
+          <div>
+            <label className="block text-xs uppercase tracking-wider text-stone-500 mb-2 font-medium">
+              {eventType === 'wedding' || eventType === 'engagement' ? 'Couple Names' : eventType === 'family' ? 'Family Name' : 'Client Name'}
+            </label>
+            <p className="text-xs text-stone-400 mb-3">These names appear as the gallery title</p>
+          </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs uppercase tracking-wider text-stone-400 mb-2">
+              <label className="block text-xs text-stone-400 mb-1.5">
                 {eventType === 'portrait' || eventType === 'maternity' ? 'Name' : 'Partner 1'}
               </label>
               <input
@@ -196,12 +229,12 @@ export function PresentationSettings({
                 value={partner1}
                 onChange={(e) => setPartner1(e.target.value)}
                 placeholder="Lexie"
-                className="w-full px-4 py-3 border border-stone-200 focus:border-stone-400 focus:ring-0 text-stone-900 placeholder:text-stone-300"
+                className="w-full px-4 py-3 border border-stone-200 focus:border-stone-400 focus:ring-0 rounded-lg text-stone-900 placeholder:text-stone-300"
               />
             </div>
             {eventType !== 'portrait' && eventType !== 'maternity' && eventType !== 'newborn' && (
               <div>
-                <label className="block text-xs uppercase tracking-wider text-stone-400 mb-2">
+                <label className="block text-xs text-stone-400 mb-1.5">
                   Partner 2
                 </label>
                 <input
@@ -209,7 +242,7 @@ export function PresentationSettings({
                   value={partner2}
                   onChange={(e) => setPartner2(e.target.value)}
                   placeholder="Taylor"
-                  className="w-full px-4 py-3 border border-stone-200 focus:border-stone-400 focus:ring-0 text-stone-900 placeholder:text-stone-300"
+                  className="w-full px-4 py-3 border border-stone-200 focus:border-stone-400 focus:ring-0 rounded-lg text-stone-900 placeholder:text-stone-300"
                 />
               </div>
             )}
@@ -217,20 +250,21 @@ export function PresentationSettings({
 
           {/* Event Date */}
           <div>
-            <label className="block text-xs uppercase tracking-wider text-stone-400 mb-2">
+            <label className="block text-xs uppercase tracking-wider text-stone-500 mb-2 font-medium">
               Event Date
             </label>
+            <p className="text-xs text-stone-400 mb-3">When did this event take place?</p>
             <input
               type="date"
               value={eventDate}
               onChange={(e) => setEventDate(e.target.value)}
-              className="w-full px-4 py-3 border border-stone-200 focus:border-stone-400 focus:ring-0 text-stone-900"
+              className="w-full px-4 py-3 border border-stone-200 focus:border-stone-400 focus:ring-0 rounded-lg text-stone-900"
             />
           </div>
 
           {/* Subtitle */}
           <div>
-            <label className="block text-xs uppercase tracking-wider text-stone-400 mb-2">
+            <label className="block text-xs uppercase tracking-wider text-stone-500 mb-2 font-medium">
               Subtitle / Tagline
             </label>
             <input
@@ -238,9 +272,10 @@ export function PresentationSettings({
               value={subtitle}
               onChange={(e) => setSubtitle(e.target.value)}
               placeholder="A love story in the hills of Tuscany"
-              className="w-full px-4 py-3 border border-stone-200 focus:border-stone-400 focus:ring-0 text-stone-900 placeholder:text-stone-300"
+              className="w-full px-4 py-3 border border-stone-200 focus:border-stone-400 focus:ring-0 rounded-lg text-stone-900 placeholder:text-stone-300"
             />
-            <p className="mt-1 text-xs text-stone-400">
+            <p className="mt-2 text-xs text-stone-400 flex items-center gap-1">
+              <Info className="w-3 h-3" />
               Appears below the names on the hero section
             </p>
           </div>

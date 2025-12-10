@@ -11,9 +11,9 @@ export function UploadProgressBar({ progress, status }: UploadProgressBarProps) 
   const getColor = () => {
     switch (status) {
       case 'error': return 'bg-red-500'
-      case 'completed': return 'bg-emerald-500'
-      case 'compressing': return 'bg-amber-500'
-      default: return 'bg-indigo-600'
+      case 'completed': return 'bg-stone-900'
+      case 'compressing': return 'bg-stone-400'
+      default: return 'bg-stone-900'
     }
   }
 

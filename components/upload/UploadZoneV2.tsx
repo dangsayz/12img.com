@@ -95,6 +95,10 @@ export function UploadZoneV2({ galleryId, onUploadComplete }: UploadZoneProps) {
   const totalProgress = totalFiles > 0 ? Math.round((completedFiles / totalFiles) * 100) : 0
   const showLargeUploadOverlay = isUploading && totalFiles >= LARGE_UPLOAD_THRESHOLD && !overlayMinimized
   
+  // Auto-redirect countdown
+  const [showCompleteModal, setShowCompleteModal] = useState(false)
+  const [redirectCountdown, setRedirectCountdown] = useState(5)
+  
   // Bandwidth savings
   const bandwidthSaved = totalOriginalBytes - totalCompressedBytes
   const bandwidthSavedMB = (bandwidthSaved / (1024 * 1024)).toFixed(1)
@@ -118,6 +122,22 @@ export function UploadZoneV2({ galleryId, onUploadComplete }: UploadZoneProps) {
       processQueue()
     }
   }, [uploads])
+
+  // Countdown effect for auto-redirect after completion
+  useEffect(() => {
+    if (!showCompleteModal) return
+    
+    if (redirectCountdown <= 0) {
+      onUploadComplete()
+      return
+    }
+    
+    const timer = setTimeout(() => {
+      setRedirectCountdown(prev => prev - 1)
+    }, 1000)
+    
+    return () => clearTimeout(timer)
+  }, [showCompleteModal, redirectCountdown, onUploadComplete])
 
   // Global drag listeners
   useEffect(() => {
@@ -536,7 +556,9 @@ export function UploadZoneV2({ galleryId, onUploadComplete }: UploadZoneProps) {
       
       if (allSuccessful.length > 0) {
         router.refresh()
-        onUploadComplete()
+        // Show completion modal with countdown instead of immediate redirect
+        setShowCompleteModal(true)
+        setRedirectCountdown(5)
       }
 
     } catch (err) {
@@ -563,6 +585,51 @@ export function UploadZoneV2({ galleryId, onUploadComplete }: UploadZoneProps) {
         estimatedMinutes={estimatedMinutes}
         onMinimize={() => setOverlayMinimized(true)}
       />
+      
+      {/* Upload Complete Modal with Countdown */}
+      <AnimatePresence>
+        {showCompleteModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="bg-white rounded-2xl p-8 max-w-md w-full mx-4 text-center shadow-2xl"
+            >
+              <div className="w-16 h-16 rounded-full bg-stone-900 flex items-center justify-center mx-auto mb-6">
+                <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-medium text-stone-900 mb-2">
+                Upload Complete
+              </h3>
+              <p className="text-stone-500 mb-6">
+                {completedFiles} photo{completedFiles !== 1 ? 's' : ''} added to your album
+              </p>
+              <div className="space-y-3">
+                <button
+                  onClick={onUploadComplete}
+                  className="w-full py-3 bg-stone-900 text-white font-medium rounded-lg hover:bg-black transition-colors"
+                >
+                  View Album ({redirectCountdown}s)
+                </button>
+                <button
+                  onClick={() => setShowCompleteModal(false)}
+                  className="w-full py-3 text-stone-500 hover:text-stone-900 transition-colors text-sm"
+                >
+                  Add more photos
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
       
       {/* Rejected Files Banner */}
       <AnimatePresence>
@@ -615,7 +682,7 @@ export function UploadZoneV2({ galleryId, onUploadComplete }: UploadZoneProps) {
           onClick={() => setCompressionEnabled(!compressionEnabled)}
           className={`flex items-center gap-2 text-xs font-medium transition-colors ${
             compressionEnabled 
-              ? 'text-amber-600 hover:text-amber-700' 
+              ? 'text-stone-900 hover:text-black' 
               : 'text-stone-400 hover:text-stone-600'
           }`}
         >
@@ -634,7 +701,7 @@ export function UploadZoneV2({ galleryId, onUploadComplete }: UploadZoneProps) {
               initial={{ opacity: 0, x: 10 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0 }}
-              className="text-xs text-emerald-600 font-medium"
+              className="text-xs text-stone-600 font-medium"
             >
               {bandwidthSavedMB}MB saved ({compressionRatioAvg}x faster)
             </motion.span>
@@ -647,13 +714,13 @@ export function UploadZoneV2({ galleryId, onUploadComplete }: UploadZoneProps) {
         <div className="flex items-center gap-4 mb-4 text-xs text-stone-500">
           {compressingFiles > 0 && (
             <span className="flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
+              <span className="w-2 h-2 rounded-full bg-stone-400 animate-pulse" />
               Optimizing {compressingFiles}...
             </span>
           )}
           {uploadingFiles > 0 && (
             <span className="flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
+              <span className="w-2 h-2 rounded-full bg-stone-900 animate-pulse" />
               Uploading {uploadingFiles}...
             </span>
           )}
@@ -716,8 +783,8 @@ export function UploadZoneV2({ galleryId, onUploadComplete }: UploadZoneProps) {
               {completedFiles} of {uploads.length} uploaded
             </span>
             {isUploading ? (
-              <span className="text-sm text-gray-600 font-medium flex items-center gap-2">
-                <span className="h-2 w-2 rounded-full bg-indigo-500 animate-pulse" />
+              <span className="text-sm text-stone-600 font-medium flex items-center gap-2">
+                <span className="h-2 w-2 rounded-full bg-stone-900 animate-pulse" />
                 {compressingFiles > 0 ? 'Optimizing...' : 'Uploading...'}
               </span>
             ) : uploads.filter(u => u.status === 'pending').length > 0 ? (

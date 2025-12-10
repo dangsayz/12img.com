@@ -57,7 +57,7 @@ export function FileItem({ item, onRemove }: FileItemProps) {
               <motion.div 
                 initial={{ scale: 0 }} 
                 animate={{ scale: 1 }}
-                className="bg-emerald-500 rounded-full p-1 text-white"
+                className="bg-stone-900 rounded-full p-1 text-white"
               >
                 <CheckCircle2 className="w-3 h-3" />
               </motion.div>
@@ -93,8 +93,8 @@ export function FileItem({ item, onRemove }: FileItemProps) {
               <span>{formatBytes(item.file.size)}</span>
               <span className={`font-medium ${
                 item.status === 'error' ? 'text-red-600' :
-                item.status === 'completed' ? 'text-emerald-600' :
-                item.status === 'compressing' ? 'text-amber-600' :
+                item.status === 'completed' ? 'text-stone-900' :
+                item.status === 'compressing' ? 'text-stone-600' :
                 'text-stone-600'
               }`}>
                 {item.status === 'pending' && 'Ready'}
