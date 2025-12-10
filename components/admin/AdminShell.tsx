@@ -24,80 +24,73 @@ import {
   X,
   Trophy,
   Lightbulb,
-  Bell,
   Tag,
 } from 'lucide-react'
 import { RealtimeIndicator } from './RealtimeIndicator'
+import { NotificationDropdown } from './NotificationDropdown'
+
+interface Notification {
+  id: string
+  type: string
+  title: string
+  message: string | null
+  metadata: Record<string, unknown>
+  isRead: boolean
+  readAt: string | null
+  createdAt: string
+}
 
 interface AdminShellProps {
   children: React.ReactNode
   adminEmail: string
   adminRole: string
   unreadNotifications?: number
+  notifications?: Notification[]
 }
 
-const NAV_ITEMS = [
+// Grouped navigation structure
+const NAV_SECTIONS = [
   {
-    title: 'Overview',
-    href: '/admin',
-    icon: LayoutDashboard,
+    title: null, // No header for main section
+    items: [
+      { title: 'Overview', href: '/admin', icon: LayoutDashboard },
+    ],
   },
   {
-    title: 'Users',
-    href: '/admin/users',
-    icon: Users,
+    title: 'Platform',
+    items: [
+      { title: 'Users', href: '/admin/users', icon: Users },
+      { title: 'Galleries', href: '/admin/galleries', icon: Image },
+      { title: 'Storage', href: '/admin/storage', icon: HardDrive },
+    ],
   },
   {
-    title: 'Galleries',
-    href: '/admin/galleries',
-    icon: Image,
+    title: 'Revenue',
+    items: [
+      { title: 'Billing', href: '/admin/billing', icon: CreditCard },
+      { title: 'Promos', href: '/admin/promos', icon: Tag },
+    ],
   },
   {
-    title: 'Storage',
-    href: '/admin/storage',
-    icon: HardDrive,
+    title: 'Engagement',
+    items: [
+      { title: 'Emails', href: '/admin/emails', icon: Mail },
+      { title: 'Contests', href: '/admin/contests', icon: Trophy },
+      { title: 'Support', href: '/admin/support', icon: MessageCircle },
+      { title: 'Feature Requests', href: '/admin/feature-requests', icon: Lightbulb },
+    ],
   },
   {
-    title: 'Billing',
-    href: '/admin/billing',
-    icon: CreditCard,
-  },
-  {
-    title: 'Emails',
-    href: '/admin/emails',
-    icon: Mail,
-  },
-  {
-    title: 'Support',
-    href: '/admin/support',
-    icon: MessageCircle,
-  },
-  {
-    title: 'Contests',
-    href: '/admin/contests',
-    icon: Trophy,
-  },
-  {
-    title: 'Feature Requests',
-    href: '/admin/feature-requests',
-    icon: Lightbulb,
-  },
-  {
-    title: 'Promos',
-    href: '/admin/promos',
-    icon: Tag,
-  },
-  {
-    title: 'Feature Flags',
-    href: '/admin/flags',
-    icon: Flag,
-  },
-  {
-    title: 'Settings',
-    href: '/admin/settings',
-    icon: Settings,
+    title: 'System',
+    items: [
+      { title: 'Feature Flags', href: '/admin/flags', icon: Flag },
+      { title: 'Settings', href: '/admin/settings', icon: Settings },
+    ],
   },
 ]
+
+// Flat list for header breadcrumb
+const NAV_ITEMS = NAV_SECTIONS.flatMap(section => section.items)
 
 const ROLE_CONFIG = {
   super_admin: {
@@ -117,7 +110,7 @@ const ROLE_CONFIG = {
   },
 }
 
-export function AdminShell({ children, adminEmail, adminRole, unreadNotifications = 0 }: AdminShellProps) {
+export function AdminShell({ children, adminEmail, adminRole, unreadNotifications = 0, notifications = [] }: AdminShellProps) {
   const pathname = usePathname()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const roleConfig = ROLE_CONFIG[adminRole as keyof typeof ROLE_CONFIG] || ROLE_CONFIG.support
@@ -169,19 +162,11 @@ export function AdminShell({ children, adminEmail, adminRole, unreadNotification
           </div>
           
           <div className="flex items-center gap-2 md:gap-4">
-            {/* Notifications bell */}
-            <Link
-              href="/admin/users"
-              className="relative p-1.5 text-[#525252] hover:text-[#141414] border border-[#E5E5E5] hover:border-[#141414] transition-colors"
-              title="New signups"
-            >
-              <Bell className="w-4 h-4" />
-              {unreadNotifications > 0 && (
-                <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] flex items-center justify-center px-1 text-[10px] font-bold bg-red-500 text-white rounded-full">
-                  {unreadNotifications > 99 ? '99+' : unreadNotifications}
-                </span>
-              )}
-            </Link>
+            {/* Notifications dropdown */}
+            <NotificationDropdown 
+              notifications={notifications}
+              unreadCount={unreadNotifications}
+            />
 
             {/* Manual refresh */}
             <div className="hidden sm:block">
@@ -240,33 +225,49 @@ export function AdminShell({ children, adminEmail, adminRole, unreadNotification
               transition={{ type: 'spring', damping: 25, stiffness: 300 }}
               className="fixed top-14 left-0 bottom-0 w-64 bg-white border-r border-[#E5E5E5] z-50 lg:hidden overflow-y-auto"
             >
-              <nav className="p-4 space-y-1">
-                {NAV_ITEMS.map((item) => {
-                  const isActive = pathname === item.href || 
-                    (item.href !== '/admin' && pathname.startsWith(item.href))
-                  
-                  return (
-                    <Link
-                      key={item.href}
-                      href={item.href}
-                      onClick={handleNavClick}
-                      className={cn(
-                        "flex items-center gap-3 px-4 py-3 text-sm transition-colors rounded-lg",
-                        isActive 
-                          ? "bg-[#141414] text-white font-medium" 
-                          : "text-[#525252] hover:bg-[#F5F5F7] hover:text-[#141414]"
-                      )}
-                    >
-                      <item.icon className="w-5 h-5" />
-                      {item.title}
-                    </Link>
-                  )
-                })}
+              <nav className="py-3">
+                {NAV_SECTIONS.map((section, sectionIndex) => (
+                  <div key={sectionIndex} className={cn(sectionIndex > 0 && "mt-4")}>
+                    {/* Section header */}
+                    {section.title && (
+                      <div className="px-5 mb-1">
+                        <span className="text-[10px] font-semibold uppercase tracking-wider text-[#A3A3A3]">
+                          {section.title}
+                        </span>
+                      </div>
+                    )}
+                    
+                    {/* Section items */}
+                    <div className="space-y-0.5 px-3">
+                      {section.items.map((item) => {
+                        const isActive = pathname === item.href || 
+                          (item.href !== '/admin' && pathname.startsWith(item.href))
+                        
+                        return (
+                          <Link
+                            key={item.href}
+                            href={item.href}
+                            onClick={handleNavClick}
+                            className={cn(
+                              "flex items-center gap-3 px-3 py-2.5 text-sm rounded-md transition-all",
+                              isActive 
+                                ? "bg-[#141414] text-white font-medium" 
+                                : "text-[#525252] hover:bg-[#F5F5F7] hover:text-[#141414]"
+                            )}
+                          >
+                            <item.icon className={cn("w-4 h-4", isActive ? "text-white" : "text-[#A3A3A3]")} />
+                            {item.title}
+                          </Link>
+                        )
+                      })}
+                    </div>
+                  </div>
+                ))}
               </nav>
               
               {/* Admin info */}
-              <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-[#E5E5E5] bg-[#F5F5F7]">
-                <p className="text-xs text-[#525252] truncate">{adminEmail}</p>
+              <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-[#E5E5E5] bg-[#FAFAFA]">
+                <p className="text-xs text-[#737373] truncate">{adminEmail}</p>
               </div>
             </motion.aside>
           </>
@@ -275,33 +276,49 @@ export function AdminShell({ children, adminEmail, adminRole, unreadNotification
       
       <div className="flex">
         {/* Sidebar - Desktop only */}
-        <aside className="hidden lg:block sticky top-[72px] h-[calc(100vh-72px)] w-60 bg-white border-r border-[#E5E5E5] overflow-y-auto">
-          <nav className="p-4 space-y-1">
-            {NAV_ITEMS.map((item) => {
-              const isActive = pathname === item.href || 
-                (item.href !== '/admin' && pathname.startsWith(item.href))
-              
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={cn(
-                    "flex items-center gap-3 px-4 py-2.5 text-sm transition-colors",
-                    isActive 
-                      ? "bg-[#141414] text-white font-medium" 
-                      : "text-[#525252] hover:bg-[#F5F5F7] hover:text-[#141414]"
-                  )}
-                >
-                  <item.icon className="w-4 h-4" />
-                  {item.title}
-                </Link>
-              )
-            })}
+        <aside className="hidden lg:block sticky top-[72px] h-[calc(100vh-72px)] w-56 bg-white border-r border-[#E5E5E5] overflow-y-auto">
+          <nav className="py-3">
+            {NAV_SECTIONS.map((section, sectionIndex) => (
+              <div key={sectionIndex} className={cn(sectionIndex > 0 && "mt-4")}>
+                {/* Section header */}
+                {section.title && (
+                  <div className="px-4 mb-1">
+                    <span className="text-[10px] font-semibold uppercase tracking-wider text-[#A3A3A3]">
+                      {section.title}
+                    </span>
+                  </div>
+                )}
+                
+                {/* Section items */}
+                <div className="space-y-0.5 px-2">
+                  {section.items.map((item) => {
+                    const isActive = pathname === item.href || 
+                      (item.href !== '/admin' && pathname.startsWith(item.href))
+                    
+                    return (
+                      <Link
+                        key={item.href}
+                        href={item.href}
+                        className={cn(
+                          "flex items-center gap-2.5 px-3 py-2 text-[13px] rounded-md transition-all",
+                          isActive 
+                            ? "bg-[#141414] text-white font-medium shadow-sm" 
+                            : "text-[#525252] hover:bg-[#F5F5F7] hover:text-[#141414]"
+                        )}
+                      >
+                        <item.icon className={cn("w-4 h-4", isActive ? "text-white" : "text-[#A3A3A3]")} />
+                        {item.title}
+                      </Link>
+                    )
+                  })}
+                </div>
+              </div>
+            ))}
           </nav>
           
           {/* Admin info */}
-          <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-[#E5E5E5] bg-[#F5F5F7]">
-            <p className="text-xs text-[#525252] truncate">{adminEmail}</p>
+          <div className="absolute bottom-0 left-0 right-0 p-3 border-t border-[#E5E5E5] bg-[#FAFAFA]">
+            <p className="text-[11px] text-[#737373] truncate">{adminEmail}</p>
           </div>
         </aside>
         

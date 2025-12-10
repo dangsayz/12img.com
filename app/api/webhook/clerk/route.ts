@@ -2,6 +2,8 @@ import { Webhook } from 'svix'
 import { headers } from 'next/headers'
 import { WebhookEvent } from '@clerk/nextjs/server'
 import { createClient } from '@supabase/supabase-js'
+import { sendNewUserNotification } from '@/server/services/admin-email.service'
+import { createAdminNotification } from '@/server/admin/notifications'
 
 export const dynamic = 'force-dynamic'
 
@@ -74,6 +76,24 @@ export async function POST(req: Request) {
       default_password_enabled: false,
       default_download_enabled: true,
     })
+
+    // Send admin notification email
+    const userEmail = primaryEmail?.email_address || ''
+    const userName = [evt.data.first_name, evt.data.last_name].filter(Boolean).join(' ')
+    
+    await sendNewUserNotification({
+      email: userEmail,
+      name: userName || undefined,
+      createdAt: new Date().toISOString(),
+    })
+
+    // Create in-app notification
+    await createAdminNotification(
+      'new_user',
+      `New signup: ${userEmail}`,
+      userName ? `${userName} just signed up` : undefined,
+      { userId: user.id, email: userEmail }
+    )
   }
 
   if (eventType === 'user.updated') {

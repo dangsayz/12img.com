@@ -5,6 +5,7 @@ import { supabaseAdmin } from '@/lib/supabase/admin'
 import { clerkClient } from '@clerk/nextjs/server'
 import { createAdminNotification } from '@/server/admin/notifications'
 import { recordRedemption } from '@/server/actions/promo.actions'
+import { sendNewSubscriptionNotification, sendCancellationNotification } from '@/server/services/admin-email.service'
 import Stripe from 'stripe'
 
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET!
@@ -134,13 +135,30 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
     }
   }
 
+  // Get user email for notifications
+  const { data: userData } = await supabaseAdmin
+    .from('users')
+    .select('email, display_name')
+    .eq('id', dbUserId)
+    .single()
+
   // Create admin notification
   await createAdminNotification(
     'new_subscription',
-    'New Subscription',
-    `User subscribed to ${planId.charAt(0).toUpperCase() + planId.slice(1)} plan${promoCode ? ` (promo: ${promoCode})` : ''}`,
+    `New payment: ${userData?.email || 'Unknown'}`,
+    `Subscribed to ${planId.charAt(0).toUpperCase() + planId.slice(1)} plan${promoCode ? ` (promo: ${promoCode})` : ''}`,
     { user_id: dbUserId, plan: planId, customer_id: session.customer, promo_code: promoCode }
   )
+
+  // Send admin email notification
+  await sendNewSubscriptionNotification({
+    email: userData?.email || 'Unknown',
+    name: userData?.display_name || undefined,
+    plan: planId.charAt(0).toUpperCase() + planId.slice(1),
+    amount: session.amount_total || 0,
+    currency: session.currency || 'usd',
+    interval: (session.metadata?.billing_interval as 'month' | 'year') || 'month',
+  })
 }
 
 async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
@@ -220,13 +238,27 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
 
   console.log(`✅ Subscription canceled, user downgraded to free`)
 
+  // Get user details for notification
+  const { data: userData } = await supabaseAdmin
+    .from('users')
+    .select('email, display_name, plan')
+    .eq('stripe_customer_id', subscription.customer)
+    .single()
+
   // Create admin notification
   await createAdminNotification(
     'subscription_cancelled',
-    'Subscription Cancelled',
-    user?.clerk_id ? `User cancelled their subscription` : 'A subscription was cancelled',
-    { customer_id: subscription.customer }
+    `Cancellation: ${userData?.email || 'Unknown'}`,
+    `User cancelled their subscription`,
+    { customer_id: subscription.customer, email: userData?.email }
   )
+
+  // Send admin email notification
+  await sendCancellationNotification({
+    email: userData?.email || 'Unknown',
+    name: userData?.display_name || undefined,
+    plan: userData?.plan || 'Unknown',
+  })
 }
 
 async function handlePaymentFailed(invoice: Stripe.Invoice) {
