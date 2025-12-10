@@ -38,7 +38,7 @@
 
 'use client'
 
-import { useState, useCallback, useMemo } from 'react'
+import { useState, useCallback, useMemo, useRef, useEffect } from 'react'
 import Image from 'next/image'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Download, ChevronDown, Share2, Check, Loader2, Heart, X, ArrowLeft } from 'lucide-react'
@@ -81,18 +81,68 @@ function getAspectCategory(img: GalleryImage): 'portrait' | 'landscape' | 'squar
   return 'square'
 }
 
-// Mosaic layout generator - creates Pic-Time style varied grid
+// Mosaic layout generator - creates Tetris-style packed grid
+// Intelligently pairs tall portraits with stacked smaller images to eliminate gaps
 function generateMosaicLayout(images: GalleryImage[]): { type: string; images: GalleryImage[] }[] {
   if (images.length === 0) return []
   
   const rows: { type: string; images: GalleryImage[] }[] = []
   let i = 0
   
+  // Helper: look ahead to find best pairing for a portrait
+  const findStackableImages = (startIdx: number, excludeIdx: number): number[] => {
+    const candidates: number[] = []
+    for (let j = startIdx; j < Math.min(startIdx + 6, images.length); j++) {
+      if (j === excludeIdx) continue
+      const cat = getAspectCategory(images[j])
+      if (cat !== 'portrait') candidates.push(j)
+      if (candidates.length === 2) break
+    }
+    return candidates
+  }
+  
   while (i < images.length) {
     const remaining = images.length - i
     const rowIndex = rows.length
+    const currentAspect = getAspectCategory(images[i])
     
-    // Vary row patterns for visual interest
+    // TETRIS LOGIC: Prioritize pairing portraits with stacked non-portraits
+    if (remaining >= 3 && currentAspect === 'portrait') {
+      // Portrait first - find 2 non-portraits to stack next to it
+      const stackable = findStackableImages(i + 1, i)
+      if (stackable.length === 2) {
+        // Portrait left + 2 stacked right (tetris fit)
+        rows.push({ 
+          type: 'portrait-stack-right', 
+          images: [images[i], images[stackable[0]], images[stackable[1]]] 
+        })
+        // Mark used indices and advance
+        const usedSet = new Set([i, ...stackable])
+        i = Math.max(...stackable) + 1
+        // Skip any we already used that might be in between
+        continue
+      }
+    }
+    
+    // Check if next image is portrait and current is not - reverse tetris
+    if (remaining >= 3 && currentAspect !== 'portrait') {
+      const nextAspect = getAspectCategory(images[i + 1])
+      if (nextAspect === 'portrait') {
+        // Find another non-portrait to stack with current
+        const thirdAspect = i + 2 < images.length ? getAspectCategory(images[i + 2]) : 'portrait'
+        if (thirdAspect !== 'portrait') {
+          // 2 stacked left + portrait right (tetris fit)
+          rows.push({ 
+            type: 'portrait-stack-left', 
+            images: [images[i], images[i + 2], images[i + 1]] // stack images, then portrait
+          })
+          i += 3
+          continue
+        }
+      }
+    }
+    
+    // Standard patterns with variety
     if (remaining >= 3 && rowIndex % 4 === 0) {
       // Row type: 1 large left + 2 stacked right
       rows.push({ type: 'featured-left', images: images.slice(i, i + 3) })
@@ -106,7 +156,34 @@ function generateMosaicLayout(images: GalleryImage[]): { type: string; images: G
       rows.push({ type: 'quad', images: images.slice(i, i + 4) })
       i += 4
     } else if (remaining >= 2) {
-      // Row type: 2 images side by side
+      // Duo - but check for aspect mismatch that would create gaps
+      const aspect1 = getAspectCategory(images[i])
+      const aspect2 = getAspectCategory(images[i + 1])
+      
+      // If one is portrait and other isn't, try to find a better match
+      if ((aspect1 === 'portrait') !== (aspect2 === 'portrait') && remaining >= 3) {
+        // Look for a third image that matches better
+        const aspect3 = getAspectCategory(images[i + 2])
+        if (aspect1 === 'portrait' && aspect3 !== 'portrait') {
+          // Portrait + 2 non-portraits stacked
+          rows.push({ 
+            type: 'portrait-stack-right', 
+            images: [images[i], images[i + 1], images[i + 2]] 
+          })
+          i += 3
+          continue
+        } else if (aspect2 === 'portrait' && aspect3 !== 'portrait') {
+          // 2 non-portraits stacked + portrait
+          rows.push({ 
+            type: 'portrait-stack-left', 
+            images: [images[i], images[i + 2], images[i + 1]] 
+          })
+          i += 3
+          continue
+        }
+      }
+      
+      // Standard duo - same aspect types work well together
       rows.push({ type: 'duo', images: images.slice(i, i + 2) })
       i += 2
     } else {
@@ -249,19 +326,21 @@ function CleanGridCard({
       {!isLoaded && (
         <div className="absolute inset-0 bg-gradient-to-br from-stone-100 to-stone-200 animate-pulse" />
       )}
-      <Image
-        src={image.thumbnailUrl}
-        alt={getSeoAltText(galleryTitle || 'Photo Gallery', undefined, index + 1)}
-        fill
-        className={`object-cover transition-all duration-500 group-hover:scale-[1.02] ${
-          isLoaded ? 'opacity-100' : 'opacity-0'
-        }`}
-        style={{ objectPosition: `${image.focalX ?? 50}% ${image.focalY ?? 50}%` }}
-        sizes="(max-width: 768px) 50vw, 33vw"
-        onLoad={() => setIsLoaded(true)}
-        loading={index < 20 ? 'eager' : 'lazy'}
-        unoptimized
-      />
+      {image.thumbnailUrl && (
+        <Image
+          src={image.thumbnailUrl}
+          alt={getSeoAltText(galleryTitle || 'Photo Gallery', undefined, index + 1)}
+          fill
+          className={`object-cover transition-all duration-500 group-hover:scale-[1.02] ${
+            isLoaded ? 'opacity-100' : 'opacity-0'
+          }`}
+          style={{ objectPosition: `${image.focalX ?? 50}% ${image.focalY ?? 50}%` }}
+          sizes="(max-width: 768px) 50vw, 33vw"
+          onLoad={() => setIsLoaded(true)}
+          loading={index < 20 ? 'eager' : 'lazy'}
+          unoptimized
+        />
+      )}
       {/* Subtle hover */}
       <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-300" />
       {/* Action buttons on hover */}
@@ -353,7 +432,7 @@ function ImageCard({
 
 export function PublicGalleryView({
   title,
-  images,
+  images: initialImages,
   downloadEnabled = false,
   photographerName,
   eventDate,
@@ -366,8 +445,60 @@ export function PublicGalleryView({
   const [showCopied, setShowCopied] = useState(false)
   const [viewerOpen, setViewerOpen] = useState(false)
   const [viewerIndex, setViewerIndex] = useState(0)
+  
+  // Pagination state for large galleries (3-4K images)
+  const [images, setImages] = useState<GalleryImage[]>(initialImages)
+  const [isLoadingMore, setIsLoadingMore] = useState(false)
+  const [hasLoadedAll, setHasLoadedAll] = useState(initialImages.every(img => img.thumbnailUrl))
+  const loadMoreRef = useRef<HTMLDivElement>(null)
 
-  const mosaicRows = useMemo(() => generateMosaicLayout(images), [images])
+  // Single IntersectionObserver for pagination (not per-item)
+  useEffect(() => {
+    if (!galleryId || hasLoadedAll) return
+    
+    const observer = new IntersectionObserver(
+      async (entries) => {
+        if (entries[0].isIntersecting && !isLoadingMore) {
+          const needsLoading = images.some(img => !img.thumbnailUrl)
+          if (!needsLoading) {
+            setHasLoadedAll(true)
+            return
+          }
+          
+          setIsLoadingMore(true)
+          try {
+            const offset = images.filter(img => img.thumbnailUrl).length
+            const res = await fetch(`/api/public/gallery/${galleryId}/images?offset=${offset}&limit=100`)
+            if (res.ok) {
+              const data = await res.json()
+              if (data.images?.length > 0) {
+                setImages(prev => {
+                  const updated = [...prev]
+                  data.images.forEach((newImg: GalleryImage) => {
+                    const idx = updated.findIndex(img => img.id === newImg.id)
+                    if (idx >= 0) updated[idx] = { ...updated[idx], ...newImg }
+                    else updated.push(newImg)
+                  })
+                  return updated
+                })
+              }
+              if (!data.hasMore) setHasLoadedAll(true)
+            }
+          } catch (err) {
+            console.error('Failed to load more images:', err)
+          } finally {
+            setIsLoadingMore(false)
+          }
+        }
+      },
+      { rootMargin: '600px' } // Load early for smooth scrolling
+    )
+    
+    if (loadMoreRef.current) observer.observe(loadMoreRef.current)
+    return () => observer.disconnect()
+  }, [galleryId, images, isLoadingMore, hasLoadedAll])
+
+  const mosaicRows = useMemo(() => generateMosaicLayout(images.filter(img => img.thumbnailUrl)), [images])
   
   // Get hero image (first landscape or first image)
   const heroImage = useMemo(() => {
@@ -464,10 +595,10 @@ export function PublicGalleryView({
         <div className="max-w-[1800px] mx-auto px-6 py-4 flex items-center justify-between">
           <Link 
             href={`/gallery/${gallerySlug || galleryId}`}
-            className="flex items-center gap-2 text-neutral-400 hover:text-neutral-900 transition-colors"
+            className="flex items-center gap-2 px-3 py-1.5 text-neutral-500 hover:text-neutral-900 hover:bg-neutral-100 transition-colors rounded-md"
           >
             <ArrowLeft className="w-4 h-4" />
-            <span className="text-sm font-medium">Back</span>
+            <span className="text-sm font-medium">Back to Album</span>
           </Link>
           
           <div className="flex items-center gap-4">
@@ -576,6 +707,69 @@ export function PublicGalleryView({
                       </div>
                     )
                   
+                  case 'portrait-stack-right':
+                    // TETRIS: Portrait left + 2 stacked squares/landscapes right
+                    // Portrait takes ~60% width, stacked images take ~40%
+                    return (
+                      <div key={rowIdx} className="grid grid-cols-1 md:grid-cols-5 gap-6 md:gap-10">
+                        <ImageCard
+                          image={row.images[0]}
+                          index={getGlobalIndex(row.images[0])}
+                          onClick={() => openViewer(getGlobalIndex(row.images[0]))}
+                          className="md:col-span-3 aspect-[3/4]"
+                          galleryTitle={title}
+                          downloadEnabled={downloadEnabled}
+                        />
+                        <div className="md:col-span-2 grid grid-rows-2 gap-6 md:gap-10">
+                          {row.images.slice(1).map((img) => (
+                            <ImageCard
+                              key={img.id}
+                              image={img}
+                              index={getGlobalIndex(img)}
+                              onClick={() => openViewer(getGlobalIndex(img))}
+                              className="aspect-[4/3]"
+                              galleryTitle={title}
+                              downloadEnabled={downloadEnabled}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    )
+                  
+                  case 'portrait-stack-left':
+                    // TETRIS: 2 stacked squares/landscapes left + Portrait right
+                    // images[0] and images[1] are stacked, images[2] is portrait
+                    return (
+                      <div key={rowIdx} className="grid grid-cols-1 md:grid-cols-5 gap-6 md:gap-10">
+                        <div className="md:col-span-2 grid grid-rows-2 gap-6 md:gap-10 order-2 md:order-1">
+                          <ImageCard
+                            image={row.images[0]}
+                            index={getGlobalIndex(row.images[0])}
+                            onClick={() => openViewer(getGlobalIndex(row.images[0]))}
+                            className="aspect-[4/3]"
+                            galleryTitle={title}
+                            downloadEnabled={downloadEnabled}
+                          />
+                          <ImageCard
+                            image={row.images[1]}
+                            index={getGlobalIndex(row.images[1])}
+                            onClick={() => openViewer(getGlobalIndex(row.images[1]))}
+                            className="aspect-[4/3]"
+                            galleryTitle={title}
+                            downloadEnabled={downloadEnabled}
+                          />
+                        </div>
+                        <ImageCard
+                          image={row.images[2]}
+                          index={getGlobalIndex(row.images[2])}
+                          onClick={() => openViewer(getGlobalIndex(row.images[2]))}
+                          className="md:col-span-3 aspect-[3/4] order-1 md:order-2"
+                          galleryTitle={title}
+                          downloadEnabled={downloadEnabled}
+                        />
+                      </div>
+                    )
+                  
                   case 'quad':
                     // 4 equal columns
                     return (
@@ -643,16 +837,27 @@ export function PublicGalleryView({
                CLEAN GRID - Pic-Time style 3-column masonry
                ============================================ */
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-6 sm:gap-8 lg:gap-10">
-              {images.map((image, idx) => (
-                <CleanGridCard
-                  key={image.id}
-                  image={image}
-                  index={idx}
-                  onClick={() => openViewer(idx)}
-                  galleryTitle={title}
-                  downloadEnabled={downloadEnabled}
-                />
-              ))}
+              {images.filter(img => img.thumbnailUrl).map((image) => {
+                const globalIdx = images.findIndex(i => i.id === image.id)
+                return (
+                  <CleanGridCard
+                    key={image.id}
+                    image={image}
+                    index={globalIdx}
+                    onClick={() => openViewer(globalIdx)}
+                    galleryTitle={title}
+                    downloadEnabled={downloadEnabled}
+                  />
+                )
+              })}
+            </div>
+          )}
+          
+          {/* Pagination trigger - single observer for large galleries */}
+          <div ref={loadMoreRef} className="h-4" />
+          {isLoadingMore && (
+            <div className="flex justify-center py-8">
+              <div className="w-6 h-6 border-2 border-stone-300 border-t-stone-600 rounded-full animate-spin" />
             </div>
           )}
         </div>

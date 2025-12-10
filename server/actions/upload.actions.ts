@@ -150,12 +150,23 @@ export async function confirmUploads(request: {
     imageIds.push(data as string)
   }
 
-  // Set first image as cover if no cover exists
+  // Set cover image if no cover exists - prefer vertical/portrait images
   const gallery = await getGalleryById(request.galleryId)
   if (gallery && !gallery.cover_image_id && imageIds.length > 0) {
+    // Find a portrait image (height > width) for better cover display
+    let coverImageId = imageIds[0] // fallback to first image
+    
+    for (let i = 0; i < request.uploads.length; i++) {
+      const upload = request.uploads[i]
+      if (upload.width && upload.height && upload.height > upload.width) {
+        coverImageId = imageIds[i]
+        break // Use first portrait image found
+      }
+    }
+    
     await supabaseAdmin
       .from('galleries')
-      .update({ cover_image_id: imageIds[0] })
+      .update({ cover_image_id: coverImageId })
       .eq('id', request.galleryId)
   }
 

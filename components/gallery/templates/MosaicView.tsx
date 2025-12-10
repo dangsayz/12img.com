@@ -559,6 +559,18 @@ export function MosaicView({
       <section ref={heroRef} className="relative h-screen flex overflow-hidden">
         {/* Left - Hero Image with Parallax */}
         <div className="relative w-1/2 h-full overflow-hidden bg-stone-100">
+          {/* Vertical photographer credit - like the inspiration */}
+          {photographerName && (
+            <div className="absolute left-4 top-1/2 -translate-y-1/2 z-10 pointer-events-none hidden lg:block">
+              <p 
+                className="text-[10px] uppercase tracking-[0.25em] text-white/40 font-light whitespace-nowrap"
+                style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}
+              >
+                Photos by {photographerName}
+              </p>
+            </div>
+          )}
+          
           {heroImage && (heroImage.originalUrl || heroImage.previewUrl || heroImage.thumbnailUrl) && (
             <>
               <motion.div
@@ -614,6 +626,18 @@ export function MosaicView({
             transition={{ delay: 0.2, duration: 1 }}
             className="text-center max-w-md"
           >
+            {/* Small 12 wordmark at top - subtle branding */}
+            <motion.div
+              className="absolute top-8 left-1/2 -translate-x-1/2"
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2, duration: 0.8 }}
+            >
+              <span className="text-[10px] tracking-[0.4em] uppercase text-stone-300 font-light">
+                12img
+              </span>
+            </motion.div>
+            
             {/* Photographer Logo/Initials - elegant entrance */}
             <motion.div 
               className="mb-12"

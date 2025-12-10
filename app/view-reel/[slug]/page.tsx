@@ -205,9 +205,9 @@ export default async function PublicViewPage({ params }: Props) {
 
   const images = await getGalleryImages(gallery.id)
   
-  // PERFORMANCE: Only generate signed URLs for first batch of images
-  // Client will lazy-load more as user scrolls
-  const INITIAL_BATCH_SIZE = 24
+  // Load first batch server-side, rest via client-side pagination
+  // Supports galleries up to 3-4K images
+  const INITIAL_BATCH_SIZE = 100
   const initialImages = images.slice(0, INITIAL_BATCH_SIZE)
   
   const signedUrls =

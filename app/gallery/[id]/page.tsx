@@ -6,6 +6,7 @@ import { getGalleryImages } from '@/server/queries/image.queries'
 import { getSignedUrlsWithSizes } from '@/lib/storage/signed-urls'
 import { GalleryEditor } from '@/components/gallery/GalleryEditor'
 import { getProxyImageUrl, getSeoDownloadFilename } from '@/lib/seo/image-urls'
+import { ensureGalleryCover } from '@/server/actions/gallery.actions'
 
 export const dynamic = 'force-dynamic'
 
@@ -37,6 +38,10 @@ export default async function GalleryViewPage({ params }: Props) {
   }
 
   const images = await getGalleryImages(gallery.id)
+  
+  // Ensure gallery has a cover image set (auto-selects portrait image if available)
+  const { coverImageId } = await ensureGalleryCover(gallery.id)
+  const effectiveCoverId = coverImageId || (gallery as { cover_image_id?: string | null }).cover_image_id
   
   // Only fetch signed URLs for the first batch (50 images) for fast initial load
   // The rest will be loaded on-demand via client-side pagination
@@ -105,7 +110,7 @@ export default async function GalleryViewPage({ params }: Props) {
     created_at: gallery.created_at,
     imageCount: images.length,
     presentation_data: (gallery as { presentation_data?: unknown }).presentation_data || null,
-    cover_image_id: (gallery as { cover_image_id?: string | null }).cover_image_id || null,
+    cover_image_id: effectiveCoverId || null,
   }
 
   return (

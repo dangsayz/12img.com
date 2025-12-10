@@ -81,6 +81,11 @@ const config: Config = {
         'spin-slow': 'spin 3s linear infinite',
         shake: 'shake 0.5s ease-in-out',
         shimmer: 'shimmer 1.5s infinite',
+        // CSS-based enter animations (replacing heavy Framer Motion)
+        'in': 'enter 0.15s ease-out',
+        'fade-in': 'fade-in 0.3s ease-out',
+        'slide-in-bottom': 'slide-in-bottom 0.4s ease-out',
+        'zoom-in': 'zoom-in 0.15s ease-out',
       },
       keyframes: {
         'border-beam': {
@@ -97,6 +102,23 @@ const config: Config = {
         },
         shimmer: {
           '100%': { transform: 'translateX(100%)' },
+        },
+        // Enter animations for better INP
+        'enter': {
+          '0%': { opacity: '0', transform: 'translateY(8px)' },
+          '100%': { opacity: '1', transform: 'translateY(0)' },
+        },
+        'fade-in': {
+          '0%': { opacity: '0' },
+          '100%': { opacity: '1' },
+        },
+        'slide-in-bottom': {
+          '0%': { opacity: '0', transform: 'translateY(16px)' },
+          '100%': { opacity: '1', transform: 'translateY(0)' },
+        },
+        'zoom-in': {
+          '0%': { opacity: '0', transform: 'scale(0.95)' },
+          '100%': { opacity: '1', transform: 'scale(1)' },
         },
       },
     },

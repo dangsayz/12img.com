@@ -752,12 +752,12 @@ export function GalleryEditor({
                   onClick={() => setShowPresentationSettings(true)}
                   className="flex items-center gap-2 px-4 py-2 text-sm bg-stone-900 text-white hover:bg-stone-800 transition-colors"
                 >
-                  <Play className="w-4 h-4" />
-                  Presentation
+                  <Pencil className="w-4 h-4" />
+                  Customize
                 </button>
                 <button
                   onClick={() => setShowDeleteConfirm(true)}
-                  className="flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:text-red-700 hover:bg-red-50 transition-colors"
+                  className="flex items-center gap-2 px-4 py-2 text-sm text-stone-500 hover:text-stone-900 hover:bg-stone-100 transition-colors"
                 >
                   <Trash2 className="w-4 h-4" />
                   Remove Album
@@ -1240,33 +1240,35 @@ export function GalleryEditor({
                 onImagesReorder={(newImages) => setLoadedImages(newImages)}
               />
             ) : (
-              /* Grid for viewing - fills horizontally (left to right) */
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+              /* CSS Columns masonry - true Tetris-style packing */
+              <div 
+                className="columns-2 md:columns-3 lg:columns-4 gap-2"
+              >
                 {loadedImages.slice(0, visibleCount).map((image, index) => {
-                  // First image is hero (larger)
                   const isHero = index === 0
                   
                   return (
-                    <MasonryImageItem
-                      key={image.id}
-                      image={image}
-                      index={index}
-                      isHero={isHero}
-                      isSelecting={isSelecting}
-                      isSelected={selectedImages.has(image.id)}
-                      onSelect={() => {
-                        const newSelected = new Set(selectedImages)
-                        if (newSelected.has(image.id)) {
-                          newSelected.delete(image.id)
-                        } else {
-                          newSelected.add(image.id)
-                        }
-                        setSelectedImages(newSelected)
-                      }}
-                      isCover={coverImageId === image.id}
-                      onSetCover={() => handleSetCover(image.id)}
-                      isSettingCover={settingCoverImageId === image.id}
-                    />
+                    <div key={image.id} className="mb-2 break-inside-avoid">
+                      <MasonryImageItem
+                        image={image}
+                        index={index}
+                        isHero={isHero}
+                        isSelecting={isSelecting}
+                        isSelected={selectedImages.has(image.id)}
+                        onSelect={() => {
+                          const newSelected = new Set(selectedImages)
+                          if (newSelected.has(image.id)) {
+                            newSelected.delete(image.id)
+                          } else {
+                            newSelected.add(image.id)
+                          }
+                          setSelectedImages(newSelected)
+                        }}
+                        isCover={coverImageId === image.id}
+                        onSetCover={() => handleSetCover(image.id)}
+                        isSettingCover={settingCoverImageId === image.id}
+                      />
+                    </div>
                   )
                 })}
               </div>
@@ -1511,8 +1513,8 @@ export function GalleryEditor({
               className="bg-white rounded-xl p-6 max-w-md w-full shadow-2xl"
             >
               <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
-                  <Trash2 className="w-5 h-5 text-red-600" />
+                <div className="w-10 h-10 rounded-full bg-stone-100 flex items-center justify-center">
+                  <Trash2 className="w-5 h-5 text-stone-600" />
                 </div>
                 <h3 className="text-lg font-semibold text-stone-900">Remove Album</h3>
               </div>
@@ -1529,7 +1531,7 @@ export function GalleryEditor({
                 <button
                   onClick={handleDeleteGallery}
                   disabled={isDeleting}
-                  className="flex-1 px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors disabled:opacity-50"
+                  className="flex-1 px-4 py-2 text-sm font-medium text-white bg-stone-900 hover:bg-stone-800 rounded-lg transition-colors disabled:opacity-50"
                 >
                   {isDeleting ? 'Removing...' : 'Yes, Remove Album'}
                 </button>

@@ -334,19 +334,9 @@ export function CleanDashboard({ galleries, photographerName, country, visibilit
         {filteredGalleries.length === 0 ? (
           <EmptyState hasSearch={!!searchQuery} onClearSearch={() => setSearchQuery('')} userPlan={userPlan} />
         ) : (
-          <motion.div 
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-12"
-            initial="hidden"
-            animate="visible"
-            variants={{
-              hidden: {},
-              visible: {
-                transition: {
-                  staggerChildren: 0.06
-                }
-              }
-            }}
-          >
+          /* OPTIMIZED: Remove Framer Motion stagger animation to improve INP
+             Each GalleryCard now handles its own CSS animation with staggered delay */
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-12">
             {filteredGalleries.map((gallery, index) => (
               <GalleryCard 
                 key={gallery.id} 
@@ -357,7 +347,7 @@ export function CleanDashboard({ galleries, photographerName, country, visibilit
                 onLeave={() => setHoveredId(null)}
               />
             ))}
-          </motion.div>
+          </div>
         )}
       </div>
     </div>
@@ -580,17 +570,12 @@ function GalleryCard({
 
   if (isDeleted) return null
 
+  // OPTIMIZED: Use CSS transitions instead of Framer Motion for hover effects
+  // This prevents blocking the main thread during interactions
   return (
-    <motion.div
-      variants={{
-        hidden: { opacity: 0, y: 24 },
-        visible: { 
-          opacity: 1, 
-          y: 0,
-          transition: { duration: 0.5, ease: [0.25, 0.1, 0.25, 1] }
-        }
-      }}
-      className="group/card"
+    <div
+      className="group/card animate-slide-in-bottom"
+      style={{ animationDelay: `${Math.min(index * 60, 300)}ms`, animationFillMode: 'backwards' }}
     >
       <Link 
         href={`/gallery/${gallery.slug}`}
@@ -598,16 +583,9 @@ function GalleryCard({
         onMouseEnter={onHover}
         onMouseLeave={() => { onLeave(); setShowMenu(false) }}
       >
-        {/* Cover Image */}
-        <motion.div 
-          className="relative aspect-[4/5] bg-stone-100 mb-4 overflow-hidden rounded-sm"
-          whileHover={{ y: -4 }}
-          transition={{ duration: 0.3, ease: [0.25, 0.1, 0.25, 1] }}
-          style={{
-            boxShadow: isHovered 
-              ? '0 25px 50px -12px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(0, 0, 0, 0.02)' 
-              : '0 1px 3px rgba(0, 0, 0, 0.08), 0 0 0 1px rgba(0, 0, 0, 0.02)'
-          }}
+        {/* Cover Image - CSS transitions for better INP */}
+        <div 
+          className="relative aspect-[4/5] bg-stone-100 mb-4 overflow-hidden rounded-sm transition-all duration-300 ease-out hover:-translate-y-1 shadow-[0_1px_3px_rgba(0,0,0,0.08),0_0_0_1px_rgba(0,0,0,0.02)] hover:shadow-[0_25px_50px_-12px_rgba(0,0,0,0.15),0_0_0_1px_rgba(0,0,0,0.02)]"
         >
           {gallery.coverImageUrl && !imageError ? (
             <Image
@@ -638,30 +616,24 @@ function GalleryCard({
             size="md"
           />
 
-          {/* Menu Button */}
-          <motion.button
-            initial={{ opacity: 0 }}
-            animate={{ opacity: isHovered ? 1 : 0 }}
+          {/* Menu Button - CSS opacity transition */}
+          <button
             onClick={(e) => {
               e.preventDefault()
               e.stopPropagation()
               setShowMenu(!showMenu)
             }}
-            className="absolute top-3 right-3 h-8 w-8 bg-white/90 backdrop-blur-sm flex items-center justify-center shadow-sm hover:bg-white transition-colors"
+            className={`absolute top-3 right-3 h-8 w-8 bg-white/90 backdrop-blur-sm flex items-center justify-center shadow-sm hover:bg-white transition-all duration-200 ${isHovered ? 'opacity-100' : 'opacity-0'}`}
           >
             <MoreHorizontal className="w-4 h-4 text-stone-600" />
-          </motion.button>
+          </button>
 
-          {/* Dropdown Menu */}
-          <AnimatePresence>
-            {showMenu && (
-              <motion.div
-                initial={{ opacity: 0, y: -10, scale: 0.95 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: -10, scale: 0.95 }}
-                className="absolute top-14 right-3 bg-white shadow-xl border border-stone-100 py-1.5 min-w-[140px] z-10"
-                onClick={(e) => e.stopPropagation()}
-              >
+          {/* Dropdown Menu - CSS animation instead of AnimatePresence */}
+          {showMenu && (
+            <div
+              className="absolute top-14 right-3 bg-white shadow-xl border border-stone-100 py-1.5 min-w-[140px] z-10 animate-zoom-in"
+              onClick={(e) => e.stopPropagation()}
+            >
                 <button
                   onClick={handleCopy}
                   className="w-full px-4 py-2 text-left text-sm text-stone-700 hover:bg-stone-50 flex items-center gap-2"
@@ -711,28 +683,22 @@ function GalleryCard({
                   <Trash2 className="w-4 h-4" />
                   Delete
                 </button>
-              </motion.div>
-            )}
-          </AnimatePresence>
+            </div>
+          )}
 
           {/* Image Count Badge */}
-          <motion.div 
-            className="absolute bottom-3 right-3 px-2.5 py-1 bg-black/70 backdrop-blur-sm rounded-full text-[11px] text-white font-medium tabular-nums flex items-center gap-1.5"
-            initial={{ opacity: 0.9 }}
-            animate={{ opacity: isHovered ? 1 : 0.9 }}
+          <div 
+            className={`absolute bottom-3 right-3 px-2.5 py-1 bg-black/70 backdrop-blur-sm rounded-full text-[11px] text-white font-medium tabular-nums flex items-center gap-1.5 transition-opacity duration-200 ${isHovered ? 'opacity-100' : 'opacity-90'}`}
           >
             <span className="w-1 h-1 rounded-full bg-white/60" />
             {gallery.imageCount}
-          </motion.div>
+          </div>
 
-          {/* Hover Overlay - cinematic gradient */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: isHovered ? 1 : 0 }}
-            transition={{ duration: 0.3 }}
-            className="absolute inset-0 bg-gradient-to-t from-black/30 via-black/5 to-transparent pointer-events-none"
+          {/* Hover Overlay - CSS transition */}
+          <div
+            className={`absolute inset-0 bg-gradient-to-t from-black/30 via-black/5 to-transparent pointer-events-none transition-opacity duration-300 ${isHovered ? 'opacity-100' : 'opacity-0'}`}
           />
-        </motion.div>
+        </div>
 
         {/* Gallery Info */}
         <div className="text-center space-y-0.5 pt-3">
@@ -745,23 +711,16 @@ function GalleryCard({
         </div>
       </Link>
 
-      {/* Delete Modal */}
-      <AnimatePresence>
-        {showDeleteModal && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
-            onClick={() => setShowDeleteModal(false)}
+      {/* Delete Modal - CSS animation */}
+      {showDeleteModal && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 animate-fade-in"
+          onClick={() => setShowDeleteModal(false)}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="bg-white p-6 max-w-sm w-full shadow-2xl animate-zoom-in"
           >
-            <motion.div
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-              onClick={(e) => e.stopPropagation()}
-              className="bg-white p-6 max-w-sm w-full shadow-2xl"
-            >
               <div className="w-12 h-12 bg-red-50 flex items-center justify-center mb-4 mx-auto">
                 <Trash2 className="w-5 h-5 text-red-500" />
               </div>
@@ -786,11 +745,10 @@ function GalleryCard({
                   {isPending ? 'Deleting...' : 'Delete'}
                 </button>
               </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </motion.div>
+          </div>
+        </div>
+      )}
+    </div>
   )
 }
 

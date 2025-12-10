@@ -107,28 +107,36 @@ export async function getUserGalleries(clerkId: string) {
     coverImages = covers || []
   }
 
-  // For galleries without explicit cover, get first image as fallback (single batch query)
+  // For galleries without explicit cover, get first portrait image as fallback (or first image)
   const galleriesWithoutCover = data.filter((g) => !g.cover_image_id)
   const fallbackCoverMap = new Map<string, string>() // gallery_id -> storage_path
   
   if (galleriesWithoutCover.length > 0) {
-    // Get first image for ALL galleries without cover in ONE query using DISTINCT ON
     const galleryIdsWithoutCover = galleriesWithoutCover.map(g => g.id)
     
-    // Use a raw query approach: get all images for these galleries, then pick first per gallery
-    const { data: allFirstImages } = await supabaseAdmin
+    // Get images with dimensions to find portrait images
+    const { data: allImages } = await supabaseAdmin
       .from('images')
-      .select('gallery_id, storage_path, created_at')
+      .select('gallery_id, storage_path, width, height, created_at')
       .in('gallery_id', galleryIdsWithoutCover)
       .order('created_at', { ascending: true })
     
-    // Group by gallery and take first
-    if (allFirstImages) {
-      const seenGalleries = new Set<string>()
-      for (const img of allFirstImages) {
-        if (!seenGalleries.has(img.gallery_id)) {
-          seenGalleries.add(img.gallery_id)
-          fallbackCoverMap.set(img.gallery_id, img.storage_path)
+    // For each gallery, prefer portrait image (height > width), fallback to first
+    if (allImages) {
+      const galleryImages = new Map<string, typeof allImages>()
+      for (const img of allImages) {
+        if (!galleryImages.has(img.gallery_id)) {
+          galleryImages.set(img.gallery_id, [])
+        }
+        galleryImages.get(img.gallery_id)!.push(img)
+      }
+      
+      for (const [galleryId, images] of galleryImages) {
+        // Find first portrait image
+        const portraitImg = images.find(img => img.width && img.height && img.height > img.width)
+        const coverImg = portraitImg || images[0]
+        if (coverImg) {
+          fallbackCoverMap.set(galleryId, coverImg.storage_path)
         }
       }
     }

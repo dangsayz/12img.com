@@ -5,7 +5,6 @@ import React, { useState, useCallback } from 'react'
 import { motion, useScroll, useSpring, useTransform, AnimatePresence } from 'framer-motion'
 import { EditorialSpread } from '@/lib/editorial/types'
 import { Spread } from './Spread'
-import { SpreadOverview } from './SpreadOverview'
 import { ArrowLeft, ChevronDown, Link2, Check } from 'lucide-react'
 import Link from 'next/link'
 
@@ -55,16 +54,6 @@ export function EditorialViewer({
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
   }, [])
-
-  const scrollToSpread = (id: string) => {
-    const element = document.getElementById(id)
-    if (element) {
-      element.scrollIntoView({ behavior: 'smooth' })
-    }
-  }
-
-  // Count actual content spreads (excluding title)
-  const contentSpreads = spreads.filter(s => s.pageNumber && s.pageNumber > 0)
 
   return (
     <div className="min-h-screen bg-[#FAFAFA] text-neutral-900 font-sans selection:bg-neutral-900 selection:text-white">
@@ -173,10 +162,6 @@ export function EditorialViewer({
           </p>
         )}
       </div>
-
-      {/* Index Sheet Footer */}
-      <SpreadOverview spreads={spreads} onSpreadClick={scrollToSpread} />
-
     </div>
   )
 }

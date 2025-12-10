@@ -286,6 +286,46 @@ export async function updateGalleryTemplate(galleryId: string, template: string)
   return { success: true, template }
 }
 
+/**
+ * Ensure gallery has a cover image set
+ * If no cover exists, automatically picks a portrait image (or first image)
+ */
+export async function ensureGalleryCover(galleryId: string): Promise<{ coverImageId: string | null }> {
+  // Get gallery
+  const { data: gallery } = await supabaseAdmin
+    .from('galleries')
+    .select('id, cover_image_id')
+    .eq('id', galleryId)
+    .single()
+
+  if (!gallery) return { coverImageId: null }
+  
+  // Already has cover
+  if (gallery.cover_image_id) return { coverImageId: gallery.cover_image_id }
+
+  // Get images with dimensions to find portrait
+  const { data: images } = await supabaseAdmin
+    .from('images')
+    .select('id, width, height')
+    .eq('gallery_id', galleryId)
+    .order('position', { ascending: true })
+    .limit(50)
+
+  if (!images || images.length === 0) return { coverImageId: null }
+
+  // Find first portrait image (height > width), or use first image
+  const portraitImage = images.find(img => img.width && img.height && img.height > img.width)
+  const coverImageId = portraitImage?.id || images[0].id
+
+  // Set the cover
+  await supabaseAdmin
+    .from('galleries')
+    .update({ cover_image_id: coverImageId })
+    .eq('id', galleryId)
+
+  return { coverImageId }
+}
+
 export async function setCoverImage(galleryId: string, imageId: string | null) {
   const { userId: clerkId } = await auth()
   if (!clerkId) return { error: 'Unauthorized' }
