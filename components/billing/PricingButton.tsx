@@ -24,8 +24,9 @@ export function PricingButton({ planId, children, className }: PricingButtonProp
     }
   }, [])
   
-  // Determine disabled state - use undefined instead of false to avoid hydration mismatch
-  const isDisabled = loading || !isLoaded ? true : undefined
+  // Only disable while actively loading a checkout - don't disable during initial load
+  // to avoid hydration mismatch (server has isLoaded=false, client has isLoaded=true)
+  const isDisabled = loading || undefined
 
   const handleClick = async () => {
     // If not signed in, redirect to sign-up with plan and promo

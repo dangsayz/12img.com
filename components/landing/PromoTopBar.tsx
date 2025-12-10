@@ -8,6 +8,9 @@ import { PromotionalCampaign } from '@/lib/promos/types'
 
 const STORAGE_KEY = 'promo_bar_dismissed'
 
+// Export height for other components to use
+export const PROMO_BAR_HEIGHT = 36 // px
+
 /**
  * Top announcement bar for promos/flash sales
  * Sticks to the very top of the page, dismissible
@@ -19,6 +22,8 @@ export function PromoTopBar() {
   const dismiss = () => {
     setVisible(false)
     sessionStorage.setItem(STORAGE_KEY, 'true')
+    // Dispatch event so nav can adjust
+    window.dispatchEvent(new CustomEvent('promo-bar-change', { detail: { visible: false } }))
   }
   
   useEffect(() => {
@@ -32,6 +37,8 @@ export function PromoTopBar() {
         if (data.campaign && data.campaign.show_on_landing) {
           setCampaign(data.campaign)
           setVisible(true)
+          // Dispatch event so nav can adjust
+          window.dispatchEvent(new CustomEvent('promo-bar-change', { detail: { visible: true } }))
         }
       } catch (error) {
         console.error('Error fetching active campaign:', error)
@@ -47,33 +54,33 @@ export function PromoTopBar() {
     <AnimatePresence>
       {visible && (
         <motion.div
-          initial={{ height: 0, opacity: 0 }}
-          animate={{ height: 'auto', opacity: 1 }}
-          exit={{ height: 0, opacity: 0 }}
+          initial={{ y: -40, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          exit={{ y: -40, opacity: 0 }}
           transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
-          className="bg-stone-900 text-white overflow-hidden"
+          className="fixed top-0 left-0 right-0 z-[60] bg-stone-900 text-white"
         >
-          <div className="max-w-screen-xl mx-auto px-4 py-2.5 flex items-center justify-center gap-4 relative">
+          <div className="max-w-screen-xl mx-auto px-4 py-2 flex items-center justify-center gap-2 sm:gap-4 relative">
             {/* Content */}
             <Link 
               href={`/promo/${campaign.slug}`}
-              className="flex items-center gap-3 text-sm hover:opacity-80 transition-opacity"
+              className="flex items-center gap-2 sm:gap-3 text-xs sm:text-sm hover:opacity-80 transition-opacity min-w-0"
             >
               {/* Pulsing dot */}
-              <span className="relative flex h-2 w-2">
+              <span className="relative flex h-1.5 w-1.5 sm:h-2 sm:w-2 shrink-0">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-50" />
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-white" />
+                <span className="relative inline-flex rounded-full h-1.5 w-1.5 sm:h-2 sm:w-2 bg-white" />
               </span>
               
-              {/* Text */}
-              <span>
+              {/* Text - truncate on mobile */}
+              <span className="truncate">
                 <span className="font-medium">{campaign.badge_text || campaign.name}</span>
                 <span className="hidden sm:inline text-white/70 mx-2">—</span>
                 <span className="hidden sm:inline text-white/70">{campaign.banner_headline}</span>
               </span>
               
               {/* Arrow */}
-              <svg className="w-4 h-4 text-white/50" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white/50 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
               </svg>
             </Link>
@@ -84,10 +91,10 @@ export function PromoTopBar() {
                 e.preventDefault()
                 dismiss()
               }}
-              className="absolute right-4 p-1 rounded-full text-white/40 hover:text-white hover:bg-white/10 transition-all"
+              className="absolute right-2 sm:right-4 p-1 rounded-full text-white/40 hover:text-white hover:bg-white/10 transition-all"
               aria-label="Dismiss"
             >
-              <X className="w-4 h-4" />
+              <X className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             </button>
           </div>
         </motion.div>

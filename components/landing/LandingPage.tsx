@@ -9,7 +9,7 @@ import { useAuthModal } from '@/components/auth/AuthModal'
 import { useAuth, UserButton } from '@clerk/nextjs'
 import { CommunitySpotlightCardClient } from '@/components/spotlight/CommunitySpotlightCardClient'
 import { PromoModal } from './PromoHint'
-import { PromoTopBar } from './PromoTopBar'
+import { PromoTopBar, PROMO_BAR_HEIGHT } from './PromoTopBar'
 import { FeatureGrid } from './FeatureGrid'
 import { FeatureBento } from './FeatureBento'
 import { AnimatePresence, motion } from 'framer-motion'
@@ -78,8 +78,19 @@ export function LandingPage() {
   const [featureEmail, setFeatureEmail] = useState('')
   const [featureSubmitted, setFeatureSubmitted] = useState(false)
   const [featureSubmitting, setFeatureSubmitting] = useState(false)
+  const [promoBarVisible, setPromoBarVisible] = useState(false)
   const { openAuthModal } = useAuthModal()
   const { isSignedIn, isLoaded } = useAuth()
+  
+  // Listen for promo bar visibility changes
+  useEffect(() => {
+    const handlePromoBarChange = (e: CustomEvent<{ visible: boolean }>) => {
+      setPromoBarVisible(e.detail.visible)
+    }
+    
+    window.addEventListener('promo-bar-change', handlePromoBarChange as EventListener)
+    return () => window.removeEventListener('promo-bar-change', handlePromoBarChange as EventListener)
+  }, [])
 
   const handleFeatureSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -131,7 +142,10 @@ export function LandingPage() {
       <PromoModal />
       
       {/* --- Navigation (Floating Pill - matches AppNav) --- */}
-      <nav className="fixed top-0 left-0 right-0 z-50 px-4 py-3 pointer-events-none">
+      <nav 
+        className="fixed left-0 right-0 z-50 px-4 py-3 pointer-events-none transition-[top] duration-300"
+        style={{ top: promoBarVisible ? PROMO_BAR_HEIGHT : 0 }}
+      >
         <div className="max-w-screen-xl mx-auto flex items-center justify-between">
           
           {/* Left: Logo + Nav Links */}

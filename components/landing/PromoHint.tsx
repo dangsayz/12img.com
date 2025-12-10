@@ -5,7 +5,53 @@ import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
 import { PromotionalCampaign, getSpotsRemaining } from '@/lib/promos/types'
 
-const STORAGE_KEY = 'promo_dismissed'
+// Storage keys
+const FIRST_VISIT_KEY = 'promo_first_visit_shown'
+const LAST_SHOWN_KEY = 'promo_last_shown'
+const COOLDOWN_HOURS = 24 // Don't show again for 24 hours after dismissal
+
+/**
+ * Check if we should show the promo modal
+ * - First visit: Show after 2s delay
+ * - After that: Only show when triggered by upgrade events (via showPromoModal())
+ */
+function shouldShowOnLoad(): boolean {
+  if (typeof window === 'undefined') return false
+  
+  // Check if first visit modal was already shown
+  const firstVisitShown = localStorage.getItem(FIRST_VISIT_KEY)
+  if (!firstVisitShown) {
+    return true // First visit - show it
+  }
+  
+  return false // Not first visit - wait for upgrade trigger
+}
+
+/**
+ * Check if enough time has passed since last dismissal
+ */
+function isOnCooldown(): boolean {
+  if (typeof window === 'undefined') return false
+  
+  const lastShown = localStorage.getItem(LAST_SHOWN_KEY)
+  if (!lastShown) return false
+  
+  const lastShownTime = parseInt(lastShown, 10)
+  const hoursSince = (Date.now() - lastShownTime) / (1000 * 60 * 60)
+  
+  return hoursSince < COOLDOWN_HOURS
+}
+
+/**
+ * Global function to trigger promo modal from anywhere (e.g., upgrade prompts)
+ * Call this when user hits a plan limit
+ */
+export function showPromoModal() {
+  if (typeof window === 'undefined') return
+  if (isOnCooldown()) return // Respect cooldown
+  
+  window.dispatchEvent(new CustomEvent('show-promo-modal'))
+}
 
 export function PromoModal() {
   const [campaign, setCampaign] = useState<PromotionalCampaign | null>(null)
@@ -13,8 +59,10 @@ export function PromoModal() {
   
   const dismiss = useCallback(() => {
     setVisible(false)
-    // Remember dismissal for this session
-    sessionStorage.setItem(STORAGE_KEY, 'true')
+    // Mark first visit as shown
+    localStorage.setItem(FIRST_VISIT_KEY, 'true')
+    // Record dismissal time for cooldown
+    localStorage.setItem(LAST_SHOWN_KEY, Date.now().toString())
   }, [])
   
   // Escape key handler
@@ -29,19 +77,31 @@ export function PromoModal() {
     }
   }, [visible, dismiss])
   
-  // Fetch campaign and show after delay
+  // Listen for manual trigger (from upgrade prompts)
   useEffect(() => {
-    // Check if already dismissed this session
-    if (sessionStorage.getItem(STORAGE_KEY)) return
+    const handleShowPromo = () => {
+      if (campaign && !isOnCooldown()) {
+        setVisible(true)
+      }
+    }
     
+    window.addEventListener('show-promo-modal', handleShowPromo)
+    return () => window.removeEventListener('show-promo-modal', handleShowPromo)
+  }, [campaign])
+  
+  // Fetch campaign and maybe show on first visit
+  useEffect(() => {
     async function fetchCampaign() {
       try {
         const res = await fetch('/api/promo/active')
         const data = await res.json()
         if (data.campaign) {
           setCampaign(data.campaign)
-          // Show after a subtle delay
-          setTimeout(() => setVisible(true), 2000)
+          
+          // Only auto-show on first visit
+          if (shouldShowOnLoad()) {
+            setTimeout(() => setVisible(true), 2500)
+          }
         }
       } catch (error) {
         console.error('Error fetching active campaign:', error)
