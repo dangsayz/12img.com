@@ -169,12 +169,12 @@ export async function getRevenueMetrics(): Promise<RevenueMetrics> {
     .select('*', { count: 'exact', head: true })
     .neq('plan', 'free')
   
-  // Count users with active Stripe subscriptions (actually paying)
+  // Count users with Stripe (subscription OR customer ID = actually paying)
   const { count: paidUsersStripe } = await supabaseAdmin
     .from('users')
     .select('*', { count: 'exact', head: true })
     .neq('plan', 'free')
-    .not('stripe_subscription_id', 'is', null)
+    .or('stripe_subscription_id.not.is.null,stripe_customer_id.not.is.null')
   
   // Manual upgrades = paid plan but no Stripe subscription
   const paidUsersManual = (paidUsers || 0) - (paidUsersStripe || 0)

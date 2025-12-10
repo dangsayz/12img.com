@@ -327,11 +327,6 @@ export function DashboardContent({ stats, revenue }: Props) {
                 <div>
                   <p className="text-[#737373] text-[10px] uppercase tracking-[0.2em]">Paid</p>
                   <p className="text-2xl font-light text-[#141414] mt-1 tabular-nums">{revenue.paidUsers}</p>
-                  {revenue.paidUsersManual > 0 && (
-                    <p className="text-[9px] text-amber-600 mt-0.5">
-                      {revenue.paidUsersStripe} Stripe · {revenue.paidUsersManual} comp
-                    </p>
-                  )}
                 </div>
                 <div>
                   <p className="text-[#737373] text-[10px] uppercase tracking-[0.2em]">Free</p>
