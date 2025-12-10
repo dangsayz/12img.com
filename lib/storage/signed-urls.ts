@@ -1,29 +1,24 @@
 /**
  * ============================================================================
- * SIGNED URL GENERATION - Performance Optimized
+ * SIGNED URL GENERATION - Cost Optimized (No Transformations)
  * ============================================================================
  * 
  * This module handles signed URL generation for Supabase Storage images.
  * 
- * ARCHITECTURE:
- * - All URLs are generated in PARALLEL (not sequential batches)
- * - This is 10-50x faster for large galleries (670+ images)
- * - Supabase can handle hundreds of concurrent requests
+ * IMPORTANT: We DO NOT use Supabase image transformations!
+ * Supabase charges per transformation and has strict limits (100/month on Pro).
+ * Instead, we serve original images and let Next.js Image optimize them
+ * on Vercel's edge network (free with Vercel hosting).
  * 
- * IMAGE SIZE STRATEGY:
- * - THUMBNAIL (600px @ 80%): Grid display, fast loading
- * - PREVIEW (1920px @ 85%): Fullscreen viewer, crisp but optimized
- * - ORIGINAL (no transform): Downloads only, never displayed
+ * ARCHITECTURE:
+ * - Get signed URLs for ORIGINAL images only (no transforms)
+ * - Next.js <Image> component handles resizing via Vercel Image Optimization
+ * - This eliminates Supabase transformation costs entirely
  * 
  * CACHING:
  * - Signed URLs expire after 1 hour (SIGNED_URL_EXPIRY.VIEW)
- * - Browser caches images via Cache-Control headers from Supabase
- * - Consider edge caching (Vercel/Cloudflare) for further optimization
- * 
- * FUTURE OPTIMIZATIONS:
- * - Pre-generate derivatives on upload (background job)
- * - BlurHash/LQIP for instant placeholders
- * - Service Worker caching for repeat visits
+ * - Browser caches images via Cache-Control headers
+ * - Vercel caches optimized images at the edge
  * 
  * @see lib/utils/constants.ts for IMAGE_SIZES configuration
  * ============================================================================
@@ -81,69 +76,22 @@ export async function getSignedUploadUrl(
   }
 }
 
+/**
+ * Get signed URLs for original images (NO transformations)
+ * 
+ * We don't use Supabase transforms to avoid hitting their 100/month limit.
+ * Next.js Image component handles resizing on Vercel's edge (free).
+ */
 export async function getSignedUrlsBatch(
   paths: string[],
   expiresIn: number = SIGNED_URL_EXPIRY.VIEW,
-  sizePreset: ImageSizePreset = 'THUMBNAIL'
+  _sizePreset: ImageSizePreset = 'ORIGINAL' // Size preset ignored - always get original
 ): Promise<Map<string, string>> {
   if (paths.length === 0) return new Map()
 
-  console.log('[SignedUrls] Requesting URLs for paths:', paths.length, 'size:', sizePreset)
+  console.log('[SignedUrls] Requesting ORIGINAL URLs (no transforms) for:', paths.length, 'images')
 
-  const transform = IMAGE_SIZES[sizePreset]
-  
-  // For transformed images, we need to create individual signed URLs
-  // as createSignedUrls doesn't support transforms for all URLs
-  if (transform) {
-    const urlMap = new Map<string, string>()
-    
-    // OPTIMIZATION: Process ALL paths in parallel (Supabase can handle it)
-    // This is 10-50x faster than sequential batches for large galleries
-    const maxRetries = 2
-    
-    const results = await Promise.all(
-      paths.map(async (path) => {
-        // Single retry for transient failures
-        for (let attempt = 1; attempt <= maxRetries; attempt++) {
-          try {
-            const { data, error } = await supabaseAdmin.storage
-              .from('gallery-images')
-              .createSignedUrl(path, expiresIn, {
-                transform: {
-                  width: transform.width,
-                  quality: transform.quality,
-                  resize: 'contain',
-                },
-              })
-            
-            if (error || !data) {
-              if (attempt < maxRetries) {
-                await new Promise(r => setTimeout(r, 50)) // Quick retry
-                continue
-              }
-              return { path, url: null }
-            }
-            return { path, url: data.signedUrl }
-          } catch (err) {
-            if (attempt < maxRetries) {
-              await new Promise(r => setTimeout(r, 50))
-              continue
-            }
-            return { path, url: null }
-          }
-        }
-        return { path, url: null }
-      })
-    )
-    
-    for (const { path, url } of results) {
-      if (url) urlMap.set(path, url)
-    }
-    
-    return urlMap
-  }
-
-  // For original (no transform), use batch endpoint
+  // ALWAYS use batch endpoint with NO transforms to avoid Supabase charges
   const { data, error } = await supabaseAdmin.storage
     .from('gallery-images')
     .createSignedUrls(paths, expiresIn)
@@ -167,10 +115,14 @@ export async function getSignedUrlsBatch(
 }
 
 /**
- * Get thumbnail, preview, and original URLs for images
- * - thumbnail: 400px for grid display (fast loading)
- * - preview: 1920px for fullscreen viewing (crisp but optimized)
- * - original: full resolution for downloads only
+ * Get URLs for images - returns same URL for all sizes
+ * 
+ * COST OPTIMIZATION: We only fetch ONE URL per image (the original).
+ * Next.js Image component handles resizing on Vercel's edge for FREE.
+ * This eliminates Supabase's transformation charges entirely.
+ * 
+ * Previously: 3 URLs per image × transforms = 3 Supabase transformations
+ * Now: 1 URL per image × no transforms = 0 Supabase transformations
  */
 export async function getSignedUrlsWithSizes(
   paths: string[],
@@ -178,38 +130,25 @@ export async function getSignedUrlsWithSizes(
 ): Promise<Map<string, { thumbnail: string; preview: string; original: string }>> {
   if (paths.length === 0) return new Map()
 
-  console.log('[SignedUrls] Getting thumbnail + preview + original URLs for:', paths.length)
+  console.log('[SignedUrls] Getting ORIGINAL URLs for:', paths.length, '(Next.js handles resizing)')
 
-  const [thumbnailUrls, previewUrls, originalUrls] = await Promise.all([
-    getSignedUrlsBatch(paths, expiresIn, 'THUMBNAIL'),
-    getSignedUrlsBatch(paths, expiresIn, 'PREVIEW'),
-    getSignedUrlsBatch(paths, expiresIn, 'ORIGINAL'),
-  ])
+  // Get ONE URL per image - no transformations
+  const originalUrls = await getSignedUrlsBatch(paths, expiresIn, 'ORIGINAL')
 
   const result = new Map<string, { thumbnail: string; preview: string; original: string }>()
   for (const path of paths) {
-    const thumbnail = thumbnailUrls.get(path)
-    const preview = previewUrls.get(path)
-    const original = originalUrls.get(path)
+    const url = originalUrls.get(path)
     
-    // Be more resilient - use fallbacks if some sizes fail
-    // Priority: original > preview > thumbnail for higher quality fallbacks
-    const effectiveThumbnail = thumbnail || preview || original
-    const effectivePreview = preview || original || thumbnail
-    const effectiveOriginal = original || preview || thumbnail
-    
-    if (effectiveThumbnail && effectivePreview && effectiveOriginal) {
+    if (url) {
+      // Use the same original URL for all sizes
+      // Next.js <Image> component will handle resizing via Vercel Image Optimization
       result.set(path, { 
-        thumbnail: effectiveThumbnail, 
-        preview: effectivePreview, 
-        original: effectiveOriginal 
+        thumbnail: url, 
+        preview: url, 
+        original: url 
       })
-    } else if (original) {
-      // Last resort: if we have at least the original, use it for everything
-      result.set(path, { thumbnail: original, preview: original, original })
     } else {
-      // Log when we completely fail to get any URL for a path
-      console.error('[SignedUrls] Failed to get any URL for path:', path)
+      console.error('[SignedUrls] Failed to get URL for path:', path)
     }
   }
   
@@ -326,36 +265,23 @@ export async function getGalleryImagesWithDerivatives(
           derivatives[deriv.size_code as DerivativeSizeCode] = data.signedUrl
         }
       }
-    } else {
-      // Fallback to on-the-fly transforms (existing behavior)
-      const sizes: { code: DerivativeSizeCode; width: number; quality: number }[] = [
-        { code: 'sm', width: 400, quality: 75 },
-        { code: 'lg', width: 1600, quality: 85 },
-      ]
-
-      for (const size of sizes) {
-        const { data } = await supabaseAdmin.storage
-          .from('gallery-images')
-          .createSignedUrl(image.storage_path, expiresIn, {
-            transform: {
-              width: size.width,
-              quality: size.quality,
-              resize: 'contain',
-            },
-          })
-        
-        if (data?.signedUrl) {
-          derivatives[size.code] = data.signedUrl
-        }
-      }
     }
+    // NOTE: We no longer use on-the-fly transforms as fallback
+    // This was burning through Supabase's 100/month transformation limit
+    // Next.js Image component handles resizing for free on Vercel
 
-    // Always get original URL
+    // Get original URL (no transforms)
     const { data: originalData } = await supabaseAdmin.storage
       .from('gallery-images')
       .createSignedUrl(image.storage_path, expiresIn)
     
-    derivatives.original = originalData?.signedUrl || ''
+    const originalUrl = originalData?.signedUrl || ''
+    derivatives.original = originalUrl
+    
+    // If no pre-generated derivatives, use original for all sizes
+    // Next.js <Image> will resize them on Vercel's edge (free)
+    if (!derivatives.sm) derivatives.sm = originalUrl
+    if (!derivatives.lg) derivatives.lg = originalUrl
 
     results.push({
       id: image.id,
