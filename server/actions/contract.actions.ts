@@ -774,27 +774,32 @@ export async function cancelContract(
     const photographerEmail = settings?.contact_email || user.email
     const clientName = `${client.first_name}${client.partner_first_name ? ` & ${client.partner_first_name}` : ''} ${client.last_name}`
 
-    // Send cancellation emails to both parties
-    await Promise.all([
-      sendContractCancellationToClient({
-        clientEmail: client.email,
-        clientName,
-        photographerName,
-        photographerEmail,
-        eventType: client.event_type || 'photography',
-        eventDate: client.event_date || undefined,
-        cancellationReason: reason,
-      }),
-      sendContractCancellationToPhotographer({
-        clientEmail: client.email,
-        clientName,
-        photographerName,
-        photographerEmail,
-        eventType: client.event_type || 'photography',
-        eventDate: client.event_date || undefined,
-        cancellationReason: reason,
-      }),
-    ])
+    // Send cancellation emails to both parties (don't fail if emails fail)
+    try {
+      await Promise.all([
+        sendContractCancellationToClient({
+          clientEmail: client.email,
+          clientName,
+          photographerName,
+          photographerEmail,
+          eventType: client.event_type || 'photography',
+          eventDate: client.event_date || undefined,
+          cancellationReason: reason,
+        }),
+        sendContractCancellationToPhotographer({
+          clientEmail: client.email,
+          clientName,
+          photographerName,
+          photographerEmail,
+          eventType: client.event_type || 'photography',
+          eventDate: client.event_date || undefined,
+          cancellationReason: reason,
+        }),
+      ])
+    } catch (emailError) {
+      console.error('[cancelContract] Email error (non-fatal):', emailError)
+      // Continue - contract is already cancelled, email failure shouldn't block
+    }
 
     revalidatePath('/dashboard/clients')
     revalidatePath(`/dashboard/clients/${client.id}`)
