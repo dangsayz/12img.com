@@ -125,7 +125,8 @@ export function PromoBanner({ campaign, position = 'floating', onDismiss }: Prom
         animate={{ y: 0, opacity: 1 }}
         exit={{ y: 100, opacity: 0 }}
         transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-        className="fixed bottom-4 left-4 right-4 md:left-auto md:right-4 md:max-w-md z-50"
+        className="fixed left-4 right-4 md:left-auto md:right-4 md:max-w-md z-50"
+        style={{ bottom: 'max(1rem, env(safe-area-inset-bottom, 1rem))' }}
       >
         <div
           className="p-4 shadow-2xl"

@@ -19,6 +19,7 @@ import {
   Layers,
   Database,
 } from 'lucide-react'
+import { RevenueRoadmap } from '@/components/admin/RevenueRoadmap'
 
 // Animation variants
 const container = {
@@ -489,6 +490,18 @@ export function DashboardContent({ stats, revenue }: Props) {
           })}
         </div>
       </motion.div>
+      
+      {/* Revenue Roadmap - Journey to $100K */}
+      {revenue && (
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.45 }}
+          className="bg-white border border-[#E5E5E5] p-6"
+        >
+          <RevenueRoadmap currentMRR={revenue.mrr} />
+        </motion.div>
+      )}
       
       {/* Quick Actions */}
       <motion.div 

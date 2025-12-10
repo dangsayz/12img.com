@@ -1,6 +1,6 @@
 import { getDashboardStats } from '@/server/admin/users'
 import { getRevenueMetrics } from '@/server/admin/billing'
-import { DashboardContent } from './DashboardContent'
+import { DashboardContent } from './DashboardContentSimple'
 
 export default async function AdminDashboardPage() {
   const [stats, revenue] = await Promise.all([

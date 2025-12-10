@@ -541,6 +541,7 @@ function GalleryCard({
   const [isDeleted, setIsDeleted] = useState(false)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [isPublic, setIsPublic] = useState(gallery.isPublic)
+  const [imageError, setImageError] = useState(false)
 
   const relativePath = `/view-reel/${gallery.slug}`
   const [shareUrl, setShareUrl] = useState(relativePath)
@@ -608,17 +609,24 @@ function GalleryCard({
               : '0 1px 3px rgba(0, 0, 0, 0.08), 0 0 0 1px rgba(0, 0, 0, 0.02)'
           }}
         >
-          {gallery.coverImageUrl ? (
+          {gallery.coverImageUrl && !imageError ? (
             <Image
               src={gallery.coverImageUrl}
               alt={gallery.title}
               fill
               className="object-cover transition-all duration-700 ease-out group-hover/card:scale-[1.03]"
               sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+              onError={() => setImageError(true)}
             />
           ) : (
-            <div className="absolute inset-0 flex items-center justify-center bg-stone-50">
-              <span className="text-stone-300 text-xs tracking-wider">NO COVER</span>
+            <div className="absolute inset-0 flex flex-col items-center justify-center bg-stone-100/50">
+              {/* Minimal geometric placeholder */}
+              <div className="relative w-12 h-12 mb-3">
+                <div className="absolute inset-0 border border-stone-200 rounded-sm" />
+                <div className="absolute inset-2 border border-stone-200/60 rounded-sm" />
+                <div className="absolute top-1/2 left-1/2 w-1 h-1 -translate-x-1/2 -translate-y-1/2 bg-stone-300 rounded-full" />
+              </div>
+              <span className="text-[10px] tracking-[0.2em] text-stone-300 uppercase">No images</span>
             </div>
           )}
 
