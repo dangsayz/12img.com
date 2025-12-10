@@ -38,6 +38,7 @@ import {
 } from '@/lib/contracts/templates'
 import { getClausesForEventType } from '@/lib/contracts/event-clauses'
 import { sendContractEmail, sendSignatureConfirmationEmail, sendPhotographerSignatureNotification } from '@/server/services/contract-email.service'
+import { canCreateContract, getContractLimit, type PlanTier } from '@/lib/config/pricing-v2'
 
 // ============================================
 // VALIDATION SCHEMAS
@@ -197,6 +198,35 @@ export async function createContract(
   if (!user) {
     return { success: false, error: systemError('USER_NOT_FOUND', 'User account not found') }
   }
+
+  // ============================================
+  // CONTRACT LIMIT CHECK (Pricing Enforcement)
+  // ============================================
+  const userPlan = (user.subscription_plan || 'free') as PlanTier
+  
+  // Get contract count for this month
+  const startOfMonth = new Date()
+  startOfMonth.setDate(1)
+  startOfMonth.setHours(0, 0, 0, 0)
+
+  const { count: contractsThisMonth } = await supabaseAdmin
+    .from('contracts')
+    .select('*', { count: 'exact', head: true })
+    .eq('photographer_id', user.id)
+    .gte('created_at', startOfMonth.toISOString())
+
+  // Check if user can create more contracts
+  if (!canCreateContract(userPlan, contractsThisMonth || 0)) {
+    const limit = getContractLimit(userPlan)
+    return { 
+      success: false, 
+      error: userError(
+        'LIMIT_REACHED', 
+        `You've reached your monthly contract limit (${limit}). Upgrade your plan for more contracts.`
+      )
+    }
+  }
+  // ============================================
 
   // Validate input
   const validation = createContractSchema.safeParse(input)

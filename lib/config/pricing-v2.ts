@@ -320,11 +320,11 @@ export const FEATURE_ROWS: FeatureRow[] = [
     label: 'Smart Contracts',
     description: 'Professional contracts with e-signatures',
     availability: {
-      free: { status: 'excluded' },
-      essential: { status: 'included' },
-      pro: { status: 'included' },
-      studio: { status: 'included' },
-      elite: { status: 'included' },
+      free: { status: 'limited', note: '1 trial', tooltip: 'Try the feature with 1 contract per month' },
+      essential: { status: 'limited', note: '5/month' },
+      pro: { status: 'limited', note: '15/month' },
+      studio: { status: 'limited', note: '50/month' },
+      elite: { status: 'included', note: 'Unlimited' },
     },
   },
   {
