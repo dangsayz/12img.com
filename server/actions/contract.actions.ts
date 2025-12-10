@@ -204,7 +204,7 @@ export async function checkContractLimits(): Promise<ActionResult<ContractLimitS
     return { success: false, error: systemError('USER_NOT_FOUND', 'User account not found') }
   }
 
-  const userPlan = (user.subscription_plan || 'free') as PlanTier
+  const userPlan = (user.plan || 'free') as PlanTier
   
   // Get contract count for this month
   const startOfMonth = new Date()
@@ -251,7 +251,7 @@ export async function createContract(
   // ============================================
   // CONTRACT LIMIT CHECK (Pricing Enforcement)
   // ============================================
-  const userPlan = (user.subscription_plan || 'free') as PlanTier
+  const userPlan = (user.plan || 'free') as PlanTier
   
   // Get contract count for this month
   const startOfMonth = new Date()
