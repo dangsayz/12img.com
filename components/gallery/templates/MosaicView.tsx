@@ -200,6 +200,7 @@ function MasonryCard({
 }) {
   const [isHovered, setIsHovered] = useState(false)
   const [isLoaded, setIsLoaded] = useState(false)
+  const [hasError, setHasError] = useState(false)
   const [isSettingCover, setIsSettingCover] = useState(false)
 
   const handleSetCover = async (e: React.MouseEvent) => {
@@ -237,7 +238,7 @@ function MasonryCard({
       )}
       
       {/* Skeleton - shows before image loads */}
-      {!isLoaded && (
+      {!isLoaded && !hasError && (
         <div 
           className="w-full bg-stone-100 animate-pulse"
           style={{ 
@@ -248,8 +249,25 @@ function MasonryCard({
         />
       )}
       
+      {/* Error state - shows when image fails to load */}
+      {hasError && (
+        <div 
+          className="w-full bg-stone-100 flex items-center justify-center"
+          style={{ 
+            aspectRatio: (image.width && image.height) 
+              ? `${image.width} / ${image.height}` 
+              : '4 / 3' 
+          }}
+        >
+          <div className="text-center p-4">
+            <ImageIcon className="w-8 h-8 text-stone-300 mx-auto mb-2" />
+            <p className="text-xs text-stone-400">Image unavailable</p>
+          </div>
+        </div>
+      )}
+      
       {/* Image - natural sizing for true masonry */}
-      {image.thumbnailUrl && (
+      {image.thumbnailUrl && !hasError && (
         <Image
           src={image.thumbnailUrl}
           alt={getSeoAltText(galleryTitle || 'Photo', undefined, index + 1)}
@@ -263,7 +281,10 @@ function MasonryCard({
           }}
           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
           onLoad={() => setIsLoaded(true)}
-          onError={() => console.error('Failed to load image:', image.id, image.thumbnailUrl)}
+          onError={() => {
+            console.error('Failed to load image:', image.id, image.thumbnailUrl)
+            setHasError(true)
+          }}
           loading={index < 9 ? 'eager' : 'lazy'}
           priority={index < 6}
         />
@@ -499,8 +520,8 @@ export function MosaicView({
           ════════════════════════════════════════════════════════════════════ */}
       <section ref={heroRef} className="relative h-screen flex overflow-hidden">
         {/* Left - Hero Image with Parallax */}
-        <div className="relative w-1/2 h-full overflow-hidden">
-          {heroImage && (
+        <div className="relative w-1/2 h-full overflow-hidden bg-stone-100">
+          {heroImage && (heroImage.originalUrl || heroImage.previewUrl || heroImage.thumbnailUrl) && (
             <>
               <motion.div
                 className="absolute inset-0"
@@ -510,7 +531,7 @@ export function MosaicView({
                 }}
               >
                 <Image
-                  src={heroImage.originalUrl || heroImage.previewUrl}
+                  src={heroImage.originalUrl || heroImage.previewUrl || heroImage.thumbnailUrl}
                   alt={getSeoAltText(title, photographerName)}
                   fill
                   className="object-cover"

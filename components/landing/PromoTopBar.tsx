@@ -72,11 +72,11 @@ export function PromoTopBar() {
                 <span className="relative inline-flex rounded-full h-1.5 w-1.5 sm:h-2 sm:w-2 bg-white" />
               </span>
               
-              {/* Text - truncate on mobile */}
+              {/* Text - benefit-focused, grandpa-friendly */}
               <span className="truncate">
-                <span className="font-medium">{campaign.badge_text || campaign.name}</span>
+                <span className="font-medium">Save 44% today</span>
                 <span className="hidden sm:inline text-white/70 mx-2">—</span>
-                <span className="hidden sm:inline text-white/70">{campaign.banner_headline}</span>
+                <span className="hidden sm:inline text-white/70">Elite plan just $30/year</span>
               </span>
               
               {/* Arrow */}

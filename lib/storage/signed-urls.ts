@@ -191,9 +191,32 @@ export async function getSignedUrlsWithSizes(
     const thumbnail = thumbnailUrls.get(path)
     const preview = previewUrls.get(path)
     const original = originalUrls.get(path)
-    if (thumbnail && preview && original) {
-      result.set(path, { thumbnail, preview, original })
+    
+    // Be more resilient - use fallbacks if some sizes fail
+    // Priority: original > preview > thumbnail for higher quality fallbacks
+    const effectiveThumbnail = thumbnail || preview || original
+    const effectivePreview = preview || original || thumbnail
+    const effectiveOriginal = original || preview || thumbnail
+    
+    if (effectiveThumbnail && effectivePreview && effectiveOriginal) {
+      result.set(path, { 
+        thumbnail: effectiveThumbnail, 
+        preview: effectivePreview, 
+        original: effectiveOriginal 
+      })
+    } else if (original) {
+      // Last resort: if we have at least the original, use it for everything
+      result.set(path, { thumbnail: original, preview: original, original })
+    } else {
+      // Log when we completely fail to get any URL for a path
+      console.error('[SignedUrls] Failed to get any URL for path:', path)
     }
+  }
+  
+  // Log summary
+  const failedCount = paths.length - result.size
+  if (failedCount > 0) {
+    console.warn(`[SignedUrls] ${failedCount}/${paths.length} paths failed to get URLs`)
   }
 
   return result
