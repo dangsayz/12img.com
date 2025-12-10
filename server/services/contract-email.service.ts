@@ -344,7 +344,7 @@ export async function sendPhotographerSignatureNotification(options: {
     minute: '2-digit',
   })
 
-  const subject = `🎉 Contract Signed by ${clientName}`
+  const subject = `Contract Signed — ${clientName}`
 
   const html = `
     <!DOCTYPE html>
