@@ -176,8 +176,28 @@ Revert `smart_contracts` free tier to `{ status: 'excluded' }`
 - [ ] Pro user cannot create more than 15 contracts/month
 - [ ] Free user cannot share with more than 3 vendors (ALREADY WORKS)
 - [ ] Free user cannot create more than 3 galleries (ALREADY WORKS)
-- [ ] Error message shows when limit reached
+- [x] Upgrade modal shows when limit reached (ADDED)
 - [ ] Existing contracts still work (no breaking changes)
+
+---
+
+## 🆕 Additional Fix: Upgrade Modal (Dec 9, 2024)
+
+### Problem
+When user clicks "New Contract" and is at their limit, nothing happened - confusing UX.
+
+### Solution
+Added `checkContractLimits()` server action and upgrade modal in `ClientsPageContent.tsx`
+
+**Files Modified:**
+- `server/actions/contract.actions.ts` - Added `checkContractLimits()` action
+- `components/clients/ClientsPageContent.tsx` - Added limit check + upgrade modal
+
+**Flow:**
+1. User clicks "New Contract" or "Add Client"
+2. `checkContractLimits()` is called
+3. If `canCreate: true` → Show create modal
+4. If `canCreate: false` → Show upgrade modal with plan options
 
 ---
 

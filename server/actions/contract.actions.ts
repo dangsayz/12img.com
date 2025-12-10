@@ -183,6 +183,55 @@ export async function getAvailableClauses(): Promise<ActionResult<ClauseWithStat
 }
 
 // ============================================
+// CHECK CONTRACT LIMITS
+// ============================================
+
+export interface ContractLimitStatus {
+  canCreate: boolean
+  currentCount: number
+  limit: number | 'unlimited'
+  plan: string
+}
+
+export async function checkContractLimits(): Promise<ActionResult<ContractLimitStatus>> {
+  const { userId: clerkId } = await auth()
+  if (!clerkId) {
+    return { success: false, error: userError('UNAUTHORIZED', 'Please sign in to continue') }
+  }
+
+  const user = await getOrCreateUserByClerkId(clerkId)
+  if (!user) {
+    return { success: false, error: systemError('USER_NOT_FOUND', 'User account not found') }
+  }
+
+  const userPlan = (user.subscription_plan || 'free') as PlanTier
+  
+  // Get contract count for this month
+  const startOfMonth = new Date()
+  startOfMonth.setDate(1)
+  startOfMonth.setHours(0, 0, 0, 0)
+
+  const { count: contractsThisMonth } = await supabaseAdmin
+    .from('contracts')
+    .select('*', { count: 'exact', head: true })
+    .eq('photographer_id', user.id)
+    .gte('created_at', startOfMonth.toISOString())
+
+  const limit = getContractLimit(userPlan)
+  const canCreate = canCreateContract(userPlan, contractsThisMonth || 0)
+
+  return {
+    success: true,
+    data: {
+      canCreate,
+      currentCount: contractsThisMonth || 0,
+      limit,
+      plan: userPlan,
+    }
+  }
+}
+
+// ============================================
 // CREATE CONTRACT
 // ============================================
 

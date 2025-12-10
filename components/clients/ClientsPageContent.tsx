@@ -1,7 +1,8 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useState, useTransition, useEffect } from 'react'
 import Link from 'next/link'
+import { useSearchParams } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Plus,
@@ -14,20 +15,50 @@ import {
   Phone,
   ChevronRight,
   ArrowLeft,
+  ArrowRight,
+  Sparkles,
+  X,
 } from 'lucide-react'
 import { type ClientWithStats, CONTRACT_STATUS_CONFIG, EVENT_TYPE_LABELS } from '@/lib/contracts/types'
 import { parseLocalDate } from '@/lib/contracts/merge-fields'
 import { CreateClientModal } from './CreateClientModal'
 import { OnboardingHint } from '@/components/onboarding'
+import { checkContractLimits, type ContractLimitStatus } from '@/server/actions/contract.actions'
 
 interface ClientsPageContentProps {
   clients: ClientWithStats[]
 }
 
 export function ClientsPageContent({ clients }: ClientsPageContentProps) {
+  const searchParams = useSearchParams()
   const [searchQuery, setSearchQuery] = useState('')
   const [showCreateModal, setShowCreateModal] = useState(false)
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false)
+  const [contractLimits, setContractLimits] = useState<ContractLimitStatus | null>(null)
   const [filter, setFilter] = useState<'all' | 'upcoming' | 'needs_attention'>('all')
+
+  // Check if user came from "New Contract" button
+  useEffect(() => {
+    if (searchParams.get('new') === 'true') {
+      handleNewContract()
+    }
+  }, [searchParams])
+
+  // Check contract limits and show appropriate modal
+  const handleNewContract = async () => {
+    const result = await checkContractLimits()
+    if (result.success && result.data) {
+      setContractLimits(result.data)
+      if (result.data.canCreate) {
+        setShowCreateModal(true)
+      } else {
+        setShowUpgradeModal(true)
+      }
+    } else {
+      // If check fails, still try to show modal (will fail on submit with proper error)
+      setShowCreateModal(true)
+    }
+  }
 
   const filteredClients = clients.filter(client => {
     // Search filter
@@ -93,7 +124,7 @@ export function ClientsPageContent({ clients }: ClientsPageContentProps) {
           <h1 className="text-xl font-light text-stone-900">Clients</h1>
         </div>
         <button
-          onClick={() => setShowCreateModal(true)}
+          onClick={handleNewContract}
           className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm bg-stone-900 text-white rounded-lg hover:bg-stone-800 transition-colors"
           data-onboarding="clients-add"
         >
@@ -203,6 +234,90 @@ export function ClientsPageContent({ clients }: ClientsPageContentProps) {
         isOpen={showCreateModal}
         onClose={() => setShowCreateModal(false)}
       />
+
+      {/* Upgrade Modal - Contract Limit Reached */}
+      <AnimatePresence>
+        {showUpgradeModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+            onClick={() => setShowUpgradeModal(false)}
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              onClick={(e) => e.stopPropagation()}
+              className="bg-white w-full max-w-md overflow-hidden shadow-2xl"
+            >
+              {/* Header */}
+              <div className="relative px-8 pt-8 pb-6 text-center border-b border-stone-100">
+                <button
+                  onClick={() => setShowUpgradeModal(false)}
+                  className="absolute top-4 right-4 p-2 text-stone-400 hover:text-stone-600 transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+                
+                <div className="w-14 h-14 bg-stone-900 flex items-center justify-center mx-auto mb-4">
+                  <Sparkles className="w-7 h-7 text-white" />
+                </div>
+                
+                <p className="text-[11px] tracking-[0.2em] uppercase text-stone-400 mb-2">
+                  Contract Limit Reached
+                </p>
+                <h2 className="text-xl font-light text-stone-900" style={{ fontFamily: 'Georgia, serif' }}>
+                  Upgrade Your Plan
+                </h2>
+              </div>
+
+              {/* Content */}
+              <div className="px-8 py-6">
+                <p className="text-center text-stone-600 mb-6">
+                  You've used <span className="font-semibold text-stone-900">{contractLimits?.currentCount || 0}</span> of{' '}
+                  <span className="font-semibold text-stone-900">
+                    {contractLimits?.limit === 'unlimited' ? 'unlimited' : contractLimits?.limit || 1}
+                  </span>{' '}
+                  contracts this month on the{' '}
+                  <span className="font-semibold text-stone-900 capitalize">{contractLimits?.plan || 'Free'}</span> plan.
+                </p>
+
+                <div className="bg-stone-50 p-4 mb-6">
+                  <p className="text-sm font-medium text-stone-700 mb-3">Upgrade to get more contracts:</p>
+                  <ul className="text-sm text-stone-600 space-y-2">
+                    <li className="flex items-center gap-2">
+                      <span className="w-1 h-1 bg-stone-400 rounded-full" />
+                      Essential: 5 contracts/month
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <span className="w-1 h-1 bg-stone-400 rounded-full" />
+                      Pro: 15 contracts/month
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <span className="w-1 h-1 bg-stone-400 rounded-full" />
+                      Studio: 50 contracts/month
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <span className="w-1 h-1 bg-stone-400 rounded-full" />
+                      Elite: Unlimited contracts
+                    </li>
+                  </ul>
+                </div>
+
+                <Link
+                  href="/pricing"
+                  className="w-full flex items-center justify-center gap-2 py-4 bg-stone-900 text-white text-sm tracking-[0.1em] uppercase font-medium hover:bg-black transition-colors"
+                >
+                  View Plans
+                  <ArrowRight className="w-4 h-4" />
+                </Link>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </>
   )
 }
