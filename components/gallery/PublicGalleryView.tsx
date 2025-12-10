@@ -258,7 +258,7 @@ function CleanGridCard({
         sizes="(max-width: 768px) 50vw, 33vw"
         onLoad={() => setIsLoaded(true)}
         loading={index < 20 ? 'eager' : 'lazy'}
-        priority={index < 6}
+        unoptimized
       />
       {/* Subtle hover */}
       <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-300" />
@@ -323,9 +323,9 @@ function ImageCard({
         className={`object-cover transition-opacity duration-300 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}
         style={{ objectPosition: `${image.focalX ?? 50}% ${image.focalY ?? 50}%` }}
         sizes="(max-width: 768px) 100vw, 50vw"
-        priority={priority || index < 4}
         loading={priority || index < 20 ? 'eager' : 'lazy'}
         onLoad={() => setIsLoaded(true)}
+        unoptimized
       />
       {/* Action buttons on hover */}
       {isHovered && (
@@ -408,8 +408,8 @@ export function PublicGalleryView({
             className="object-cover"
             style={{ objectPosition: `${heroImage.focalX ?? 50}% ${heroImage.focalY ?? 50}%` }}
             priority
-            quality={90}
             sizes="100vw"
+            unoptimized
           />
           
           {/* Minimal gradient for text readability only */}

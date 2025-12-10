@@ -209,6 +209,7 @@ function ImageCard({
           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
           onLoad={() => setIsLoaded(true)}
           loading={index < 8 ? 'eager' : 'lazy'}
+          unoptimized
         />
       )}
 
@@ -523,6 +524,7 @@ export function CinematicGallery({
                 }}
                 priority
                 sizes="(max-width: 1024px) 100vw, 50vw"
+                unoptimized
               />
             </motion.div>
           )}
@@ -734,6 +736,7 @@ export function CinematicGallery({
                 width={lightboxImage.width || 1920}
                 height={lightboxImage.height || 1080}
                 className="max-w-full max-h-[90vh] object-contain"
+                unoptimized
               />
             </motion.div>
           </motion.div>

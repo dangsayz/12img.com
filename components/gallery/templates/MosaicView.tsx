@@ -267,6 +267,8 @@ function MasonryCard({
       )}
       
       {/* Image - natural sizing for true masonry */}
+      {/* Using unoptimized to bypass Vercel Image Optimization (402 quota errors) */}
+      {/* Supabase already provides optimized transforms via signed URLs */}
       {image.thumbnailUrl && !hasError && (
         <Image
           src={image.thumbnailUrl}
@@ -279,14 +281,13 @@ function MasonryCard({
           style={{ 
             objectPosition: `${image.focalX ?? 50}% ${image.focalY ?? 50}%`,
           }}
-          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
           onLoad={() => setIsLoaded(true)}
           onError={() => {
             console.error('Failed to load image:', image.id, image.thumbnailUrl)
             setHasError(true)
           }}
           loading={index < 9 ? 'eager' : 'lazy'}
-          priority={index < 6}
+          unoptimized
         />
       )}
       
@@ -537,8 +538,8 @@ export function MosaicView({
                   className="object-cover"
                   style={{ objectPosition: `${heroImage.focalX ?? 50}% ${heroImage.focalY ?? 50}%` }}
                   priority
-                  quality={90}
                   sizes="50vw"
+                  unoptimized
                 />
               </motion.div>
               
