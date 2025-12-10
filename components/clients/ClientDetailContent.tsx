@@ -579,16 +579,20 @@ export function ClientDetailContent({
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Event Details */}
           <div className="lg:col-span-2 space-y-6">
-            <div className="bg-white rounded-2xl border border-stone-200/60 shadow-sm overflow-hidden">
-              <div className="px-6 py-4 border-b border-stone-100 bg-stone-50/50">
+            <button 
+              onClick={() => setShowEditModal(true)}
+              className="w-full text-left bg-white rounded-2xl border border-stone-200/60 shadow-sm overflow-hidden hover:border-stone-300 hover:shadow-md transition-all group"
+            >
+              <div className="px-6 py-4 border-b border-stone-100 bg-stone-50/50 flex items-center justify-between">
                 <h2 className="text-sm font-semibold text-stone-900 flex items-center gap-2">
                   <Calendar className="w-4 h-4 text-stone-400" />
                   Event Details
                 </h2>
+                <Pencil className="w-4 h-4 text-stone-300 group-hover:text-stone-500 transition-colors" />
               </div>
               <div className="p-6">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                  <div className="group">
+                  <div>
                     <p className="text-xs font-medium text-stone-400 uppercase tracking-wider mb-1.5">Date</p>
                     <p className="text-base font-medium text-stone-900">
                       {eventDate
@@ -601,19 +605,19 @@ export function ClientDetailContent({
                         : <span className="text-stone-400 italic">Not set</span>}
                     </p>
                   </div>
-                  <div className="group">
+                  <div>
                     <p className="text-xs font-medium text-stone-400 uppercase tracking-wider mb-1.5">Event Type</p>
                     <p className="text-base font-medium text-stone-900">
                       {EVENT_TYPE_LABELS[client.eventType]}
                     </p>
                   </div>
-                  <div className="group">
+                  <div>
                     <p className="text-xs font-medium text-stone-400 uppercase tracking-wider mb-1.5">Location</p>
                     <p className="text-base font-medium text-stone-900">
                       {client.eventLocation || <span className="text-stone-400 italic">Not set</span>}
                     </p>
                   </div>
-                  <div className="group">
+                  <div>
                     <p className="text-xs font-medium text-stone-400 uppercase tracking-wider mb-1.5">Venue</p>
                     <p className="text-base font-medium text-stone-900">
                       {client.eventVenue || <span className="text-stone-400 italic">Not set</span>}
@@ -621,18 +625,22 @@ export function ClientDetailContent({
                   </div>
                 </div>
               </div>
-            </div>
+            </button>
 
             {/* Package */}
-            {client.packageName && (
-              <div className="bg-white rounded-2xl border border-stone-200/60 shadow-sm overflow-hidden">
-                <div className="px-6 py-4 border-b border-stone-100 bg-stone-50/50">
-                  <h2 className="text-sm font-semibold text-stone-900 flex items-center gap-2">
-                    <FileText className="w-4 h-4 text-stone-400" />
-                    Package
-                  </h2>
-                </div>
-                <div className="p-6">
+            <button 
+              onClick={() => setShowEditModal(true)}
+              className="w-full text-left bg-white rounded-2xl border border-stone-200/60 shadow-sm overflow-hidden hover:border-stone-300 hover:shadow-md transition-all group"
+            >
+              <div className="px-6 py-4 border-b border-stone-100 bg-stone-50/50 flex items-center justify-between">
+                <h2 className="text-sm font-semibold text-stone-900 flex items-center gap-2">
+                  <FileText className="w-4 h-4 text-stone-400" />
+                  Package
+                </h2>
+                <Pencil className="w-4 h-4 text-stone-300 group-hover:text-stone-500 transition-colors" />
+              </div>
+              <div className="p-6">
+                {client.packageName ? (
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-lg font-medium text-stone-900">{client.packageName}</p>
@@ -653,9 +661,11 @@ export function ClientDetailContent({
                       )}
                     </div>
                   </div>
-                </div>
+                ) : (
+                  <p className="text-stone-400 italic">No package set - click to add</p>
+                )}
               </div>
-            )}
+            </button>
 
             {/* Milestone Timeline */}
             {milestones.length > 0 && (
