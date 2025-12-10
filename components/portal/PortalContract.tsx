@@ -204,112 +204,106 @@ export function PortalContract({
           </div>
         </motion.div>
 
-        {/* Signature Section */}
+        {/* Signature Section - Ultra Minimalist */}
         {!isSigned && canSign && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="bg-white rounded-2xl border border-stone-200 overflow-hidden"
+            className="bg-white border border-stone-200 overflow-hidden"
           >
-            {/* Header */}
-            <div className="px-6 py-4 bg-gradient-to-r from-stone-50 to-white border-b border-stone-100">
-              <h2 className="text-lg font-semibold text-stone-900 flex items-center gap-2">
-                <PenTool className="w-5 h-5 text-stone-400" />
-                Sign Contract
-              </h2>
-              <p className="text-sm text-stone-500 mt-1">
-                Draw your signature below to complete the agreement
+            {/* Minimal Header */}
+            <div className="px-8 py-6 border-b border-stone-100">
+              <p className="text-[11px] tracking-[0.2em] uppercase text-stone-400 mb-2">
+                Complete Agreement
               </p>
+              <h2 className="text-xl font-light text-stone-900" style={{ fontFamily: 'Georgia, serif' }}>
+                Sign Your Contract
+              </h2>
             </div>
 
-            <div className="p-6 space-y-5">
+            <div className="p-8 space-y-8">
               {!showSignature ? (
+                /* Initial State - Click to Sign */
                 <button
                   onClick={() => setShowSignature(true)}
-                  className="w-full flex flex-col items-center justify-center gap-3 p-8 border-2 border-dashed border-stone-300 rounded-2xl hover:border-stone-400 hover:bg-stone-50 transition-all group"
+                  className="w-full group"
                 >
-                  <div className="w-14 h-14 rounded-xl bg-stone-100 flex items-center justify-center group-hover:bg-stone-200 transition-colors">
-                    <PenTool className="w-6 h-6 text-stone-500" />
-                  </div>
-                  <div className="text-center">
-                    <p className="font-medium text-stone-900">Click to add your signature</p>
-                    <p className="text-sm text-stone-500 mt-1">Draw your signature using your mouse or finger</p>
+                  <div className="border border-stone-200 hover:border-stone-900 transition-colors p-12">
+                    <div className="flex flex-col items-center gap-4">
+                      <div className="w-px h-8 bg-stone-200" />
+                      <p className="text-sm tracking-wide text-stone-400 group-hover:text-stone-900 transition-colors">
+                        TAP TO SIGN
+                      </p>
+                      <div className="w-px h-8 bg-stone-200" />
+                    </div>
                   </div>
                 </button>
               ) : (
-                <div className="space-y-5">
-                  {/* Signature Canvas */}
+                <div className="space-y-8">
+                  {/* Signature Canvas - Clean */}
                   <div className="relative">
-                    <div className="absolute -inset-px bg-gradient-to-br from-stone-200 to-stone-300 rounded-2xl" />
-                    <div className="relative bg-white rounded-2xl overflow-hidden">
-                      <canvas
-                        ref={canvasRef}
-                        width={600}
-                        height={180}
-                        onMouseDown={startDrawing}
-                        onMouseMove={draw}
-                        onMouseUp={stopDrawing}
-                        onMouseLeave={stopDrawing}
-                        onTouchStart={startDrawing}
-                        onTouchMove={draw}
-                        onTouchEnd={stopDrawing}
-                        className="w-full h-[180px] cursor-crosshair touch-none"
-                        style={{ background: 'linear-gradient(to bottom, #fafaf9 0%, white 100%)' }}
-                      />
-                      {/* Signature line */}
-                      <div className="absolute bottom-8 left-6 right-6 h-0.5 bg-stone-300" />
-                      <p className="absolute bottom-2 left-6 text-xs text-stone-400 font-medium">
-                        Sign above the line
-                      </p>
-                    </div>
+                    <canvas
+                      ref={canvasRef}
+                      width={600}
+                      height={160}
+                      onMouseDown={startDrawing}
+                      onMouseMove={draw}
+                      onMouseUp={stopDrawing}
+                      onMouseLeave={stopDrawing}
+                      onTouchStart={startDrawing}
+                      onTouchMove={draw}
+                      onTouchEnd={stopDrawing}
+                      className="w-full h-[160px] cursor-crosshair touch-none bg-white border border-stone-200"
+                    />
+                    {/* Signature line */}
+                    <div className="absolute bottom-10 left-8 right-8 h-px bg-stone-900" />
+                    <p className="absolute bottom-3 left-8 text-[10px] tracking-[0.15em] uppercase text-stone-400">
+                      Your Signature
+                    </p>
                     <button
                       onClick={clearSignature}
-                      className="absolute top-3 right-3 px-3 py-1.5 text-xs font-medium text-stone-600 hover:text-stone-900 bg-white/90 backdrop-blur border border-stone-200 rounded-lg shadow-sm hover:shadow transition-all"
+                      className="absolute top-3 right-3 text-[10px] tracking-wider uppercase text-stone-400 hover:text-stone-900 transition-colors"
                     >
                       Clear
                     </button>
                   </div>
 
-                  {/* Agreement Checkbox */}
-                  <label className="flex items-start gap-3 cursor-pointer p-4 bg-stone-50 rounded-xl border border-stone-200 hover:bg-stone-100 transition-colors">
-                    <input
-                      type="checkbox"
-                      checked={agreedToTerms}
-                      onChange={e => setAgreedToTerms(e.target.checked)}
-                      className="mt-0.5 w-5 h-5 rounded border-stone-300 text-stone-900 focus:ring-stone-900 focus:ring-offset-0"
-                    />
-                    <span className="text-sm text-stone-700 leading-relaxed">
-                      I have read and agree to all terms and conditions outlined in this Photography Services Agreement. 
-                      I understand this is a <strong>legally binding contract</strong>.
+                  {/* Agreement - Minimal */}
+                  <label className="flex items-start gap-4 cursor-pointer group">
+                    <div className="relative mt-0.5">
+                      <input
+                        type="checkbox"
+                        checked={agreedToTerms}
+                        onChange={e => setAgreedToTerms(e.target.checked)}
+                        className="sr-only peer"
+                      />
+                      <div className="w-5 h-5 border border-stone-300 peer-checked:border-stone-900 peer-checked:bg-stone-900 transition-colors flex items-center justify-center">
+                        {agreedToTerms && <Check className="w-3 h-3 text-white" />}
+                      </div>
+                    </div>
+                    <span className="text-sm text-stone-500 leading-relaxed group-hover:text-stone-700 transition-colors">
+                      I agree to the terms and conditions of this Photography Services Agreement.
                     </span>
                   </label>
 
                   {error && (
-                    <div className="flex items-start gap-3 p-4 bg-red-50 border border-red-200 rounded-xl">
-                      <div className="w-5 h-5 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0 mt-0.5">
-                        <span className="text-red-600 text-xs font-bold">!</span>
-                      </div>
-                      <p className="text-sm text-red-700">{error}</p>
-                    </div>
+                    <p className="text-sm text-red-600 text-center">{error}</p>
                   )}
 
-                  {/* Sign Button */}
+                  {/* Sign Button - Elegant */}
                   <button
                     onClick={handleSign}
                     disabled={!signatureData || !agreedToTerms || isPending}
-                    className="w-full flex items-center justify-center gap-2.5 px-6 py-4 bg-stone-900 text-white text-base font-medium rounded-xl hover:bg-stone-800 transition-all hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-none"
+                    className="w-full py-4 bg-stone-900 text-white text-sm tracking-[0.1em] uppercase font-medium hover:bg-black transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
                   >
                     {isPending ? (
-                      <>
-                        <Loader2 className="w-5 h-5 animate-spin" />
-                        Signing contract...
-                      </>
+                      <span className="flex items-center justify-center gap-2">
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        Signing...
+                      </span>
                     ) : (
-                      <>
-                        <Check className="w-5 h-5" />
-                        Sign & Complete Contract
-                      </>
+                      'Complete & Sign'
                     )}
                   </button>
                 </div>
@@ -318,28 +312,31 @@ export function PortalContract({
           </motion.div>
         )}
 
-        {/* Signed Confirmation */}
+        {/* Signed Confirmation - Minimal */}
         {isSigned && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="bg-emerald-50 border border-emerald-200 rounded-2xl p-6 text-center"
+            className="bg-white border border-stone-200 p-12 text-center"
           >
-            <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Check className="w-8 h-8 text-emerald-600" />
+            <div className="w-12 h-12 border border-stone-900 flex items-center justify-center mx-auto mb-6">
+              <Check className="w-5 h-5 text-stone-900" />
             </div>
-            <h2 className="text-lg font-medium text-emerald-900 mb-2">Contract Signed</h2>
-            <p className="text-sm text-emerald-700">
-              This contract was signed on{' '}
+            <p className="text-[11px] tracking-[0.2em] uppercase text-stone-400 mb-2">
+              Agreement Complete
+            </p>
+            <h2 className="text-xl font-light text-stone-900 mb-4" style={{ fontFamily: 'Georgia, serif' }}>
+              Contract Signed
+            </h2>
+            <p className="text-sm text-stone-500">
               {contract.signed_at
                 ? new Date(contract.signed_at).toLocaleDateString('en-US', {
                     month: 'long',
                     day: 'numeric',
                     year: 'numeric',
                   })
-                : 'an earlier date'}
-              .
+                : ''}
             </p>
           </motion.div>
         )}
