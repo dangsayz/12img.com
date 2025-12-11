@@ -240,11 +240,11 @@ export const CAMPAIGN_TEMPLATES: CampaignTemplate[] = [
     name: 'Founder\'s Pricing',
     description: 'Limited spots at a special launch price',
     discount_type: 'price_override',
-    discount_value: 3000, // $30
+    discount_value: 2500, // $25/month
     target_plans: ['elite'],
     badge_text: 'FOUNDER PRICING',
-    banner_headline: 'First 100 get Elite for $30/year',
-    banner_subheadline: '2TB storage. Unlimited everything. Lock in 44% off.',
+    banner_headline: 'First 100 get Elite for $25/month',
+    banner_subheadline: '2TB storage. Unlimited galleries. Unlimited contracts. Save $29/month.',
     suggested_duration_days: 90,
     suggested_max_redemptions: 100,
   },

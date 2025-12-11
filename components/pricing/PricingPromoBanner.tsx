@@ -9,7 +9,10 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+import { useUser } from '@clerk/nextjs'
 import { motion, AnimatePresence } from 'framer-motion'
+import { Loader2 } from 'lucide-react'
 import { 
   PromotionalCampaign, 
   getSpotsRemaining, 
@@ -69,7 +72,7 @@ function SpotsIndicator({ campaign }: { campaign: PromotionalCampaign }) {
   const isVeryUrgent = spots <= 5
   
   return (
-    <div className={`flex items-center gap-2 text-sm ${isVeryUrgent ? 'text-red-600' : isUrgent ? 'text-amber-600' : 'text-stone-600'}`}>
+    <div className={`flex items-center gap-2 text-sm ${isVeryUrgent ? 'text-red-400' : isUrgent ? 'text-amber-400' : 'text-stone-300'}`}>
       <div className="flex items-center gap-1">
         {/* Animated dot for urgency */}
         {isUrgent && (
@@ -86,7 +89,10 @@ function SpotsIndicator({ campaign }: { campaign: PromotionalCampaign }) {
 }
 
 export function PricingPromoBanner({ campaign, className = '' }: PricingPromoBannerProps) {
+  const { isSignedIn } = useUser()
+  const router = useRouter()
   const [dismissed, setDismissed] = useState(false)
+  const [loading, setLoading] = useState(false)
   
   // Check localStorage for dismissal
   useEffect(() => {
@@ -116,6 +122,40 @@ export function PricingPromoBanner({ campaign, className = '' }: PricingPromoBan
   const time = getTimeRemaining(campaign)
   const hasUrgency = (spots !== null && spots <= 20) || (time.days <= 3 && !time.isExpired)
   
+  const promoCode = campaign.stripe_coupon_id || campaign.slug
+  
+  const handleClaimClick = async () => {
+    // If not signed in, redirect to sign-up with plan and promo
+    if (!isSignedIn) {
+      router.push(`/sign-up?plan=${targetPlan}&promo=${promoCode}`)
+      return
+    }
+    
+    // Already signed in - go directly to checkout
+    setLoading(true)
+    try {
+      const response = await fetch('/api/stripe/create-checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ planId: targetPlan, promoCode }),
+      })
+      
+      const data = await response.json()
+      
+      if (data.url) {
+        window.location.href = data.url
+      } else {
+        console.error('No checkout URL:', data.error)
+        alert(data.error || 'Failed to start checkout. Please try again.')
+        setLoading(false)
+      }
+    } catch (error) {
+      console.error('Checkout error:', error)
+      alert('Something went wrong. Please try again.')
+      setLoading(false)
+    }
+  }
+  
   return (
     <AnimatePresence>
       <motion.div
@@ -124,30 +164,30 @@ export function PricingPromoBanner({ campaign, className = '' }: PricingPromoBan
         exit={{ opacity: 0, y: -10 }}
         className={`relative ${className}`}
       >
-        {/* Main banner - subtle and editorial */}
-        <div className="bg-gradient-to-r from-stone-50 to-stone-100/50 border border-stone-200 rounded-xl p-5 md:p-6">
+        {/* Main banner - stands out as special deal */}
+        <div className="bg-gradient-to-br from-stone-900 via-stone-800 to-stone-900 border border-stone-700 rounded-xl p-5 md:p-6 shadow-lg">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             {/* Left: Promo info */}
             <div className="flex-1">
               <div className="flex items-center gap-2 mb-2">
                 {campaign.badge_text && (
-                  <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] uppercase tracking-wider font-semibold bg-stone-900 text-white">
+                  <span className="inline-flex items-center px-2.5 py-1 rounded text-[10px] uppercase tracking-wider font-semibold bg-emerald-500 text-white">
                     {campaign.badge_text}
                   </span>
                 )}
                 {hasUrgency && (
-                  <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] uppercase tracking-wider font-medium bg-amber-100 text-amber-700">
+                  <span className="inline-flex items-center px-2.5 py-1 rounded text-[10px] uppercase tracking-wider font-medium bg-amber-500/20 text-amber-300 border border-amber-500/30">
                     Limited Time
                   </span>
                 )}
               </div>
               
-              <h3 className="font-serif text-lg md:text-xl text-stone-900 mb-1">
+              <h3 className="font-serif text-lg md:text-xl text-white mb-1">
                 {campaign.banner_headline}
               </h3>
               
               {campaign.banner_subheadline && (
-                <p className="text-sm text-stone-600 mb-3">
+                <p className="text-sm text-stone-300 mb-3">
                   {campaign.banner_subheadline}
                 </p>
               )}
@@ -163,27 +203,37 @@ export function PricingPromoBanner({ campaign, className = '' }: PricingPromoBan
             <div className="flex flex-col items-start md:items-end gap-3">
               {savingsPerMonth > 0 && (
                 <div className="text-right">
-                  <div className="text-xs uppercase tracking-wider text-stone-500 mb-0.5">You save</div>
-                  <div className="font-serif text-2xl text-stone-900">${savingsPerMonth}<span className="text-sm text-stone-500">/mo</span></div>
+                  <div className="text-xs uppercase tracking-wider text-stone-400 mb-0.5">You save</div>
+                  <div className="font-serif text-2xl text-white">${savingsPerMonth}<span className="text-sm text-stone-400">/mo</span></div>
                 </div>
               )}
               
-              <Link
-                href={`/sign-up?plan=${targetPlan}&promo=${campaign.stripe_coupon_id || campaign.slug}`}
-                className="inline-flex items-center gap-2 px-5 py-2.5 bg-stone-900 text-white text-sm font-medium rounded-lg hover:bg-black transition-colors"
+              <button
+                onClick={handleClaimClick}
+                disabled={loading}
+                className="inline-flex items-center gap-2 px-5 py-2.5 bg-white text-stone-900 text-sm font-medium rounded-lg hover:bg-stone-100 transition-colors disabled:opacity-70"
               >
-                {campaign.banner_cta}
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                </svg>
-              </Link>
+                {loading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Loading...
+                  </>
+                ) : (
+                  <>
+                    {campaign.banner_cta}
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                    </svg>
+                  </>
+                )}
+              </button>
             </div>
           </div>
           
           {/* Dismiss button */}
           <button
             onClick={handleDismiss}
-            className="absolute top-3 right-3 p-1.5 text-stone-400 hover:text-stone-600 transition-colors"
+            className="absolute top-3 right-3 p-1.5 text-stone-500 hover:text-white transition-colors"
             aria-label="Dismiss"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

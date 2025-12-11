@@ -335,3 +335,105 @@ export async function sendCancellationNotification(data: CancellationData): Prom
     return { success: false, error: String(err) }
   }
 }
+
+// =============================================================================
+// PAYMENT FAILED
+// =============================================================================
+
+interface PaymentFailedData {
+  email: string
+  name?: string
+  plan: string
+  failureCount: number
+  gracePeriodEndsAt?: string
+}
+
+export async function sendPaymentFailedNotification(data: PaymentFailedData): Promise<EmailResult> {
+  if (!process.env.RESEND_API_KEY) {
+    return { success: false, error: 'Email not configured' }
+  }
+
+  const gracePeriodDate = data.gracePeriodEndsAt 
+    ? new Date(data.gracePeriodEndsAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+    : null
+
+  try {
+    const { data: result, error } = await resend.emails.send({
+      from: FROM_EMAIL,
+      to: ADMIN_EMAIL,
+      subject: `⚠️ Payment failed: ${data.email} (attempt ${data.failureCount})`,
+      html: `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        </head>
+        <body style="margin: 0; padding: 0; background-color: #fafafa; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+          <div style="max-width: 480px; margin: 40px auto; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+            
+            <!-- Header -->
+            <div style="background: #f97316; padding: 24px 32px;">
+              <div style="display: inline-block; background: white; padding: 4px 8px; font-weight: bold; font-size: 12px; letter-spacing: -0.5px;">12</div>
+              <span style="color: white; font-size: 18px; margin-left: 8px; font-weight: 500;">Payment Failed</span>
+            </div>
+            
+            <!-- Content -->
+            <div style="padding: 32px;">
+              <p style="margin: 0 0 24px; color: #525252; font-size: 14px; line-height: 1.6;">
+                A payment has failed for a subscribed user.
+              </p>
+              
+              <div style="background: #fff7ed; border: 1px solid #fed7aa; border-radius: 6px; padding: 16px; margin-bottom: 24px;">
+                <p style="margin: 0; color: #c2410c; font-size: 14px; font-weight: 500;">
+                  ⚠️ Attempt ${data.failureCount} of 3
+                  ${gracePeriodDate ? `<br><span style="font-weight: normal;">Grace period ends: ${gracePeriodDate}</span>` : ''}
+                </p>
+              </div>
+              
+              <div style="background: #f5f5f5; border-radius: 6px; padding: 20px; margin-bottom: 24px;">
+                <table style="width: 100%; border-collapse: collapse;">
+                  <tr>
+                    <td style="padding: 8px 0; color: #737373; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">Email</td>
+                    <td style="padding: 8px 0; color: #141414; font-size: 14px; font-weight: 500; text-align: right;">${data.email}</td>
+                  </tr>
+                  ${data.name ? `
+                  <tr>
+                    <td style="padding: 8px 0; color: #737373; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">Name</td>
+                    <td style="padding: 8px 0; color: #141414; font-size: 14px; text-align: right;">${data.name}</td>
+                  </tr>
+                  ` : ''}
+                  <tr>
+                    <td style="padding: 8px 0; color: #737373; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">Plan</td>
+                    <td style="padding: 8px 0; color: #141414; font-size: 14px; text-align: right;">${data.plan}</td>
+                  </tr>
+                </table>
+              </div>
+              
+              <a href="${process.env.NEXT_PUBLIC_SITE_URL || 'https://12img.com'}/admin/billing" 
+                 style="display: inline-block; background: #141414; color: white; padding: 12px 24px; text-decoration: none; font-size: 13px; font-weight: 500; border-radius: 4px;">
+                View in Admin →
+              </a>
+            </div>
+            
+            <!-- Footer -->
+            <div style="padding: 20px 32px; border-top: 1px solid #e5e5e5;">
+              <p style="margin: 0; color: #a3a3a3; font-size: 11px;">
+                Stripe will automatically retry the payment. If all retries fail, the user will be downgraded.
+              </p>
+            </div>
+          </div>
+        </body>
+        </html>
+      `,
+    })
+
+    if (error) {
+      return { success: false, error: error.message }
+    }
+
+    return { success: true, messageId: result?.id }
+  } catch (err) {
+    return { success: false, error: String(err) }
+  }
+}

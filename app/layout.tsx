@@ -6,6 +6,7 @@ import { ConditionalFooter } from '@/components/landing/ConditionalFooter'
 import { OrganizationJsonLd, SoftwareApplicationJsonLd, WebsiteJsonLd } from '@/components/seo/JsonLd'
 import { SupportWidget } from '@/components/support/SupportWidget'
 import { AuthModalProvider } from '@/components/auth/AuthModal'
+import { ExitIntentPopup } from '@/components/promo/ExitIntentPopup'
 
 const satoshi = Plus_Jakarta_Sans({ 
   subsets: ['latin'],
@@ -201,6 +202,13 @@ export default function RootLayout({
             {children}
             <ConditionalFooter />
             <SupportWidget />
+            <ExitIntentPopup 
+              discountCode="freeone"
+              discountText="First month FREE ($54 value)"
+              headline="Wait! Don't leave empty-handed"
+              subheadline="Your first month is on us"
+              showOnPaths={['/pricing', '/', '/features']}
+            />
           </AuthModalProvider>
         </body>
       </html>

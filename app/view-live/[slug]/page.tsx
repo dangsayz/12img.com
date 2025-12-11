@@ -92,6 +92,66 @@ export default async function EditorialLiveViewPage({ params }: Props) {
     notFound()
   }
 
+  // Check if gallery is archived (owner downgraded/cancelled subscription)
+  if ((gallery as { archived_at?: string | null }).archived_at) {
+    return (
+      <div className="min-h-screen bg-stone-950 flex flex-col items-center justify-center p-6 relative overflow-hidden">
+        {/* Subtle gradient background */}
+        <div className="absolute inset-0 bg-gradient-to-br from-stone-900 via-stone-950 to-black" />
+        
+        {/* Decorative elements */}
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-amber-900/10 rounded-full blur-3xl" />
+        <div className="absolute bottom-1/4 right-1/4 w-64 h-64 bg-stone-700/10 rounded-full blur-3xl" />
+        
+        {/* Content */}
+        <div className="relative z-10 text-center max-w-md">
+          {/* Archive icon */}
+          <div className="relative mx-auto mb-8">
+            <div className="w-20 h-20 rounded-full border border-amber-700/30 flex items-center justify-center mx-auto backdrop-blur-sm bg-stone-900/50">
+              <svg className="w-8 h-8 text-amber-500/70" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" />
+              </svg>
+            </div>
+          </div>
+          
+          {/* Typography */}
+          <h1 className="text-3xl sm:text-4xl font-extralight text-white tracking-tight mb-4">
+            Gallery Unavailable
+          </h1>
+          <p className="text-stone-400 text-base leading-relaxed mb-8">
+            This gallery is no longer available.<br />
+            Please contact the photographer for assistance.
+          </p>
+          
+          {/* Divider */}
+          <div className="flex items-center gap-4 mb-8">
+            <div className="flex-1 h-px bg-gradient-to-r from-transparent to-stone-700/50" />
+            <span className="text-stone-600 text-xs uppercase tracking-widest">12img</span>
+            <div className="flex-1 h-px bg-gradient-to-l from-transparent to-stone-700/50" />
+          </div>
+          
+          {/* Action */}
+          <a
+            href="/"
+            className="inline-flex items-center gap-2 text-sm text-stone-400 hover:text-white transition-colors group"
+          >
+            <svg className="w-4 h-4 transition-transform group-hover:-translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+            </svg>
+            Return home
+          </a>
+        </div>
+        
+        {/* Bottom branding */}
+        <div className="absolute bottom-6 left-0 right-0 text-center">
+          <p className="text-stone-700 text-xs">
+            Powered by <span className="text-stone-500">12img</span>
+          </p>
+        </div>
+      </div>
+    )
+  }
+
   // Check if gallery is private (not public)
   if (gallery.is_public === false) {
     return (

@@ -16,6 +16,8 @@ export type NotificationType =
   | 'new_subscription'
   | 'subscription_cancelled'
   | 'subscription_upgraded'
+  | 'payment_failed'
+  | 'payment_recovered'
   | 'support_ticket'
   | 'contest_entry'
   | 'feature_request'
@@ -29,6 +31,8 @@ export const NOTIFICATION_TYPE_CONFIG: Record<NotificationType, {
   new_subscription: { icon: 'CreditCard', color: 'text-emerald-600', bgColor: 'bg-emerald-50' },
   subscription_cancelled: { icon: 'XCircle', color: 'text-red-600', bgColor: 'bg-red-50' },
   subscription_upgraded: { icon: 'TrendingUp', color: 'text-purple-600', bgColor: 'bg-purple-50' },
+  payment_failed: { icon: 'AlertTriangle', color: 'text-orange-600', bgColor: 'bg-orange-50' },
+  payment_recovered: { icon: 'CheckCircle', color: 'text-green-600', bgColor: 'bg-green-50' },
   support_ticket: { icon: 'MessageCircle', color: 'text-amber-600', bgColor: 'bg-amber-50' },
   contest_entry: { icon: 'Trophy', color: 'text-yellow-600', bgColor: 'bg-yellow-50' },
   feature_request: { icon: 'Lightbulb', color: 'text-indigo-600', bgColor: 'bg-indigo-50' },

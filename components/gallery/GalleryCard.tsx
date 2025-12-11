@@ -16,6 +16,8 @@ interface Gallery {
   imageCount: number
   createdAt: string
   updatedAt: string
+  isArchived?: boolean
+  archivedReason?: string | null
 }
 
 interface GalleryCardProps {
@@ -147,15 +149,30 @@ export function GalleryCard({ gallery }: GalleryCardProps) {
             </div>
           </div>
 
-          {/* Private badge */}
-          {gallery.hasPassword && (
-            <div className="absolute top-3 left-3">
+          {/* Badges */}
+          <div className="absolute top-3 left-3 flex gap-1.5">
+            {/* Archived badge */}
+            {gallery.isArchived && (
+              <div className="h-6 px-2 bg-amber-500/90 backdrop-blur-sm flex items-center justify-center gap-1">
+                <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" />
+                </svg>
+                <span className="text-[10px] font-medium text-white uppercase tracking-wide">Archived</span>
+              </div>
+            )}
+            {/* Private badge */}
+            {gallery.hasPassword && !gallery.isArchived && (
               <div className="h-6 w-6 bg-white/90 backdrop-blur-sm flex items-center justify-center">
                 <svg className="w-3 h-3 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
                 </svg>
               </div>
-            </div>
+            )}
+          </div>
+
+          {/* Archived overlay */}
+          {gallery.isArchived && (
+            <div className="absolute inset-0 bg-black/40 pointer-events-none" />
           )}
         </div>
       </Link>

@@ -11,6 +11,8 @@ export type JobStatus = 'pending' | 'processing' | 'completed' | 'failed'
 export type ProcessingStatus = 'pending' | 'processing' | 'ready' | 'failed'
 export type DerivativeSizeCode = 'xs' | 'sm' | 'md' | 'lg' | 'xl'
 export type ProfileVisibilityMode = 'PRIVATE' | 'PUBLIC' | 'PUBLIC_LOCKED'
+export type SubscriptionStatus = 'active' | 'past_due' | 'grace_period' | 'canceled' | 'paused'
+export type GalleryArchivedReason = 'downgrade' | 'payment_failed' | 'manual' | 'expired'
 
 // Client Portal Types
 export type EventType = 'wedding' | 'engagement' | 'portrait' | 'family' | 'newborn' | 'maternity' | 'corporate' | 'event' | 'other'
@@ -18,6 +20,11 @@ export type ContractStatus = 'draft' | 'sent' | 'viewed' | 'signed' | 'archived'
 export type ClauseCategory = 'payment' | 'cancellation' | 'liability' | 'copyright' | 'usage_rights' | 'delivery' | 'scheduling' | 'meals_breaks' | 'travel' | 'equipment' | 'force_majeure' | 'dispute_resolution' | 'custom'
 export type MessageStatus = 'sent' | 'delivered' | 'read'
 export type MessageType = 'text' | 'image' | 'file' | 'system'
+
+// Vault Types
+export type VaultSubscriptionStatus = 'active' | 'past_due' | 'canceled' | 'expired'
+export type VaultBillingPeriod = 'monthly' | 'annual'
+export type VaultInvitationStatus = 'pending' | 'sent' | 'clicked' | 'purchased' | 'expired'
 
 export interface Database {
   public: {
@@ -171,6 +178,13 @@ export interface Database {
           bio: string | null
           avatar_url: string | null
           cover_image_url: string | null
+          // Subscription status tracking
+          subscription_status: SubscriptionStatus
+          payment_failed_at: string | null
+          payment_failure_count: number
+          grace_period_ends_at: string | null
+          downgraded_at: string | null
+          previous_plan: string | null
           created_at: string
           updated_at: string
         }
@@ -186,6 +200,12 @@ export interface Database {
           bio?: string | null
           avatar_url?: string | null
           cover_image_url?: string | null
+          subscription_status?: SubscriptionStatus
+          payment_failed_at?: string | null
+          payment_failure_count?: number
+          grace_period_ends_at?: string | null
+          downgraded_at?: string | null
+          previous_plan?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -201,6 +221,12 @@ export interface Database {
           bio?: string | null
           avatar_url?: string | null
           cover_image_url?: string | null
+          subscription_status?: SubscriptionStatus
+          payment_failed_at?: string | null
+          payment_failure_count?: number
+          grace_period_ends_at?: string | null
+          downgraded_at?: string | null
+          previous_plan?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -308,6 +334,9 @@ export interface Database {
           lock_pin_hash: string | null
           // Visibility
           is_public: boolean
+          // Archiving (for downgraded users)
+          archived_at: string | null
+          archived_reason: GalleryArchivedReason | null
           created_at: string
           updated_at: string
         }
@@ -324,6 +353,8 @@ export interface Database {
           lock_pin_hash?: string | null
           is_public?: boolean
           template?: string
+          archived_at?: string | null
+          archived_reason?: GalleryArchivedReason | null
           created_at?: string
           updated_at?: string
         }
@@ -340,6 +371,8 @@ export interface Database {
           is_locked?: boolean
           lock_pin_hash?: string | null
           is_public?: boolean
+          archived_at?: string | null
+          archived_reason?: GalleryArchivedReason | null
           created_at?: string
           updated_at?: string
         }
@@ -867,6 +900,232 @@ export interface Database {
           revoked_reason?: string | null
           last_used_at?: string | null
           use_count?: number
+          created_at?: string
+        }
+      }
+      // ============================================
+      // CLIENT VAULT TABLES
+      // ============================================
+      vault_plans: {
+        Row: {
+          id: string
+          name: string
+          storage_gb: number
+          monthly_price_cents: number
+          annual_price_cents: number
+          stripe_monthly_price_id: string | null
+          stripe_annual_price_id: string | null
+          is_active: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          storage_gb: number
+          monthly_price_cents: number
+          annual_price_cents: number
+          stripe_monthly_price_id?: string | null
+          stripe_annual_price_id?: string | null
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          storage_gb?: number
+          monthly_price_cents?: number
+          annual_price_cents?: number
+          stripe_monthly_price_id?: string | null
+          stripe_annual_price_id?: string | null
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      client_vaults: {
+        Row: {
+          id: string
+          client_email: string
+          client_name: string | null
+          photographer_id: string
+          original_gallery_id: string | null
+          vault_plan_id: string
+          stripe_customer_id: string | null
+          stripe_subscription_id: string | null
+          subscription_status: VaultSubscriptionStatus
+          billing_period: VaultBillingPeriod
+          storage_used_bytes: number
+          storage_limit_bytes: number
+          image_count: number
+          starts_at: string
+          expires_at: string | null
+          canceled_at: string | null
+          access_token_hash: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          client_email: string
+          client_name?: string | null
+          photographer_id: string
+          original_gallery_id?: string | null
+          vault_plan_id: string
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          subscription_status?: VaultSubscriptionStatus
+          billing_period?: VaultBillingPeriod
+          storage_used_bytes?: number
+          storage_limit_bytes: number
+          image_count?: number
+          starts_at?: string
+          expires_at?: string | null
+          canceled_at?: string | null
+          access_token_hash?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          client_email?: string
+          client_name?: string | null
+          photographer_id?: string
+          original_gallery_id?: string | null
+          vault_plan_id?: string
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          subscription_status?: VaultSubscriptionStatus
+          billing_period?: VaultBillingPeriod
+          storage_used_bytes?: number
+          storage_limit_bytes?: number
+          image_count?: number
+          starts_at?: string
+          expires_at?: string | null
+          canceled_at?: string | null
+          access_token_hash?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      vault_images: {
+        Row: {
+          id: string
+          vault_id: string
+          storage_path: string
+          original_filename: string
+          file_size_bytes: number
+          mime_type: string
+          width: number | null
+          height: number | null
+          original_image_id: string | null
+          position: number
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          vault_id: string
+          storage_path: string
+          original_filename: string
+          file_size_bytes: number
+          mime_type: string
+          width?: number | null
+          height?: number | null
+          original_image_id?: string | null
+          position?: number
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          vault_id?: string
+          storage_path?: string
+          original_filename?: string
+          file_size_bytes?: number
+          mime_type?: string
+          width?: number | null
+          height?: number | null
+          original_image_id?: string | null
+          position?: number
+          created_at?: string
+        }
+      }
+      vault_access_tokens: {
+        Row: {
+          id: string
+          vault_id: string
+          token_hash: string
+          last_used_at: string | null
+          use_count: number
+          expires_at: string
+          is_revoked: boolean
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          vault_id: string
+          token_hash: string
+          last_used_at?: string | null
+          use_count?: number
+          expires_at: string
+          is_revoked?: boolean
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          vault_id?: string
+          token_hash?: string
+          last_used_at?: string | null
+          use_count?: number
+          expires_at?: string
+          is_revoked?: boolean
+          created_at?: string
+        }
+      }
+      vault_invitations: {
+        Row: {
+          id: string
+          gallery_id: string
+          photographer_id: string
+          client_email: string
+          client_name: string | null
+          status: VaultInvitationStatus
+          sent_at: string | null
+          clicked_at: string | null
+          purchased_at: string | null
+          vault_id: string | null
+          token_hash: string
+          expires_at: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          gallery_id: string
+          photographer_id: string
+          client_email: string
+          client_name?: string | null
+          status?: VaultInvitationStatus
+          sent_at?: string | null
+          clicked_at?: string | null
+          purchased_at?: string | null
+          vault_id?: string | null
+          token_hash: string
+          expires_at: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          gallery_id?: string
+          photographer_id?: string
+          client_email?: string
+          client_name?: string | null
+          status?: VaultInvitationStatus
+          sent_at?: string | null
+          clicked_at?: string | null
+          purchased_at?: string | null
+          vault_id?: string | null
+          token_hash?: string
+          expires_at?: string
           created_at?: string
         }
       }

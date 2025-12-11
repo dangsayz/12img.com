@@ -70,6 +70,8 @@ export async function getUserGalleries(clerkId: string) {
       password_hash,
       download_enabled,
       is_public,
+      archived_at,
+      archived_reason,
       created_at,
       updated_at,
       cover_image_id
@@ -176,6 +178,9 @@ export async function getUserGalleries(clerkId: string) {
       hasPassword: !!gallery.password_hash,
       downloadEnabled: gallery.download_enabled,
       isPublic: gallery.is_public ?? true,
+      isArchived: !!gallery.archived_at,
+      archivedAt: gallery.archived_at,
+      archivedReason: gallery.archived_reason,
       createdAt: gallery.created_at,
       updatedAt: gallery.updated_at,
       coverImageUrl,

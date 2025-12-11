@@ -104,6 +104,20 @@ export async function GET(request: Request) {
     results.contest = { error: String(error) }
   }
 
+  // 7. Process expired subscription grace periods
+  try {
+    const subscriptionResponse = await fetch(
+      `${process.env.NEXT_PUBLIC_APP_URL}/api/cron/subscription-grace`,
+      { 
+        method: 'GET',
+        headers: { 'Authorization': `Bearer ${secret}` }
+      }
+    )
+    results.subscriptionGrace = await subscriptionResponse.json()
+  } catch (error) {
+    results.subscriptionGrace = { error: String(error) }
+  }
+
   const duration = Date.now() - startTime
 
   return NextResponse.json({

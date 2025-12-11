@@ -2493,6 +2493,116 @@ export function LandingPage() {
         </div>
       </section>
 
+      {/* --- Photo Vault Add-on Section --- */}
+      <section className="py-16 md:py-24 px-4 sm:px-6 bg-gradient-to-b from-[#141414] to-[#1a1a1a] text-white relative overflow-hidden">
+        {/* Background pattern */}
+        <div className="absolute inset-0 opacity-[0.03]">
+          <div className="absolute inset-0" style={{
+            backgroundImage: `radial-gradient(circle at 1px 1px, white 1px, transparent 0)`,
+            backgroundSize: '40px 40px'
+          }} />
+        </div>
+        
+        <div className="max-w-[1100px] mx-auto relative">
+          {/* Header */}
+          <div className="text-center mb-12">
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 border border-white/20 rounded-full mb-6 backdrop-blur-sm">
+              <Shield className="w-4 h-4 text-emerald-400" />
+              <span className="text-sm font-medium">Client Add-on</span>
+            </div>
+            <h2 className="font-serif text-3xl sm:text-4xl lg:text-[48px] mb-4 leading-tight">
+              Photo Vault for <span className="italic">your clients</span>
+            </h2>
+            <p className="text-white/60 text-lg max-w-2xl mx-auto leading-relaxed">
+              When galleries expire, your clients can subscribe to Photo Vault—keeping their memories safe forever. 
+              <span className="text-white/80"> You earn passive revenue.</span>
+            </p>
+          </div>
+
+          {/* Vault Plans */}
+          <div className="grid md:grid-cols-2 gap-6 max-w-3xl mx-auto mb-12">
+            {/* Vault Basic */}
+            <div className="bg-white/5 border border-white/10 rounded-2xl p-6 backdrop-blur-sm hover:bg-white/10 transition-colors">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-xl font-medium">Vault</h3>
+                <span className="text-2xl font-light">$39<span className="text-sm text-white/60">/yr</span></span>
+              </div>
+              <p className="text-white/50 text-sm mb-4">Perfect for a single event</p>
+              <ul className="space-y-2 text-sm">
+                <li className="flex items-center gap-2 text-white/70">
+                  <Check className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+                  50GB secure storage
+                </li>
+                <li className="flex items-center gap-2 text-white/70">
+                  <Check className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+                  ~500 high-res photos
+                </li>
+                <li className="flex items-center gap-2 text-white/70">
+                  <Check className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+                  Access & download anytime
+                </li>
+              </ul>
+            </div>
+
+            {/* Vault+ */}
+            <div className="bg-gradient-to-br from-emerald-500/20 to-teal-500/20 border border-emerald-500/30 rounded-2xl p-6 relative overflow-hidden">
+              <div className="absolute top-3 right-3 px-2 py-0.5 bg-emerald-500 text-[10px] font-bold uppercase tracking-wider rounded">
+                Popular
+              </div>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-xl font-medium">Vault+</h3>
+                <span className="text-2xl font-light">$79<span className="text-sm text-white/60">/yr</span></span>
+              </div>
+              <p className="text-white/50 text-sm mb-4">Multiple events or large galleries</p>
+              <ul className="space-y-2 text-sm">
+                <li className="flex items-center gap-2 text-white/70">
+                  <Check className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+                  200GB secure storage
+                </li>
+                <li className="flex items-center gap-2 text-white/70">
+                  <Check className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+                  ~2,000 high-res photos
+                </li>
+                <li className="flex items-center gap-2 text-white/70">
+                  <Check className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+                  Multiple galleries
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          {/* How it works */}
+          <div className="bg-white/5 border border-white/10 rounded-2xl p-8 backdrop-blur-sm">
+            <h4 className="text-center text-sm font-medium uppercase tracking-wider text-white/50 mb-8">How it works</h4>
+            <div className="grid sm:grid-cols-3 gap-8">
+              <div className="text-center">
+                <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center mx-auto mb-4">
+                  <span className="text-lg font-medium">1</span>
+                </div>
+                <p className="text-sm text-white/70">Gallery approaches expiry—client sees a "Keep Forever" option</p>
+              </div>
+              <div className="text-center">
+                <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center mx-auto mb-4">
+                  <span className="text-lg font-medium">2</span>
+                </div>
+                <p className="text-sm text-white/70">Client subscribes to Photo Vault directly through Stripe</p>
+              </div>
+              <div className="text-center">
+                <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center mx-auto mb-4">
+                  <span className="text-lg font-medium">3</span>
+                </div>
+                <p className="text-sm text-white/70">Photos move to their private vault—accessible forever</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Bottom note */}
+          <p className="text-center text-sm text-white/40 mt-8">
+            You invite clients • They pay us • Their photos stay safe • Everyone wins
+          </p>
+        </div>
+      </section>
+
       {/* --- Transparency Section - "We're new, and that's a feature" --- */}
       <section className="py-12 md:py-16 px-4 sm:px-6 bg-white border-t border-stone-200">
         <div className="max-w-3xl mx-auto text-center">
@@ -2558,6 +2668,7 @@ export function LandingPage() {
             <ul className="space-y-4 text-sm">
               <li><Link href="#" className="hover:text-white transition-colors">Client Galleries</Link></li>
               <li><Link href="#" className="hover:text-white transition-colors">Pricing</Link></li>
+              <li><a href="#pricing" className="hover:text-white transition-colors">Photo Vault</a></li>
               <li><Link href="#" className="hover:text-white transition-colors">Sample Galleries</Link></li>
             </ul>
           </div>

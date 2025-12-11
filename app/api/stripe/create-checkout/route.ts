@@ -6,8 +6,8 @@ import { getOrCreateUserByClerkId } from '@/server/queries/user.queries'
 import { getPromoFromCookies } from '@/lib/promo/persistence'
 import { headers } from 'next/headers'
 
-// Founder's deal: $30/year for Elite (normally $449/year)
-const FOUNDERS_PRICE_ID = 'price_1ScqDM8bvfxoPxbALJyCHttN'
+// Founder's deal: $25/month for Elite (normally $54/month)
+const FOUNDERS_PRICE_ID = 'price_1ScyI88bvfxoPxbAY7zquBRA'
 const FOUNDERS_PROMO_CODES = ['founders-100', 'FOUNDERS100', 'founders100', 'founder100', 'FOUNDER100']
 
 // Helper to check if a promo code is a Founder's code
@@ -80,6 +80,7 @@ export async function POST(request: Request) {
       customer: customerId,
       mode: 'subscription',
       payment_method_types: ['card'],
+      allow_promotion_codes: true, // Let customers enter promo codes at checkout
       line_items: [
         {
           price: priceId,
