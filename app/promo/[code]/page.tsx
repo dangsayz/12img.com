@@ -72,10 +72,13 @@ export default async function PromoPage({ params, searchParams }: Props) {
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://12img.com'
   
   // Pass data to client component which will store promo and redirect
+  // Use /checkout for direct conversion - no intermediate sign-up page
+  const promoCode = campaign.stripe_coupon_id || campaign.slug
+  
   return (
     <PromoLandingClient
       campaign={{
-        code: campaign.stripe_coupon_id || campaign.slug,
+        code: promoCode,
         campaignSlug: campaign.slug,
         plan: targetPlan,
         discount: campaign.discount_value,
@@ -87,7 +90,7 @@ export default async function PromoPage({ params, searchParams }: Props) {
           ? campaign.max_redemptions - campaign.current_redemptions 
           : null,
       }}
-      redirectUrl={`${baseUrl}/sign-up?plan=${targetPlan}&promo=${campaign.stripe_coupon_id || campaign.slug}`}
+      redirectUrl={`${baseUrl}/checkout?plan=${targetPlan}&promo=${promoCode}`}
       utmParams={{
         source: search.utm_source,
         medium: search.utm_medium,

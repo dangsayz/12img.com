@@ -142,9 +142,8 @@ export function ExitIntentPopup({
   }
 
   const handleClaimOffer = () => {
-    // Store the code and redirect to pricing
-    sessionStorage.setItem('promo_code_hint', discountCode)
-    window.location.href = `/pricing?promo=${discountCode}`
+    // Go directly to checkout with promo - no intermediate pages
+    window.location.href = `/checkout?plan=pro&promo=${discountCode}`
   }
 
   return (
