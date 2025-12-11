@@ -147,17 +147,33 @@ export async function POST(request: Request) {
     }
 
     // Create checkout session
-    const session = await stripe.checkout.sessions.create(sessionConfig)
-
-    return NextResponse.json({ 
-      url: session.url,
-      couponApplied: !!sessionConfig.discounts,
-      couponCode: couponCode || null,
-    })
-  } catch (error) {
+    try {
+      const session = await stripe.checkout.sessions.create(sessionConfig)
+      return NextResponse.json({ 
+        url: session.url,
+        couponApplied: !!sessionConfig.discounts,
+        couponCode: couponCode || null,
+      })
+    } catch (stripeError: unknown) {
+      // If session creation failed due to invalid discount, retry without discount
+      if (sessionConfig.discounts && stripeError instanceof Error && stripeError.message?.includes('coupon')) {
+        console.log('[Checkout] Retrying without invalid coupon')
+        delete sessionConfig.discounts
+        const session = await stripe.checkout.sessions.create(sessionConfig)
+        return NextResponse.json({ 
+          url: session.url,
+          couponApplied: false,
+          couponCode: null,
+          warning: 'Promo code was invalid and not applied',
+        })
+      }
+      throw stripeError
+    }
+  } catch (error: unknown) {
     console.error('Stripe checkout error:', error)
+    const errorMessage = error instanceof Error ? error.message : 'Failed to create checkout session'
     return NextResponse.json(
-      { error: 'Failed to create checkout session' },
+      { error: errorMessage },
       { status: 500 }
     )
   }
