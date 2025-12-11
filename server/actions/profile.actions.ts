@@ -4,11 +4,16 @@ import { auth } from '@clerk/nextjs/server'
 import { revalidatePath } from 'next/cache'
 import { cookies } from 'next/headers'
 import { createHmac, randomBytes } from 'crypto'
+import sharp from 'sharp'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 import { hashPassword, verifyPassword } from '@/lib/utils/password'
 import { getOrCreateUserByClerkId } from '@/server/queries/user.queries'
 import { getSignedUrlsBatch } from '@/lib/storage/signed-urls'
 import type { ProfileVisibilityMode } from '@/types/database'
+
+// Profile cover image settings
+const PROFILE_COVER_MAX_HEIGHT = 1200 // Max height in pixels
+const PROFILE_COVER_QUALITY = 85 // JPEG quality
 
 // ============================================
 // PROFILE VISIBILITY ACTIONS
@@ -379,9 +384,21 @@ export async function uploadProfileCover(formData: FormData): Promise<{ success?
       return { error: 'File too large. Maximum 50MB.' }
     }
 
-    // Generate unique filename
-    const ext = file.name.split('.').pop() || 'jpg'
-    const filename = `${user.id}/${Date.now()}.${ext}`
+    // Resize image to optimal dimensions
+    const arrayBuffer = await file.arrayBuffer()
+    const buffer = Buffer.from(arrayBuffer)
+    
+    const resizedBuffer = await sharp(buffer)
+      .resize({
+        height: PROFILE_COVER_MAX_HEIGHT,
+        withoutEnlargement: true, // Don't upscale small images
+        fit: 'inside',
+      })
+      .jpeg({ quality: PROFILE_COVER_QUALITY })
+      .toBuffer()
+
+    // Generate unique filename (always jpg after processing)
+    const filename = `${user.id}/${Date.now()}.jpg`
 
     // Delete old cover if exists
     if (user.cover_image_url) {
@@ -391,11 +408,11 @@ export async function uploadProfileCover(formData: FormData): Promise<{ success?
       }
     }
 
-    // Upload to profile-covers bucket
+    // Upload resized image to profile-covers bucket
     const { error: uploadError } = await supabaseAdmin.storage
       .from('profile-covers')
-      .upload(filename, file, {
-        contentType: file.type,
+      .upload(filename, resizedBuffer, {
+        contentType: 'image/jpeg',
         upsert: true,
       })
 
@@ -640,7 +657,8 @@ export async function getPublicProfileBySlug(slug: string, viewerUserId?: string
       .single()
 
     // Get galleries for this profile
-    // Owners see all galleries, visitors only see public ones
+    // Owners see all galleries, visitors only see those marked show_on_profile
+    // and with public or client_only visibility (not private)
     let galleriesQuery = supabaseAdmin
       .from('galleries')
       .select(`
@@ -650,14 +668,19 @@ export async function getPublicProfileBySlug(slug: string, viewerUserId?: string
         is_public,
         is_locked,
         cover_image_id,
-        created_at
+        created_at,
+        visibility_mode,
+        show_on_profile
       `)
       .eq('user_id', profile.id)
+      .is('archived_at', null)
       .order('created_at', { ascending: false })
     
-    // Only filter to public galleries for non-owners
+    // Only filter for non-owners: show_on_profile must be true and visibility not private
     if (!isOwner) {
-      galleriesQuery = galleriesQuery.eq('is_public', true)
+      galleriesQuery = galleriesQuery
+        .eq('show_on_profile', true)
+        .in('visibility_mode', ['public', 'client_only'])
     }
     
     const { data: galleries } = await galleriesQuery

@@ -68,10 +68,8 @@ export function CommunitySpotlightCardClient() {
     fetchData()
   }, [])
 
-  // Don't render if loading or no contest activity
-  if (loading || !data || data.state === 'none') {
-    return null
-  }
+  // Show promotional card even when no active contest
+  const showPromo = !loading && (!data || data.state === 'none')
 
   return (
     <section className="py-12 md:py-20 px-4 sm:px-6 bg-[#F5F5F7]">
@@ -88,20 +86,101 @@ export function CommunitySpotlightCardClient() {
         
         {/* Card Content */}
         <div className="relative">
-          {data.state === 'winner' && data.winner && (
+          {loading && <LoadingCard />}
+          
+          {showPromo && <PromoCard />}
+          
+          {data?.state === 'winner' && data.winner && (
             <WinnerCard winner={data.winner} />
           )}
           
-          {data.state === 'voting' && data.voting && (
+          {data?.state === 'voting' && data.voting && (
             <VotingCard voting={data.voting} />
           )}
           
-          {data.state === 'submissions' && data.submissions && (
+          {data?.state === 'submissions' && data.submissions && (
             <SubmissionsCard submissions={data.submissions} />
           )}
         </div>
       </div>
     </section>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// LOADING CARD
+// ─────────────────────────────────────────────────────────────────────────────
+function LoadingCard() {
+  return (
+    <div className="border border-stone-200 bg-white p-8 text-center">
+      <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-stone-100 animate-pulse" />
+      <div className="h-6 w-48 mx-auto mb-2 bg-stone-100 rounded animate-pulse" />
+      <div className="h-4 w-32 mx-auto bg-stone-100 rounded animate-pulse" />
+    </div>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PROMO CARD - Show when no active contest
+// ─────────────────────────────────────────────────────────────────────────────
+function PromoCard() {
+  return (
+    <div className="border border-stone-200 bg-white overflow-hidden">
+      {/* Hero banner */}
+      <div className="bg-gradient-to-r from-stone-900 to-stone-800 px-6 py-8 text-center">
+        <p className="text-[10px] uppercase tracking-[0.3em] text-stone-400 mb-2">
+          Monthly Photo Contest
+        </p>
+        <h3 className="text-2xl sm:text-3xl font-light text-white mb-2">
+          Showcase Your Best Work
+        </h3>
+        <p className="text-stone-400 text-sm">
+          Compete with photographers worldwide
+        </p>
+      </div>
+      
+      {/* Contest info */}
+      <div className="p-6">
+        <p className="text-center text-stone-600 mb-6">
+          Submit your favorite wedding shot and get recognized.
+          <br className="hidden sm:block" />
+          <span className="text-stone-900 font-medium">Daily, weekly, monthly, and annual awards.</span>
+        </p>
+        
+        {/* Award tiers */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
+          <div className="text-center p-3 bg-stone-50 rounded-lg">
+            <p className="text-xs text-stone-400 uppercase tracking-wider mb-1">Daily</p>
+            <p className="text-sm font-medium text-stone-900">Shot of the Day</p>
+          </div>
+          <div className="text-center p-3 bg-stone-50 rounded-lg">
+            <p className="text-xs text-stone-400 uppercase tracking-wider mb-1">Weekly</p>
+            <p className="text-sm font-medium text-stone-900">Top 7</p>
+          </div>
+          <div className="text-center p-3 bg-stone-50 rounded-lg">
+            <p className="text-xs text-stone-400 uppercase tracking-wider mb-1">Monthly</p>
+            <p className="text-sm font-medium text-stone-900">Champion</p>
+          </div>
+          <div className="text-center p-3 bg-amber-50 rounded-lg border border-amber-200">
+            <p className="text-xs text-amber-600 uppercase tracking-wider mb-1">Annual</p>
+            <p className="text-sm font-medium text-amber-700">POTY</p>
+          </div>
+        </div>
+        
+        {/* CTA */}
+        <div className="text-center">
+          <Link
+            href="/sign-up"
+            className="inline-flex items-center justify-center gap-2 px-10 py-4 bg-stone-900 text-white text-sm font-medium hover:bg-stone-800 transition-colors rounded-full"
+          >
+            Join & Enter Contest
+          </Link>
+          <p className="text-xs text-stone-400 mt-3">
+            Free to enter for all members
+          </p>
+        </div>
+      </div>
+    </div>
   )
 }
 
@@ -193,37 +272,65 @@ function VotingCard({ voting }: { voting: NonNullable<SpotlightCardData['voting'
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// SUBMISSIONS CARD
+// SUBMISSIONS CARD - Enhanced for landing page
 // ─────────────────────────────────────────────────────────────────────────────
 function SubmissionsCard({ submissions }: { submissions: NonNullable<SpotlightCardData['submissions']> }) {
   return (
-    <div className="text-center py-8 px-4 border border-stone-200 bg-white/80 backdrop-blur-sm">
-      {/* Icon */}
-      <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-blue-50 flex items-center justify-center">
-        <svg className="w-5 h-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z" />
-          <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0zM18.75 10.5h.008v.008h-.008V10.5z" />
-        </svg>
+    <div className="border border-stone-200 bg-white overflow-hidden">
+      {/* Hero banner */}
+      <div className="bg-gradient-to-r from-stone-900 to-stone-800 px-6 py-8 text-center">
+        <p className="text-[10px] uppercase tracking-[0.3em] text-stone-400 mb-2">
+          This Month's Theme
+        </p>
+        <h3 className="text-2xl sm:text-3xl font-light text-white mb-2">
+          {submissions.theme || 'Wedding Photography'}
+        </h3>
+        <p className="text-stone-400 text-sm">
+          {formatTimeRemaining(submissions.endsAt)}
+        </p>
       </div>
       
-      {/* Text */}
-      <h3 className="text-lg font-light text-[#141414] mb-1">
-        {submissions.theme || 'Monthly Contest'}
-      </h3>
-      <p className="text-sm text-stone-500 mb-2">
-        Submit your best shot
-      </p>
-      <p className="text-xs text-stone-400 mb-6">
-        {formatTimeRemaining(submissions.endsAt)}
-      </p>
-      
-      {/* CTA - Large touch target for mobile */}
-      <Link
-        href="/contest/submit"
-        className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-[#141414] text-white text-sm font-medium hover:bg-black transition-colors min-h-[48px]"
-      >
-        Enter Contest
-      </Link>
+      {/* Contest info */}
+      <div className="p-6">
+        <p className="text-center text-stone-600 mb-6">
+          Submit your best wedding shot and compete for recognition.
+          <br className="hidden sm:block" />
+          <span className="text-stone-900 font-medium">Winners get featured on our homepage.</span>
+        </p>
+        
+        {/* Award tiers */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
+          <div className="text-center p-3 bg-stone-50 rounded-lg">
+            <p className="text-xs text-stone-400 uppercase tracking-wider mb-1">Daily</p>
+            <p className="text-sm font-medium text-stone-900">Shot of the Day</p>
+          </div>
+          <div className="text-center p-3 bg-stone-50 rounded-lg">
+            <p className="text-xs text-stone-400 uppercase tracking-wider mb-1">Weekly</p>
+            <p className="text-sm font-medium text-stone-900">Top 7</p>
+          </div>
+          <div className="text-center p-3 bg-stone-50 rounded-lg">
+            <p className="text-xs text-stone-400 uppercase tracking-wider mb-1">Monthly</p>
+            <p className="text-sm font-medium text-stone-900">Champion</p>
+          </div>
+          <div className="text-center p-3 bg-amber-50 rounded-lg border border-amber-200">
+            <p className="text-xs text-amber-600 uppercase tracking-wider mb-1">Annual</p>
+            <p className="text-sm font-medium text-amber-700">POTY</p>
+          </div>
+        </div>
+        
+        {/* CTA */}
+        <div className="text-center">
+          <Link
+            href="/contest/submit"
+            className="inline-flex items-center justify-center gap-2 px-10 py-4 bg-stone-900 text-white text-sm font-medium hover:bg-stone-800 transition-colors rounded-full"
+          >
+            Submit Your Best Shot
+          </Link>
+          <p className="text-xs text-stone-400 mt-3">
+            Free to enter for all members
+          </p>
+        </div>
+      </div>
     </div>
   )
 }

@@ -5,7 +5,8 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
-import { updateGalleryTemplate, updateGallery, toggleGalleryVisibility, toggleGalleryDownloads, updateGalleryPassword, setCoverImage, deleteGallery } from '@/server/actions/gallery.actions'
+import { updateGalleryTemplate, updateGallery, toggleGalleryVisibility, toggleGalleryDownloads, updateGalleryPassword, setCoverImage, deleteGallery, type GalleryVisibilityMode, type GalleryVisibilitySettings } from '@/server/actions/gallery.actions'
+import { GalleryVisibilitySettings as GalleryVisibilitySettingsUI } from '@/components/gallery/GalleryVisibilitySettings'
 import { 
   ArrowLeft,
   ArrowDownToLine,
@@ -362,6 +363,11 @@ interface GalleryData {
   imageCount: number
   presentation_data?: PresentationData | null
   cover_image_id?: string | null
+  // New visibility fields
+  visibility_mode?: GalleryVisibilityMode
+  show_on_profile?: boolean
+  respect_profile_visibility?: boolean
+  inherit_profile_pin?: boolean
 }
 
 interface GalleryEditorProps {
@@ -905,43 +911,18 @@ export function GalleryEditor({
                     </button>
                   </div>
 
-                  {/* Visibility Toggle */}
-                  <div className="flex items-center justify-between py-3 border-b border-stone-100">
-                    <div className="flex items-center gap-3">
-                      {isPublic ? (
-                        <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center">
-                          <Globe className="w-4 h-4 text-emerald-600" />
-                        </div>
-                      ) : (
-                        <div className="w-8 h-8 rounded-full bg-stone-900 flex items-center justify-center">
-                          <EyeOff className="w-4 h-4 text-white" />
-                        </div>
-                      )}
-                      <div>
-                        <p className="text-sm font-medium text-stone-900">
-                          {isPublic ? 'Public Gallery' : 'Private Gallery'}
-                        </p>
-                        <p className="text-xs text-stone-500">
-                          {isPublic 
-                            ? 'Anyone with the link can view' 
-                            : 'Only you can see this gallery'
-                          }
-                        </p>
-                      </div>
-                    </div>
-                    <button
-                      onClick={handleVisibilityToggle}
-                      disabled={isTogglingVisibility}
-                      className={`relative w-11 h-6 rounded-full transition-colors ${
-                        isPublic ? 'bg-emerald-500' : 'bg-stone-300'
-                      } ${isTogglingVisibility ? 'opacity-50' : ''}`}
-                    >
-                      <span
-                        className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${
-                          isPublic ? 'translate-x-5' : 'translate-x-0'
-                        }`}
-                      />
-                    </button>
+                  {/* Visibility Settings */}
+                  <div className="py-3 border-b border-stone-100">
+                    <GalleryVisibilitySettingsUI
+                      galleryId={gallery.id}
+                      initialSettings={{
+                        visibilityMode: gallery.visibility_mode || (gallery.is_public ? 'public' : 'private'),
+                        showOnProfile: gallery.show_on_profile ?? true,
+                        respectProfileVisibility: gallery.respect_profile_visibility ?? false,
+                        inheritProfilePin: gallery.inherit_profile_pin ?? true,
+                      }}
+                      onUpdate={() => router.refresh()}
+                    />
                   </div>
 
                   {/* Downloads Toggle */}

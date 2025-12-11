@@ -2,7 +2,6 @@
 
 import { useState, useMemo, useEffect, useTransition } from 'react'
 import Link from 'next/link'
-import Image from 'next/image'
 import { motion, AnimatePresence } from 'framer-motion'
 import { 
   Search, 
@@ -21,7 +20,11 @@ import {
   FileText,
   MessageSquare,
   X,
-  Trophy
+  Trophy,
+  Settings,
+  Pencil,
+  Archive,
+  Sparkles
 } from 'lucide-react'
 import { deleteGallery, toggleGalleryVisibility } from '@/server/actions/gallery.actions'
 import { updateProfileVisibility } from '@/server/actions/profile.actions'
@@ -81,6 +84,7 @@ interface CleanDashboardProps {
 }
 
 const CATEGORIES = ['ALL', 'WEDDING', 'FAMILY', 'PORTRAITS', 'LIFESTYLE', 'EVENTS']
+const GALLERIES_PER_PAGE = 20
 
 export function CleanDashboard({ galleries, photographerName, country, visibilityMode = 'PRIVATE', profileSlug, activeContest, userPlan = 'free' }: CleanDashboardProps) {
   const [activeCategory, setActiveCategory] = useState('ALL')
@@ -90,6 +94,7 @@ export function CleanDashboard({ galleries, photographerName, country, visibilit
   const [currentVisibility, setCurrentVisibility] = useState<ProfileVisibilityMode>(visibilityMode)
   const [isPending, startTransition] = useTransition()
   const [showFeatureHint, setShowFeatureHint] = useState(true)
+  const [visibleCount, setVisibleCount] = useState(GALLERIES_PER_PAGE)
   
   // Check if feature hint was dismissed
   useEffect(() => {
@@ -109,6 +114,15 @@ export function CleanDashboard({ galleries, photographerName, country, visibilit
       return matchesCategory && matchesSearch
     })
   }, [galleries, activeCategory, searchQuery])
+
+  // Reset visible count when filters change
+  useEffect(() => {
+    setVisibleCount(GALLERIES_PER_PAGE)
+  }, [activeCategory, searchQuery])
+
+  const visibleGalleries = filteredGalleries.slice(0, visibleCount)
+  const hasMore = visibleCount < filteredGalleries.length
+  const remainingCount = filteredGalleries.length - visibleCount
 
   const totalImages = galleries.reduce((acc, g) => acc + g.imageCount, 0)
 
@@ -312,15 +326,17 @@ export function CleanDashboard({ galleries, photographerName, country, visibilit
       )}
 
       {/* Feature Hints Container - Handles single or multiple banners elegantly */}
-      <FeatureHintsContainer
-        showClientPortal={showFeatureHint}
-        onDismissClientPortal={dismissFeatureHint}
-        contest={activeContest || null}
-        userPlan={userPlan}
-      />
+      <div className="max-w-7xl mx-auto">
+        <FeatureHintsContainer
+          showClientPortal={showFeatureHint}
+          onDismissClientPortal={dismissFeatureHint}
+          contest={activeContest || null}
+          userPlan={userPlan}
+        />
+      </div>
 
       {/* First-time user hint */}
-      <div className="max-w-7xl mx-auto px-6 pt-8">
+      <div className="max-w-7xl mx-auto px-6 pt-6">
         <FeatureBanner
           id="dashboard-welcome"
           title="Welcome to 12img"
@@ -329,15 +345,14 @@ export function CleanDashboard({ galleries, photographerName, country, visibilit
         />
       </div>
 
-      {/* Gallery Grid */}
-      <div className="max-w-7xl mx-auto px-6 py-16" data-onboarding="dashboard-galleries">
+      {/* Gallery List */}
+      <div className="max-w-7xl mx-auto px-6 py-8" data-onboarding="dashboard-galleries">
         {filteredGalleries.length === 0 ? (
           <EmptyState hasSearch={!!searchQuery} onClearSearch={() => setSearchQuery('')} userPlan={userPlan} />
         ) : (
-          /* OPTIMIZED: Remove Framer Motion stagger animation to improve INP
-             Each GalleryCard now handles its own CSS animation with staggered delay */
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-12">
-            {filteredGalleries.map((gallery, index) => (
+          /* Premium minimal layout */
+          <div>
+            {visibleGalleries.map((gallery, index) => (
               <GalleryCard 
                 key={gallery.id} 
                 gallery={gallery} 
@@ -347,6 +362,22 @@ export function CleanDashboard({ galleries, photographerName, country, visibilit
                 onLeave={() => setHoveredId(null)}
               />
             ))}
+            
+            {/* Load More */}
+            {hasMore && (
+              <div className="flex justify-center py-12">
+                <button
+                  onClick={() => setVisibleCount(prev => prev + GALLERIES_PER_PAGE)}
+                  className="group flex flex-col items-center gap-2 text-stone-400 hover:text-stone-600 transition-colors"
+                >
+                  <span className="text-[10px] tracking-[0.2em] uppercase">Load More</span>
+                  <span className="text-xs text-stone-300 group-hover:text-stone-400 transition-colors">
+                    {remainingCount} more {remainingCount === 1 ? 'gallery' : 'galleries'}
+                  </span>
+                  <ChevronDown className="w-4 h-4 mt-1" />
+                </button>
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -409,7 +440,7 @@ function FeatureHintsContainer({
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="max-w-7xl mx-auto px-6 pt-6"
+      className="px-6 pt-6"
     >
       <div className={`flex gap-3 ${bothVisible ? 'flex-col sm:flex-row' : ''}`}>
         {/* Client Portal Hint */}
@@ -531,7 +562,6 @@ function GalleryCard({
   const [isDeleted, setIsDeleted] = useState(false)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [isPublic, setIsPublic] = useState(gallery.isPublic)
-  const [imageError, setImageError] = useState(false)
 
   const relativePath = `/view-reel/${gallery.slug}`
   const [shareUrl, setShareUrl] = useState(relativePath)
@@ -548,15 +578,15 @@ function GalleryCard({
     setTimeout(() => setCopied(false), 2000)
   }
 
-  const handleToggleVisibility = (e: React.MouseEvent) => {
+  const handleToggleVisibility = async (e: React.MouseEvent) => {
     e.preventDefault()
     e.stopPropagation()
     const newValue = !isPublic
-    setIsPublic(newValue)
-    startTransition(async () => {
-      const result = await toggleGalleryVisibility(gallery.id, newValue)
-      if (result.error) setIsPublic(!newValue) // Revert on error
-    })
+    setIsPublic(newValue) // Optimistic update - instant
+    
+    // Server sync in background (don't block UI)
+    const result = await toggleGalleryVisibility(gallery.id, newValue)
+    if (result.error) setIsPublic(!newValue) // Revert on error
   }
 
   const handleDelete = () => {
@@ -570,148 +600,221 @@ function GalleryCard({
 
   if (isDeleted) return null
 
-  // OPTIMIZED: Use CSS transitions instead of Framer Motion for hover effects
-  // This prevents blocking the main thread during interactions
+  // Premium gallery card - Apple-inspired minimal design
   return (
     <div
       className="group/card animate-slide-in-bottom"
-      style={{ animationDelay: `${Math.min(index * 60, 300)}ms`, animationFillMode: 'backwards' }}
+      style={{ animationDelay: `${Math.min(index * 50, 250)}ms`, animationFillMode: 'backwards' }}
     >
-      <Link 
-        href={`/gallery/${gallery.slug}`}
-        className="block"
+      <div 
+        className="relative"
         onMouseEnter={onHover}
-        onMouseLeave={() => { onLeave(); setShowMenu(false) }}
+        onMouseLeave={() => { if (!showMenu) onLeave() }}
       >
-        {/* Cover Image - CSS transitions for better INP */}
-        <div 
-          className="relative aspect-[4/5] bg-stone-100 mb-4 overflow-hidden rounded-sm transition-all duration-300 ease-out hover:-translate-y-1 shadow-[0_1px_3px_rgba(0,0,0,0.08),0_0_0_1px_rgba(0,0,0,0.02)] hover:shadow-[0_25px_50px_-12px_rgba(0,0,0,0.15),0_0_0_1px_rgba(0,0,0,0.02)]"
+        <Link 
+          href={`/gallery/${gallery.slug}`}
+          className="block group"
         >
-          {gallery.coverImageUrl && !imageError ? (
-            <Image
-              src={gallery.coverImageUrl}
-              alt={gallery.title}
-              fill
-              className="object-cover transition-all duration-700 ease-out group-hover/card:scale-[1.03]"
-              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-              onError={() => setImageError(true)}
-            />
-          ) : (
-            <div className="absolute inset-0 flex flex-col items-center justify-center bg-stone-100/50">
-              {/* Minimal geometric placeholder */}
-              <div className="relative w-12 h-12 mb-3">
-                <div className="absolute inset-0 border border-stone-200 rounded-sm" />
-                <div className="absolute inset-2 border border-stone-200/60 rounded-sm" />
-                <div className="absolute top-1/2 left-1/2 w-1 h-1 -translate-x-1/2 -translate-y-1/2 bg-stone-300 rounded-full" />
+          {/* Card Container */}
+          <div className="flex gap-8 py-8 border-b border-stone-100 group-hover:border-stone-200 transition-colors">
+            {/* Thumbnail - Large and prominent with micro-details */}
+            <div className="w-40 h-40 sm:w-48 sm:h-48 overflow-hidden bg-stone-100 flex-shrink-0 relative group-hover:shadow-2xl transition-all duration-500">
+              {gallery.coverImageUrl ? (
+                <img
+                  src={gallery.coverImageUrl}
+                  alt=""
+                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                />
+              ) : (
+                <div className="w-full h-full flex flex-col items-center justify-center gap-3 bg-gradient-to-br from-stone-50 to-stone-100">
+                  <div className="w-12 h-12 border-2 border-dashed border-stone-200 rounded-xl" />
+                  <span className="text-xs text-stone-300 uppercase tracking-[0.2em]">Empty</span>
+                </div>
+              )}
+              
+              {/* Micro-writing corner details with gradient for readability */}
+              <div className="absolute inset-0 pointer-events-none">
+                {/* Subtle gradient overlays for text visibility */}
+                <div className="absolute top-0 left-0 w-16 h-8 bg-gradient-to-br from-black/30 to-transparent" />
+                <div className="absolute top-0 right-0 w-16 h-8 bg-gradient-to-bl from-black/30 to-transparent" />
+                <div className="absolute bottom-0 left-0 w-16 h-8 bg-gradient-to-tr from-black/30 to-transparent" />
+                <div className="absolute bottom-0 right-0 w-16 h-8 bg-gradient-to-tl from-black/30 to-transparent" />
+                
+                {/* Top-left: Image count */}
+                <span className="absolute top-2.5 left-3 text-[9px] font-medium tracking-[0.12em] text-white/90">
+                  {String(gallery.imageCount).padStart(3, '0')}
+                </span>
+                
+                {/* Top-right: Category initial */}
+                {gallery.category && (
+                  <span className="absolute top-2.5 right-3 text-[9px] font-medium tracking-[0.12em] text-white/90 uppercase">
+                    {gallery.category.slice(0, 3)}
+                  </span>
+                )}
+                
+                {/* Bottom-left: Year */}
+                <span className="absolute bottom-2.5 left-3 text-[9px] font-medium tracking-[0.12em] text-white/90">
+                  {new Date(gallery.createdAt).getFullYear()}
+                </span>
+                
+                {/* Bottom-right: Lock indicator */}
+                {gallery.hasPassword && (
+                  <Lock className="absolute bottom-2.5 right-3 w-3 h-3 text-white/90" />
+                )}
               </div>
-              <span className="text-[10px] tracking-[0.2em] text-stone-300 uppercase">No images</span>
             </div>
-          )}
-
-          {/* Visibility Badge */}
-          <VisibilityBadgeOverlay 
-            isPublic={isPublic}
-            hasPassword={gallery.hasPassword}
-            position="top-left"
-            size="md"
-          />
-
-          {/* Menu Button - CSS opacity transition */}
-          <button
-            onClick={(e) => {
-              e.preventDefault()
-              e.stopPropagation()
-              setShowMenu(!showMenu)
-            }}
-            className={`absolute top-3 right-3 h-8 w-8 bg-white/90 backdrop-blur-sm flex items-center justify-center shadow-sm hover:bg-white transition-all duration-200 ${isHovered ? 'opacity-100' : 'opacity-0'}`}
-          >
-            <MoreHorizontal className="w-4 h-4 text-stone-600" />
-          </button>
-
-          {/* Dropdown Menu - CSS animation instead of AnimatePresence */}
-          {showMenu && (
-            <div
-              className="absolute top-14 right-3 bg-white shadow-xl border border-stone-100 py-1.5 min-w-[140px] z-10 animate-zoom-in"
-              onClick={(e) => e.stopPropagation()}
-            >
+            
+            {/* Content */}
+            <div className="flex-1 min-w-0 flex flex-col justify-center">
+              {/* Title - Large elegant typography */}
+              <h3 className="text-2xl sm:text-3xl font-medium text-stone-900 leading-tight tracking-[-0.02em] mb-3">
+                {gallery.title}
+              </h3>
+              
+              {/* Meta Row - Subtle */}
+              <p className="text-base text-stone-400 mb-6">
+                {gallery.imageCount} {gallery.imageCount === 1 ? 'photo' : 'photos'}
+                <span className="mx-2">·</span>
+                {formatRelativeTime(gallery.updatedAt)}
+                {gallery.hasPassword && (
+                  <>
+                    <span className="mx-2">·</span>
+                    <span className="inline-flex items-center gap-1">
+                      <Lock className="w-3.5 h-3.5" />
+                      Protected
+                    </span>
+                  </>
+                )}
+              </p>
+              
+              {/* Actions - Clean pill buttons */}
+              <div className="flex items-center gap-3" onClick={(e) => e.preventDefault()}>
+                {/* Visibility Toggle Switch */}
+                <button
+                  onClick={handleToggleVisibility}
+                  disabled={isPending}
+                  className="inline-flex items-center gap-3 group/toggle disabled:opacity-50"
+                >
+                  {/* Toggle Track */}
+                  <div className={`relative w-11 h-6 rounded-full transition-colors duration-200 ${
+                    isPublic ? 'bg-stone-900' : 'bg-stone-300'
+                  }`}>
+                    {/* Toggle Knob */}
+                    <div className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow-sm transition-all duration-200 ${
+                      isPublic ? 'left-[22px]' : 'left-0.5'
+                    }`} />
+                  </div>
+                  {/* Label */}
+                  <span className="text-sm font-medium text-stone-600 group-hover/toggle:text-stone-900 transition-colors">
+                    {isPublic ? 'Public' : 'Private'}
+                  </span>
+                </button>
+                
+                {/* Copy Link */}
                 <button
                   onClick={handleCopy}
-                  className="w-full px-4 py-2 text-left text-sm text-stone-700 hover:bg-stone-50 flex items-center gap-2"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-medium bg-stone-100 text-stone-700 hover:bg-stone-200 transition-all duration-200"
                 >
-                  {copied ? <Check className="w-4 h-4 text-emerald-500" /> : <Copy className="w-4 h-4" />}
-                  {copied ? 'Copied!' : 'Copy Link'}
+                  {copied ? (
+                    <>
+                      <Check className="w-4 h-4 text-stone-900" />
+                      Copied
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="w-4 h-4" />
+                      Copy Link
+                    </>
+                  )}
                 </button>
+                
+                {/* Preview */}
                 <button
                   onClick={(e) => {
                     e.preventDefault()
                     e.stopPropagation()
                     window.open(relativePath, '_blank')
                   }}
-                  className="w-full px-4 py-2 text-left text-sm text-stone-700 hover:bg-stone-50 flex items-center gap-2"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-medium bg-stone-900 text-white hover:bg-stone-800 transition-all duration-200"
                 >
                   <ExternalLink className="w-4 h-4" />
                   Preview
                 </button>
-                <div className="border-t border-stone-100 my-1" />
-                <button
-                  onClick={handleToggleVisibility}
-                  disabled={isPending}
-                  className="w-full px-4 py-2 text-left text-sm text-stone-700 hover:bg-stone-50 flex items-center gap-2 disabled:opacity-50"
-                >
-                  {isPublic ? (
-                    <>
-                      <EyeOff className="w-4 h-4" />
-                      Make Private
-                    </>
-                  ) : (
-                    <>
-                      <Globe className="w-4 h-4" />
-                      Make Public
-                    </>
-                  )}
-                </button>
-                <div className="border-t border-stone-100 my-1" />
-                <button
-                  onClick={(e) => {
-                    e.preventDefault()
-                    e.stopPropagation()
-                    setShowMenu(false)
-                    setShowDeleteModal(true)
-                  }}
-                  className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
-                >
-                  <Trash2 className="w-4 h-4" />
-                  Delete
-                </button>
+              </div>
             </div>
-          )}
-
-          {/* Image Count Badge */}
-          <div 
-            className={`absolute bottom-3 right-3 px-2.5 py-1 bg-black/70 backdrop-blur-sm rounded-full text-[11px] text-white font-medium tabular-nums flex items-center gap-1.5 transition-opacity duration-200 ${isHovered ? 'opacity-100' : 'opacity-90'}`}
-          >
-            <span className="w-1 h-1 rounded-full bg-white/60" />
-            {gallery.imageCount}
           </div>
+        </Link>
 
-          {/* Hover Overlay - CSS transition */}
-          <div
-            className={`absolute inset-0 bg-gradient-to-t from-black/30 via-black/5 to-transparent pointer-events-none transition-opacity duration-300 ${isHovered ? 'opacity-100' : 'opacity-0'}`}
-          />
-        </div>
+        {/* Menu Button + Dropdown Container */}
+        <div className={`absolute right-0 top-1/2 -translate-y-1/2 ${isHovered || showMenu ? 'opacity-100' : 'opacity-0'} transition-all duration-200`}>
+          <button
+            onClick={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
+              setShowMenu(!showMenu)
+            }}
+            className="h-10 w-10 flex items-center justify-center rounded-full hover:bg-stone-100 transition-colors"
+          >
+            <MoreHorizontal className="w-4 h-4 text-stone-600" />
+          </button>
 
-        {/* Gallery Info */}
-        <div className="text-center space-y-0.5 pt-3">
-          <h3 className="text-[15px] font-medium text-stone-800 leading-tight tracking-[-0.01em] transition-colors duration-300 group-hover/card:text-stone-600">
-            {gallery.title}
-          </h3>
-          <p className="text-[12px] text-stone-400/80 font-light tracking-wide transition-all duration-300 group-hover/card:text-stone-400">
-            {formatRelativeTime(gallery.updatedAt)}
-          </p>
-        </div>
-      </Link>
+          {/* Dropdown Menu */}
+          {showMenu && (
+            <div
+              className="absolute top-full right-0 mt-1 bg-white shadow-2xl border border-stone-200 rounded-lg py-1.5 min-w-[180px] z-50 animate-zoom-in"
+              onClick={(e) => e.stopPropagation()}
+              onMouseLeave={() => { setShowMenu(false); onLeave() }}
+            >
+            <Link
+              href={`/gallery/${gallery.slug}`}
+              className="block px-4 py-2.5 text-sm text-stone-900 hover:bg-stone-50 transition-colors"
+            >
+              Edit
+            </Link>
+            <Link
+              href={`/gallery/${gallery.slug}/settings`}
+              className="block px-4 py-2.5 text-sm text-stone-900 hover:bg-stone-50 transition-colors"
+            >
+              Settings
+            </Link>
+            
+            <div className="border-t border-stone-100 my-1" />
+            
+            <Link
+              href={`/contest/submit?gallery=${gallery.id}`}
+              className="block px-4 py-2.5 text-sm text-stone-900 hover:bg-stone-50 transition-colors"
+            >
+              Submit to Spotlight
+            </Link>
+            <button
+              onClick={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+                setShowMenu(false)
+              }}
+              className="w-full px-4 py-2.5 text-left text-sm text-stone-900 hover:bg-stone-50 transition-colors"
+            >
+              Archive
+            </button>
+            
+            <div className="border-t border-stone-100 my-1" />
+            
+            <button
+              onClick={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+                setShowMenu(false)
+                setShowDeleteModal(true)
+              }}
+              className="w-full px-4 py-2.5 text-left text-sm text-red-500 hover:bg-red-50 transition-colors"
+            >
+              Delete
+            </button>
+          </div>
+        )}
+      </div>
 
-      {/* Delete Modal - CSS animation */}
+      {/* Delete Modal */}
       {showDeleteModal && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 animate-fade-in"
@@ -719,35 +822,36 @@ function GalleryCard({
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            className="bg-white p-6 max-w-sm w-full shadow-2xl animate-zoom-in"
+            className="bg-white p-6 max-w-sm w-full shadow-2xl rounded-xl animate-zoom-in"
           >
-              <div className="w-12 h-12 bg-red-50 flex items-center justify-center mb-4 mx-auto">
-                <Trash2 className="w-5 h-5 text-red-500" />
-              </div>
-              <h3 className="text-lg font-medium text-stone-900 text-center mb-2">
-                Delete Gallery?
-              </h3>
-              <p className="text-sm text-stone-500 text-center mb-6">
-                "{gallery.title}" and all {gallery.imageCount} images will be permanently deleted.
-              </p>
-              <div className="flex gap-3">
-                <button
-                  onClick={() => setShowDeleteModal(false)}
-                  className="flex-1 px-4 py-2.5 text-sm font-medium text-stone-700 bg-stone-100 hover:bg-stone-200 transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleDelete}
-                  disabled={isPending}
-                  className="flex-1 px-4 py-2.5 text-sm font-medium text-white bg-red-500 hover:bg-red-600 transition-colors disabled:opacity-50"
-                >
-                  {isPending ? 'Deleting...' : 'Delete'}
-                </button>
-              </div>
+            <div className="w-12 h-12 bg-red-50 rounded-full flex items-center justify-center mb-4 mx-auto">
+              <Trash2 className="w-5 h-5 text-red-500" />
+            </div>
+            <h3 className="text-lg font-medium text-stone-900 text-center mb-2">
+              Delete Gallery?
+            </h3>
+            <p className="text-sm text-stone-500 text-center mb-6">
+              "{gallery.title}" and all {gallery.imageCount} images will be permanently deleted.
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowDeleteModal(false)}
+                className="flex-1 px-4 py-2.5 text-sm font-medium text-stone-700 bg-stone-100 hover:bg-stone-200 rounded-lg transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDelete}
+                disabled={isPending}
+                className="flex-1 px-4 py-2.5 text-sm font-medium text-white bg-red-500 hover:bg-red-600 rounded-lg transition-colors disabled:opacity-50"
+              >
+                {isPending ? 'Deleting...' : 'Delete'}
+              </button>
+            </div>
           </div>
         </div>
       )}
+      </div>
     </div>
   )
 }

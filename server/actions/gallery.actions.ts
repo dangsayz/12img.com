@@ -717,3 +717,224 @@ export async function getGalleryPresentation(
 
   return { data: presentationData }
 }
+
+// ============================================
+// UNIFIED VISIBILITY SYSTEM
+// ============================================
+
+export type GalleryVisibilityMode = 'public' | 'client_only' | 'private'
+
+export interface GalleryVisibilitySettings {
+  visibilityMode: GalleryVisibilityMode
+  showOnProfile: boolean
+  respectProfileVisibility: boolean
+  inheritProfilePin: boolean
+}
+
+/**
+ * Update gallery visibility settings (unified system)
+ */
+export async function updateGalleryVisibilitySettings(
+  galleryId: string,
+  settings: Partial<GalleryVisibilitySettings>
+) {
+  const { userId: clerkId } = await auth()
+  if (!clerkId) return { error: 'Unauthorized' }
+
+  const user = await getOrCreateUserByClerkId(clerkId)
+  if (!user) return { error: 'User not found' }
+
+  const gallery = await getGalleryWithOwnershipCheck(galleryId, user.id)
+  if (!gallery) return { error: 'Gallery not found' }
+
+  // Build update object
+  const updateData: Record<string, unknown> = {}
+  
+  if (settings.visibilityMode !== undefined) {
+    updateData.visibility_mode = settings.visibilityMode
+    // Also update legacy is_public for backwards compatibility
+    updateData.is_public = settings.visibilityMode === 'public'
+  }
+  
+  if (settings.showOnProfile !== undefined) {
+    updateData.show_on_profile = settings.showOnProfile
+  }
+  
+  if (settings.respectProfileVisibility !== undefined) {
+    updateData.respect_profile_visibility = settings.respectProfileVisibility
+  }
+  
+  if (settings.inheritProfilePin !== undefined) {
+    updateData.inherit_profile_pin = settings.inheritProfilePin
+  }
+
+  const { error } = await supabaseAdmin
+    .from('galleries')
+    .update(updateData)
+    .eq('id', galleryId)
+
+  if (error) {
+    console.error('[updateGalleryVisibilitySettings] Error:', error)
+    return { error: 'Failed to update visibility settings' }
+  }
+
+  revalidatePath('/')
+  revalidatePath(`/gallery/${galleryId}`)
+  revalidatePath(`/view-reel/${gallery.slug}`)
+  revalidatePath(`/view-live/${gallery.slug}`)
+
+  return { success: true, settings }
+}
+
+/**
+ * Get gallery visibility settings
+ */
+export async function getGalleryVisibilitySettings(galleryId: string) {
+  const { userId: clerkId } = await auth()
+  if (!clerkId) return { error: 'Unauthorized' }
+
+  const user = await getOrCreateUserByClerkId(clerkId)
+  if (!user) return { error: 'User not found' }
+
+  const gallery = await getGalleryWithOwnershipCheck(galleryId, user.id)
+  if (!gallery) return { error: 'Gallery not found' }
+
+  return {
+    success: true,
+    settings: {
+      visibilityMode: (gallery as { visibility_mode?: string }).visibility_mode || 'public',
+      showOnProfile: (gallery as { show_on_profile?: boolean }).show_on_profile ?? true,
+      respectProfileVisibility: (gallery as { respect_profile_visibility?: boolean }).respect_profile_visibility ?? false,
+      inheritProfilePin: (gallery as { inherit_profile_pin?: boolean }).inherit_profile_pin ?? true,
+    } as GalleryVisibilitySettings
+  }
+}
+
+/**
+ * Link a client to a gallery for client_only access
+ */
+export async function linkClientToGallery(
+  galleryId: string,
+  clientProfileId: string,
+  options?: {
+    canView?: boolean
+    canDownload?: boolean
+    canFavorite?: boolean
+    notifyOnUpload?: boolean
+  }
+) {
+  const { userId: clerkId } = await auth()
+  if (!clerkId) return { error: 'Unauthorized' }
+
+  const user = await getOrCreateUserByClerkId(clerkId)
+  if (!user) return { error: 'User not found' }
+
+  const gallery = await getGalleryWithOwnershipCheck(galleryId, user.id)
+  if (!gallery) return { error: 'Gallery not found' }
+
+  // Verify client belongs to this photographer
+  const { data: client, error: clientError } = await supabaseAdmin
+    .from('client_profiles')
+    .select('id')
+    .eq('id', clientProfileId)
+    .eq('photographer_id', user.id)
+    .single()
+
+  if (clientError || !client) {
+    return { error: 'Client not found' }
+  }
+
+  // Insert or update the link
+  const { error } = await supabaseAdmin
+    .from('gallery_client_access')
+    .upsert({
+      gallery_id: galleryId,
+      client_profile_id: clientProfileId,
+      can_view: options?.canView ?? true,
+      can_download: options?.canDownload ?? true,
+      can_favorite: options?.canFavorite ?? true,
+      notify_on_upload: options?.notifyOnUpload ?? true,
+      created_by: user.id,
+    }, {
+      onConflict: 'gallery_id,client_profile_id'
+    })
+
+  if (error) {
+    console.error('[linkClientToGallery] Error:', error)
+    return { error: 'Failed to link client to gallery' }
+  }
+
+  revalidatePath(`/gallery/${galleryId}`)
+
+  return { success: true }
+}
+
+/**
+ * Unlink a client from a gallery
+ */
+export async function unlinkClientFromGallery(galleryId: string, clientProfileId: string) {
+  const { userId: clerkId } = await auth()
+  if (!clerkId) return { error: 'Unauthorized' }
+
+  const user = await getOrCreateUserByClerkId(clerkId)
+  if (!user) return { error: 'User not found' }
+
+  const gallery = await getGalleryWithOwnershipCheck(galleryId, user.id)
+  if (!gallery) return { error: 'Gallery not found' }
+
+  const { error } = await supabaseAdmin
+    .from('gallery_client_access')
+    .delete()
+    .eq('gallery_id', galleryId)
+    .eq('client_profile_id', clientProfileId)
+
+  if (error) {
+    console.error('[unlinkClientFromGallery] Error:', error)
+    return { error: 'Failed to unlink client' }
+  }
+
+  revalidatePath(`/gallery/${galleryId}`)
+
+  return { success: true }
+}
+
+/**
+ * Get clients linked to a gallery
+ */
+export async function getGalleryLinkedClients(galleryId: string) {
+  const { userId: clerkId } = await auth()
+  if (!clerkId) return { error: 'Unauthorized' }
+
+  const user = await getOrCreateUserByClerkId(clerkId)
+  if (!user) return { error: 'User not found' }
+
+  const gallery = await getGalleryWithOwnershipCheck(galleryId, user.id)
+  if (!gallery) return { error: 'Gallery not found' }
+
+  const { data, error } = await supabaseAdmin
+    .from('gallery_client_access')
+    .select(`
+      id,
+      can_view,
+      can_download,
+      can_favorite,
+      notify_on_upload,
+      first_viewed_at,
+      last_viewed_at,
+      view_count,
+      created_at,
+      client_profile:client_profiles (
+        id,
+        name,
+        email
+      )
+    `)
+    .eq('gallery_id', galleryId)
+
+  if (error) {
+    console.error('[getGalleryLinkedClients] Error:', error)
+    return { error: 'Failed to fetch linked clients' }
+  }
+
+  return { success: true, clients: data }
+}

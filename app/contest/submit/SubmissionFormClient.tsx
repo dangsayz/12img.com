@@ -16,7 +16,7 @@ import { useState, useTransition, useEffect } from 'react'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Check, Loader2, ChevronDown } from 'lucide-react'
+import { Check, Loader2, ChevronDown, ImageIcon } from 'lucide-react'
 import { submitEntry } from '@/server/actions/contest.actions'
 import { getSignedUrlsWithSizes } from '@/lib/storage/signed-urls'
 
@@ -233,13 +233,14 @@ export function SubmissionFormClient({
     )
   }
 
-  // Confirmation Modal
-  if (showConfirmation && selectedImageId && selectedImageUrl) {
+  // Confirmation Modal - Show loading state while image URL loads
+  if (showConfirmation && selectedImageId) {
     // Calculate actual aspect ratio from image dimensions
     const imgWidth = selectedImage?.width || 4
     const imgHeight = selectedImage?.height || 3
     const aspectRatio = imgWidth / imgHeight
     const isPortrait = aspectRatio < 1
+    const isLoadingPreview = !selectedImageUrl && loadingUrls
     
     return (
       <motion.div
@@ -251,7 +252,7 @@ export function SubmissionFormClient({
         <div className="relative mb-10">
           {/* Image Container - Uses actual aspect ratio */}
           <div 
-            className="relative mx-auto"
+            className="relative mx-auto bg-stone-100 rounded-lg overflow-hidden"
             style={{ 
               aspectRatio: `${imgWidth} / ${imgHeight}`,
               maxWidth: isPortrait ? '340px' : '100%',
@@ -261,14 +262,36 @@ export function SubmissionFormClient({
             {/* Subtle shadow */}
             <div className="absolute inset-0 shadow-xl shadow-stone-300/50" />
             
-            <Image
-              src={selectedImageUrl}
-              alt="Selected entry"
-              fill
-              className="object-contain bg-stone-50"
-              sizes="(max-width: 640px) 100vw, 512px"
-              priority
-            />
+            {isLoadingPreview ? (
+              // Loading state
+              <div className="absolute inset-0 flex items-center justify-center bg-stone-100">
+                <div className="text-center">
+                  <Loader2 className="w-8 h-8 animate-spin text-stone-400 mx-auto mb-2" />
+                  <p className="text-sm text-stone-400">Loading preview...</p>
+                </div>
+              </div>
+            ) : selectedImageUrl ? (
+              <Image
+                src={selectedImageUrl}
+                alt="Your selected photo"
+                fill
+                className="object-contain bg-stone-50"
+                sizes="(max-width: 640px) 100vw, 512px"
+                priority
+                onError={(e) => {
+                  console.error('[Submit] Image failed to load:', selectedImageUrl)
+                }}
+              />
+            ) : (
+              // Fallback if URL failed to load
+              <div className="absolute inset-0 flex items-center justify-center bg-stone-100">
+                <div className="text-center">
+                  <ImageIcon className="w-12 h-12 text-stone-300 mx-auto mb-2" />
+                  <p className="text-sm text-stone-400">Preview unavailable</p>
+                  <p className="text-xs text-stone-300 mt-1">You can still submit</p>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
@@ -287,16 +310,19 @@ export function SubmissionFormClient({
           <textarea
             value={caption}
             onChange={(e) => setCaption(e.target.value)}
-            placeholder="Caption (optional)"
-            className="w-full px-4 py-3 bg-transparent border border-stone-200 text-stone-900 placeholder:text-stone-400 focus:border-stone-400 focus:outline-none resize-none text-center"
+            placeholder="Add a caption to tell the story behind this shot..."
+            className="w-full px-4 py-4 bg-stone-50 border border-stone-200 text-stone-900 placeholder:text-stone-400 focus:border-stone-400 focus:outline-none resize-none rounded-lg"
             rows={2}
             maxLength={200}
           />
+          <p className="text-xs text-stone-400 mt-2 text-right">
+            {caption.length}/200
+          </p>
         </div>
 
         {/* Error */}
         {error && (
-          <div className="p-4 mb-6 bg-red-50 border border-red-100 text-red-600 text-sm text-center">
+          <div className="p-4 mb-6 bg-red-50 border border-red-200 text-red-600 text-sm text-center rounded-lg">
             {error}
           </div>
         )}
@@ -305,8 +331,8 @@ export function SubmissionFormClient({
         <div className="space-y-3">
           <button
             onClick={handleSubmit}
-            disabled={isPending}
-            className="w-full py-4 text-sm font-medium bg-stone-900 text-white hover:bg-stone-800 transition-colors flex items-center justify-center gap-2"
+            disabled={isPending || isLoadingPreview}
+            className="w-full py-4 text-sm font-medium bg-stone-900 text-white hover:bg-stone-800 disabled:bg-stone-300 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2 rounded-lg"
           >
             {isPending ? (
               <>
@@ -314,7 +340,7 @@ export function SubmissionFormClient({
                 Submitting...
               </>
             ) : (
-              'Submit This Entry'
+              '✨ Submit This Entry'
             )}
           </button>
           <button
@@ -324,7 +350,7 @@ export function SubmissionFormClient({
             }}
             className="w-full py-3 text-sm text-stone-400 hover:text-stone-600 transition-colors"
           >
-            Choose a different photo
+            ← Choose a different photo
           </button>
         </div>
       </motion.div>
@@ -420,60 +446,12 @@ export function SubmissionFormClient({
         </div>
       )}
       
-      {/* Caption - Optional */}
-      {selectedImageId && (
-        <div>
-          <p className="text-xs uppercase tracking-[0.2em] text-stone-500 mb-4">
-            Caption <span className="normal-case tracking-normal text-stone-600">(optional)</span>
-          </p>
-          <textarea
-            value={caption}
-            onChange={(e) => setCaption(e.target.value)}
-            placeholder="Tell the story behind this shot..."
-            className="w-full px-4 py-3 bg-stone-900 border border-stone-800 text-white placeholder:text-stone-600 focus:border-stone-700 focus:outline-none resize-none"
-            rows={2}
-            maxLength={200}
-          />
-          <p className="text-xs text-stone-600 mt-2 text-right">
-            {caption.length}/200
-          </p>
-        </div>
-      )}
-      
       {/* Error */}
       {error && (
-        <div className="p-4 bg-red-950/50 border border-red-900/50 text-red-400 text-sm">
+        <div className="p-4 bg-red-50 border border-red-200 text-red-600 text-sm rounded-lg">
           {error}
         </div>
       )}
-      
-      {/* Submit Button */}
-      <div className="pt-4">
-        <button
-          onClick={handleSubmit}
-          disabled={!selectedImageId || isPending}
-          className={`w-full py-4 text-sm font-medium transition-all min-h-[56px] flex items-center justify-center gap-2 ${
-            selectedImageId && !isPending
-              ? 'bg-white text-stone-900 hover:bg-stone-100'
-              : 'bg-stone-800 text-stone-600 cursor-not-allowed'
-          }`}
-        >
-          {isPending ? (
-            <>
-              <Loader2 className="w-4 h-4 animate-spin" />
-              Submitting...
-            </>
-          ) : (
-            'Submit Entry'
-          )}
-        </button>
-        
-        {!selectedImageId && (
-          <p className="text-center text-xs text-stone-600 mt-3">
-            Select a photo to continue
-          </p>
-        )}
-      </div>
     </div>
   )
 }

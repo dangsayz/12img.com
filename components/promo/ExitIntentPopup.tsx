@@ -9,10 +9,85 @@
  * - Only shows once per session
  */
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useUser } from '@clerk/nextjs'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, Copy, Check } from 'lucide-react'
+
+// Showcase images for rotation - curated selection for the popup
+const SHOWCASE_IMAGES = [
+  '/images/showcase/MitchellexJohnWedding-1.jpg',
+  '/images/showcase/MitchellexJohnWedding-102.jpg',
+  '/images/showcase/MitchellexJohnWedding-107.jpg',
+  '/images/showcase/MitchellexJohnWedding-112.jpg',
+  '/images/showcase/MitchellexJohnWedding-170.jpg',
+  '/images/showcase/MitchellexJohnWedding-251.jpg',
+  '/images/showcase/MitchellexJohnWedding-358.jpg',
+  '/images/showcase/MitchellexJohnWedding-402.jpg',
+  '/images/showcase/MitchellexJohnWedding-422.jpg',
+  '/images/showcase/MitchellexJohnWedding-473.jpg',
+  '/images/showcase/MitchellexJohnWedding-539.jpg',
+  '/images/showcase/MitchellexJohnWedding-551.jpg',
+  '/images/showcase/MitchellexJohnWedding-567.jpg',
+  '/images/showcase/MitchellexJohnWedding-586.jpg',
+  '/images/showcase/MitchellexJohnWedding-619.jpg',
+  '/images/showcase/MitchellexJohnWedding-736.jpg',
+  '/images/showcase/MitchellexJohnWedding-853.jpg',
+  '/images/showcase/MitchellexJohnWedding-855.jpg',
+  '/images/showcase/MitchellexJohnprt1-6.jpg',
+  '/images/showcase/MitchellexJohnprt1-68.jpg',
+  '/images/showcase/MitchellexJohnprt1-73.jpg',
+  '/images/showcase/MitchellexJohnprt1-76.jpg',
+  '/images/showcase/WxGweddinggalleryprt3-00931.jpg',
+  '/images/showcase/modern-wedding-gallery-01.jpg',
+  '/images/showcase/modern-wedding-gallery-02.jpg',
+  '/images/showcase/modern-wedding-gallery-03.jpg',
+  '/images/showcase/modern-wedding-gallery-04.jpg',
+  '/images/showcase/modern-wedding-gallery-05.jpg',
+  '/images/showcase/modern-wedding-gallery-06.jpg',
+  '/images/showcase/modern-wedding-gallery-07.jpg',
+  '/images/showcase/modern-wedding-gallery-08.jpg',
+  '/images/showcase/modern-wedding-gallery-09.jpg',
+]
+
+const IMAGE_HISTORY_KEY = 'exit_popup_shown_images'
+
+/**
+ * Get a random image that hasn't been shown recently
+ * Tracks shown images in localStorage and cycles through all before repeating
+ */
+function getRotatingImage(): string {
+  if (typeof window === 'undefined') return SHOWCASE_IMAGES[0]
+  
+  // Get history of shown images
+  let shownImages: string[] = []
+  try {
+    const stored = localStorage.getItem(IMAGE_HISTORY_KEY)
+    if (stored) shownImages = JSON.parse(stored)
+  } catch {
+    shownImages = []
+  }
+  
+  // Find images not yet shown
+  const unseenImages = SHOWCASE_IMAGES.filter(img => !shownImages.includes(img))
+  
+  // If all images have been shown, reset and start fresh
+  if (unseenImages.length === 0) {
+    shownImages = []
+    localStorage.setItem(IMAGE_HISTORY_KEY, JSON.stringify([]))
+  }
+  
+  // Pick random from unseen (or all if reset)
+  const availableImages = unseenImages.length > 0 ? unseenImages : SHOWCASE_IMAGES
+  const randomIndex = Math.floor(Math.random() * availableImages.length)
+  const selectedImage = availableImages[randomIndex]
+  
+  // Save to history
+  shownImages.push(selectedImage)
+  localStorage.setItem(IMAGE_HISTORY_KEY, JSON.stringify(shownImages))
+  
+  return selectedImage
+}
 
 interface ExitIntentPopupProps {
   /** Discount code to display */
@@ -49,6 +124,9 @@ export function ExitIntentPopup({
   const [copied, setCopied] = useState(false)
   const [canShow, setCanShow] = useState(false)
   const [imageLoaded, setImageLoaded] = useState(false)
+  
+  // Get a rotating image that the user hasn't seen recently
+  const [currentImage] = useState(() => getRotatingImage())
 
   // Check if we should show the popup
   const shouldShow = useCallback(() => {
@@ -188,7 +266,7 @@ export function ExitIntentPopup({
                     className="absolute inset-0"
                   >
                     <img
-                      src="/images/showcase/MitchellexJohnprt1-76.jpg"
+                      src={currentImage}
                       alt=""
                       className="w-full h-full object-cover"
                       onLoad={() => setImageLoaded(true)}

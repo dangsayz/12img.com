@@ -161,10 +161,14 @@ export async function getUserGalleries(clerkId: string) {
   }
 
   // Generate signed URLs for all covers (explicit + fallback)
-  const allCoverPaths = [
+  // IMPORTANT: Deduplicate paths to avoid issues with Supabase batch URL generation
+  const allCoverPaths = Array.from(new Set([
     ...coverImages.map((c) => c.storage_path),
     ...Array.from(fallbackCoverMap.values())
-  ]
+  ]))
+  
+  console.log('[getUserGalleries] Unique cover paths to fetch:', allCoverPaths.length)
+  
   const signedUrls =
     allCoverPaths.length > 0 ? await getSignedUrlsBatch(allCoverPaths, undefined, 'COVER') : new Map()
 
@@ -180,6 +184,9 @@ export async function getUserGalleries(clerkId: string) {
   })
 
   console.log('[getUserGalleries] Cover URL map size:', coverUrlMap.size)
+  console.log('[getUserGalleries] Fallback map size:', fallbackCoverMap.size)
+  console.log('[getUserGalleries] Signed URLs map size:', signedUrls.size)
+  console.log('[getUserGalleries] All cover paths requested:', allCoverPaths.length)
 
   return data.map((gallery) => {
     // Use explicit cover if set, otherwise use fallback first image

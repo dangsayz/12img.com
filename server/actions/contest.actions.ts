@@ -162,10 +162,9 @@ export async function getContestEntries(
   contestId: string,
   userId?: string
 ): Promise<ContestEntryWithVoteStatus[]> {
-  const supabase = createServerClient()
-  
-  // Get approved entries with image and user data
-  const { data: entries, error } = await supabase
+  // Use admin client to bypass RLS on images table for public contest viewing
+  // We already filter to approved=true entries only
+  const { data: entries, error } = await supabaseAdmin
     .from('contest_entries')
     .select(`
       *,
@@ -186,22 +185,26 @@ export async function getContestEntries(
     .eq('approved', true)
     .order('created_at', { ascending: true })
   
-  if (error || !entries) {
-    console.error('[Contest] Error fetching entries:', error)
+  if (error) {
+    console.error('[Contest] Error fetching entries:', JSON.stringify(error, null, 2))
+    return []
+  }
+  
+  if (!entries) {
     return []
   }
   
   // Get user's votes if logged in
   let userVotes: Set<string> = new Set()
   if (userId) {
-    const { data: votes } = await supabase
+    const { data: votes } = await supabaseAdmin
       .from('contest_votes')
       .select('entry_id')
       .eq('contest_id', contestId)
       .eq('voter_id', userId)
     
     if (votes) {
-      userVotes = new Set(votes.map(v => v.entry_id))
+      userVotes = new Set(votes.map((v: { entry_id: string }) => v.entry_id))
     }
   }
   
@@ -279,16 +282,36 @@ export async function getContestPageData(contestId: string): Promise<ContestPage
     
     userVoteCount = count || 0
     
-    // Check if user has submitted
-    const { data: entryData } = await supabase
+    // Check if user has submitted - include image data for display
+    const { data: entryData } = await supabaseAdmin
       .from('contest_entries')
-      .select('*')
+      .select(`
+        *,
+        images (
+          id,
+          storage_path,
+          width,
+          height
+        )
+      `)
       .eq('contest_id', contestId)
       .eq('user_id', userId)
       .single()
     
     if (entryData) {
       userEntry = mapEntry(entryData)
+      // Add image URL to userEntry for display
+      if (entryData.images) {
+        const urls = await getSignedUrlsWithSizes([entryData.images.storage_path])
+        const imageUrls = urls.get(entryData.images.storage_path)
+        ;(userEntry as any).image = {
+          id: entryData.images.id,
+          thumbnailUrl: imageUrls?.thumbnail || '',
+          previewUrl: imageUrls?.preview || '',
+          width: entryData.images.width,
+          height: entryData.images.height,
+        }
+      }
     }
   }
   

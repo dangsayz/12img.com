@@ -594,7 +594,7 @@ export function PublicGalleryView({
       <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-sm border-b border-neutral-100">
         <div className="max-w-[1800px] mx-auto px-6 py-4 flex items-center justify-between">
           <Link 
-            href={`/gallery/${gallerySlug || galleryId}`}
+            href={`/view-reel/${gallerySlug || galleryId}`}
             className="flex items-center gap-2 px-3 py-1.5 text-neutral-500 hover:text-neutral-900 hover:bg-neutral-100 transition-colors rounded-md"
           >
             <ArrowLeft className="w-4 h-4" />

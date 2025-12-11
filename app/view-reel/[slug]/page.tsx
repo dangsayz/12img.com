@@ -178,8 +178,12 @@ export default async function PublicViewPage({ params }: Props) {
     )
   }
 
-  // Check if gallery is private (not public)
-  if (gallery.is_public === false) {
+  // Check gallery visibility mode
+  const visibilityMode = (gallery as { visibility_mode?: string }).visibility_mode || 
+    (gallery.is_public === false ? 'private' : 'public')
+  
+  // Private galleries - only owner can view
+  if (visibilityMode === 'private' && !isOwner) {
     return (
       <div className="min-h-screen bg-stone-950 flex flex-col items-center justify-center p-6 relative overflow-hidden">
         {/* Subtle gradient background */}
@@ -231,6 +235,59 @@ export default async function PublicViewPage({ params }: Props) {
         </div>
         
         {/* Bottom branding */}
+        <div className="absolute bottom-6 left-0 right-0 text-center">
+          <p className="text-stone-700 text-xs">
+            Powered by <span className="text-stone-500">12img</span>
+          </p>
+        </div>
+      </div>
+    )
+  }
+
+  // Client-only galleries - requires portal token access (not direct link)
+  // For now, show a message directing to contact photographer
+  // TODO: Check for portal token in cookies when client portal integration is complete
+  if (visibilityMode === 'client_only' && !isOwner) {
+    return (
+      <div className="min-h-screen bg-stone-950 flex flex-col items-center justify-center p-6 relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-stone-900 via-stone-950 to-black" />
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-900/10 rounded-full blur-3xl" />
+        <div className="absolute bottom-1/4 right-1/4 w-64 h-64 bg-stone-700/10 rounded-full blur-3xl" />
+        
+        <div className="relative z-10 text-center max-w-md">
+          <div className="relative mx-auto mb-8">
+            <div className="w-20 h-20 rounded-full border border-blue-700/30 flex items-center justify-center mx-auto backdrop-blur-sm bg-stone-900/50">
+              <svg className="w-8 h-8 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />
+              </svg>
+            </div>
+          </div>
+          
+          <h1 className="text-3xl sm:text-4xl font-extralight text-white tracking-tight mb-4">
+            Client Access Only
+          </h1>
+          <p className="text-stone-400 text-base leading-relaxed mb-8">
+            This gallery is available to clients only.<br />
+            Please use the link provided by your photographer.
+          </p>
+          
+          <div className="flex items-center gap-4 mb-8">
+            <div className="flex-1 h-px bg-gradient-to-r from-transparent to-stone-700/50" />
+            <span className="text-stone-600 text-xs uppercase tracking-widest">12img</span>
+            <div className="flex-1 h-px bg-gradient-to-l from-transparent to-stone-700/50" />
+          </div>
+          
+          <a
+            href="/"
+            className="inline-flex items-center gap-2 text-sm text-stone-400 hover:text-white transition-colors group"
+          >
+            <svg className="w-4 h-4 transition-transform group-hover:-translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+            </svg>
+            Return home
+          </a>
+        </div>
+        
         <div className="absolute bottom-6 left-0 right-0 text-center">
           <p className="text-stone-700 text-xs">
             Powered by <span className="text-stone-500">12img</span>

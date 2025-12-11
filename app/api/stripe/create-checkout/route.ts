@@ -90,6 +90,7 @@ export async function POST(request: Request) {
       success_url: `${process.env.NEXT_PUBLIC_SITE_URL}/settings?success=true&plan=${planId}${couponCode ? `&promo=${couponCode}` : ''}`,
       cancel_url: `${process.env.NEXT_PUBLIC_SITE_URL}/pricing?canceled=true`,
       subscription_data: {
+        trial_period_days: 30,
         metadata: {
           clerk_user_id: userId,
           db_user_id: dbUser.id,
@@ -111,18 +112,34 @@ export async function POST(request: Request) {
     const shouldApplyCoupon = couponCode && !isFoundersDeal && !isFoundersPromoCode(couponCode)
     
     if (shouldApplyCoupon) {
-      // Validate the coupon exists in Stripe
+      // Try to find a promotion code first (customer-facing codes like ONEMONTH)
       try {
-        const coupon = await stripe.coupons.retrieve(couponCode)
-        if (coupon && coupon.valid) {
-          sessionConfig.discounts = [{ coupon: couponCode }]
-          console.log(`[Checkout] Applying coupon: ${couponCode}`)
+        const promotionCodes = await stripe.promotionCodes.list({
+          code: couponCode,
+          active: true,
+          limit: 1,
+        })
+        
+        if (promotionCodes.data.length > 0) {
+          // Found a promotion code - use it
+          sessionConfig.discounts = [{ promotion_code: promotionCodes.data[0].id }]
+          console.log(`[Checkout] Applying promotion code: ${couponCode} (ID: ${promotionCodes.data[0].id})`)
         } else {
-          console.log(`[Checkout] Coupon invalid or expired: ${couponCode}`)
+          // Try as a direct coupon ID
+          try {
+            const coupon = await stripe.coupons.retrieve(couponCode)
+            if (coupon && coupon.valid) {
+              sessionConfig.discounts = [{ coupon: couponCode }]
+              console.log(`[Checkout] Applying coupon: ${couponCode}`)
+            } else {
+              console.log(`[Checkout] Coupon invalid or expired: ${couponCode}`)
+            }
+          } catch (couponError) {
+            console.log(`[Checkout] No promotion code or coupon found: ${couponCode}`)
+          }
         }
-      } catch (couponError) {
-        // Coupon doesn't exist, continue without it
-        console.log(`[Checkout] Coupon not found: ${couponCode}`, couponError)
+      } catch (promoError) {
+        console.log(`[Checkout] Error looking up promotion code: ${couponCode}`, promoError)
       }
     } else if (isFoundersPromoCode(couponCode) && planId !== 'elite') {
       // User has Founder's code but is buying a different plan - don't apply it
