@@ -216,7 +216,7 @@ export function VendorShareModal({ isOpen, onClose, galleryId, galleryTitle }: V
                         No vendors in your network yet
                       </p>
                       <a
-                        href="/settings"
+                        href="/settings#vendors"
                         className="text-sm text-stone-900 font-medium hover:underline"
                       >
                         Add vendors in Settings →
