@@ -177,8 +177,7 @@ export async function getContestEntries(
       profiles:user_id (
         id,
         display_name,
-        avatar_url,
-        slug
+        avatar_url
       )
     `)
     .eq('contest_id', contestId)
@@ -231,7 +230,7 @@ export async function getContestEntries(
         id: profile.id || entry.user_id,
         displayName: profile.display_name || 'Photographer',
         avatarUrl: profile.avatar_url,
-        slug: profile.slug,
+        slug: '',
       },
       hasVoted: userVotes.has(entry.id),
     }
@@ -662,7 +661,7 @@ export async function getSpotlightCardData(): Promise<SpotlightCardData> {
         ),
         profiles:user_id (
           display_name,
-          slug
+          avatar_url
         )
       )
     `)
@@ -684,7 +683,7 @@ export async function getSpotlightCardData(): Promise<SpotlightCardData> {
       winner: {
         imageUrl,
         photographerName: profile.display_name || 'Photographer',
-        photographerSlug: profile.slug,
+        photographerSlug: '',
         contestName: finishedContest.name,
         contestTheme: finishedContest.theme,
       },

@@ -728,39 +728,32 @@ export async function getPublicProfileBySlug(slug: string, viewerUserId?: string
       })
     }
 
-    // Get favorite images for portfolio display
-    // Privacy rules: only show favorites from public galleries with show_on_profile=true
-    // and no password protection
+    // Get curated portfolio images from portfolio_images table
     let portfolioImages: any[] = []
-    
-    if (galleryIds.length > 0) {
-      // Build query for favorite images with privacy filters
-      let favoritesQuery = supabaseAdmin
-        .from('images')
+    {
+      const { data: portfolioData } = await supabaseAdmin
+        .from('portfolio_images')
         .select(`
-          id,
-          storage_path,
-          gallery_id,
-          width,
-          height,
-          focal_x,
-          focal_y,
-          is_favorite
+          image_id,
+          position,
+          images!inner (
+            id,
+            storage_path,
+            gallery_id,
+            width,
+            height,
+            focal_x,
+            focal_y
+          )
         `)
-        .in('gallery_id', galleryIds)
-        .eq('is_favorite', true)
-        .order('created_at', { ascending: false })
-        .limit(50)
-      
-      const { data: favoriteImages } = await favoritesQuery
-      
-      if (favoriteImages && favoriteImages.length > 0) {
-        // Filter to only include images from privacy-respecting galleries
-        // For non-owners: gallery must be public, show_on_profile=true, no password
-        const publicGalleryIds = new Set(
+        .eq('user_id', profile.id)
+        .order('position', { ascending: true })
+
+      if (portfolioData && portfolioData.length > 0) {
+        const visibleGalleryIds = new Set(
           galleries
             ?.filter(g => {
-              if (isOwner) return true // Owner sees all favorites
+              if (isOwner) return true
               const isPublic = g.visibility_mode === 'public' || (g.visibility_mode === null && g.is_public)
               const showOnProfile = g.show_on_profile !== false
               const noPassword = !g.is_locked
@@ -768,8 +761,8 @@ export async function getPublicProfileBySlug(slug: string, viewerUserId?: string
             })
             .map(g => g.id) || []
         )
-        
-        portfolioImages = favoriteImages.filter(img => publicGalleryIds.has(img.gallery_id))
+
+        portfolioImages = portfolioData.filter((pi: any) => visibleGalleryIds.has(pi.images.gallery_id))
       }
     }
     
@@ -799,15 +792,15 @@ export async function getPublicProfileBySlug(slug: string, viewerUserId?: string
     const galleryTitleMap = new Map<string, string>()
     galleries?.forEach(g => galleryTitleMap.set(g.id, g.title))
     
-    const formattedPortfolioImages = portfolioImages?.map((img: any) => ({
-      id: img.id,
-      storage_path: img.storage_path,
-      gallery_id: img.gallery_id,
-      gallery_title: galleryTitleMap.get(img.gallery_id) || '',
-      width: img.width,
-      height: img.height,
-      focal_x: img.focal_x,
-      focal_y: img.focal_y,
+    const formattedPortfolioImages = portfolioImages?.map((pi: any) => ({
+      id: pi.images.id,
+      storage_path: pi.images.storage_path,
+      gallery_id: pi.images.gallery_id,
+      gallery_title: galleryTitleMap.get(pi.images.gallery_id) || '',
+      width: pi.images.width,
+      height: pi.images.height,
+      focal_x: pi.images.focal_x,
+      focal_y: pi.images.focal_y,
     })) || []
 
     return {

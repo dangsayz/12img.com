@@ -97,6 +97,7 @@ function MasonryImageItem({
   const [isRetrying, setIsRetrying] = useState(false)
   const [currentUrl, setCurrentUrl] = useState(image.thumbnailUrl || image.previewUrl || image.originalUrl)
   const [isHovered, setIsHovered] = useState(false)
+  const [isAddingToPortfolio, setIsAddingToPortfolio] = useState(false)
   
   // Auto-fetch URL if missing
   useEffect(() => {
@@ -317,6 +318,37 @@ function MasonryImageItem({
               )}
             </motion.button>
           )}
+          {/* Add to Portfolio button */}
+          <motion.button
+            onClick={async (e) => {
+              e.stopPropagation()
+              if (isAddingToPortfolio) return
+              setIsAddingToPortfolio(true)
+              try {
+                const { addToPortfolio } = await import('@/server/actions/profile.actions')
+                const result = await addToPortfolio(image.id)
+                if (result?.error) {
+                  alert(result.error)
+                }
+              } catch (err) {
+                console.error('Failed to add to portfolio', err)
+                alert('Failed to add image to portfolio. Please try again.')
+              } finally {
+                setIsAddingToPortfolio(false)
+              }
+            }}
+            disabled={isAddingToPortfolio}
+            className="w-7 h-7 bg-white/95 backdrop-blur-sm flex items-center justify-center hover:bg-stone-50 transition-colors shadow-sm disabled:opacity-50"
+            title="Add to portfolio"
+            whileHover={{ scale: isAddingToPortfolio ? 1 : 1.05 }}
+            whileTap={{ scale: isAddingToPortfolio ? 1 : 0.95 }}
+          >
+            {isAddingToPortfolio ? (
+              <div className="w-3 h-3 border-2 border-stone-500 border-t-transparent rounded-full animate-spin" />
+            ) : (
+              <BookOpen className="w-3.5 h-3.5 text-stone-600" />
+            )}
+          </motion.button>
           {/* Download button */}
           <motion.button 
             onClick={(e) => {
