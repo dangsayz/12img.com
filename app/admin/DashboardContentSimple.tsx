@@ -144,7 +144,7 @@ export function DashboardContent({ stats, revenue }: Props) {
         transition={{ delay: 0.3 }}
       >
         <p className="text-xs uppercase tracking-widest text-stone-400 mb-4">Quick links</p>
-        <div className="grid grid-cols-4 gap-2">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
           {[
             { href: '/admin/users', icon: Users, label: 'Users' },
             { href: '/admin/galleries', icon: Layers, label: 'Galleries' },

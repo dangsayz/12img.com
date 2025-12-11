@@ -192,17 +192,17 @@ export function AddVendorModal({ isOpen, onClose, onSave, vendor }: AddVendorMod
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={handleClose}
-            className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50"
+            className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[60]"
           />
 
           {/* Modal Container */}
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
+          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 pointer-events-none">
             <motion.div
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
               transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-              className="w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden pointer-events-auto"
+              className="w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden pointer-events-auto max-h-[calc(100vh-2rem)] flex flex-col"
             >
               {/* Header */}
               <div className="flex items-center justify-between px-6 py-4 border-b border-stone-100">
@@ -234,7 +234,7 @@ export function AddVendorModal({ isOpen, onClose, onSave, vendor }: AddVendorMod
               )}
 
               {/* Content */}
-              <div className="p-6">
+              <div className="p-6 flex-1 overflow-y-auto">
                 <AnimatePresence mode="wait">
                   {/* Step 1: Email */}
                   {step === 'email' && (

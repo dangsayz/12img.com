@@ -760,11 +760,16 @@ function GalleryCard({
 
           {/* Dropdown Menu */}
           {showMenu && (
-            <div
-              className="absolute top-full right-0 mt-1 bg-white shadow-2xl border border-stone-200 rounded-lg py-1.5 min-w-[180px] z-50 animate-zoom-in"
-              onClick={(e) => e.stopPropagation()}
-              onMouseLeave={() => { setShowMenu(false); onLeave() }}
-            >
+            <>
+              {/* Invisible backdrop to close menu on click outside */}
+              <div 
+                className="fixed inset-0 z-40" 
+                onClick={() => { setShowMenu(false); onLeave() }}
+              />
+              <div
+                className="absolute top-full right-0 mt-1 bg-white shadow-2xl border border-stone-200 rounded-lg py-1.5 min-w-[180px] z-50 animate-zoom-in max-h-[300px] overflow-y-auto"
+                onClick={(e) => e.stopPropagation()}
+              >
             <Link
               href={`/gallery/${gallery.slug}`}
               className="block px-4 py-2.5 text-sm text-stone-900 hover:bg-stone-50 transition-colors"
@@ -810,8 +815,9 @@ function GalleryCard({
             >
               Delete
             </button>
-          </div>
-        )}
+              </div>
+            </>
+          )}
       </div>
 
       {/* Delete Modal */}

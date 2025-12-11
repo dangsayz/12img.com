@@ -293,7 +293,7 @@ export function GalleriesContent({
           </form>
           
           {/* Quick Filters */}
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <select
               value={currentFilters.visibility || 'all'}
               onChange={(e) => updateFilters({ visibility: e.target.value as any })}
@@ -379,14 +379,14 @@ export function GalleriesContent({
         </AnimatePresence>
         
         {/* Results Summary */}
-        <div className="flex items-center justify-between mt-4 pt-4 border-t border-[#E5E5E5]">
-          <div className="flex items-center gap-4 text-sm text-[#525252]">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mt-4 pt-4 border-t border-[#E5E5E5]">
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-[#525252]">
             <span>{galleries.total.toLocaleString()} galleries found</span>
             {galleries.aggregates && (
               <>
-                <span>·</span>
+                <span className="hidden sm:inline">·</span>
                 <span>{galleries.aggregates.totalImages.toLocaleString()} images</span>
-                <span>·</span>
+                <span className="hidden sm:inline">·</span>
                 <span>{formatBytes(galleries.aggregates.totalStorage)}</span>
               </>
             )}

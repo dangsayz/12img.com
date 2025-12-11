@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, Loader2, Copy, Check, Link2, Users, ExternalLink, Send } from 'lucide-react'
+import { X, Loader2, Copy, Check, Link2, Users, ExternalLink, Send, Plus } from 'lucide-react'
 import {
   Vendor,
   GalleryVendorShareWithDetails,
@@ -17,7 +17,10 @@ import {
   shareGalleryWithVendor,
   revokeGalleryVendorShare,
   resendVendorShareEmail,
+  createVendor,
 } from '@/server/actions/vendor.actions'
+import { CreateVendorInput, UpdateVendorInput } from '@/lib/vendors/types'
+import { AddVendorModal } from './AddVendorModal'
 
 interface VendorShareModalProps {
   isOpen: boolean
@@ -34,6 +37,7 @@ export function VendorShareModal({ isOpen, onClose, galleryId, galleryTitle }: V
   const [selectedVendorId, setSelectedVendorId] = useState<string>('')
   const [copiedId, setCopiedId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [showAddVendor, setShowAddVendor] = useState(false)
 
   useEffect(() => {
     if (isOpen) {
@@ -120,7 +124,15 @@ export function VendorShareModal({ isOpen, onClose, galleryId, galleryTitle }: V
     v => !shares.some(s => s.vendor_id === v.id)
   )
 
+  const handleAddVendor = async (data: CreateVendorInput | UpdateVendorInput) => {
+    const created = await createVendor(data as CreateVendorInput)
+    setVendors([...vendors, created])
+    setSelectedVendorId(created.id) // Auto-select the new vendor
+    setShowAddVendor(false)
+  }
+
   return (
+    <>
     <AnimatePresence>
       {isOpen && (
         <>
@@ -199,6 +211,13 @@ export function VendorShareModal({ isOpen, onClose, galleryId, galleryTitle }: V
                           )}
                           Share
                         </button>
+                        <button
+                          onClick={() => setShowAddVendor(true)}
+                          className="p-2.5 border border-stone-200 text-stone-600 rounded-lg hover:bg-stone-50 hover:border-stone-300 transition-colors"
+                          title="Add new vendor"
+                        >
+                          <Plus className="w-4 h-4" />
+                        </button>
                       </div>
                       {error && (
                         <p className="text-sm text-red-600 mt-2">{error}</p>
@@ -215,12 +234,13 @@ export function VendorShareModal({ isOpen, onClose, galleryId, galleryTitle }: V
                       <p className="text-sm text-stone-600 mb-3">
                         No vendors in your network yet
                       </p>
-                      <a
-                        href="/settings#vendors"
-                        className="text-sm text-stone-900 font-medium hover:underline"
+                      <button
+                        onClick={() => setShowAddVendor(true)}
+                        className="inline-flex items-center gap-2 px-4 py-2 bg-stone-900 text-white text-sm font-medium rounded-lg hover:bg-stone-800 transition-colors"
                       >
-                        Add vendors in Settings →
-                      </a>
+                        <Plus className="w-4 h-4" />
+                        Add Your First Vendor
+                      </button>
                     </div>
                   )}
 
@@ -347,5 +367,13 @@ export function VendorShareModal({ isOpen, onClose, galleryId, galleryTitle }: V
         </>
       )}
     </AnimatePresence>
+
+    {/* Inline Add Vendor Modal */}
+    <AddVendorModal
+      isOpen={showAddVendor}
+      onClose={() => setShowAddVendor(false)}
+      onSave={handleAddVendor}
+    />
+    </>
   )
 }

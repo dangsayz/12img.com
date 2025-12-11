@@ -106,25 +106,23 @@ export function GalleryVisibilitySettings({
   }
 
   return (
-    <div className="space-y-4">
-      {/* Main Visibility Mode Selector */}
+    <div className="space-y-1">
+      {/* Main Visibility Mode Selector - Compact inline style */}
       <div className="relative">
         <button
           onClick={() => setShowModeSelector(!showModeSelector)}
           disabled={isPending}
-          className="w-full flex items-center justify-between p-3 bg-white border border-stone-200 rounded-xl hover:border-stone-300 transition-colors"
+          className="w-full flex items-center justify-between py-2 hover:bg-stone-50 rounded-lg px-1 -mx-1 transition-colors"
         >
-          <div className="flex items-center gap-3">
-            <div className={`w-10 h-10 rounded-lg ${currentMode.bgColor} flex items-center justify-center`}>
-              <CurrentIcon className={`w-5 h-5 ${currentMode.color}`} />
-            </div>
+          <div className="flex items-center gap-2.5">
+            <CurrentIcon className={`w-4 h-4 ${currentMode.color}`} />
             <div className="text-left">
-              <p className="text-sm font-medium text-stone-900">{currentMode.label}</p>
-              <p className="text-xs text-stone-500">{currentMode.description}</p>
+              <p className="text-sm font-medium text-stone-700">{currentMode.label}</p>
+              <p className="text-xs text-stone-400">{currentMode.description}</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
-            {isPending && <Loader2 className="w-4 h-4 text-stone-400 animate-spin" />}
+            {isPending && <Loader2 className="w-3.5 h-3.5 text-stone-400 animate-spin" />}
             <ChevronDown className={`w-4 h-4 text-stone-400 transition-transform ${showModeSelector ? 'rotate-180' : ''}`} />
           </div>
         </button>
@@ -132,10 +130,10 @@ export function GalleryVisibilitySettings({
         <AnimatePresence>
           {showModeSelector && (
             <motion.div
-              initial={{ opacity: 0, y: -8 }}
+              initial={{ opacity: 0, y: -4 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -8 }}
-              className="absolute top-full left-0 right-0 mt-2 bg-white border border-stone-200 rounded-xl shadow-lg z-50 overflow-hidden"
+              exit={{ opacity: 0, y: -4 }}
+              className="absolute top-full left-0 right-0 mt-1 bg-white border border-stone-200 rounded-lg shadow-lg z-50 overflow-hidden"
             >
               {visibilityModes.map((mode) => {
                 const Icon = mode.icon
@@ -144,16 +142,14 @@ export function GalleryVisibilitySettings({
                   <button
                     key={mode.mode}
                     onClick={() => handleModeChange(mode.mode)}
-                    className={`w-full flex items-center gap-3 p-3 hover:bg-stone-50 transition-colors ${
+                    className={`w-full flex items-center gap-2.5 px-3 py-2.5 hover:bg-stone-50 transition-colors ${
                       isSelected ? 'bg-stone-50' : ''
                     }`}
                   >
-                    <div className={`w-10 h-10 rounded-lg ${mode.bgColor} flex items-center justify-center`}>
-                      <Icon className={`w-5 h-5 ${mode.color}`} />
-                    </div>
+                    <Icon className={`w-4 h-4 ${mode.color}`} />
                     <div className="flex-1 text-left">
-                      <p className="text-sm font-medium text-stone-900">{mode.label}</p>
-                      <p className="text-xs text-stone-500">{mode.description}</p>
+                      <p className="text-sm font-medium text-stone-700">{mode.label}</p>
+                      <p className="text-xs text-stone-400">{mode.description}</p>
                     </div>
                     {isSelected && (
                       <Check className="w-4 h-4 text-emerald-500" />
@@ -166,110 +162,84 @@ export function GalleryVisibilitySettings({
         </AnimatePresence>
       </div>
 
-      {/* Show on Profile Toggle */}
-      <div className="flex items-center justify-between p-3 bg-stone-50 rounded-xl">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-white border border-stone-200 flex items-center justify-center">
-            <Eye className="w-4 h-4 text-stone-500" />
-          </div>
+      {/* Show on Profile Toggle - Simple row */}
+      <div className="flex items-center justify-between py-2">
+        <div className="flex items-center gap-2.5">
+          <Eye className="w-4 h-4 text-stone-400" />
           <div>
             <p className="text-sm font-medium text-stone-700">Show on Profile</p>
-            <p className="text-xs text-stone-500">Display in your public portfolio</p>
+            <p className="text-xs text-stone-400">Display in your public portfolio</p>
           </div>
         </div>
         <button
           onClick={() => handleToggle('showOnProfile', !settings.showOnProfile)}
           disabled={isPending}
-          className={`relative w-11 h-6 rounded-full transition-colors ${
+          className={`relative w-10 h-5 rounded-full transition-colors ${
             settings.showOnProfile ? 'bg-emerald-500' : 'bg-stone-300'
           } ${isPending ? 'opacity-50' : ''}`}
         >
           <span
-            className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${
+            className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow-sm transition-transform ${
               settings.showOnProfile ? 'translate-x-5' : 'translate-x-0'
             }`}
           />
         </button>
       </div>
 
-      {/* Advanced Settings */}
-      <div className="border border-stone-200 rounded-xl overflow-hidden">
+      {/* Advanced Settings - Subtle collapsible */}
+      <div className="pt-1">
         <button
           onClick={() => setShowAdvanced(!showAdvanced)}
-          className="w-full flex items-center justify-between p-3 hover:bg-stone-50 transition-colors"
+          className="flex items-center gap-1.5 py-1 text-stone-400 hover:text-stone-600 transition-colors"
         >
-          <div className="flex items-center gap-2">
-            <Shield className="w-4 h-4 text-stone-400" />
-            <span className="text-sm font-medium text-stone-600">Advanced Settings</span>
-          </div>
-          {showAdvanced ? (
-            <ChevronUp className="w-4 h-4 text-stone-400" />
-          ) : (
-            <ChevronDown className="w-4 h-4 text-stone-400" />
-          )}
+          <Shield className="w-3.5 h-3.5" />
+          <span className="text-xs">Advanced</span>
+          <ChevronDown className={`w-3 h-3 transition-transform ${showAdvanced ? 'rotate-180' : ''}`} />
         </button>
 
         <AnimatePresence>
           {showAdvanced && (
             <motion.div
-              initial={{ height: 0 }}
-              animate={{ height: 'auto' }}
-              exit={{ height: 0 }}
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
               className="overflow-hidden"
             >
-              <div className="p-3 pt-0 space-y-3 border-t border-stone-100">
+              <div className="pl-5 pt-2 space-y-2">
                 {/* Respect Profile Visibility */}
-                <div className="flex items-start justify-between gap-3 py-2">
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-stone-700">Respect Profile Visibility</p>
-                    <p className="text-xs text-stone-500 mt-0.5">
-                      If your profile is private, block direct gallery links too
-                    </p>
-                  </div>
+                <div className="flex items-center justify-between gap-3">
+                  <p className="text-xs text-stone-500">Block direct links if profile private</p>
                   <button
                     onClick={() => handleToggle('respectProfileVisibility', !settings.respectProfileVisibility)}
                     disabled={isPending}
-                    className={`relative w-11 h-6 rounded-full transition-colors shrink-0 ${
+                    className={`relative w-8 h-4 rounded-full transition-colors shrink-0 ${
                       settings.respectProfileVisibility ? 'bg-emerald-500' : 'bg-stone-300'
                     } ${isPending ? 'opacity-50' : ''}`}
                   >
                     <span
-                      className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${
-                        settings.respectProfileVisibility ? 'translate-x-5' : 'translate-x-0'
+                      className={`absolute top-0.5 left-0.5 w-3 h-3 bg-white rounded-full shadow-sm transition-transform ${
+                        settings.respectProfileVisibility ? 'translate-x-4' : 'translate-x-0'
                       }`}
                     />
                   </button>
                 </div>
 
                 {/* Inherit Profile PIN */}
-                <div className="flex items-start justify-between gap-3 py-2">
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-stone-700">Inherit Profile PIN</p>
-                    <p className="text-xs text-stone-500 mt-0.5">
-                      Use profile PIN instead of separate password (avoids double auth)
-                    </p>
-                  </div>
+                <div className="flex items-center justify-between gap-3">
+                  <p className="text-xs text-stone-500">Use profile PIN (skip double auth)</p>
                   <button
                     onClick={() => handleToggle('inheritProfilePin', !settings.inheritProfilePin)}
                     disabled={isPending}
-                    className={`relative w-11 h-6 rounded-full transition-colors shrink-0 ${
+                    className={`relative w-8 h-4 rounded-full transition-colors shrink-0 ${
                       settings.inheritProfilePin ? 'bg-emerald-500' : 'bg-stone-300'
                     } ${isPending ? 'opacity-50' : ''}`}
                   >
                     <span
-                      className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${
-                        settings.inheritProfilePin ? 'translate-x-5' : 'translate-x-0'
+                      className={`absolute top-0.5 left-0.5 w-3 h-3 bg-white rounded-full shadow-sm transition-transform ${
+                        settings.inheritProfilePin ? 'translate-x-4' : 'translate-x-0'
                       }`}
                     />
                   </button>
-                </div>
-
-                {/* Info Note */}
-                <div className="flex items-start gap-2 p-2 bg-blue-50 rounded-lg mt-2">
-                  <Info className="w-4 h-4 text-blue-500 shrink-0 mt-0.5" />
-                  <p className="text-xs text-blue-700">
-                    These settings control how visibility rules cascade from your profile to individual galleries.
-                  </p>
                 </div>
               </div>
             </motion.div>

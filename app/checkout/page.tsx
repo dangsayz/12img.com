@@ -29,7 +29,9 @@ function CheckoutContent() {
   const [error, setError] = useState<string | null>(null)
   const checkoutTriggered = useRef(false)
   
-  const plan = searchParams.get('plan') || 'pro'
+  const VALID_PLANS = ['essential', 'pro', 'studio', 'elite']
+  const rawPlan = searchParams.get('plan') || 'pro'
+  const plan = VALID_PLANS.includes(rawPlan) ? rawPlan : 'pro' // Default to pro if invalid
   const promo = searchParams.get('promo')
   
   // Store promo code if provided

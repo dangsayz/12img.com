@@ -422,12 +422,13 @@ function getTemplateUrl(gallerySlug: string, template: GalleryTemplate): string 
 
 /**
  * Send gallery to a client via email.
+ * Automatically includes the gallery PIN if one is set.
  */
 export async function sendGalleryToClient(
   galleryId: string,
   clientEmail: string,
   personalMessage?: string,
-  password?: string,  // Include PIN in email if provided
+  _password?: string,  // Deprecated - PIN is now fetched from gallery
   template: GalleryTemplate = 'mosaic'  // Template for gallery view
 ) {
   const { userId: clerkId } = await auth()
@@ -454,6 +455,9 @@ export async function sendGalleryToClient(
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://12img.com'
   const galleryPath = getTemplateUrl(gallery.slug, template)
 
+  // Automatically include PIN if gallery has one set
+  const galleryPin = (gallery as { password_plain?: string | null }).password_plain || undefined
+
   try {
     const result = await sendGalleryInviteEmail(
       gallery,
@@ -463,7 +467,7 @@ export async function sendGalleryToClient(
         photographerEmail,
         personalMessage: personalMessage?.trim() || undefined,
         baseUrl,
-        password,  // Include PIN if provided
+        password: galleryPin,  // Automatically include gallery PIN
         galleryPath,  // Custom path based on template
       }
     )

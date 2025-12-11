@@ -267,7 +267,7 @@ export function CreateCampaignModal({
                 <label className="block text-[10px] font-semibold text-[#737373] uppercase tracking-wider mb-2">
                   Quick Start Template
                 </label>
-                <div className="grid grid-cols-3 gap-2">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                   {CAMPAIGN_TEMPLATES.slice(0, 6).map(template => (
                     <button
                       key={template.id}
@@ -361,7 +361,7 @@ export function CreateCampaignModal({
             </div>
             
             {/* Discount */}
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div>
                 <label className="block text-[10px] font-semibold text-[#737373] uppercase tracking-wider mb-2">
                   Discount Type

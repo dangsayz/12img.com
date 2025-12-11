@@ -278,7 +278,7 @@ export function DashboardContent({ stats, revenue }: Props) {
               transition={{ delay: 0.5 }}
               className="relative mt-8 pt-6 border-t border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-4"
             >
-              <div className="flex gap-8">
+              <div className="flex gap-4 sm:gap-8">
                 <div>
                   <p className="text-white/40 text-[10px] uppercase tracking-[0.2em]">This Month</p>
                   <p className="text-2xl font-light mt-1 tabular-nums">{formatCurrency(revenue.revenueThisMonth)}</p>
@@ -378,7 +378,7 @@ export function DashboardContent({ stats, revenue }: Props) {
         variants={container}
         initial="hidden"
         animate="show"
-        className="grid grid-cols-3 gap-4"
+        className="grid grid-cols-1 sm:grid-cols-3 gap-4"
       >
         <StatCard
           title="New Today"
@@ -459,7 +459,7 @@ export function DashboardContent({ stats, revenue }: Props) {
         </div>
         
         {/* Plan cards */}
-        <div className="grid grid-cols-5 gap-3 pt-4 border-t border-[#E5E5E5]">
+        <div className="grid grid-cols-3 sm:grid-cols-5 gap-2 sm:gap-3 pt-4 border-t border-[#E5E5E5]">
           {['free', 'starter', 'pro', 'studio', 'elite'].map((plan, index) => {
             const count = stats.planBreakdown[plan] || 0
             const percentage = totalPlanUsers > 0 ? Math.round((count / totalPlanUsers) * 100) : 0

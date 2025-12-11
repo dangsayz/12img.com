@@ -257,7 +257,7 @@ function CampaignCard({
       </div>
       
       {/* Stats */}
-      <div className="grid grid-cols-4 divide-x divide-[#F5F5F7] border-b border-[#F5F5F7]">
+      <div className="grid grid-cols-2 sm:grid-cols-4 divide-x divide-[#F5F5F7] border-b border-[#F5F5F7]">
         <div className="p-4 text-center">
           <p className="text-[10px] text-[#737373] uppercase tracking-wider">Redemptions</p>
           <p className="text-xl font-serif text-[#141414] mt-1">

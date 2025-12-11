@@ -111,10 +111,10 @@ export default async function BillingDashboardPage() {
     <RealtimeWrapper refreshInterval={15}>
       <div className="space-y-8 max-w-[1400px]">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h1 className="font-serif text-3xl lg:text-4xl text-[#141414]">Revenue & Billing</h1>
-            <p className="text-[#525252] mt-2">
+            <h1 className="font-serif text-2xl sm:text-3xl lg:text-4xl text-[#141414]">Revenue & Billing</h1>
+            <p className="text-[#525252] mt-1 sm:mt-2 text-sm">
               Real-time revenue metrics and payment history
             </p>
           </div>
@@ -122,10 +122,11 @@ export default async function BillingDashboardPage() {
             href={stripeDashboardUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-[#141414] bg-white border border-[#E5E5E5] hover:border-[#141414] transition-colors"
+            className="inline-flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium text-[#141414] bg-white border border-[#E5E5E5] hover:border-[#141414] transition-colors w-full sm:w-auto"
         >
           <ExternalLink className="w-4 h-4" />
-          Open Stripe Dashboard
+          <span className="hidden sm:inline">Open Stripe Dashboard</span>
+          <span className="sm:hidden">Stripe</span>
         </a>
       </div>
       
@@ -147,7 +148,7 @@ export default async function BillingDashboardPage() {
               <Zap className="w-6 h-6" />
             </div>
           </div>
-          <div className="mt-8 pt-6 border-t border-white/10 grid grid-cols-3 gap-6">
+          <div className="mt-8 pt-6 border-t border-white/10 grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
             <div>
               <p className="text-white/50 text-xs uppercase tracking-wider">Active Subs</p>
               <p className="text-2xl font-serif mt-1">{metrics.activeSubscriptions}</p>

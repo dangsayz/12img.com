@@ -123,7 +123,7 @@ export default async function UserDetailPage({ params }: Props) {
         {/* User Info Card */}
         <div className="lg:col-span-2 space-y-6">
           {/* Stats */}
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="bg-white rounded-xl border border-gray-200 p-4">
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-blue-50 rounded-lg">

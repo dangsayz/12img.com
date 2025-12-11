@@ -926,103 +926,80 @@ export function GalleryEditor({
                   </div>
 
                   {/* Downloads Toggle */}
-                  <div className="flex items-center justify-between py-3 border-t border-stone-100">
-                    <div className="flex items-center gap-3">
-                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${downloadsEnabled ? 'bg-blue-100' : 'bg-stone-100'}`}>
-                        <ArrowDownToLine className={`w-4 h-4 ${downloadsEnabled ? 'text-blue-600' : 'text-stone-400'}`} />
-                      </div>
+                  <div className="flex items-center justify-between py-2">
+                    <div className="flex items-center gap-2.5">
+                      <ArrowDownToLine className={`w-4 h-4 ${downloadsEnabled ? 'text-blue-500' : 'text-stone-400'}`} />
                       <div>
-                        <p className="text-sm font-medium text-stone-700">
-                          Downloads
-                        </p>
-                        <p className="text-xs text-stone-500">
-                          {downloadsEnabled 
-                            ? 'Clients can download images' 
-                            : 'Downloads are disabled'
-                          }
+                        <p className="text-sm font-medium text-stone-700">Downloads</p>
+                        <p className="text-xs text-stone-400">
+                          {downloadsEnabled ? 'Clients can download' : 'Disabled'}
                         </p>
                       </div>
                     </div>
                     <button
                       onClick={handleDownloadsToggle}
                       disabled={isTogglingDownloads}
-                      className={`relative w-11 h-6 rounded-full transition-colors ${
+                      className={`relative w-10 h-5 rounded-full transition-colors ${
                         downloadsEnabled ? 'bg-blue-500' : 'bg-stone-300'
                       } ${isTogglingDownloads ? 'opacity-50' : ''}`}
                     >
                       <span
-                        className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${
+                        className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow-sm transition-transform ${
                           downloadsEnabled ? 'translate-x-5' : 'translate-x-0'
                         }`}
                       />
                     </button>
                   </div>
 
-                  {/* Password Protection */}
-                  <div className="flex items-center justify-between py-3 border-t border-stone-100">
-                    <div className="flex items-center gap-3">
-                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${isLocked ? 'bg-stone-900' : 'bg-stone-100'}`}>
-                        {isLocked ? (
-                          <Lock className="w-4 h-4 text-white" />
-                        ) : (
-                          <Unlock className="w-4 h-4 text-stone-400" />
-                        )}
-                      </div>
+                  {/* PIN Protection */}
+                  <div className="flex items-center justify-between py-2">
+                    <div className="flex items-center gap-2.5">
+                      {isLocked ? (
+                        <Lock className="w-4 h-4 text-stone-600" />
+                      ) : (
+                        <Unlock className="w-4 h-4 text-stone-400" />
+                      )}
                       <div>
-                        <p className="text-sm font-medium text-stone-700">
-                          Password
-                        </p>
+                        <p className="text-sm font-medium text-stone-700">PIN</p>
                         {isLocked && currentPassword ? (
-                          <p className="text-xs text-stone-900 font-mono tracking-wider">
-                            {currentPassword}
-                          </p>
+                          <p className="text-xs text-stone-500 font-mono tracking-wider">{currentPassword}</p>
                         ) : (
-                          <p className="text-xs text-stone-400">
-                            {isLocked ? 'Protected' : 'Not set'}
-                          </p>
+                          <p className="text-xs text-stone-400">4-digit code</p>
                         )}
                       </div>
                     </div>
                     <button
                       onClick={() => setShowPasswordModal(true)}
-                      className="text-xs font-medium text-stone-900 hover:text-black px-3 py-1.5 rounded-lg hover:bg-stone-100 transition-colors"
+                      className="text-xs text-stone-500 hover:text-stone-700 transition-colors"
                     >
-                      {isLocked ? 'Change' : 'Add'}
+                      {isLocked ? 'Change' : 'Set'}
                     </button>
                   </div>
 
-                  {/* Share with Vendors - Clear CTA */}
-                  <div className="py-4 border-t border-stone-200 mt-4">
+                  {/* Share with Vendors */}
+                  <div className="py-2">
                     <button
                       onClick={() => setShowVendorShareModal(true)}
-                      className="w-full flex items-center gap-3 p-3 bg-stone-50 hover:bg-stone-100 border border-stone-200 hover:border-stone-300 rounded-xl transition-all group"
+                      className="w-full flex items-center gap-2.5 py-2 hover:bg-stone-50 rounded-lg px-1 -mx-1 transition-colors group"
                     >
-                      <div className="w-10 h-10 rounded-lg bg-stone-900 flex items-center justify-center shrink-0">
-                        <Users className="w-5 h-5 text-white" />
-                      </div>
+                      <Users className="w-4 h-4 text-stone-400 group-hover:text-stone-600" />
                       <div className="flex-1 text-left">
-                        <p className="text-sm font-medium text-stone-900">Share with Vendors</p>
-                        <p className="text-xs text-stone-500">Give florists, planners & venues access</p>
+                        <p className="text-sm font-medium text-stone-700">Share with Vendors</p>
+                        <p className="text-xs text-stone-400">Florists, planners & venues</p>
                       </div>
-                      <ChevronRight className="w-4 h-4 text-stone-400 group-hover:text-stone-600 transition-colors" />
+                      <ChevronRight className="w-4 h-4 text-stone-300 group-hover:text-stone-500 transition-colors" />
                     </button>
                   </div>
 
                   {/* Email Activity Toggle */}
-                  <div className="pt-4 border-t border-stone-200">
+                  <div className="pt-2 border-t border-stone-100 mt-2">
                     <button
                       onClick={() => setShowActivity(!showActivity)}
-                      className="flex items-center justify-between w-full text-left"
+                      className="flex items-center gap-1.5 py-1 text-stone-400 hover:text-stone-600 transition-colors"
                     >
-                      <div className="flex items-center gap-2">
-                        <Activity className="w-4 h-4 text-stone-500" />
-                        <span className="text-sm font-medium text-stone-700">Email Activity</span>
-                      </div>
-                      {showActivity ? (
-                        <ChevronUp className="w-4 h-4 text-stone-400" />
-                      ) : (
-                        <ChevronDown className="w-4 h-4 text-stone-400" />
-                      )}
+                      <Activity className="w-3.5 h-3.5" />
+                      <span className="text-xs">Email Activity</span>
+                      <ChevronDown className={`w-3 h-3 transition-transform ${showActivity ? 'rotate-180' : ''}`} />
                     </button>
                     
                     <AnimatePresence>
@@ -1379,7 +1356,7 @@ export function GalleryEditor({
         galleryTitle={currentTitle}
       />
 
-      {/* Password Modal */}
+      {/* PIN Modal */}
       <AnimatePresence>
         {showPasswordModal && (
           <motion.div
@@ -1402,27 +1379,33 @@ export function GalleryEditor({
                 </div>
                 <div>
                   <h3 className="font-semibold text-stone-900">
-                    {isLocked ? 'Update Password' : 'Add Password'}
+                    {isLocked ? 'Update PIN' : 'Set PIN'}
                   </h3>
-                  <p className="text-xs text-stone-500">Protect this gallery with a PIN</p>
+                  <p className="text-xs text-stone-500">4-digit code to protect this gallery</p>
                 </div>
               </div>
 
               <div className="space-y-4">
                 <div>
                   <label className="text-xs font-medium text-stone-500 uppercase tracking-wider mb-2 block">
-                    {isLocked ? 'New Password' : 'Password'}
+                    4-Digit PIN
                   </label>
                   <input
                     type="text"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    maxLength={4}
                     value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    placeholder="e.g. 1234"
-                    className="w-full px-4 py-3 rounded-xl border border-stone-200 focus:border-stone-900 focus:ring-0 text-center font-mono text-lg tracking-[0.3em]"
+                    onChange={(e) => {
+                      const value = e.target.value.replace(/\D/g, '').slice(0, 4)
+                      setNewPassword(value)
+                    }}
+                    placeholder="0000"
+                    className="w-full px-4 py-4 rounded-xl border border-stone-200 focus:border-stone-900 focus:ring-0 text-center font-mono text-2xl tracking-[0.5em]"
                     autoFocus
                   />
                   <p className="text-xs text-stone-400 mt-2 text-center">
-                    Something simple your client can remember
+                    This PIN will be included when you email the gallery
                   </p>
                 </div>
 
@@ -1438,7 +1421,7 @@ export function GalleryEditor({
                   )}
                   <button
                     onClick={handlePasswordSave}
-                    disabled={isSavingPassword || !newPassword.trim()}
+                    disabled={isSavingPassword || newPassword.length !== 4}
                     className="flex-1 py-3 rounded-xl bg-stone-900 text-white text-sm font-medium hover:bg-black transition-colors disabled:opacity-50"
                   >
                     {isSavingPassword ? 'Saving...' : 'Save'}
