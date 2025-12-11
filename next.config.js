@@ -22,6 +22,16 @@ const nextConfig = {
   async headers() {
     return [
       {
+        // Prevent caching on dashboard/home page to ensure fresh cover images
+        source: '/',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'no-store, must-revalidate',
+          },
+        ],
+      },
+      {
         source: '/:path*',
         headers: [
           {
