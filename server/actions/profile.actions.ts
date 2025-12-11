@@ -293,10 +293,10 @@ function verifyUnlockCookieToken(token: string, galleryId: string): boolean {
 
 export async function unlockGalleryWithPin(galleryId: string, pin: string) {
   try {
-    // Fetch gallery with lock info
+    // Fetch gallery with lock info - check both password_hash (gallery PIN) and lock_pin_hash (profile PIN)
     const { data: gallery } = await supabaseAdmin
       .from('galleries')
-      .select('id, is_locked, lock_pin_hash, user_id')
+      .select('id, is_locked, lock_pin_hash, password_hash, user_id')
       .eq('id', galleryId)
       .single()
 
@@ -304,25 +304,39 @@ export async function unlockGalleryWithPin(galleryId: string, pin: string) {
       return { error: 'Gallery not found' }
     }
 
-    if (!gallery.is_locked || !gallery.lock_pin_hash) {
+    // Check if gallery has any PIN protection
+    const pinHash = gallery.password_hash || gallery.lock_pin_hash
+    if (!gallery.is_locked || !pinHash) {
       return { error: 'Gallery is not locked' }
     }
 
-    // Verify PIN
-    const isValid = await verifyPassword(pin, gallery.lock_pin_hash)
+    // Verify PIN against whichever hash is set
+    const isValid = await verifyPassword(pin, pinHash)
     if (!isValid) {
       return { error: 'Invalid PIN' }
     }
 
-    // Generate unlock token and set cookie
+    // Generate unlock token and set cookies
     const token = generateUnlockCookieToken(galleryId)
     
     const cookieStore = await cookies()
+    
+    // Set profile unlock cookie (for profile page gallery cards)
     cookieStore.set(`gallery_unlock_${galleryId}`, token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       maxAge: UNLOCK_COOKIE_MAX_AGE,
+      path: '/',
+    })
+    
+    // Also set gallery access cookie (for view pages to recognize the unlock)
+    // This prevents double password prompts when navigating from profile to gallery view
+    cookieStore.set(`gallery_access_${galleryId}`, 'granted', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 60 * 60 * 24, // 24 hours (matches validateGalleryPassword)
       path: '/',
     })
 
@@ -714,44 +728,14 @@ export async function getPublicProfileBySlug(slug: string, viewerUserId?: string
       })
     }
 
-    // Get curated portfolio images (from portfolio_images table, limit 10)
-    // Falls back to recent gallery images if no curated selection exists
+    // Get favorite images for portfolio display
+    // Privacy rules: only show favorites from public galleries with show_on_profile=true
+    // and no password protection
     let portfolioImages: any[] = []
     
-    // First, try to get curated portfolio images
-    const { data: curatedImages } = await supabaseAdmin
-      .from('portfolio_images')
-      .select(`
-        image_id,
-        position,
-        images!inner (
-          id,
-          storage_path,
-          gallery_id,
-          width,
-          height,
-          focal_x,
-          focal_y
-        )
-      `)
-      .eq('user_id', profile.id)
-      .order('position', { ascending: true })
-      .limit(10)
-    
-    if (curatedImages && curatedImages.length > 0) {
-      // Use curated portfolio images
-      portfolioImages = curatedImages.map((pi: any) => ({
-        id: pi.images.id,
-        storage_path: pi.images.storage_path,
-        gallery_id: pi.images.gallery_id,
-        width: pi.images.width,
-        height: pi.images.height,
-        focal_x: pi.images.focal_x,
-        focal_y: pi.images.focal_y,
-      }))
-    } else if (galleryIds.length > 0) {
-      // Fallback: get recent images from galleries (limit 10)
-      const { data } = await supabaseAdmin
+    if (galleryIds.length > 0) {
+      // Build query for favorite images with privacy filters
+      let favoritesQuery = supabaseAdmin
         .from('images')
         .select(`
           id,
@@ -760,14 +744,33 @@ export async function getPublicProfileBySlug(slug: string, viewerUserId?: string
           width,
           height,
           focal_x,
-          focal_y
+          focal_y,
+          is_favorite
         `)
         .in('gallery_id', galleryIds)
-        .eq('show_in_portfolio', true)
+        .eq('is_favorite', true)
         .order('created_at', { ascending: false })
-        .limit(10)
+        .limit(50)
       
-      portfolioImages = data || []
+      const { data: favoriteImages } = await favoritesQuery
+      
+      if (favoriteImages && favoriteImages.length > 0) {
+        // Filter to only include images from privacy-respecting galleries
+        // For non-owners: gallery must be public, show_on_profile=true, no password
+        const publicGalleryIds = new Set(
+          galleries
+            ?.filter(g => {
+              if (isOwner) return true // Owner sees all favorites
+              const isPublic = g.visibility_mode === 'public' || (g.visibility_mode === null && g.is_public)
+              const showOnProfile = g.show_on_profile !== false
+              const noPassword = !g.is_locked
+              return isPublic && showOnProfile && noPassword
+            })
+            .map(g => g.id) || []
+        )
+        
+        portfolioImages = favoriteImages.filter(img => publicGalleryIds.has(img.gallery_id))
+      }
     }
     
     // If no explicit cover images, use first image from portfolio or galleries

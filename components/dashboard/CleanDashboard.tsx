@@ -746,7 +746,7 @@ function GalleryCard({
         </Link>
 
         {/* Menu Button + Dropdown Container */}
-        <div className={`absolute right-0 top-1/2 -translate-y-1/2 ${isHovered || showMenu ? 'opacity-100' : 'opacity-0'} transition-all duration-200`}>
+        <div className={`absolute right-0 top-1/2 -translate-y-1/2 z-10 ${isHovered || showMenu ? 'opacity-100' : 'opacity-0'} transition-all duration-200`}>
           <button
             onClick={(e) => {
               e.preventDefault()
@@ -808,10 +808,11 @@ function GalleryCard({
               onClick={(e) => {
                 e.preventDefault()
                 e.stopPropagation()
+                e.nativeEvent.stopImmediatePropagation()
                 setShowMenu(false)
                 setShowDeleteModal(true)
               }}
-              className="w-full px-4 py-2.5 text-left text-sm text-red-500 hover:bg-red-50 transition-colors"
+              className="w-full px-4 py-2.5 text-left text-sm text-red-500 hover:bg-red-50 transition-colors pointer-events-auto"
             >
               Delete
             </button>

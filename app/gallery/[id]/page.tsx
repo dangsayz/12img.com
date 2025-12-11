@@ -119,6 +119,7 @@ export default async function GalleryViewPage({ params }: Props) {
       images={imagesWithUrls}
       photographerName={userSettings?.businessName || undefined}
       totalFileSizeBytes={totalFileSizeBytes}
+      profileSlug={(user as { profile_slug?: string | null }).profile_slug || undefined}
     />
   )
 }

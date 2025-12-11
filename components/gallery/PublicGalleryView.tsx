@@ -565,6 +565,12 @@ export function PublicGalleryView({
               <h1 className="font-serif text-4xl md:text-6xl lg:text-7xl text-white font-light tracking-wide mb-4">
                 {title}
               </h1>
+              {/* Tagline/Subtitle from presentation */}
+              {presentation?.subtitle && (
+                <p className="text-white/70 text-base md:text-lg font-light italic mb-4">
+                  {presentation.subtitle}
+                </p>
+              )}
               {eventDate && (
                 <p className="text-white/60 text-sm tracking-wide">{eventDate}</p>
               )}
@@ -593,13 +599,13 @@ export function PublicGalleryView({
           ============================================ */}
       <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-sm border-b border-neutral-100">
         <div className="max-w-[1800px] mx-auto px-6 py-4 flex items-center justify-between">
-          <Link 
-            href={`/view-reel/${gallerySlug || galleryId}`}
+          <button 
+            onClick={() => window.history.back()}
             className="flex items-center gap-2 px-3 py-1.5 text-neutral-500 hover:text-neutral-900 hover:bg-neutral-100 transition-colors rounded-md"
           >
             <ArrowLeft className="w-4 h-4" />
-            <span className="text-sm font-medium">Back to Album</span>
-          </Link>
+            <span className="text-sm font-medium">Back</span>
+          </button>
           
           <div className="flex items-center gap-4">
             <button
@@ -641,6 +647,12 @@ export function PublicGalleryView({
             <h2 className="font-serif text-2xl md:text-3xl text-neutral-800 font-light">
               {images.length} Moments Captured
             </h2>
+            {/* Tagline/Subtitle from presentation */}
+            {presentation?.subtitle && (
+              <p className="text-sm md:text-base text-neutral-500 font-light italic mt-4">
+                {presentation.subtitle}
+              </p>
+            )}
           </div>
 
           {template === 'mosaic' ? (

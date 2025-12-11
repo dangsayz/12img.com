@@ -3,7 +3,7 @@
 import { useState, useCallback, useMemo, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, useScroll, useTransform, useSpring, AnimatePresence } from 'framer-motion'
-import { Camera, Lock, Image as ImageIcon, Mail, Globe } from 'lucide-react'
+import { Camera, Lock, Image as ImageIcon, Mail, Globe, Star } from 'lucide-react'
 import { CountryFlag, hasCustomFlag } from '@/components/ui/CountryFlag'
 import { VisibilityBadge, LockIndicator, PrivateOverlay } from '@/components/ui/VisibilityBadge'
 import { SocialShareButtons } from '@/components/ui/SocialShareButtons'
@@ -11,6 +11,7 @@ import { LazyImage, HeroImage } from '@/components/ui/LazyImage'
 import { PublicHeader } from '@/components/profile/PublicHeader'
 import { PINEntryModal } from '@/components/profile/PINEntryModal'
 import { checkGalleryUnlocked } from '@/server/actions/profile.actions'
+import { toggleImageFavorite } from '@/server/actions/gallery.actions'
 
 interface PortfolioImage {
   id: string
@@ -53,6 +54,7 @@ interface Profile {
   location?: string | null
   country?: string | null
   isOwner?: boolean
+  socialSharingEnabled?: boolean
 }
 
 interface ProfilePageClientProps {
@@ -65,6 +67,45 @@ export function ProfilePageClient({ profile }: ProfilePageClientProps) {
   const [selectedGallery, setSelectedGallery] = useState<Gallery | null>(null)
   const [unlockedGalleries, setUnlockedGalleries] = useState<Set<string>>(new Set())
   const [activeTab, setActiveTab] = useState<'portfolio' | 'galleries'>('portfolio')
+  const [removedFavorites, setRemovedFavorites] = useState<Set<string>>(new Set())
+  const [pendingUnstar, setPendingUnstar] = useState<string | null>(null)
+
+  // Filter out removed favorites for optimistic UI
+  const visibleFavorites = useMemo(() => 
+    (profile.portfolioImages || []).filter(img => !removedFavorites.has(img.id)),
+    [profile.portfolioImages, removedFavorites]
+  )
+
+  const handleUnstar = useCallback(async (imageId: string) => {
+    if (pendingUnstar) return // Prevent rapid clicks
+    
+    setPendingUnstar(imageId)
+    // Optimistic removal
+    setRemovedFavorites(prev => new Set([...prev, imageId]))
+    
+    try {
+      const result = await toggleImageFavorite(imageId, false)
+      if (result.error) {
+        // Revert on error
+        setRemovedFavorites(prev => {
+          const next = new Set(prev)
+          next.delete(imageId)
+          return next
+        })
+        console.error('Failed to unstar:', result.error)
+      }
+    } catch (e) {
+      // Revert on error
+      setRemovedFavorites(prev => {
+        const next = new Set(prev)
+        next.delete(imageId)
+        return next
+      })
+      console.error('Failed to unstar:', e)
+    } finally {
+      setPendingUnstar(null)
+    }
+  }, [pendingUnstar])
 
   const handleGalleryClick = useCallback(async (gallery: Gallery) => {
     if (!gallery.is_locked) {
@@ -465,430 +506,168 @@ export function ProfilePageClient({ profile }: ProfilePageClientProps) {
           className="py-32 lg:py-40"
         >
         {activeTab === 'portfolio' ? (
-          /* Editorial Portfolio Layout */
-          displayImages.length > 0 ? (
-            <div className="space-y-32 lg:space-y-48">
-              {/* Opening editorial text block - refined */}
-              {profile.bio && (
-                <motion.div
-                  initial={{ opacity: 0, y: 30 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true, margin: '-50px' }}
-                  transition={{ duration: 1, ease: [0.22, 1, 0.36, 1] }}
-                  className="max-w-2xl mx-auto px-6 text-center"
-                >
-                  <motion.div 
-                    className="w-px h-16 bg-gradient-to-b from-transparent via-stone-300 to-transparent mx-auto mb-10"
-                    initial={{ scaleY: 0 }}
-                    whileInView={{ scaleY: 1 }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 0.8, delay: 0.2 }}
-                  />
-                  <p className="font-serif text-xl lg:text-2xl text-stone-600 leading-[1.8] italic font-light">
-                    "{profile.bio}"
-                  </p>
-                  <p className="mt-8 text-[10px] tracking-[0.3em] text-stone-400 uppercase font-light">
-                    — {profile.display_name}
-                  </p>
-                </motion.div>
-              )}
-
-              {editorialSpreads.slice(1).map((spread, spreadIndex) => {
-                // Inject editorial typography between spreads
-                const shouldInjectQuote = spreadIndex === 2 && profile.galleries.length > 0
-                const shouldInjectStats = spreadIndex === 4 && (profile.galleries.length > 1 || displayImages.length > 5)
-                const shouldInjectDivider = spreadIndex > 0 && spreadIndex % 3 === 0 && !shouldInjectQuote && !shouldInjectStats
-
-                const renderImage = (image: typeof displayImages[0], className: string = '', aspectClass: string = 'aspect-[4/5]', imageIndex: number = 0) => {
-                  const caption = getEditorialCaption(image.gallery_title, spreadIndex * 3 + imageIndex, spread.type)
-                  
-                  return (
+          /* Favorites Grid - Simple masonry layout */
+          visibleFavorites.length > 0 ? (
+            <div className="max-w-7xl mx-auto px-6">
+              {/* Section header */}
+              <div className="text-center mb-16">
+                <p className="text-[10px] tracking-[0.3em] text-stone-400 uppercase mb-4">Favorites</p>
+                <div className="w-12 h-px bg-stone-300 mx-auto" />
+              </div>
+              
+              {/* Masonry grid */}
+              <div className="columns-2 md:columns-3 lg:columns-4 gap-4">
+                <AnimatePresence mode="popLayout">
+                  {visibleFavorites.map((image, index) => (
                     <motion.div
                       key={image.id}
-                      initial={{ opacity: 0, y: 50 }}
-                      whileInView={{ opacity: 1, y: 0 }}
-                      viewport={{ once: true, margin: '-80px' }}
-                      transition={{ duration: 1, ease: [0.22, 1, 0.36, 1] }}
-                      className={`${className} group`}
+                      layout
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.9 }}
+                      transition={{ duration: 0.3 }}
+                      className="mb-4 break-inside-avoid group relative"
                     >
-                      <div className="relative">
+                      <div className="relative overflow-hidden rounded-sm">
                         <LazyImage
                           src={image.imageUrl}
-                          alt={image.gallery_title}
-                          aspectRatio={aspectClass}
+                          alt={image.gallery_title || 'Favorite photo'}
+                          aspectRatio={
+                            image.width && image.height 
+                              ? `aspect-[${image.width}/${image.height}]`
+                              : 'aspect-[4/5]'
+                          }
                           objectPosition={`${image.focal_x ?? 50}% ${image.focal_y ?? 50}%`}
                         />
                         
-                        {/* Social share on hover */}
-                        <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10">
-                          <SocialShareButtons
-                            imageUrl={image.imageUrl}
-                            description={`${image.gallery_title} by ${profile.display_name || 'Photographer'} | 12img`}
-                            size="sm"
-                          />
-                        </div>
+                        {/* Hover overlay */}
+                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors duration-300" />
                         
-                        {/* Overlay caption (number style) */}
-                        {caption.style === 'number' && caption.text && (
-                          <div className="absolute bottom-4 left-4">
-                            <span className="text-[10px] tracking-[0.3em] text-white/70 font-light">
-                              {caption.text}
-                            </span>
+                        {/* Owner: Unstar button */}
+                        {profile.isOwner && (
+                          <button
+                            onClick={() => handleUnstar(image.id)}
+                            disabled={pendingUnstar === image.id}
+                            className="absolute top-3 left-3 p-2 rounded-full bg-black/50 hover:bg-black/70 transition-all opacity-0 group-hover:opacity-100 disabled:opacity-50"
+                            title="Remove from favorites"
+                          >
+                            <Star className={`w-4 h-4 text-amber-400 fill-amber-400 ${pendingUnstar === image.id ? 'animate-pulse' : ''}`} />
+                          </button>
+                        )}
+                        
+                        {/* Share buttons */}
+                        {profile.socialSharingEnabled && (
+                          <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                            <SocialShareButtons
+                              imageUrl={image.imageUrl}
+                              description={`${image.gallery_title || 'Photo'} by ${profile.display_name || 'Photographer'} | 12img`}
+                              size="sm"
+                            />
                           </div>
                         )}
                       </div>
-                      
-                      {/* Editorial Caption - Refined typography */}
-                      {caption.style !== 'none' && caption.style !== 'number' && caption.text && (
-                        <motion.div 
-                          className="mt-5"
-                          initial={{ opacity: 0, y: 10 }}
-                          whileInView={{ opacity: 1, y: 0 }}
-                          viewport={{ once: true }}
-                          transition={{ duration: 0.6, delay: 0.2 }}
-                        >
-                          {caption.style === 'full' && (
-                            <p className="font-serif text-lg text-stone-700 tracking-tight">{caption.text}</p>
-                          )}
-                          {caption.style === 'short' && (
-                            <p className="font-serif text-base text-stone-500 italic font-light">{caption.text}</p>
-                          )}
-                          {caption.style === 'minimal' && (
-                            <p className="text-[10px] tracking-[0.25em] text-stone-400/70 uppercase font-light">{caption.text}</p>
-                          )}
-                          {caption.style === 'date' && (
-                            <p className="text-[9px] tracking-[0.2em] text-stone-400/60 font-light">{caption.text}</p>
-                          )}
-                        </motion.div>
-                      )}
                     </motion.div>
-                  )
-                }
-
-                // Editorial typography injection component
-                const EditorialInjection = () => {
-                  if (shouldInjectQuote) {
-                    // Pull quote from gallery title
-                    const featuredGallery = profile.galleries[0]
-                    const words = featuredGallery?.title.split(/[|\-–—]/).map(s => s.trim()).filter(Boolean) || []
-                    const pullQuote = words[0] || featuredGallery?.title
-                    
-                    return (
-                      <motion.div
-                        initial={{ opacity: 0 }}
-                        whileInView={{ opacity: 1 }}
-                        viewport={{ once: true }}
-                        transition={{ duration: 1 }}
-                        className="max-w-4xl mx-auto px-6 py-16 lg:py-24"
-                      >
-                        <div className="grid grid-cols-12 gap-6 items-center">
-                          <div className="col-span-12 lg:col-span-2">
-                            <div className="w-full h-px bg-stone-200 lg:w-px lg:h-24" />
-                          </div>
-                          <div className="col-span-12 lg:col-span-8">
-                            <p className="font-serif text-3xl lg:text-5xl text-stone-800 leading-tight tracking-tight">
-                              {pullQuote}
-                            </p>
-                            {words[1] && (
-                              <p className="mt-4 text-sm text-stone-500 italic">
-                                {words[1]}
-                              </p>
-                            )}
-                          </div>
-                        </div>
-                      </motion.div>
-                    )
-                  }
-                  
-                  if (shouldInjectStats) {
-                    return (
-                      <motion.div
-                        initial={{ opacity: 0 }}
-                        whileInView={{ opacity: 1 }}
-                        viewport={{ once: true }}
-                        transition={{ duration: 1 }}
-                        className="max-w-3xl mx-auto px-6 py-16 lg:py-24"
-                      >
-                        <div className="flex items-center justify-center gap-12 lg:gap-24 text-center">
-                          <div>
-                            <p className="font-serif text-4xl lg:text-6xl text-stone-800">{profile.galleries.length}</p>
-                            <p className="mt-2 text-xs tracking-[0.2em] text-stone-400 uppercase">
-                              {profile.galleries.length === 1 ? 'Gallery' : 'Galleries'}
-                            </p>
-                          </div>
-                          <div className="w-px h-16 bg-stone-200" />
-                          <div>
-                            <p className="font-serif text-4xl lg:text-6xl text-stone-800">{displayImages.length}</p>
-                            <p className="mt-2 text-xs tracking-[0.2em] text-stone-400 uppercase">Images</p>
-                          </div>
-                        </div>
-                      </motion.div>
-                    )
-                  }
-                  
-                  if (shouldInjectDivider) {
-                    return (
-                      <div className="flex items-center justify-center py-8">
-                        <div className="w-px h-16 bg-stone-200" />
-                      </div>
-                    )
-                  }
-                  
-                  return null
-                }
-
-                // Render different spread types
-                const spreadContent = (() => {
-                  switch (spread.type) {
-                    case 'hero':
-                      return (
-                        <div className="max-w-5xl mx-auto px-6">
-                          {renderImage(spread.images[0], '', 'aspect-[16/10]')}
-                        </div>
-                      )
-
-                    case 'split':
-                      return (
-                        <div className="max-w-7xl mx-auto px-6 lg:px-12">
-                          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-12">
-                            {spread.images.map((img, i) => 
-                              renderImage(img, i === 1 ? 'lg:mt-24' : '', 'aspect-[3/4]', i)
-                            )}
-                          </div>
-                        </div>
-                      )
-
-                  case 'offset-left':
-                      return (
-                        <div className="max-w-7xl mx-auto px-6 lg:px-12">
-                          <div className="grid grid-cols-12 gap-6">
-                            <div className="col-span-12 lg:col-span-8 lg:col-start-1">
-                              {renderImage(spread.images[0], '', 'aspect-[4/3]')}
-                            </div>
-                          </div>
-                        </div>
-                      )
-
-                    case 'offset-right':
-                      return (
-                        <div className="max-w-7xl mx-auto px-6 lg:px-12">
-                          <div className="grid grid-cols-12 gap-6">
-                            <div className="col-span-12 lg:col-span-7 lg:col-start-6">
-                              {renderImage(spread.images[0], '', 'aspect-[3/4]')}
-                            </div>
-                          </div>
-                        </div>
-                      )
-
-                    case 'trio':
-                      return (
-                        <div className="max-w-7xl mx-auto px-6 lg:px-12">
-                          <div className="grid grid-cols-12 gap-4 lg:gap-6">
-                            <div className="col-span-12 lg:col-span-5">
-                              {renderImage(spread.images[0], '', 'aspect-[3/4]', 0)}
-                            </div>
-                            <div className="col-span-6 lg:col-span-4 lg:mt-16">
-                              {renderImage(spread.images[1], '', 'aspect-[4/5]', 1)}
-                            </div>
-                            <div className="col-span-6 lg:col-span-3 lg:mt-32">
-                              {renderImage(spread.images[2], '', 'aspect-square', 2)}
-                            </div>
-                          </div>
-                        </div>
-                      )
-
-                    case 'duo-stacked':
-                      return (
-                        <div className="max-w-4xl mx-auto px-6">
-                          <div className="space-y-6">
-                            {spread.images.map((img, i) => 
-                              renderImage(img, '', i === 0 ? 'aspect-[16/9]' : 'aspect-[21/9]', i)
-                            )}
-                          </div>
-                        </div>
-                      )
-
-                    case 'single-centered':
-                    default:
-                      return (
-                        <div className="max-w-3xl mx-auto px-6">
-                          {renderImage(spread.images[0], '', 'aspect-[4/5]')}
-                        </div>
-                      )
-                  }
-                })()
-
-                // Return the spread with optional editorial injection before it
-                return (
-                  <div key={spreadIndex}>
-                    <EditorialInjection />
-                    {spreadContent}
-                  </div>
-                )
-              })}
-
-              {/* Editorial divider */}
-              <div className="flex items-center justify-center py-12">
-                <div className="w-px h-16 bg-stone-200" />
+                  ))}
+                </AnimatePresence>
               </div>
             </div>
           ) : (
             <div className="text-center py-32">
-              <Camera className="w-12 h-12 text-stone-300 mx-auto mb-6" />
-              <p className="font-serif text-xl text-stone-400">No portfolio images yet</p>
+              <Star className="w-12 h-12 text-stone-300 mx-auto mb-6" />
+              <p className="font-serif text-xl text-stone-400">No favorites yet</p>
+              <p className="text-sm text-stone-400 mt-2">Star your best photos to showcase them here</p>
             </div>
           )
         ) : (
-          /* Galleries - Editorial Cards with varied titles */
+          /* Galleries - Clean Grid Layout (scales to 100s of albums) */
           profile.galleries.length > 0 ? (
-            <div className="max-w-6xl mx-auto px-6 space-y-16 lg:space-y-24">
-              {profile.galleries.map((gallery, index) => {
-                const isUnlocked = unlockedGalleries.has(gallery.id)
-                const isEven = index % 2 === 0
-                
-                // Editorial title variations for galleries
-                const getGalleryTitle = () => {
-                  const words = gallery.title.split(/[|\-–—,]/).map(s => s.trim()).filter(Boolean)
-                  const patterns = [
-                    // Full title with date
-                    { title: gallery.title, subtitle: null, style: 'full' as const },
-                    // Just first part, italicized
-                    { title: words[0] || gallery.title, subtitle: words[1] || null, style: 'split' as const },
-                    // Short + number
-                    { title: words[0]?.split(' ').slice(0, 2).join(' ') || gallery.title, subtitle: `№${String(index + 1).padStart(2, '0')}`, style: 'numbered' as const },
-                    // Single word, large
-                    { title: words[0]?.split(' ')[0] || gallery.title, subtitle: null, style: 'minimal' as const },
-                    // Full title
-                    { title: gallery.title, subtitle: null, style: 'full' as const },
-                  ]
-                  return patterns[index % patterns.length]
-                }
-                
-                const titleInfo = getGalleryTitle()
-                
-                return (
-                  <motion.button
-                    key={gallery.id}
-                    initial={{ opacity: 0, y: 40 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true, margin: '-100px' }}
-                    transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
-                    onClick={() => handleGalleryClick(gallery)}
-                    className="group text-left w-full"
-                  >
-                    <div className={`grid grid-cols-12 gap-6 lg:gap-12 items-center ${isEven ? '' : 'direction-rtl'}`}>
-                      {/* Image */}
-                      <div className={`col-span-12 lg:col-span-7 ${isEven ? '' : 'lg:col-start-6 lg:order-2'}`}>
-                        <div className="relative">
+            <div className="max-w-7xl mx-auto px-6">
+              {/* Section header with count */}
+              <div className="text-center mb-12">
+                <p className="text-[10px] tracking-[0.3em] text-stone-400 uppercase mb-2">
+                  {profile.galleries.length} {profile.galleries.length === 1 ? 'Gallery' : 'Galleries'}
+                </p>
+                <div className="w-12 h-px bg-stone-300 mx-auto" />
+              </div>
+              
+              {/* Responsive Grid - 2 cols mobile, 3 cols tablet, 4 cols desktop */}
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+                {profile.galleries.map((gallery, index) => {
+                  const isUnlocked = unlockedGalleries.has(gallery.id)
+                  
+                  return (
+                    <motion.div
+                      key={gallery.id}
+                      initial={{ opacity: 0, y: 20 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true, margin: '-50px' }}
+                      transition={{ duration: 0.4, delay: Math.min(index * 0.05, 0.3) }}
+                      className="group"
+                    >
+                      <button
+                        onClick={() => handleGalleryClick(gallery)}
+                        className="w-full text-left"
+                      >
+                        {/* Cover Image */}
+                        <div className="relative aspect-[4/5] overflow-hidden rounded-sm bg-stone-100">
                           {gallery.coverImageUrl ? (
                             <LazyImage
                               src={gallery.coverImageUrl}
                               alt={gallery.title}
-                              aspectRatio="aspect-[4/3]"
+                              aspectRatio="aspect-[4/5]"
                             />
                           ) : (
-                            <div className="aspect-[4/3] bg-stone-900 flex items-center justify-center">
-                              <ImageIcon className="w-12 h-12 text-stone-700" />
+                            <div className="absolute inset-0 bg-stone-900 flex items-center justify-center">
+                              <ImageIcon className="w-8 h-8 text-stone-700" />
                             </div>
                           )}
-
-                          {/* Subtle hover overlay */}
-                          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-500 pointer-events-none" />
-
-                          {/* Visibility Badge - for private galleries (owner viewing) */}
-                          {!gallery.is_public && profile.isOwner && (
-                            <div className="absolute top-3 left-3 z-10">
-                              <VisibilityBadge 
-                                isPublic={false} 
-                                variant="badge" 
-                                size="md" 
-                              />
-                            </div>
-                          )}
-
-                          {/* Lock Overlay - for PIN-protected galleries */}
+                          
+                          {/* Hover overlay */}
+                          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300" />
+                          
+                          {/* Lock indicator */}
                           {gallery.is_locked && !isUnlocked && (
-                            <PrivateOverlay type="protected" size="md" />
-                          )}
-                          
-                          {/* Overlay number for numbered style */}
-                          {titleInfo.style === 'numbered' && (
-                            <div className="absolute bottom-4 right-4">
-                              <span className="text-[10px] tracking-[0.3em] text-white/60 font-light">
-                                {titleInfo.subtitle}
-                              </span>
+                            <div className="absolute top-2 right-2">
+                              <div className="w-7 h-7 rounded-full bg-black/50 flex items-center justify-center">
+                                <Lock className="w-3.5 h-3.5 text-white" />
+                              </div>
                             </div>
                           )}
-                        </div>
-                      </div>
-
-                      {/* Content - Varied editorial styles */}
-                      <div className={`col-span-12 lg:col-span-5 ${isEven ? '' : 'lg:col-start-1 lg:order-1 text-right'}`}>
-                        <div className={`${isEven ? '' : 'lg:text-right'}`}>
-                          {/* Date - only show on some */}
-                          {(titleInfo.style === 'full' || titleInfo.style === 'split') && (
-                            <p className="text-[10px] tracking-[0.2em] text-stone-400 uppercase mb-4">
-                              {new Date(gallery.created_at).toLocaleDateString('en-US', {
-                                month: 'long',
-                                year: 'numeric'
-                              })}
-                            </p>
+                          
+                          {/* Private badge for owner */}
+                          {!gallery.is_public && profile.isOwner && (
+                            <div className="absolute top-2 left-2">
+                              <div className="px-2 py-1 rounded bg-black/50 text-[9px] text-white/80 tracking-wider uppercase">
+                                Private
+                              </div>
+                            </div>
                           )}
                           
-                          {/* Title - varied styles */}
-                          {titleInfo.style === 'full' && (
-                            <h3 className="font-serif text-2xl lg:text-3xl text-stone-800 mb-3 group-hover:text-stone-600 transition-colors">
-                              {titleInfo.title}
-                            </h3>
-                          )}
-                          {titleInfo.style === 'split' && (
-                            <>
-                              <h3 className="font-serif text-2xl lg:text-3xl text-stone-800 mb-2 group-hover:text-stone-600 transition-colors">
-                                {titleInfo.title}
-                              </h3>
-                              {titleInfo.subtitle && (
-                                <p className="font-serif text-lg text-stone-500 italic mb-3">{titleInfo.subtitle}</p>
-                              )}
-                            </>
-                          )}
-                          {titleInfo.style === 'numbered' && (
-                            <h3 className="font-serif text-xl lg:text-2xl text-stone-700 mb-3 group-hover:text-stone-600 transition-colors">
-                              {titleInfo.title}
-                            </h3>
-                          )}
-                          {titleInfo.style === 'minimal' && (
-                            <h3 className="text-[11px] tracking-[0.25em] text-stone-500 uppercase mb-3 group-hover:text-stone-700 transition-colors">
-                              {titleInfo.title}
-                            </h3>
-                          )}
-                          
-                          <div className={`w-12 h-px bg-stone-300 mb-4 ${isEven ? '' : 'lg:ml-auto'}`} />
-                          
-                          {/* Meta - simplified for some styles */}
-                          <div className={`flex items-center gap-3 text-xs text-stone-500 ${isEven ? '' : 'lg:justify-end'}`}>
-                            {titleInfo.style !== 'minimal' && (
-                              <span>{gallery.imageCount} images</span>
-                            )}
-                            {/* Show visibility status */}
-                            {(!gallery.is_public || (gallery.is_locked && !isUnlocked)) && (
-                              <>
-                                {titleInfo.style !== 'minimal' && <span className="text-stone-300">·</span>}
-                                <VisibilityBadge 
-                                  isPublic={gallery.is_public}
-                                  hasPassword={gallery.is_locked}
-                                  isUnlocked={isUnlocked}
-                                  variant="minimal"
-                                  size="sm"
-                                />
-                              </>
-                            )}
+                          {/* Image count badge */}
+                          <div className="absolute bottom-2 right-2">
+                            <div className="px-2 py-1 rounded bg-black/50 text-[10px] text-white/90 tabular-nums">
+                              {gallery.imageCount}
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    </div>
-                  </motion.button>
-                )
-              })}
+                        
+                        {/* Title & Meta */}
+                        <div className="mt-3">
+                          <h3 className="text-sm font-medium text-stone-800 group-hover:text-stone-600 transition-colors line-clamp-1">
+                            {gallery.title}
+                          </h3>
+                          <p className="text-[10px] text-stone-400 mt-1">
+                            {new Date(gallery.created_at).toLocaleDateString('en-US', {
+                              month: 'short',
+                              year: 'numeric'
+                            })}
+                          </p>
+                        </div>
+                      </button>
+                    </motion.div>
+                  )
+                })}
+              </div>
             </div>
           ) : (
             <div className="text-center py-32">

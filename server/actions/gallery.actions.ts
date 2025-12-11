@@ -942,3 +942,42 @@ export async function getGalleryLinkedClients(galleryId: string) {
 
   return { success: true, clients: data }
 }
+
+/**
+ * Toggle favorite status for an image
+ * Favorite images appear on public portfolio (subject to gallery privacy settings)
+ */
+export async function toggleImageFavorite(imageId: string, isFavorite: boolean) {
+  const { userId: clerkId } = await auth()
+  if (!clerkId) return { error: 'Unauthorized' }
+
+  const user = await getOrCreateUserByClerkId(clerkId)
+  if (!user) return { error: 'User not found' }
+
+  // Verify user owns the image's gallery
+  const { data: image } = await supabaseAdmin
+    .from('images')
+    .select('gallery_id')
+    .eq('id', imageId)
+    .single()
+
+  if (!image) return { error: 'Image not found' }
+
+  const gallery = await getGalleryWithOwnershipCheck(image.gallery_id, user.id)
+  if (!gallery) return { error: 'Unauthorized' }
+
+  const { error } = await supabaseAdmin
+    .from('images')
+    .update({ is_favorite: isFavorite })
+    .eq('id', imageId)
+
+  if (error) {
+    console.error('[toggleImageFavorite] Error:', error)
+    return { error: 'Failed to update favorite status' }
+  }
+
+  revalidatePath(`/gallery/${image.gallery_id}`)
+  revalidatePath(`/profile/${user.profile_slug}`)
+
+  return { success: true, isFavorite }
+}
