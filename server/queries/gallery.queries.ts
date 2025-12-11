@@ -57,8 +57,14 @@ export async function getGalleryWithOwnershipCheck(
 }
 
 export async function getUserGalleries(clerkId: string) {
+  console.log('[getUserGalleries] Starting for clerkId:', clerkId)
+  
   const user = await getUserByClerkId(clerkId)
-  if (!user) return []
+  if (!user) {
+    console.log('[getUserGalleries] User not found')
+    return []
+  }
+  console.log('[getUserGalleries] User found:', user.id)
 
   const { data, error } = await supabaseAdmin
     .from('galleries')
@@ -80,7 +86,13 @@ export async function getUserGalleries(clerkId: string) {
     .eq('user_id', user.id)
     .order('created_at', { ascending: false })
 
-  if (error) throw error
+  if (error) {
+    console.error('[getUserGalleries] Query error:', error)
+    throw error
+  }
+  
+  console.log('[getUserGalleries] Found', data.length, 'galleries')
+  console.log('[getUserGalleries] Galleries with cover_image_id:', data.filter(g => g.cover_image_id).map(g => ({ id: g.id, title: g.title, cover_image_id: g.cover_image_id })))
 
   // Get image counts
   const galleryIds = data.map((g) => g.id)
