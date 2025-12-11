@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Image from 'next/image'
 import { Shield, Download, Loader2, AlertCircle, Image as ImageIcon, X } from 'lucide-react'
@@ -30,7 +30,7 @@ interface VaultData {
   }>
 }
 
-export default function VaultViewPage() {
+function VaultViewContent() {
   const searchParams = useSearchParams()
   const token = searchParams.get('token')
 
@@ -246,5 +246,20 @@ export default function VaultViewPage() {
         </div>
       )}
     </div>
+  )
+}
+
+export default function VaultViewPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-stone-50 flex items-center justify-center">
+        <div className="flex items-center gap-3 text-stone-500">
+          <Loader2 className="w-5 h-5 animate-spin" />
+          <span>Loading your vault...</span>
+        </div>
+      </div>
+    }>
+      <VaultViewContent />
+    </Suspense>
   )
 }
