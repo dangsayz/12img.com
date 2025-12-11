@@ -188,7 +188,7 @@ export function ExitIntentPopup({
                     className="absolute inset-0"
                   >
                     <img
-                      src="/images/showcase/promo-hero.jpg"
+                      src="/images/showcase/MitchellexJohnprt1-76.jpg"
                       alt=""
                       className="w-full h-full object-cover"
                       onLoad={() => setImageLoaded(true)}
