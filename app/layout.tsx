@@ -203,10 +203,10 @@ export default function RootLayout({
             <ConditionalFooter />
             <SupportWidget />
             <ExitIntentPopup 
-              discountCode="freeone"
-              discountText="First month FREE ($54 value)"
-              headline="Wait! Don't leave empty-handed"
-              subheadline="Your first month is on us"
+              discountCode="ONEMONTH"
+              discountText="Your first 30 days, complimentary"
+              headline="One month on us."
+              subheadline="Experience what it feels like to deliver galleries your clients will remember."
               showOnPaths={['/pricing', '/', '/features']}
             />
           </AuthModalProvider>

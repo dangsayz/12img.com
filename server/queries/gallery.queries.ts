@@ -99,14 +99,20 @@ export async function getUserGalleries(clerkId: string) {
     .filter((g) => g.cover_image_id)
     .map((g) => g.cover_image_id!)
 
+  console.log('[getUserGalleries] Galleries with explicit cover_image_id:', coverImageIds.length)
+
   let coverImages: { id: string; storage_path: string }[] = []
   if (coverImageIds.length > 0) {
-    const { data: covers } = await supabaseAdmin
+    const { data: covers, error: coverError } = await supabaseAdmin
       .from('images')
       .select('id, storage_path')
       .in('id', coverImageIds)
 
+    if (coverError) {
+      console.error('[getUserGalleries] Error fetching cover images:', coverError)
+    }
     coverImages = covers || []
+    console.log('[getUserGalleries] Found cover images:', coverImages.length, 'of', coverImageIds.length, 'requested')
   }
 
   // For galleries without explicit cover, get first portrait image as fallback (or first image)
@@ -156,14 +162,23 @@ export async function getUserGalleries(clerkId: string) {
   const coverUrlMap = new Map<string, string>()
   coverImages.forEach((c) => {
     const url = signedUrls.get(c.storage_path)
-    if (url) coverUrlMap.set(c.id, url)
+    if (url) {
+      coverUrlMap.set(c.id, url)
+    } else {
+      console.warn('[getUserGalleries] No signed URL for cover image:', c.id, 'path:', c.storage_path)
+    }
   })
+
+  console.log('[getUserGalleries] Cover URL map size:', coverUrlMap.size)
 
   return data.map((gallery) => {
     // Use explicit cover if set, otherwise use fallback first image
     let coverImageUrl: string | null = null
     if (gallery.cover_image_id) {
       coverImageUrl = coverUrlMap.get(gallery.cover_image_id) || null
+      if (!coverImageUrl) {
+        console.warn('[getUserGalleries] Gallery', gallery.id, 'has cover_image_id', gallery.cover_image_id, 'but no URL found')
+      }
     } else {
       const fallbackPath = fallbackCoverMap.get(gallery.id)
       if (fallbackPath) {

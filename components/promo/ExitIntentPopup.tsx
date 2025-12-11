@@ -12,7 +12,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useUser } from '@clerk/nextjs'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, Gift, Copy, Check, ArrowRight } from 'lucide-react'
+import { X, Copy, Check } from 'lucide-react'
 
 interface ExitIntentPopupProps {
   /** Discount code to display */
@@ -38,8 +38,8 @@ const DEFAULT_DISCOUNT = '15% off your first month'
 export function ExitIntentPopup({
   discountCode = DEFAULT_CODE,
   discountText = DEFAULT_DISCOUNT,
-  headline = "Wait! Don't leave empty-handed",
-  subheadline = "Here's a special offer just for you",
+  headline = "Before you go",
+  subheadline = "We'd love for you to experience what premium gallery delivery feels like.",
   delayMs = 5000,
   showOnPaths = ['/pricing', '/'],
   hideForSubscribers = true,
@@ -48,6 +48,7 @@ export function ExitIntentPopup({
   const [isVisible, setIsVisible] = useState(false)
   const [copied, setCopied] = useState(false)
   const [canShow, setCanShow] = useState(false)
+  const [imageLoaded, setImageLoaded] = useState(false)
 
   // Check if we should show the popup
   const shouldShow = useCallback(() => {
@@ -156,83 +157,172 @@ export function ExitIntentPopup({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={handleClose}
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100]"
+            className="fixed inset-0 bg-black/80 backdrop-blur-md z-[100]"
           />
 
-          {/* Popup */}
+          {/* Popup - Editorial Magazine Style */}
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 pointer-events-none">
             <motion.div
-              initial={{ opacity: 0, scale: 0.9, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-              className="relative w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden pointer-events-auto"
+              initial={{ opacity: 0, y: 40 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 20 }}
+              transition={{ type: 'spring', damping: 30, stiffness: 200, delay: 0.1 }}
+              className="relative w-full max-w-3xl bg-stone-950 overflow-hidden pointer-events-auto"
+              style={{ aspectRatio: '16/10' }}
             >
               {/* Close button */}
               <button
                 onClick={handleClose}
-                className="absolute top-4 right-4 p-2 text-stone-400 hover:text-stone-600 hover:bg-stone-100 rounded-full transition-colors z-10"
+                className="absolute top-5 right-5 p-2 text-white/40 hover:text-white transition-colors z-20"
               >
                 <X className="w-5 h-5" />
               </button>
 
-              {/* Header with gift icon */}
-              <div className="bg-gradient-to-br from-stone-900 via-stone-800 to-stone-900 px-8 pt-10 pb-8 text-center">
-                <div className="inline-flex items-center justify-center w-16 h-16 bg-white/10 rounded-full mb-4">
-                  <Gift className="w-8 h-8 text-white" />
-                </div>
-                <h2 className="text-2xl font-serif text-white mb-2">
-                  {headline}
-                </h2>
-                <p className="text-stone-300 text-sm">
-                  {subheadline}
-                </p>
-              </div>
-
-              {/* Content */}
-              <div className="px-8 py-8">
-                {/* Discount highlight */}
-                <div className="text-center mb-6">
-                  <div className="inline-block px-4 py-1 bg-emerald-100 text-emerald-700 rounded-full text-sm font-medium mb-3">
-                    {discountText}
-                  </div>
+              {/* Split layout */}
+              <div className="absolute inset-0 flex">
+                {/* Left side - Image */}
+                <div className="w-1/2 relative overflow-hidden">
+                  <motion.div
+                    initial={{ scale: 1.1, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+                    className="absolute inset-0"
+                  >
+                    <img
+                      src="/images/showcase/promo-hero.jpg"
+                      alt=""
+                      className="w-full h-full object-cover"
+                      onLoad={() => setImageLoaded(true)}
+                      onError={(e) => {
+                        // Fallback to a gradient if image doesn't exist
+                        e.currentTarget.style.display = 'none'
+                        setImageLoaded(true)
+                      }}
+                    />
+                    {/* Gradient overlay for image */}
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-transparent to-stone-950" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-stone-950/60 via-transparent to-transparent" />
+                  </motion.div>
                   
-                  {/* Code box */}
-                  <div className="flex items-center justify-center gap-2 p-4 bg-stone-50 rounded-xl border-2 border-dashed border-stone-200">
-                    <code className="text-2xl font-mono font-bold text-stone-900 tracking-wider">
-                      {discountCode}
-                    </code>
-                    <button
-                      onClick={handleCopyCode}
-                      className="p-2 text-stone-400 hover:text-stone-600 hover:bg-white rounded-lg transition-colors"
-                      title="Copy code"
-                    >
-                      {copied ? (
-                        <Check className="w-5 h-5 text-emerald-500" />
-                      ) : (
-                        <Copy className="w-5 h-5" />
-                      )}
-                    </button>
-                  </div>
+                  {/* Fallback gradient background */}
+                  <div className="absolute inset-0 bg-gradient-to-br from-stone-800 via-stone-900 to-stone-950 -z-10" />
                 </div>
 
-                {/* CTA button */}
-                <button
-                  onClick={handleClaimOffer}
-                  className="w-full flex items-center justify-center gap-2 px-6 py-4 bg-stone-900 text-white font-medium rounded-xl hover:bg-black transition-colors"
-                >
-                  Claim Your Discount
-                  <ArrowRight className="w-4 h-4" />
-                </button>
+                {/* Right side - Content */}
+                <div className="w-1/2 flex flex-col justify-center px-10 py-8 relative">
+                  {/* Decorative line */}
+                  <motion.div 
+                    initial={{ scaleY: 0 }}
+                    animate={{ scaleY: 1 }}
+                    transition={{ duration: 0.6, delay: 0.3 }}
+                    className="absolute left-0 top-1/2 -translate-y-1/2 w-px h-24 bg-gradient-to-b from-transparent via-white/20 to-transparent origin-center"
+                  />
 
-                {/* No thanks link */}
-                <button
-                  onClick={handleClose}
-                  className="w-full mt-3 text-sm text-stone-400 hover:text-stone-600 transition-colors"
-                >
-                  No thanks, I'll pay full price
-                </button>
+                  {/* Small label */}
+                  <motion.p 
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.2 }}
+                    className="text-[10px] uppercase tracking-[0.3em] text-white/40 mb-4"
+                  >
+                    A gift for you
+                  </motion.p>
+
+                  {/* Headline */}
+                  <motion.h2 
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.3 }}
+                    className="font-serif text-3xl md:text-4xl text-white leading-[1.1] mb-4"
+                  >
+                    {headline}
+                  </motion.h2>
+
+                  {/* Subheadline */}
+                  <motion.p 
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.4 }}
+                    className="text-white/50 text-sm leading-relaxed mb-8 max-w-[280px]"
+                  >
+                    {subheadline}
+                  </motion.p>
+
+                  {/* Offer */}
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.5 }}
+                    className="mb-8"
+                  >
+                    <p className="text-white/30 text-xs uppercase tracking-wider mb-2">
+                      {discountText}
+                    </p>
+                    <div className="flex items-center gap-3">
+                      <span className="font-mono text-2xl text-white tracking-widest">
+                        {discountCode}
+                      </span>
+                      <button
+                        onClick={handleCopyCode}
+                        className="p-1.5 text-white/30 hover:text-white/60 transition-colors"
+                        title="Copy code"
+                      >
+                        {copied ? (
+                          <Check className="w-4 h-4 text-emerald-400" />
+                        ) : (
+                          <Copy className="w-4 h-4" />
+                        )}
+                      </button>
+                    </div>
+                  </motion.div>
+
+                  {/* CTA */}
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.6 }}
+                    className="space-y-3"
+                  >
+                    <button
+                      onClick={handleClaimOffer}
+                      className="group flex items-center gap-3 text-white text-sm font-medium"
+                    >
+                      <span className="relative">
+                        Start your free month
+                        <span className="absolute left-0 -bottom-0.5 w-full h-px bg-white/30 group-hover:bg-white transition-colors" />
+                      </span>
+                      <svg 
+                        className="w-4 h-4 transform group-hover:translate-x-1 transition-transform" 
+                        fill="none" 
+                        viewBox="0 0 24 24" 
+                        stroke="currentColor"
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                      </svg>
+                    </button>
+
+                    <button
+                      onClick={handleClose}
+                      className="text-xs text-white/20 hover:text-white/40 transition-colors"
+                    >
+                      Maybe later
+                    </button>
+                  </motion.div>
+                </div>
               </div>
+
+              {/* Bottom bar - subtle branding */}
+              <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.8 }}
+                className="absolute bottom-4 left-6 flex items-center gap-2"
+              >
+                <div className="w-5 h-5 rounded-sm bg-white/10 flex items-center justify-center">
+                  <span className="text-[10px] font-bold text-white/60">12</span>
+                </div>
+                <span className="text-[10px] text-white/20 tracking-wider">12IMG.COM</span>
+              </motion.div>
             </motion.div>
           </div>
         </>
