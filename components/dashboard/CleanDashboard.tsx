@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useMemo, useEffect, useTransition } from 'react'
+import { createPortal } from 'react-dom'
 import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
 import { 
@@ -821,8 +822,8 @@ function GalleryCard({
           )}
       </div>
 
-      {/* Delete Modal */}
-      {showDeleteModal && (
+      {/* Delete Modal - Portal to body to escape transform context */}
+      {showDeleteModal && typeof document !== 'undefined' && createPortal(
         <div
           className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 animate-fade-in"
           onClick={() => setShowDeleteModal(false)}
@@ -856,7 +857,8 @@ function GalleryCard({
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
       </div>
     </div>

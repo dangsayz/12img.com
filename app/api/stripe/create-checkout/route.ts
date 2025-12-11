@@ -80,7 +80,7 @@ export async function POST(request: Request) {
       customer: customerId,
       mode: 'subscription',
       payment_method_types: ['card'],
-      allow_promotion_codes: true, // Let customers enter promo codes at checkout
+      // Note: allow_promotion_codes is set later, only if we're not pre-applying a discount
       line_items: [
         {
           price: priceId,
@@ -146,6 +146,12 @@ export async function POST(request: Request) {
       console.log(`[Checkout] Founder's code ${couponCode} only valid for Elite, not ${planId}`)
     }
 
+    // Only allow manual promo code entry if we're NOT pre-applying a discount
+    // Stripe doesn't allow both allow_promotion_codes and discounts together
+    if (!sessionConfig.discounts) {
+      sessionConfig.allow_promotion_codes = true
+    }
+
     // Create checkout session
     try {
       const session = await stripe.checkout.sessions.create(sessionConfig)
@@ -159,6 +165,7 @@ export async function POST(request: Request) {
       if (sessionConfig.discounts && stripeError instanceof Error && stripeError.message?.includes('coupon')) {
         console.log('[Checkout] Retrying without invalid coupon')
         delete sessionConfig.discounts
+        sessionConfig.allow_promotion_codes = true // Re-enable manual entry
         const session = await stripe.checkout.sessions.create(sessionConfig)
         return NextResponse.json({ 
           url: session.url,

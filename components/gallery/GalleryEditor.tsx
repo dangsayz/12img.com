@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
+import { createPortal } from 'react-dom'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
@@ -1474,9 +1475,9 @@ export function GalleryEditor({
         )}
       </AnimatePresence>
 
-      {/* Delete Confirmation Modal */}
-      <AnimatePresence>
-        {showDeleteConfirm && (
+      {/* Delete Confirmation Modal - Portal to body to escape transform context */}
+      {showDeleteConfirm && typeof document !== 'undefined' && createPortal(
+        <AnimatePresence>
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -1517,8 +1518,9 @@ export function GalleryEditor({
               </div>
             </motion.div>
           </motion.div>
-        )}
-      </AnimatePresence>
+        </AnimatePresence>,
+        document.body
+      )}
 
       {/* Mobile Floating Action Bar */}
       <div className="fixed bottom-0 left-0 right-0 sm:hidden z-40 pb-safe">

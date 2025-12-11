@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { useState, useTransition } from 'react'
+import { createPortal } from 'react-dom'
 import { Image, Trash2, ExternalLink, Check } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { deleteGallery } from '@/server/actions/gallery.actions'
@@ -177,9 +178,9 @@ export function GalleryCard({ gallery }: GalleryCardProps) {
         </div>
       </Link>
 
-      {/* Delete confirmation modal */}
-      <AnimatePresence>
-        {showConfirm && (
+      {/* Delete confirmation modal - Portal to body to escape transform context */}
+      {showConfirm && typeof document !== 'undefined' && createPortal(
+        <AnimatePresence>
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -216,8 +217,9 @@ export function GalleryCard({ gallery }: GalleryCardProps) {
               </div>
             </motion.div>
           </motion.div>
-        )}
-      </AnimatePresence>
+        </AnimatePresence>,
+        document.body
+      )}
     </>
   )
 }

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useMemo, useEffect, useTransition } from 'react'
+import { createPortal } from 'react-dom'
 import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
 import { 
@@ -470,9 +471,9 @@ function GalleryCardGrid({ gallery, index }: { gallery: Gallery; index: number }
         </div>
       </Link>
 
-      {/* Delete Confirmation Modal */}
-      <AnimatePresence>
-        {showDeleteModal && (
+      {/* Delete Confirmation Modal - Portal to body to escape transform context */}
+      {showDeleteModal && typeof document !== 'undefined' && createPortal(
+        <AnimatePresence>
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -518,8 +519,9 @@ function GalleryCardGrid({ gallery, index }: { gallery: Gallery; index: number }
               </div>
             </motion.div>
           </motion.div>
-        )}
-      </AnimatePresence>
+        </AnimatePresence>,
+        document.body
+      )}
     </motion.div>
   )
 }

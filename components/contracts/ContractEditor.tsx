@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useTransition, useMemo, useEffect, useRef, useCallback } from 'react'
+import { createPortal } from 'react-dom'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import {
@@ -1208,9 +1209,9 @@ export function ContractEditor({ contract, clientName, clientId }: ContractEdito
         )}
       </AnimatePresence>
 
-      {/* Delete Confirmation Modal */}
-      <AnimatePresence>
-        {showDeleteConfirm && (
+      {/* Delete Confirmation Modal - Portal to body to escape transform context */}
+      {showDeleteConfirm && typeof document !== 'undefined' && createPortal(
+        <AnimatePresence>
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -1251,8 +1252,9 @@ export function ContractEditor({ contract, clientName, clientId }: ContractEdito
               </div>
             </motion.div>
           </motion.div>
-        )}
-      </AnimatePresence>
+        </AnimatePresence>,
+        document.body
+      )}
 
       {/* Send Confirmation Modal with Expiration Selector */}
       <AnimatePresence>
