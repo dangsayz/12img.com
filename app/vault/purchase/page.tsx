@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { Shield, Image, Clock, Download, Check, Loader2, AlertCircle } from 'lucide-react'
 import { validateVaultInvitation } from '@/server/actions/vault.actions'
@@ -19,7 +19,7 @@ interface InvitationData {
   imageCount: number
 }
 
-export default function VaultPurchasePage() {
+function VaultPurchaseContent() {
   const searchParams = useSearchParams()
   const token = searchParams.get('token')
   const canceled = searchParams.get('canceled')
@@ -282,5 +282,20 @@ export default function VaultPurchasePage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function VaultPurchasePage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gradient-to-b from-stone-50 to-white flex items-center justify-center">
+        <div className="flex items-center gap-3 text-stone-500">
+          <Loader2 className="w-5 h-5 animate-spin" />
+          <span>Loading...</span>
+        </div>
+      </div>
+    }>
+      <VaultPurchaseContent />
+    </Suspense>
   )
 }
