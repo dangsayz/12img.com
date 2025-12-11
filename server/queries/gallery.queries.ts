@@ -127,18 +127,16 @@ export async function getUserGalleries(clerkId: string) {
     console.log('[getUserGalleries] Found cover images:', coverImages.length, 'of', coverImageIds.length, 'requested')
   }
 
-  // For galleries without explicit cover, get first portrait image as fallback (or first image)
-  const galleriesWithoutCover = data.filter((g) => !g.cover_image_id)
+  // Get fallback images for ALL galleries (needed if cover_image_id points to deleted image)
+  // Also used for galleries without explicit cover
   const fallbackCoverMap = new Map<string, string>() // gallery_id -> storage_path
   
-  if (galleriesWithoutCover.length > 0) {
-    const galleryIdsWithoutCover = galleriesWithoutCover.map(g => g.id)
-    
-    // Get images with dimensions to find portrait images
+  if (galleryIds.length > 0) {
+    // Get images with dimensions to find portrait images for ALL galleries
     const { data: allImages } = await supabaseAdmin
       .from('images')
       .select('gallery_id, storage_path, width, height, created_at')
-      .in('gallery_id', galleryIdsWithoutCover)
+      .in('gallery_id', galleryIds)
       .order('created_at', { ascending: true })
     
     // For each gallery, prefer portrait image (height > width), fallback to first
@@ -189,7 +187,13 @@ export async function getUserGalleries(clerkId: string) {
     if (gallery.cover_image_id) {
       coverImageUrl = coverUrlMap.get(gallery.cover_image_id) || null
       if (!coverImageUrl) {
-        console.warn('[getUserGalleries] Gallery', gallery.id, 'has cover_image_id', gallery.cover_image_id, 'but no URL found')
+        console.warn('[getUserGalleries] Gallery', gallery.id, 'has cover_image_id', gallery.cover_image_id, 'but no URL found - trying fallback')
+        // Fallback: cover_image_id points to deleted image, use first gallery image instead
+        const fallbackPath = fallbackCoverMap.get(gallery.id)
+        if (fallbackPath) {
+          coverImageUrl = signedUrls.get(fallbackPath) || null
+          console.log('[getUserGalleries] Using fallback cover for gallery', gallery.id, ':', !!coverImageUrl)
+        }
       }
     } else {
       const fallbackPath = fallbackCoverMap.get(gallery.id)
