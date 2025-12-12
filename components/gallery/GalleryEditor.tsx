@@ -725,6 +725,7 @@ export function GalleryEditor({
     'mosaic': <Layers className="w-4 h-4" />,
     'cinematic': <Film className="w-4 h-4" />,
     'editorial': <BookOpen className="w-4 h-4" />,
+    'album': <ImageIcon className="w-4 h-4" />,
   }
 
   const getPreviewUrl = (template: GalleryTemplate) => {
