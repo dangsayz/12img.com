@@ -205,13 +205,13 @@ export function NotificationDropdown({ notifications: initialNotifications, unre
       <AnimatePresence>
         {isOpen && (
           <>
-            {/* Mobile backdrop */}
+            {/* Mobile backdrop - higher z-index to cover sidebar */}
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
-              className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40 md:hidden"
+              className="fixed inset-0 bg-black/30 backdrop-blur-sm z-[60] md:hidden"
               onClick={() => setIsOpen(false)}
               onTouchEnd={(e) => {
                 e.preventDefault()
@@ -221,21 +221,22 @@ export function NotificationDropdown({ notifications: initialNotifications, unre
             
             {/* Panel */}
             <motion.div
-              initial={{ opacity: 0, y: 8 }}
+              initial={{ opacity: 0, y: 100 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 8 }}
+              exit={{ opacity: 0, y: 100 }}
               transition={{ 
                 duration: 0.25, 
                 ease: [0.22, 1, 0.36, 1]
               }}
               className={cn(
-                "z-50 bg-white overflow-hidden",
+                "z-[70] bg-white flex flex-col",
                 // Mobile: full width bottom sheet
-                "fixed inset-x-0 bottom-0 rounded-t-2xl max-h-[70vh]",
+                "fixed inset-x-0 bottom-0 rounded-t-2xl",
                 // Desktop: positioned dropdown
                 "md:absolute md:right-0 md:top-full md:mt-3 md:w-[380px] md:rounded-xl md:max-h-[480px] md:inset-auto",
                 "shadow-[0_0_0_1px_rgba(0,0,0,0.04),0_8px_40px_-8px_rgba(0,0,0,0.12)]"
               )}
+              style={{ maxHeight: '70vh' }}
             >
               {/* Drag handle - mobile only */}
               <div className="md:hidden flex justify-center pt-3 pb-1">
@@ -267,7 +268,7 @@ export function NotificationDropdown({ notifications: initialNotifications, unre
               </div>
 
               {/* Notifications List */}
-              <div className="overflow-y-auto overscroll-contain" style={{ maxHeight: 'calc(70vh - 80px)' }}>
+              <div className="flex-1 overflow-y-auto overscroll-contain min-h-[120px]">
                 {unreadNotifications.length === 0 ? (
                   <motion.div 
                     initial={{ opacity: 0 }}
