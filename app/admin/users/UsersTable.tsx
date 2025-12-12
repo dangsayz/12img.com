@@ -109,107 +109,173 @@ export function UsersTable({ users, pagination }: Props) {
       transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
       className="bg-white border border-[#E5E5E5] overflow-hidden"
     >
-      {/* Table */}
-      <div className="overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead className="bg-[#F5F5F7] border-b border-[#E5E5E5]">
-            <tr>
-              <th className="text-left px-6 py-4 text-[10px] font-medium text-[#525252] uppercase tracking-[0.15em]">User</th>
-              <th className="text-left px-6 py-4 text-[10px] font-medium text-[#525252] uppercase tracking-[0.15em]">Plan</th>
-              <th className="text-left px-6 py-4 text-[10px] font-medium text-[#525252] uppercase tracking-[0.15em]">Role</th>
-              <th className="text-left px-6 py-4 text-[10px] font-medium text-[#525252] uppercase tracking-[0.15em]">Storage</th>
-              <th className="text-left px-6 py-4 text-[10px] font-medium text-[#525252] uppercase tracking-[0.15em]">Galleries</th>
-              <th className="text-left px-6 py-4 text-[10px] font-medium text-[#525252] uppercase tracking-[0.15em]">Status</th>
-              <th className="text-left px-6 py-4 text-[10px] font-medium text-[#525252] uppercase tracking-[0.15em]">Joined</th>
-              <th className="text-right px-6 py-4 text-[10px] font-medium text-[#525252] uppercase tracking-[0.15em]">Actions</th>
-            </tr>
-          </thead>
-          <motion.tbody 
-            variants={tableContainer}
-            initial="hidden"
-            animate="show"
-            className="divide-y divide-[#E5E5E5]"
+      {/* Mobile: stacked cards */}
+      <motion.div
+        variants={tableContainer}
+        initial="hidden"
+        animate="show"
+        className="divide-y divide-[#E5E5E5] md:hidden"
+      >
+        {users.map((user) => (
+          <motion.div
+            key={user.id}
+            variants={tableRow}
+            className="px-4 py-4 space-y-3 bg-white"
           >
-            {users.map((user, index) => (
-              <motion.tr 
-                key={user.id} 
-                variants={tableRow}
-                className="group hover:bg-[#FAFAFA] transition-colors duration-200"
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 bg-gradient-to-br from-[#F5F5F7] to-[#E5E5E5] flex items-center justify-center text-xs font-medium text-[#525252] uppercase">
+                  {user.email.charAt(0)}
+                </div>
+                <div>
+                  <p className="font-medium text-[#141414] text-sm leading-tight">{user.email}</p>
+                  <p className="text-[10px] text-[#737373] font-mono mt-0.5 tracking-wide">{user.id.slice(0, 8)}...</p>
+                </div>
+              </div>
+              <Link
+                href={`/admin/users/${user.id}`}
+                className="inline-flex items-center gap-1 px-2.5 py-1 text-[10px] font-medium uppercase tracking-[0.1em] text-[#141414] border border-[#E5E5E5] hover:border-[#141414] hover:bg-[#141414] hover:text-white transition-all duration-200"
               >
-                <td className="px-6 py-4">
-                  <div className="flex items-center gap-3">
-                    {/* Avatar placeholder */}
-                    <div className="w-9 h-9 bg-gradient-to-br from-[#F5F5F7] to-[#E5E5E5] flex items-center justify-center text-xs font-medium text-[#525252] uppercase">
-                      {user.email.charAt(0)}
+                <Eye className="w-3 h-3" />
+                <span>View</span>
+              </Link>
+            </div>
+
+            <div className="flex flex-wrap gap-2 text-[11px] text-[#525252]">
+              <span className={`inline-flex px-2 py-0.5 rounded-sm text-[10px] uppercase tracking-[0.1em] ${PLAN_COLORS[user.plan] || PLAN_COLORS.free}`}>
+                Plan: {user.plan || 'free'}
+              </span>
+              <span className={`inline-flex px-2 py-0.5 rounded-sm text-[10px] uppercase tracking-[0.1em] ${ROLE_COLORS[user.role] || ROLE_COLORS.user}`}>
+                Role: {user.role?.replace('_', ' ') || 'user'}
+              </span>
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-sm border border-[#E5E5E5] bg-[#FAFAFA] text-[10px] uppercase tracking-[0.1em]">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                {user.is_suspended ? 'Suspended' : 'Active'}
+              </span>
+            </div>
+
+            <div className="flex flex-wrap gap-4 text-[11px] text-[#525252]">
+              <div>
+                <p className="font-medium tabular-nums">{formatBytes(user.usage.totalBytes)}</p>
+                {user.usage.imageCount > 0 && (
+                  <p className="text-[10px] text-[#737373]">{user.usage.imageCount.toLocaleString()} images</p>
+                )}
+              </div>
+              <div>
+                <p className="font-medium tabular-nums">{user.usage.galleryCount}</p>
+                <p className="text-[10px] text-[#737373]">galleries</p>
+              </div>
+              <div>
+                <p className="text-[11px] text-[#525252]">{formatDate(user.created_at)}</p>
+                <p className="text-[10px] text-[#737373]">{getRelativeTime(user.created_at)}</p>
+              </div>
+            </div>
+          </motion.div>
+        ))}
+      </motion.div>
+
+      {/* Desktop: full table */}
+      <div className="hidden md:block">
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead className="bg-[#F5F5F7] border-b border-[#E5E5E5]">
+              <tr>
+                <th className="text-left px-6 py-4 text-[10px] font-medium text-[#525252] uppercase tracking-[0.15em]">User</th>
+                <th className="text-left px-6 py-4 text-[10px] font-medium text-[#525252] uppercase tracking-[0.15em]">Plan</th>
+                <th className="text-left px-6 py-4 text-[10px] font-medium text-[#525252] uppercase tracking-[0.15em]">Role</th>
+                <th className="text-left px-6 py-4 text-[10px] font-medium text-[#525252] uppercase tracking-[0.15em]">Storage</th>
+                <th className="text-left px-6 py-4 text-[10px] font-medium text-[#525252] uppercase tracking-[0.15em]">Galleries</th>
+                <th className="text-left px-6 py-4 text-[10px] font-medium text-[#525252] uppercase tracking-[0.15em]">Status</th>
+                <th className="text-left px-6 py-4 text-[10px] font-medium text-[#525252] uppercase tracking-[0.15em]">Joined</th>
+                <th className="text-right px-6 py-4 text-[10px] font-medium text-[#525252] uppercase tracking-[0.15em]">Actions</th>
+              </tr>
+            </thead>
+            <motion.tbody 
+              variants={tableContainer}
+              initial="hidden"
+              animate="show"
+              className="divide-y divide-[#E5E5E5]"
+            >
+              {users.map((user) => (
+                <motion.tr 
+                  key={user.id} 
+                  variants={tableRow}
+                  className="group hover:bg-[#FAFAFA] transition-colors duration-200"
+                >
+                  <td className="px-6 py-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 bg-gradient-to-br from-[#F5F5F7] to-[#E5E5E5] flex items-center justify-center text-xs font-medium text-[#525252] uppercase">
+                        {user.email.charAt(0)}
+                      </div>
+                      <div>
+                        <p className="font-medium text-[#141414] group-hover:text-[#000] transition-colors">{user.email}</p>
+                        <p className="text-[10px] text-[#737373] font-mono mt-0.5 tracking-wide">{user.id.slice(0, 8)}...</p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="font-medium text-[#141414] group-hover:text-[#000] transition-colors">{user.email}</p>
-                      <p className="text-[10px] text-[#737373] font-mono mt-0.5 tracking-wide">{user.id.slice(0, 8)}...</p>
+                  </td>
+                  <td className="px-6 py-4">
+                    <span className={`inline-flex px-2.5 py-1 text-[10px] font-medium uppercase tracking-[0.1em] ${PLAN_COLORS[user.plan] || PLAN_COLORS.free}`}>
+                      {user.plan || 'free'}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4">
+                    <span className={`inline-flex px-2.5 py-1 text-[10px] font-medium uppercase tracking-[0.1em] ${ROLE_COLORS[user.role] || ROLE_COLORS.user}`}>
+                      {user.role?.replace('_', ' ') || 'user'}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className="flex flex-col">
+                      <span className="text-[#141414] font-medium tabular-nums">{formatBytes(user.usage.totalBytes)}</span>
+                      {user.usage.imageCount > 0 && (
+                        <span className="text-[10px] text-[#737373]">{user.usage.imageCount.toLocaleString()} images</span>
+                      )}
                     </div>
-                  </div>
-                </td>
-                <td className="px-6 py-4">
-                  <span className={`inline-flex px-2.5 py-1 text-[10px] font-medium uppercase tracking-[0.1em] ${PLAN_COLORS[user.plan] || PLAN_COLORS.free}`}>
-                    {user.plan || 'free'}
-                  </span>
-                </td>
-                <td className="px-6 py-4">
-                  <span className={`inline-flex px-2.5 py-1 text-[10px] font-medium uppercase tracking-[0.1em] ${ROLE_COLORS[user.role] || ROLE_COLORS.user}`}>
-                    {user.role?.replace('_', ' ') || 'user'}
-                  </span>
-                </td>
-                <td className="px-6 py-4">
-                  <div className="flex flex-col">
-                    <span className="text-[#141414] font-medium tabular-nums">{formatBytes(user.usage.totalBytes)}</span>
-                    {user.usage.imageCount > 0 && (
-                      <span className="text-[10px] text-[#737373]">{user.usage.imageCount.toLocaleString()} images</span>
+                  </td>
+                  <td className="px-6 py-4">
+                    <span className="text-[#141414] font-medium tabular-nums">{user.usage.galleryCount}</span>
+                  </td>
+                  <td className="px-6 py-4">
+                    {user.is_suspended ? (
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 text-[10px] font-medium uppercase tracking-[0.1em] border border-red-200 bg-red-50 text-red-600">
+                        <Ban className="w-3 h-3" />
+                        Suspended
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 text-[10px] font-medium uppercase tracking-[0.1em] border border-emerald-200 bg-emerald-50 text-emerald-600">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                        Active
+                      </span>
                     )}
-                  </div>
-                </td>
-                <td className="px-6 py-4">
-                  <span className="text-[#141414] font-medium tabular-nums">{user.usage.galleryCount}</span>
-                </td>
-                <td className="px-6 py-4">
-                  {user.is_suspended ? (
-                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 text-[10px] font-medium uppercase tracking-[0.1em] border border-red-200 bg-red-50 text-red-600">
-                      <Ban className="w-3 h-3" />
-                      Suspended
-                    </span>
-                  ) : (
-                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 text-[10px] font-medium uppercase tracking-[0.1em] border border-emerald-200 bg-emerald-50 text-emerald-600">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                      Active
-                    </span>
-                  )}
-                </td>
-                <td className="px-6 py-4">
-                  <div className="flex flex-col">
-                    <span className="text-[#525252]">{formatDate(user.created_at)}</span>
-                    <span className="text-[10px] text-[#737373]">{getRelativeTime(user.created_at)}</span>
-                  </div>
-                </td>
-                <td className="px-6 py-4 text-right">
-                  <Link
-                    href={`/admin/users/${user.id}`}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-medium uppercase tracking-[0.1em] text-[#141414] border border-[#E5E5E5] hover:border-[#141414] hover:bg-[#141414] hover:text-white transition-all duration-200 group/btn"
-                  >
-                    <Eye className="w-3 h-3" />
-                    <span>View</span>
-                    <ExternalLink className="w-3 h-3 opacity-0 -ml-1 group-hover/btn:opacity-100 group-hover/btn:ml-0 transition-all duration-200" />
-                  </Link>
-                </td>
-              </motion.tr>
-            ))}
-          </motion.tbody>
-        </table>
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className="flex flex-col">
+                      <span className="text-[#525252]">{formatDate(user.created_at)}</span>
+                      <span className="text-[10px] text-[#737373]">{getRelativeTime(user.created_at)}</span>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 text-right">
+                    <Link
+                      href={`/admin/users/${user.id}`}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-medium uppercase tracking-[0.1em] text-[#141414] border border-[#E5E5E5] hover:border-[#141414] hover:bg-[#141414] hover:text-white transition-all duration-200 group/btn"
+                    >
+                      <Eye className="w-3 h-3" />
+                      <span>View</span>
+                      <ExternalLink className="w-3 h-3 opacity-0 -ml-1 group-hover/btn:opacity-100 group-hover/btn:ml-0 transition-all duration-200" />
+                    </Link>
+                  </td>
+                </motion.tr>
+              ))}
+            </motion.tbody>
+          </table>
+        </div>
       </div>
-      
+
       {/* Pagination */}
-      <div className="flex items-center justify-between px-6 py-4 border-t border-[#E5E5E5]">
-        <p className="text-sm text-[#525252]">
+      <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between px-4 md:px-6 py-4 border-t border-[#E5E5E5] bg-[#FAFAFA]">
+        <p className="text-xs md:text-sm text-[#525252]">
           Page {pagination.page} of {pagination.totalPages} ({pagination.total} total)
         </p>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 self-end md:self-auto">
           <button
             onClick={() => goToPage(pagination.page - 1)}
             disabled={pagination.page <= 1}
