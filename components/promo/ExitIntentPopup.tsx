@@ -277,7 +277,7 @@ export function ExitIntentPopup({
 
     const handleMouseLeave = (e: MouseEvent) => {
       // Only trigger when mouse leaves toward top of viewport (browser chrome)
-      if (e.clientY <= 5 && !isVisible) {
+      if (e.clientY <= 5 && !isVisible && shouldShow()) {
         setIsVisible(true)
         markAsShown()
       }
@@ -285,7 +285,7 @@ export function ExitIntentPopup({
 
     document.addEventListener('mouseleave', handleMouseLeave)
     return () => document.removeEventListener('mouseleave', handleMouseLeave)
-  }, [canShow, isVisible])
+  }, [canShow, isVisible, shouldShow])
 
   // Inactivity detection (mobile fallback)
   useEffect(() => {
@@ -323,6 +323,8 @@ export function ExitIntentPopup({
   const handleNoThanks = () => {
     // "No thanks" - permanent dismiss
     dismissPromo(discountCode)
+    // Hard-stop this instance for the rest of the session immediately
+    setCanShow(false)
     setIsVisible(false)
   }
 
