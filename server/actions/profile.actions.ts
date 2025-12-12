@@ -1410,19 +1410,39 @@ export async function addMultipleToPortfolio(imageIds: string[]): Promise<{
     // Limit to available slots
     const imagesToAdd = imageIds.slice(0, availableSlots)
 
-    // Verify user owns all these images
-    const { data: verifiedImages, error: verifyError } = await supabaseAdmin
+    // Verify user owns these images.
+    // Avoid relying on a fragile Supabase relationship name (e.g. `galleries`).
+    // Instead: fetch images' gallery_id, then verify those galleries belong to this user.
+    const { data: images, error: imagesError } = await supabaseAdmin
       .from('images')
-      .select('id, galleries!inner(user_id)')
+      .select('id, gallery_id')
       .in('id', imagesToAdd)
 
-    if (verifyError) {
+    if (imagesError) {
+      console.error('addMultipleToPortfolio image lookup error:', imagesError)
       return { error: 'Failed to verify image ownership' }
     }
 
-    const validImageIds = verifiedImages
-      ?.filter((img: any) => img.galleries.user_id === user.id)
-      .map((img: any) => img.id) || []
+    const galleryIds = Array.from(new Set((images || []).map((img: any) => img.gallery_id).filter(Boolean)))
+    if (galleryIds.length === 0) {
+      return { error: 'No valid images to add' }
+    }
+
+    const { data: ownedGalleries, error: galleriesError } = await supabaseAdmin
+      .from('galleries')
+      .select('id')
+      .eq('user_id', user.id)
+      .in('id', galleryIds)
+
+    if (galleriesError) {
+      console.error('addMultipleToPortfolio gallery ownership lookup error:', galleriesError)
+      return { error: 'Failed to verify image ownership' }
+    }
+
+    const ownedGalleryIds = new Set((ownedGalleries || []).map((g: any) => g.id))
+    const validImageIds = (images || [])
+      .filter((img: any) => ownedGalleryIds.has(img.gallery_id))
+      .map((img: any) => img.id)
 
     if (validImageIds.length === 0) {
       return { error: 'No valid images to add' }
