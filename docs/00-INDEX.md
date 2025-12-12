@@ -4,6 +4,7 @@
 
 | Section | File | Description |
 |---------|------|-------------|
+| 0 | [00-QUALITY-DOCTRINE.md](./00-QUALITY-DOCTRINE.md) | **Baseline standards for all work** — design, engineering, process |
 | 1 | [01-SYSTEM-ARCHITECTURE.md](./01-SYSTEM-ARCHITECTURE.md) | RSC/Client split, Server Actions, API boundaries, caching, security layers |
 | 2 | [02-DIRECTORY-STRUCTURE.md](./02-DIRECTORY-STRUCTURE.md) | Complete file tree for production Next.js App Router project |
 | 3 | [03-DATABASE-SCHEMA.md](./03-DATABASE-SCHEMA.md) | Full SQL schema, RLS policies, storage policies, TypeScript types |
