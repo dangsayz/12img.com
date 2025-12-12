@@ -7,8 +7,10 @@ import { X, Upload, FolderOpen, ChevronLeft, Check, Star, Image as ImageIcon, Lo
 import { 
   getGalleriesForPortfolioPicker, 
   getGalleryImagesForPortfolioPicker,
-  addMultipleToPortfolio 
+  addMultipleToPortfolio,
+  getOrCreatePortfolioUploadsGallery
 } from '@/server/actions/profile.actions'
+import { UploadModal } from '@/components/gallery/UploadModal'
 
 interface Gallery {
   id: string
@@ -49,6 +51,10 @@ export function AddFavoritesModal({
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
+  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false)
+  const [uploadGalleryId, setUploadGalleryId] = useState<string | null>(null)
+  const [isPreparingUpload, setIsPreparingUpload] = useState(false)
+
   const availableSlots = maxFavorites - currentFavoritesCount
 
   // Reset state when modal closes
@@ -60,6 +66,9 @@ export function AddFavoritesModal({
       setGalleryImages([])
       setSelectedImages(new Set())
       setError(null)
+      setIsUploadModalOpen(false)
+      setUploadGalleryId(null)
+      setIsPreparingUpload(false)
     }
   }, [isOpen])
 
@@ -154,6 +163,46 @@ export function AddFavoritesModal({
         onClose()
       }
     } catch (e) {
+      setError('Failed to add images')
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  const handleUploadNewPhotos = async () => {
+    setIsPreparingUpload(true)
+    setError(null)
+    try {
+      const result = await getOrCreatePortfolioUploadsGallery()
+      if (result.error || !result.galleryId) {
+        setError(result.error || 'Failed to prepare upload')
+        return
+      }
+      setUploadGalleryId(result.galleryId)
+      setIsUploadModalOpen(true)
+    } catch {
+      setError('Failed to prepare upload')
+    } finally {
+      setIsPreparingUpload(false)
+    }
+  }
+
+  const handleUploadedNewPhotos = async (imageIds: string[]) => {
+    if (imageIds.length === 0) return
+    setIsSaving(true)
+    setError(null)
+    try {
+      const result = await addMultipleToPortfolio(imageIds)
+      if (result.error) {
+        setError(result.error)
+        return
+      }
+
+      router.refresh()
+      setIsUploadModalOpen(false)
+      setUploadGalleryId(null)
+      onClose()
+    } catch {
       setError('Failed to add images')
     } finally {
       setIsSaving(false)
@@ -255,10 +304,9 @@ export function AddFavoritesModal({
                           </div>
                         </div>
 
-                        <a
-                          href="/dashboard"
-                          target="_blank"
-                          rel="noopener noreferrer"
+                        <button
+                          onClick={handleUploadNewPhotos}
+                          disabled={isPreparingUpload}
                           className="w-full flex items-center gap-4 p-4 rounded-xl border border-stone-200 hover:border-stone-300 hover:bg-stone-50 transition-all group"
                         >
                           <div className="w-12 h-12 rounded-lg bg-stone-100 flex items-center justify-center group-hover:bg-stone-200 transition-colors">
@@ -268,7 +316,7 @@ export function AddFavoritesModal({
                             <p className="font-medium text-stone-900">Upload New Photos</p>
                             <p className="text-sm text-stone-500">Create a gallery first, then add to favorites</p>
                           </div>
-                        </a>
+                        </button>
                       </>
                     )}
                   </div>
@@ -289,14 +337,13 @@ export function AddFavoritesModal({
                       <div className="text-center py-12">
                         <FolderOpen className="w-10 h-10 text-stone-300 mx-auto mb-3" />
                         <p className="text-stone-500">No galleries yet</p>
-                        <a
-                          href="/dashboard"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="mt-3 text-sm text-stone-600 underline underline-offset-4"
+                        <button
+                          onClick={handleUploadNewPhotos}
+                          disabled={isPreparingUpload}
+                          className="mt-3 text-sm text-stone-600 underline underline-offset-4 disabled:opacity-50"
                         >
-                          Create your first gallery
-                        </a>
+                          Upload photos
+                        </button>
                       </div>
                     ) : (
                       <div className="grid grid-cols-2 gap-3">
@@ -436,8 +483,38 @@ export function AddFavoritesModal({
               )}
             </motion.div>
           </div>
+
+          {uploadGalleryId && (
+            <AddFavoritesUploadModal
+              isOpen={isUploadModalOpen}
+              onClose={() => setIsUploadModalOpen(false)}
+              galleryId={uploadGalleryId}
+              onUploaded={handleUploadedNewPhotos}
+            />
+          )}
         </>
       )}
     </AnimatePresence>
+  )
+}
+
+function AddFavoritesUploadModal({
+  isOpen,
+  onClose,
+  galleryId,
+  onUploaded,
+}: {
+  isOpen: boolean
+  onClose: () => void
+  galleryId: string
+  onUploaded: (imageIds: string[]) => void | Promise<void>
+}) {
+  return (
+    <UploadModal
+      isOpen={isOpen}
+      onClose={onClose}
+      galleryId={galleryId}
+      onUploaded={onUploaded}
+    />
   )
 }

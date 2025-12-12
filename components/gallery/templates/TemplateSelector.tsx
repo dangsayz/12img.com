@@ -46,6 +46,11 @@ const TEMPLATE_META: Record<GalleryTemplate, {
     gradient: 'from-slate-900/40 via-slate-800/20 to-slate-900/40',
     accent: 'bg-slate-700',
   },
+  'album': {
+    tagline: 'Classic & Timeless',
+    gradient: 'from-stone-900/15 via-stone-700/10 to-stone-900/15',
+    accent: 'bg-stone-800',
+  },
   'editorial': {
     tagline: 'Magazine Style',
     gradient: 'from-violet-500/15 via-purple-500/10 to-indigo-500/15',

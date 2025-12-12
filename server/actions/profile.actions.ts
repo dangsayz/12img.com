@@ -7,6 +7,7 @@ import { createHmac, randomBytes } from 'crypto'
 import sharp from 'sharp'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 import { hashPassword, verifyPassword } from '@/lib/utils/password'
+import { generateUniqueSlug } from '@/lib/utils/slug'
 import { getOrCreateUserByClerkId } from '@/server/queries/user.queries'
 import { getSignedUrlsBatch } from '@/lib/storage/signed-urls'
 import type { ProfileVisibilityMode } from '@/types/database'
@@ -845,6 +846,63 @@ export async function getUserProfile() {
 
 const MAX_PORTFOLIO_IMAGES = 10
 
+const PORTFOLIO_UPLOADS_GALLERY_TITLE = 'Portfolio Uploads'
+
+export async function getOrCreatePortfolioUploadsGallery(): Promise<{ galleryId?: string; error?: string }> {
+  const { userId: clerkId } = await auth()
+  if (!clerkId) return { error: 'Unauthorized' }
+
+  const user = await getOrCreateUserByClerkId(clerkId)
+  if (!user) return { error: 'User not found' }
+
+  try {
+    const { data: existing, error: existingError } = await supabaseAdmin
+      .from('galleries')
+      .select('id')
+      .eq('user_id', user.id)
+      .eq('title', PORTFOLIO_UPLOADS_GALLERY_TITLE)
+      .is('archived_at', null)
+      .limit(1)
+      .maybeSingle()
+
+    if (existingError) {
+      console.error('getOrCreatePortfolioUploadsGallery existing lookup error:', existingError)
+      return { error: 'Failed to fetch gallery' }
+    }
+
+    if (existing?.id) {
+      return { galleryId: existing.id }
+    }
+
+    const slug = await generateUniqueSlug(PORTFOLIO_UPLOADS_GALLERY_TITLE)
+
+    const { data: created, error: createError } = await supabaseAdmin
+      .from('galleries')
+      .insert({
+        user_id: user.id,
+        title: PORTFOLIO_UPLOADS_GALLERY_TITLE,
+        slug,
+        download_enabled: false,
+        is_public: false,
+        visibility_mode: 'private',
+        show_on_profile: false,
+        template: 'mosaic',
+      })
+      .select('id')
+      .single()
+
+    if (createError) {
+      console.error('getOrCreatePortfolioUploadsGallery create error:', createError)
+      return { error: 'Failed to create gallery' }
+    }
+
+    return { galleryId: created.id }
+  } catch (e) {
+    console.error('getOrCreatePortfolioUploadsGallery exception:', e)
+    return { error: 'An unexpected error occurred' }
+  }
+}
+
 export interface PortfolioImageData {
   id: string
   imageId: string
@@ -1233,21 +1291,14 @@ export async function getGalleryImagesForPortfolioPicker(galleryId: string): Pro
   if (!user) return { error: 'User not found' }
 
   try {
-    // Run all queries in parallel for speed
-    const [galleryResult, imagesResult, portfolioResult] = await Promise.all([
+    // Run gallery + portfolio queries in parallel (images query handled with fallback)
+    const [galleryResult, portfolioResult] = await Promise.all([
       // Verify user owns this gallery
       supabaseAdmin
         .from('galleries')
         .select('id, user_id')
         .eq('id', galleryId)
         .single(),
-      // Get images from the gallery (limit to 100 for performance)
-      supabaseAdmin
-        .from('images')
-        .select('id, storage_path, thumbnail_path')
-        .eq('gallery_id', galleryId)
-        .order('position', { ascending: true })
-        .limit(100),
       // Get current portfolio image IDs
       supabaseAdmin
         .from('portfolio_images')
@@ -1260,9 +1311,43 @@ export async function getGalleryImagesForPortfolioPicker(galleryId: string): Pro
       return { error: 'Gallery not found or access denied' }
     }
 
-    const { data: images, error: imagesError } = imagesResult
-    if (imagesError) {
-      return { error: 'Failed to fetch images' }
+    // Get images from the gallery (limit to 100 for performance)
+    // Fallback: some environments may not have thumbnail_path column.
+    let images: Array<{ id: string; storage_path: string; thumbnail_path?: string | null }> | null = null
+    {
+      const { data, error: imagesError } = await supabaseAdmin
+        .from('images')
+        .select('id, storage_path, thumbnail_path')
+        .eq('gallery_id', galleryId)
+        .order('position', { ascending: true })
+        .limit(100)
+
+      if (imagesError) {
+        const { data: fallbackData, error: fallbackError } = await supabaseAdmin
+          .from('images')
+          .select('id, storage_path')
+          .eq('gallery_id', galleryId)
+          .order('position', { ascending: true })
+          .limit(100)
+
+        if (fallbackError) {
+          console.error('getGalleryImagesForPortfolioPicker images query error:', imagesError)
+          console.error('getGalleryImagesForPortfolioPicker fallback images query error:', fallbackError)
+          return { error: 'Failed to fetch images' }
+        }
+
+        images = (fallbackData || []).map((img: any) => ({
+          id: img.id,
+          storage_path: img.storage_path,
+          thumbnail_path: null,
+        }))
+      } else {
+        images = (data || []).map((img: any) => ({
+          id: img.id,
+          storage_path: img.storage_path,
+          thumbnail_path: img.thumbnail_path,
+        }))
+      }
     }
 
     if (!images || images.length === 0) {

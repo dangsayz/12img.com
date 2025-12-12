@@ -3,7 +3,7 @@ export { MosaicLayout } from './MosaicLayout'
 export { MosaicView } from './MosaicView'
 export { CinematicLayout } from './CinematicLayout'
 
-export type GalleryTemplate = 'mosaic' | 'clean-grid' | 'cinematic' | 'editorial'
+export type GalleryTemplate = 'mosaic' | 'clean-grid' | 'cinematic' | 'editorial' | 'album'
 
 // Default template is 'editorial' - magazine-style story layout
 export const DEFAULT_TEMPLATE: GalleryTemplate = 'editorial'
@@ -26,6 +26,12 @@ export const GALLERY_TEMPLATES = [
     name: 'Cinematic',
     description: 'Dark, moody, framed spreads',
     preview: '/images/templates/cinematic.jpg',
+  },
+  {
+    id: 'album' as const,
+    name: 'Album',
+    description: 'Classic album layout',
+    preview: '/images/templates/album.jpg',
   },
   {
     id: 'editorial' as const,

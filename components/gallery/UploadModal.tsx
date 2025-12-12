@@ -36,9 +36,10 @@ interface UploadModalProps {
   isOpen: boolean
   onClose: () => void
   galleryId: string
+  onUploaded?: (imageIds: string[]) => void | Promise<void>
 }
 
-export function UploadModal({ isOpen, onClose, galleryId }: UploadModalProps) {
+export function UploadModal({ isOpen, onClose, galleryId, onUploaded }: UploadModalProps) {
   const router = useRouter()
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [uploads, setUploads] = useState<FileItemState[]>([])
@@ -248,7 +249,7 @@ export function UploadModal({ isOpen, onClose, galleryId }: UploadModalProps) {
           return orderA - orderB
         })
         
-        await confirmUploads({
+        const { imageIds } = await confirmUploads({
           galleryId,
           uploads: sortedCompleted.map(u => ({
             storagePath: u.storagePath!,
@@ -258,6 +259,10 @@ export function UploadModal({ isOpen, onClose, galleryId }: UploadModalProps) {
             mimeType: u.file.type,
           })),
         })
+
+        if (imageIds.length > 0) {
+          await onUploaded?.(imageIds)
+        }
       }
 
       router.refresh()
