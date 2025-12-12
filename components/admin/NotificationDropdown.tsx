@@ -89,16 +89,15 @@ export function NotificationDropdown({ notifications: initialNotifications, unre
 
   // Close dropdown when clicking outside
   useEffect(() => {
-    function handleClickOutside(event: MouseEvent | TouchEvent) {
+    function handleClickOutside(event: MouseEvent) {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setIsOpen(false)
       }
     }
+    // Only use mousedown - touchstart interferes with touch buttons inside the dropdown
     document.addEventListener('mousedown', handleClickOutside)
-    document.addEventListener('touchstart', handleClickOutside)
     return () => {
       document.removeEventListener('mousedown', handleClickOutside)
-      document.removeEventListener('touchstart', handleClickOutside)
     }
   }, [])
 
@@ -214,6 +213,10 @@ export function NotificationDropdown({ notifications: initialNotifications, unre
               transition={{ duration: 0.2 }}
               className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40 md:hidden"
               onClick={() => setIsOpen(false)}
+              onTouchEnd={(e) => {
+                e.preventDefault()
+                setIsOpen(false)
+              }}
             />
             
             {/* Panel */}
@@ -363,17 +366,16 @@ export function NotificationDropdown({ notifications: initialNotifications, unre
               </div>
 
               {/* Elegant footer - tappable to dismiss */}
-              <motion.button 
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.2 }}
+              <button 
+                type="button"
                 onClick={() => setIsOpen(false)}
-                className="w-full border-t border-stone-100 px-5 py-4 bg-stone-50/50 hover:bg-stone-100 transition-colors touch-manipulation"
+                className="w-full border-t border-stone-100 px-5 py-4 bg-stone-50/50 hover:bg-stone-100 active:bg-stone-200 transition-colors cursor-pointer"
+                style={{ WebkitTapHighlightColor: 'transparent' }}
               >
-                <p className="text-[11px] text-stone-500 text-center tracking-wide font-medium">
+                <span className="text-[11px] text-stone-500 text-center tracking-wide font-medium block">
                   Tap to dismiss
-                </p>
-              </motion.button>
+                </span>
+              </button>
             </motion.div>
           </>
         )}
