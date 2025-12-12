@@ -223,9 +223,9 @@ export function AdminShell({ children, adminEmail, adminRole, unreadNotification
               animate={{ x: 0 }}
               exit={{ x: '-100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-              className="fixed top-14 left-0 bottom-0 w-64 bg-white border-r border-[#E5E5E5] z-50 lg:hidden overflow-y-auto"
+              className="fixed top-14 left-0 bottom-0 w-[280px] max-w-[85vw] bg-white border-r border-[#E5E5E5] z-50 lg:hidden overflow-y-auto"
             >
-              <nav className="py-3">
+              <nav className="py-3 pb-20">
                 {NAV_SECTIONS.map((section, sectionIndex) => (
                   <div key={sectionIndex} className={cn(sectionIndex > 0 && "mt-4")}>
                     {/* Section header */}
@@ -266,7 +266,7 @@ export function AdminShell({ children, adminEmail, adminRole, unreadNotification
               </nav>
               
               {/* Admin info */}
-              <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-[#E5E5E5] bg-[#FAFAFA]">
+              <div className="sticky bottom-0 left-0 right-0 p-4 border-t border-[#E5E5E5] bg-[#FAFAFA]">
                 <p className="text-xs text-[#737373] truncate">{adminEmail}</p>
               </div>
             </motion.aside>
