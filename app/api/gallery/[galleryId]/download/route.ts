@@ -15,6 +15,7 @@ import { getOrCreateUserByClerkId } from '@/server/queries/user.queries'
 import archiver from 'archiver'
 import { SIGNED_URL_EXPIRY } from '@/lib/utils/constants'
 import { getSeoDownloadFilename, getSeoArchiveFilename } from '@/lib/seo/image-urls'
+import { createHash } from 'crypto'
 
 export async function GET(
   request: NextRequest,
@@ -180,6 +181,33 @@ export async function GET(
     const zipBuffer = await archivePromise
     
     console.log(`[Download] ZIP size: ${zipBuffer.length} bytes`)
+    
+    // Track the download (fire and forget)
+    try {
+      const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 
+                 request.headers.get('x-real-ip') || 
+                 'unknown'
+      const userAgent = request.headers.get('user-agent') || 'unknown'
+      
+      const visitorId = createHash('sha256')
+        .update(`${ip}:${userAgent}`)
+        .digest('hex')
+        .substring(0, 16)
+      
+      void supabaseAdmin.rpc('record_gallery_download', {
+        p_gallery_id: galleryId,
+        p_visitor_id: visitorId,
+        p_ip_address: ip,
+        p_user_agent: userAgent.substring(0, 500),
+        p_download_type: 'full',
+        p_image_count: imageBuffers.length
+      }).then(({ error }) => {
+        if (error) console.error('[Download Tracking] Error:', error)
+        else console.log(`[Download Tracking] Recorded download for gallery ${galleryId}`)
+      })
+    } catch (trackingError) {
+      console.error('[Download Tracking] Error:', trackingError)
+    }
     
     // SEO-friendly archive filename: 12img-{gallery-slug}-gallery-{date}.zip
     const archiveFilename = getSeoArchiveFilename(gallery.title)

@@ -46,6 +46,7 @@ import {
   ChevronRight
 } from 'lucide-react'
 import { EmailActivity } from '@/components/gallery/EmailActivity'
+import { GalleryAnalytics } from '@/components/gallery/GalleryAnalytics'
 import { ShareModal } from '@/components/gallery/ShareModal'
 import { VendorShareModal } from '@/components/vendors/VendorShareModal'
 import { SocialShareButtons } from '@/components/ui/SocialShareButtons'
@@ -429,6 +430,7 @@ export function GalleryEditor({
   const [loadedImages, setLoadedImages] = useState<GalleryImage[]>(images)
   const [isLoadingMore, setIsLoadingMore] = useState(false)
   const [showActivity, setShowActivity] = useState(false)
+  const [showAnalytics, setShowAnalytics] = useState(false)
   const [showShareModal, setShowShareModal] = useState(false)
   const [showVendorShareModal, setShowVendorShareModal] = useState(false)
   const [showPresentationSettings, setShowPresentationSettings] = useState(false)
@@ -1032,6 +1034,34 @@ export function GalleryEditor({
                     </button>
                   </div>
 
+                  {/* Gallery Analytics Toggle */}
+                  <div className="pt-2 border-t border-stone-100 mt-2">
+                    <button
+                      onClick={() => setShowAnalytics(!showAnalytics)}
+                      className="flex items-center gap-1.5 py-1 text-stone-400 hover:text-stone-600 transition-colors"
+                    >
+                      <Eye className="w-3.5 h-3.5" />
+                      <span className="text-xs">Views & Downloads</span>
+                      <ChevronDown className={`w-3 h-3 transition-transform ${showAnalytics ? 'rotate-180' : ''}`} />
+                    </button>
+                    
+                    <AnimatePresence>
+                      {showAnalytics && (
+                        <motion.div
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: 'auto', opacity: 1 }}
+                          exit={{ height: 0, opacity: 0 }}
+                          transition={{ duration: 0.2 }}
+                          className="overflow-hidden"
+                        >
+                          <div className="pt-4">
+                            <GalleryAnalytics galleryId={gallery.id} />
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+
                   {/* Email Activity Toggle */}
                   <div className="pt-2 border-t border-stone-100 mt-2">
                     <button
@@ -1507,7 +1537,7 @@ export function GalleryEditor({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+            className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/50 p-4"
             onClick={() => setShowDeleteConfirm(false)}
           >
             <motion.div

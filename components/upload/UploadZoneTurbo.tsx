@@ -219,6 +219,7 @@ export function UploadZoneTurbo({ galleryId, onUploadComplete }: UploadZoneTurbo
         completedFiles={completedFiles}
         totalProgress={totalProgress}
         estimatedMinutes={Math.ceil((stats?.estimatedSecondsRemaining || 0) / 60)}
+        phaseMessage={stats?.phaseMessage}
         onMinimize={() => setOverlayMinimized(true)}
       />
       

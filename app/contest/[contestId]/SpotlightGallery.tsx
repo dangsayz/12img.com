@@ -53,16 +53,17 @@ export function SpotlightGallery({
 
   return (
     <>
-      {/* Awwwards-style Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      {/* Large 2-Column Grid for Proper Critique */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-6xl mx-auto">
         {entries.map((entry, index) => (
           <SpotlightCard
             key={entry.id}
             entry={entry}
+            index={index}
             canVote={canVote}
             showVoteCount={showVoteCounts}
             onClick={() => openViewer(index)}
-            priority={index < 6}
+            priority={index < 4}
           />
         ))}
       </div>
@@ -89,12 +90,14 @@ export function SpotlightGallery({
 // ─────────────────────────────────────────────────────────────────────────────
 function SpotlightCard({
   entry,
+  index,
   canVote,
   showVoteCount,
   onClick,
   priority,
 }: {
   entry: ContestEntryWithVoteStatus
+  index: number
   canVote: boolean
   showVoteCount: boolean
   onClick: () => void
@@ -109,9 +112,9 @@ function SpotlightCard({
       transition={{ duration: 0.4 }}
       className="group"
     >
-      {/* Image Container */}
+      {/* Tall Vogue-Style Image Container */}
       <div 
-        className="relative aspect-[4/5] overflow-hidden rounded-xl bg-stone-100 cursor-pointer mb-4"
+        className="relative aspect-[3/4] overflow-hidden rounded-2xl bg-stone-100 cursor-pointer mb-4"
         onClick={onClick}
       >
         {/* Skeleton */}
@@ -126,19 +129,26 @@ function SpotlightCard({
           fill
           className={`object-cover transition-all duration-500 ${
             isLoaded ? 'opacity-100' : 'opacity-0'
-          } group-hover:scale-105`}
-          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+          } group-hover:scale-[1.02]`}
+          sizes="(max-width: 768px) 100vw, 50vw"
           onLoad={() => setIsLoaded(true)}
           loading={priority ? 'eager' : 'lazy'}
           priority={priority}
         />
         
-        {/* Hover Overlay */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+        {/* Rank Badge */}
+        {index < 3 && (
+          <div className="absolute top-4 left-4">
+            <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold
+              ${index === 0 ? 'bg-amber-400 text-amber-900' : 'bg-white/90 text-stone-700'}`}>
+              #{index + 1}
+            </div>
+          </div>
+        )}
         
-        {/* Vote Button - Bottom Right */}
+        {/* Vote Button - Always Visible */}
         <div 
-          className="absolute bottom-4 right-4 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+          className="absolute bottom-4 right-4 z-10"
           onClick={(e) => e.stopPropagation()}
         >
           <VoteButton
@@ -147,64 +157,57 @@ function SpotlightCard({
             hasVoted={entry.hasVoted}
             canVote={canVote}
             showCount={showVoteCount}
-            size="md"
+            size="lg"
           />
         </div>
-        
-        {/* Award Badge (if top voted) */}
-        {entry.voteCount >= 5 && (
-          <div className="absolute top-4 left-4 px-2 py-1 bg-amber-500 text-black text-[10px] font-bold uppercase tracking-wider rounded">
-            Top Rated
-          </div>
-        )}
       </div>
       
       {/* Entry Info */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between px-1">
         <div className="flex items-center gap-3 min-w-0">
           {/* Photographer Avatar */}
           {entry.photographer.avatarUrl ? (
             <Image
               src={entry.photographer.avatarUrl}
               alt={entry.photographer.displayName}
-              width={32}
-              height={32}
+              width={40}
+              height={40}
               className="rounded-full flex-shrink-0"
             />
           ) : (
-            <div className="w-8 h-8 rounded-full bg-stone-100 flex items-center justify-center flex-shrink-0">
-              <span className="text-stone-500 text-xs font-medium">
+            <div className="w-10 h-10 rounded-full bg-stone-200 flex items-center justify-center flex-shrink-0">
+              <span className="text-stone-600 font-medium">
                 {entry.photographer.displayName.charAt(0).toUpperCase()}
               </span>
             </div>
           )}
           
-          {/* Name & Link */}
+          {/* Name & Caption */}
           <div className="min-w-0">
             {entry.photographer.slug ? (
               <Link
                 href={`/profile/${entry.photographer.slug}`}
-                className="text-stone-900 text-sm font-medium hover:text-stone-600 transition-colors truncate block"
+                className="text-stone-900 font-medium hover:text-stone-600 transition-colors truncate block"
                 onClick={(e) => e.stopPropagation()}
               >
                 {entry.photographer.displayName}
               </Link>
             ) : (
-              <span className="text-stone-900 text-sm font-medium truncate block">
+              <span className="text-stone-900 font-medium truncate block">
                 {entry.photographer.displayName}
               </span>
             )}
             {entry.caption && (
-              <p className="text-stone-400 text-xs truncate">{entry.caption}</p>
+              <p className="text-stone-500 text-sm truncate">{entry.caption}</p>
             )}
           </div>
         </div>
         
-        {/* Vote Count */}
+        {/* Vote Count Display */}
         {showVoteCount && (
-          <div className="flex items-center gap-1.5 text-stone-400 flex-shrink-0">
-            <Heart className="w-3.5 h-3.5" />
-            <span className="text-sm">{entry.voteCount}</span>
+          <div className="flex items-center gap-2 px-3 py-1.5 bg-stone-100 rounded-full flex-shrink-0">
+            <Heart className="w-4 h-4 text-rose-500" />
+            <span className="text-sm font-medium text-stone-700">{entry.voteCount}</span>
           </div>
         )}
       </div>

@@ -21,14 +21,28 @@ import {
   LayoutDashboard,
   Shield
 } from 'lucide-react'
+import { NotificationDropdown } from '@/components/admin/NotificationDropdown'
 
 export type UserRole = 'user' | 'support' | 'admin' | 'super_admin'
+
+interface AdminNotification {
+  id: string
+  type: string
+  title: string
+  message: string | null
+  metadata: Record<string, unknown>
+  isRead: boolean
+  readAt: string | null
+  createdAt: string
+}
 
 interface AppNavProps {
   userPlan?: string
   storageUsed?: number
   storageLimit?: number
   isAdmin?: boolean
+  adminNotifications?: AdminNotification[]
+  adminUnreadCount?: number
 }
 
 const navItems = [
@@ -42,7 +56,9 @@ export function AppNav({
   userPlan = 'free',
   storageUsed = 0,
   storageLimit = 2 * 1024 * 1024 * 1024, // 2GB default
-  isAdmin = false
+  isAdmin = false,
+  adminNotifications = [],
+  adminUnreadCount = 0
 }: AppNavProps) {
   const pathname = usePathname()
   const [mobileOpen, setMobileOpen] = useState(false)
@@ -154,6 +170,14 @@ export function AppNav({
                 </span>
               </div>
             </div>
+            
+            {/* Admin Notifications Bell */}
+            {isAdmin && (
+              <NotificationDropdown 
+                notifications={adminNotifications}
+                unreadCount={adminUnreadCount}
+              />
+            )}
             
             {/* New Button with Dropdown */}
             <div className="relative">

@@ -106,9 +106,112 @@ interface ExitIntentPopupProps {
   hideForSubscribers?: boolean
 }
 
-const STORAGE_KEY = 'exit_intent_shown'
+// ============================================
+// STORAGE KEYS & DEFAULTS
+// ============================================
+const STORAGE_KEY = 'exit_intent_session_count'      // Session show count
+const COOLDOWN_KEY = 'exit_intent_last_shown'        // Timestamp of last shown (for cooldown)
+const DISMISSED_PROMOS_KEY = 'exit_intent_dismissed_promos'  // Permanent dismiss (per promo code)
+const COOLDOWN_DAYS = 1.5                            // 1-2 days before showing again
+const MAX_PER_SESSION = 2                            // Max times to show per session
 const DEFAULT_CODE = 'TRY15'
 const DEFAULT_DISCOUNT = '15% off your first month'
+
+// ============================================
+// DISMISS PERSISTENCE
+// Tracks which promo codes user has permanently dismissed.
+// Stored as JSON array in localStorage: ["PROMO1", "PROMO2"]
+// New promo codes will still show - only dismissed codes are blocked.
+// ============================================
+
+/**
+ * Check if we're still in cooldown period
+ * @returns true if popup was shown within the last COOLDOWN_DAYS
+ */
+function isInCooldown(): boolean {
+  if (typeof window === 'undefined') return true
+  try {
+    const lastShown = localStorage.getItem(COOLDOWN_KEY)
+    if (!lastShown) return false
+    const daysSince = (Date.now() - parseInt(lastShown, 10)) / (1000 * 60 * 60 * 24)
+    return daysSince < COOLDOWN_DAYS
+  } catch {
+    return false
+  }
+}
+
+/**
+ * Mark popup as shown (increment session count)
+ */
+function markAsShown(): void {
+  if (typeof window === 'undefined') return
+  try {
+    const currentCount = parseInt(sessionStorage.getItem(STORAGE_KEY) || '0', 10)
+    sessionStorage.setItem(STORAGE_KEY, (currentCount + 1).toString())
+  } catch {
+    // Silently fail
+  }
+}
+
+/**
+ * Start cooldown timer (called on "Maybe later")
+ */
+function startCooldown(): void {
+  if (typeof window === 'undefined') return
+  try {
+    localStorage.setItem(COOLDOWN_KEY, Date.now().toString())
+  } catch {
+    // Silently fail
+  }
+}
+
+/**
+ * Check if max session views reached
+ */
+function isSessionLimitReached(): boolean {
+  if (typeof window === 'undefined') return true
+  try {
+    const count = parseInt(sessionStorage.getItem(STORAGE_KEY) || '0', 10)
+    return count >= MAX_PER_SESSION
+  } catch {
+    return true
+  }
+}
+
+/**
+ * Check if a specific promo has been permanently dismissed
+ * @returns false on SSR or localStorage errors (fail-open to show promo)
+ */
+function isPromoDismissed(promoCode: string): boolean {
+  if (typeof window === 'undefined') return false
+  try {
+    const dismissed = localStorage.getItem(DISMISSED_PROMOS_KEY)
+    if (!dismissed) return false
+    const promos: string[] = JSON.parse(dismissed)
+    return promos.includes(promoCode)
+  } catch {
+    // localStorage unavailable or corrupted - fail open (show promo)
+    return false
+  }
+}
+
+/**
+ * Permanently dismiss a promo so it won't show again until promo code changes
+ * Silently fails on localStorage errors - user will just see promo again next session
+ */
+function dismissPromo(promoCode: string): void {
+  if (typeof window === 'undefined') return
+  try {
+    const dismissed = localStorage.getItem(DISMISSED_PROMOS_KEY)
+    const promos: string[] = dismissed ? JSON.parse(dismissed) : []
+    if (!promos.includes(promoCode)) {
+      promos.push(promoCode)
+      localStorage.setItem(DISMISSED_PROMOS_KEY, JSON.stringify(promos))
+    }
+  } catch {
+    // localStorage unavailable - silently fail, promo will show again next session
+  }
+}
 
 export function ExitIntentPopup({
   discountCode = DEFAULT_CODE,
@@ -130,8 +233,14 @@ export function ExitIntentPopup({
 
   // Check if we should show the popup
   const shouldShow = useCallback(() => {
-    // Already shown this session
-    if (sessionStorage.getItem(STORAGE_KEY)) return false
+    // User permanently dismissed this promo
+    if (isPromoDismissed(discountCode)) return false
+    
+    // Still in cooldown period (shown within last 1-2 days)
+    if (isInCooldown()) return false
+    
+    // Already shown max times this session
+    if (isSessionLimitReached()) return false
     
     // Check path
     if (showOnPaths.length > 0) {
@@ -149,7 +258,7 @@ export function ExitIntentPopup({
     }
     
     return true
-  }, [showOnPaths, hideForSubscribers, isSignedIn, user])
+  }, [showOnPaths, hideForSubscribers, isSignedIn, user, discountCode])
 
   // Delay before popup can activate
   useEffect(() => {
@@ -170,7 +279,7 @@ export function ExitIntentPopup({
       // Only trigger when mouse leaves toward top of viewport (browser chrome)
       if (e.clientY <= 5 && !isVisible) {
         setIsVisible(true)
-        sessionStorage.setItem(STORAGE_KEY, 'true')
+        markAsShown()
       }
     }
 
@@ -189,7 +298,7 @@ export function ExitIntentPopup({
       inactivityTimer = setTimeout(() => {
         if (shouldShow()) {
           setIsVisible(true)
-          sessionStorage.setItem(STORAGE_KEY, 'true')
+          markAsShown()
         }
       }, 30000) // 30 seconds of inactivity
     }
@@ -206,6 +315,14 @@ export function ExitIntentPopup({
   }, [canShow, isVisible, shouldShow])
 
   const handleClose = () => {
+    // "Maybe later" - start cooldown
+    startCooldown()
+    setIsVisible(false)
+  }
+
+  const handleNoThanks = () => {
+    // "No thanks" - permanent dismiss
+    dismissPromo(discountCode)
     setIsVisible(false)
   }
 
@@ -238,7 +355,12 @@ export function ExitIntentPopup({
           />
 
           {/* Popup - Editorial Magazine Style */}
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 pointer-events-none">
+          <div 
+            className="fixed inset-0 z-[100] flex items-center justify-center p-4 pointer-events-none"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="promo-headline"
+          >
             <motion.div
               initial={{ opacity: 0, y: 40 }}
               animate={{ opacity: 1, y: 0 }}
@@ -247,10 +369,11 @@ export function ExitIntentPopup({
               className="relative w-full max-w-3xl bg-stone-950 overflow-hidden pointer-events-auto"
               style={{ aspectRatio: '16/10' }}
             >
-              {/* Close button */}
+              {/* Close button - Mobile-first: 44px minimum touch target */}
               <button
                 onClick={handleClose}
-                className="absolute top-5 right-5 p-2 text-white/40 hover:text-white transition-colors z-20"
+                aria-label="Close promotional offer"
+                className="absolute top-3 right-3 sm:top-5 sm:right-5 p-3 sm:p-2 min-w-[44px] min-h-[44px] flex items-center justify-center text-white/40 hover:text-white active:text-white/80 transition-colors z-20"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -307,6 +430,7 @@ export function ExitIntentPopup({
 
                   {/* Headline */}
                   <motion.h2 
+                    id="promo-headline"
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.3 }}
@@ -378,12 +502,24 @@ export function ExitIntentPopup({
                       </svg>
                     </button>
 
-                    <button
-                      onClick={handleClose}
-                      className="text-xs text-white/20 hover:text-white/40 transition-colors"
-                    >
-                      Maybe later
-                    </button>
+                    {/* Dismiss options - Mobile-first: min 44px touch targets */}
+                    <div className="flex items-center gap-2 sm:gap-4">
+                      <button
+                        onClick={handleClose}
+                        aria-label="Dismiss for this session"
+                        className="min-h-[44px] px-3 text-xs text-white/30 hover:text-white/50 active:text-white/60 transition-colors"
+                      >
+                        Maybe later
+                      </button>
+                      <span className="text-white/10" aria-hidden="true">·</span>
+                      <button
+                        onClick={handleNoThanks}
+                        aria-label="Don't show this promotion again"
+                        className="min-h-[44px] px-3 text-xs text-white/20 hover:text-white/40 active:text-white/50 transition-colors"
+                      >
+                        No thanks
+                      </button>
+                    </div>
                   </motion.div>
                 </div>
               </div>

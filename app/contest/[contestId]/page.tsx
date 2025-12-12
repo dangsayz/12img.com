@@ -17,71 +17,55 @@ import { Camera, Heart, Clock, Users, Sparkles, ArrowRight, Plus, MapPin, Trophy
 import { getContestPageData } from '@/server/actions/contest.actions'
 import { SpotlightGallery } from './SpotlightGallery'
 
-// Placeholder data for demo/preview purposes
+// Placeholder data for demo/preview purposes - uses real images from showcase
 const PLACEHOLDER_ENTRIES = [
   {
     id: 'demo-1',
-    photographer: { displayName: 'Sarah Chen', slug: 'sarahchen', avatarUrl: null, location: 'San Francisco, CA' },
+    photographer: { displayName: 'Sarah Chen', slug: 'sarahchen', avatarUrl: null },
     voteCount: 47,
-    scores: { composition: 9, lighting: 8, emotion: 9, technique: 8 },
-    overallScore: 8.50,
-    image: { thumbnailUrl: '/images/showcase/1.jpg', previewUrl: '/images/showcase/1.jpg' },
+    hasVoted: false,
+    caption: 'Golden hour magic',
+    image: { thumbnailUrl: '/images/showcase/modern-wedding-gallery-01.jpg', previewUrl: '/images/showcase/modern-wedding-gallery-01.jpg' },
   },
   {
     id: 'demo-2',
-    photographer: { displayName: 'Marcus Rivera', slug: 'marcusrivera', avatarUrl: null, location: 'Austin, TX' },
+    photographer: { displayName: 'Marcus Rivera', slug: 'marcusrivera', avatarUrl: null },
     voteCount: 42,
-    scores: { composition: 8, lighting: 9, emotion: 8, technique: 9 },
-    overallScore: 8.50,
-    image: { thumbnailUrl: '/images/showcase/2.jpg', previewUrl: '/images/showcase/2.jpg' },
+    hasVoted: true,
+    caption: 'First dance',
+    image: { thumbnailUrl: '/images/showcase/modern-wedding-gallery-02.jpg', previewUrl: '/images/showcase/modern-wedding-gallery-02.jpg' },
   },
   {
     id: 'demo-3',
-    photographer: { displayName: 'Emma Thompson', slug: 'emmathompson', avatarUrl: null, location: 'London, UK' },
+    photographer: { displayName: 'Emma Thompson', slug: 'emmathompson', avatarUrl: null },
     voteCount: 38,
-    scores: { composition: 9, lighting: 8, emotion: 9, technique: 7 },
-    overallScore: 8.25,
-    image: { thumbnailUrl: '/images/showcase/3.jpg', previewUrl: '/images/showcase/3.jpg' },
+    hasVoted: false,
+    caption: 'The look',
+    image: { thumbnailUrl: '/images/showcase/modern-wedding-gallery-03.jpg', previewUrl: '/images/showcase/modern-wedding-gallery-03.jpg' },
   },
   {
     id: 'demo-4',
-    photographer: { displayName: 'James Park', slug: 'jamespark', avatarUrl: null, location: 'Seoul, Korea' },
+    photographer: { displayName: 'James Park', slug: 'jamespark', avatarUrl: null },
     voteCount: 35,
-    scores: { composition: 8, lighting: 8, emotion: 8, technique: 8 },
-    overallScore: 8.00,
-    image: { thumbnailUrl: '/images/showcase/4.jpg', previewUrl: '/images/showcase/4.jpg' },
+    hasVoted: false,
+    caption: 'Quiet moments',
+    image: { thumbnailUrl: '/images/showcase/modern-wedding-gallery-04.jpg', previewUrl: '/images/showcase/modern-wedding-gallery-04.jpg' },
   },
   {
     id: 'demo-5',
-    photographer: { displayName: 'Ana García', slug: 'anagarcia', avatarUrl: null, location: 'Barcelona, Spain' },
+    photographer: { displayName: 'Ana García', slug: 'anagarcia', avatarUrl: null },
     voteCount: 31,
-    scores: { composition: 7, lighting: 9, emotion: 8, technique: 8 },
-    overallScore: 8.00,
-    image: { thumbnailUrl: '/images/showcase/5.jpg', previewUrl: '/images/showcase/5.jpg' },
+    hasVoted: false,
+    caption: 'Natural light',
+    image: { thumbnailUrl: '/images/showcase/modern-wedding-gallery-05.jpg', previewUrl: '/images/showcase/modern-wedding-gallery-05.jpg' },
   },
   {
     id: 'demo-6',
-    photographer: { displayName: 'David Kim', slug: 'davidkim', avatarUrl: null, location: 'Los Angeles, CA' },
+    photographer: { displayName: 'David Kim', slug: 'davidkim', avatarUrl: null },
     voteCount: 28,
-    scores: { composition: 8, lighting: 7, emotion: 8, technique: 8 },
-    overallScore: 7.75,
-    image: { thumbnailUrl: '/images/showcase/6.jpg', previewUrl: '/images/showcase/6.jpg' },
-  },
-  {
-    id: 'demo-7',
-    photographer: { displayName: 'Sophie Martin', slug: 'sophiemartin', avatarUrl: null, location: 'Paris, France' },
-    voteCount: 24,
-    scores: { composition: 8, lighting: 8, emotion: 7, technique: 8 },
-    overallScore: 7.75,
-    image: { thumbnailUrl: '/images/showcase/7.jpg', previewUrl: '/images/showcase/7.jpg' },
-  },
-  {
-    id: 'demo-8',
-    photographer: { displayName: 'Alex Johnson', slug: 'alexjohnson', avatarUrl: null, location: 'New York, NY' },
-    voteCount: 21,
-    scores: { composition: 7, lighting: 8, emotion: 8, technique: 7 },
-    overallScore: 7.50,
-    image: { thumbnailUrl: '/images/showcase/8.jpg', previewUrl: '/images/showcase/8.jpg' },
+    hasVoted: false,
+    caption: 'Joy',
+    image: { thumbnailUrl: '/images/showcase/modern-wedding-gallery-06.jpg', previewUrl: '/images/showcase/modern-wedding-gallery-06.jpg' },
   },
 ]
 
@@ -228,13 +212,13 @@ export default async function ContestVotingPage({ params }: Props) {
         <div className="mx-6 mb-8">
           <div className="max-w-5xl mx-auto">
             <div className="flex items-center gap-6 p-4 border border-stone-200 rounded-xl bg-white hover:border-stone-300 transition-colors">
-              <div className="relative w-20 h-20 rounded-lg overflow-hidden flex-shrink-0">
+              <div className="relative w-32 h-44 rounded-lg overflow-hidden flex-shrink-0">
                 <Image
                   src={(userEntry as any).image.thumbnailUrl}
                   alt="Your entry"
                   fill
                   className="object-cover"
-                  sizes="80px"
+                  sizes="128px"
                 />
               </div>
               <div className="flex-1 min-w-0">
@@ -259,99 +243,104 @@ export default async function ContestVotingPage({ params }: Props) {
       <main className="px-6 pb-16">
         <div className="max-w-7xl mx-auto">
           {entries.length === 0 ? (
-            <div className="max-w-5xl mx-auto">
-              {/* Minimal Preview Indicator */}
-              <div className="mb-10 text-center">
-                <span className="inline-flex items-center gap-2 px-3 py-1.5 text-xs text-stone-400 border border-stone-200 rounded-full">
-                  <span className="w-1.5 h-1.5 rounded-full bg-stone-300" />
-                  Preview with sample data
+            <div className="max-w-6xl mx-auto">
+              {/* Preview Mode Banner */}
+              <div className="mb-8 text-center">
+                <span className="inline-flex items-center gap-2 px-4 py-2 text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-full">
+                  <Sparkles className="w-4 h-4" />
+                  Preview Mode — Sample entries shown below
                 </span>
               </div>
               
-              {/* Leaderboard Table - Refined */}
-              <div className="mb-16">
-                {/* Table Header */}
-                <div className="flex items-center justify-between pb-4 border-b border-stone-200">
-                  <div className="flex items-center gap-4">
-                    <span className="w-8" />
-                    <span className="w-14" />
-                    <span className="text-[11px] text-stone-400 uppercase tracking-[0.15em]">Photographer</span>
-                  </div>
-                  <div className="flex items-center">
-                    <span className="w-14 text-center text-[11px] text-stone-400 uppercase tracking-[0.1em] hidden lg:block">Comp</span>
-                    <span className="w-14 text-center text-[11px] text-stone-400 uppercase tracking-[0.1em] hidden lg:block">Light</span>
-                    <span className="w-14 text-center text-[11px] text-stone-400 uppercase tracking-[0.1em] hidden lg:block">Emotion</span>
-                    <span className="w-14 text-center text-[11px] text-stone-400 uppercase tracking-[0.1em] hidden lg:block">Tech</span>
-                    <span className="w-20 text-center text-[11px] text-stone-400 uppercase tracking-[0.1em]">Score</span>
-                  </div>
-                </div>
-                
-                {/* Table Body */}
-                <div>
-                  {PLACEHOLDER_ENTRIES.map((entry, index) => (
-                    <div
-                      key={entry.id}
-                      className={`flex items-center justify-between py-5 border-b border-stone-100 transition-all duration-200 group cursor-pointer
-                        ${index === 0 ? 'bg-stone-50/50' : 'hover:bg-stone-50/50'}`}
-                    >
-                      <div className="flex items-center gap-4 flex-1 min-w-0">
-                        {/* Rank */}
-                        <div className="w-8 flex-shrink-0 text-center">
-                          {index === 0 ? (
-                            <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-stone-900 text-white text-xs font-medium">1</span>
-                          ) : index === 1 ? (
-                            <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-stone-200 text-stone-700 text-xs font-medium">2</span>
-                          ) : index === 2 ? (
-                            <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-stone-200 text-stone-700 text-xs font-medium">3</span>
-                          ) : (
-                            <span className="text-stone-400 text-sm tabular-nums">{index + 1}</span>
-                          )}
-                        </div>
-                        
-                        {/* Photo Thumbnail */}
-                        <div className="relative w-14 h-14 rounded-lg overflow-hidden flex-shrink-0 bg-stone-100 ring-1 ring-stone-200/50">
-                          <div className="absolute inset-0 bg-gradient-to-br from-stone-100 to-stone-200" />
-                        </div>
-                        
-                        {/* Photographer Info */}
-                        <div className="min-w-0 flex-1">
-                          <p className="text-stone-900 font-medium text-sm truncate group-hover:text-stone-700 transition-colors">
-                            {entry.photographer.displayName}
-                          </p>
-                          <p className="text-stone-400 text-xs truncate">
-                            {entry.photographer.location}
-                          </p>
-                        </div>
-                        
-                        {/* Vote Count */}
-                        <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-stone-100/80">
-                          <Heart className="w-3 h-3 text-stone-400" />
-                          <span className="text-xs text-stone-600 tabular-nums font-medium">{entry.voteCount}</span>
-                        </div>
-                      </div>
+              {/* Large Image Grid for Proper Critique */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16">
+                {PLACEHOLDER_ENTRIES.map((entry, index) => (
+                  <div key={entry.id} className="group">
+                    {/* Tall Vogue-Style Image Container */}
+                    <div className="relative aspect-[3/4] overflow-hidden rounded-2xl bg-stone-100 mb-4">
+                      <Image
+                        src={entry.image.thumbnailUrl}
+                        alt={`Entry by ${entry.photographer.displayName}`}
+                        fill
+                        className="object-cover transition-transform duration-500 group-hover:scale-[1.02]"
+                        sizes="(max-width: 768px) 100vw, 50vw"
+                        priority={index < 2}
+                      />
                       
-                      {/* Scores */}
-                      <div className="flex items-center">
-                        <span className="w-14 text-center text-stone-500 text-sm tabular-nums hidden lg:block">{entry.scores.composition}</span>
-                        <span className="w-14 text-center text-stone-500 text-sm tabular-nums hidden lg:block">{entry.scores.lighting}</span>
-                        <span className="w-14 text-center text-stone-500 text-sm tabular-nums hidden lg:block">{entry.scores.emotion}</span>
-                        <span className="w-14 text-center text-stone-500 text-sm tabular-nums hidden lg:block">{entry.scores.technique}</span>
-                        <div className="w-20 text-center">
-                          <span className={`inline-block px-2.5 py-1 rounded text-sm font-semibold tabular-nums
-                            ${entry.overallScore >= 8.5 ? 'bg-emerald-50 text-emerald-700' : 
-                              entry.overallScore >= 8.0 ? 'bg-stone-100 text-stone-900' : 
-                              'text-stone-600'}`}>
-                            {entry.overallScore.toFixed(2)}
+                      {/* Rank Badge */}
+                      {index < 3 && (
+                        <div className="absolute top-4 left-4">
+                          <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold
+                            ${index === 0 ? 'bg-amber-400 text-amber-900' : 'bg-white/90 text-stone-700'}`}>
+                            #{index + 1}
+                          </div>
+                        </div>
+                      )}
+                      
+                      {/* Vote Button - Always Visible */}
+                      <div className="absolute bottom-4 right-4">
+                        <button 
+                          className={`flex items-center gap-2 px-4 py-2.5 rounded-full transition-all shadow-lg
+                            ${entry.hasVoted 
+                              ? 'bg-rose-500 text-white' 
+                              : 'bg-white/95 backdrop-blur-sm text-stone-700 hover:bg-white'}`}
+                        >
+                          <Heart className={`w-5 h-5 ${entry.hasVoted ? 'fill-current' : ''}`} />
+                          <span className="font-medium tabular-nums">{entry.voteCount}</span>
+                        </button>
+                      </div>
+                    </div>
+                    
+                    {/* Photographer Info */}
+                    <div className="flex items-center justify-between px-1">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-stone-200 flex items-center justify-center">
+                          <span className="text-stone-600 font-medium">
+                            {entry.photographer.displayName.charAt(0)}
                           </span>
+                        </div>
+                        <div>
+                          <p className="font-medium text-stone-900">{entry.photographer.displayName}</p>
+                          {entry.caption && (
+                            <p className="text-sm text-stone-500">{entry.caption}</p>
+                          )}
                         </div>
                       </div>
                     </div>
-                  ))}
+                  </div>
+                ))}
+              </div>
+              
+              {/* How Voting Works */}
+              <div className="max-w-2xl mx-auto text-center mb-16 px-6 py-10 bg-stone-50 rounded-3xl">
+                <h3 className="text-xl font-medium text-stone-900 mb-6">How Voting Works</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 text-sm">
+                  <div>
+                    <div className="w-12 h-12 rounded-full bg-stone-200 flex items-center justify-center mx-auto mb-3">
+                      <Camera className="w-5 h-5 text-stone-600" />
+                    </div>
+                    <p className="font-medium text-stone-900 mb-1">Browse</p>
+                    <p className="text-stone-500">View all submissions in full size</p>
+                  </div>
+                  <div>
+                    <div className="w-12 h-12 rounded-full bg-rose-100 flex items-center justify-center mx-auto mb-3">
+                      <Heart className="w-5 h-5 text-rose-500" />
+                    </div>
+                    <p className="font-medium text-stone-900 mb-1">Vote</p>
+                    <p className="text-stone-500">Click the heart to cast your vote</p>
+                  </div>
+                  <div>
+                    <div className="w-12 h-12 rounded-full bg-amber-100 flex items-center justify-center mx-auto mb-3">
+                      <Trophy className="w-5 h-5 text-amber-600" />
+                    </div>
+                    <p className="font-medium text-stone-900 mb-1">Win</p>
+                    <p className="text-stone-500">Top voted entries win prizes</p>
+                  </div>
                 </div>
               </div>
               
               {/* CTA Section */}
-              <div className="text-center py-16">
+              <div className="text-center py-10">
                 <p className="text-stone-400 text-xs uppercase tracking-[0.2em] mb-4">Be the first</p>
                 <h3 className="text-2xl font-light text-stone-900 mb-4">
                   Your shot could be #1

@@ -4,6 +4,7 @@ import { useState, useCallback, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { Upload, X, CheckCircle, AlertCircle } from 'lucide-react'
 import { generateSignedUploadUrls, confirmUploads } from '@/server/actions/upload.actions'
+import { sortFilesByExifDate } from '@/lib/upload/exif-date'
 import { Button } from '@/components/ui/button'
 import { ALLOWED_MIME_TYPES, MAX_FILE_SIZE } from '@/lib/utils/constants'
 
@@ -35,13 +36,12 @@ export function ImageUploader({ galleryId }: ImageUploaderProps) {
     return null
   }
 
-  const handleFileSelect = useCallback((files: FileList | null) => {
+  const handleFileSelect = useCallback(async (files: FileList | null) => {
     if (!files) return
 
-    // Sort files naturally (so img-2 comes before img-10)
-    const sortedFiles = Array.from(files).sort((a, b) => 
-      a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' })
-    )
+    // Sort files by EXIF capture date (like Pixieset)
+    // This preserves chronological order from the event
+    const sortedFiles = await sortFilesByExifDate(Array.from(files))
 
     const newUploads: UploadItem[] = []
     sortedFiles.forEach((file, i) => {

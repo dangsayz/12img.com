@@ -11,6 +11,7 @@ interface LargeUploadOverlayProps {
   completedFiles: number
   totalProgress: number
   estimatedMinutes: number
+  phaseMessage?: string
   onMinimize?: () => void
 }
 
@@ -36,6 +37,7 @@ export function LargeUploadOverlay({
   completedFiles,
   totalProgress,
   estimatedMinutes,
+  phaseMessage,
   onMinimize,
 }: LargeUploadOverlayProps) {
   const [messageIndex, setMessageIndex] = useState(0)
@@ -179,17 +181,17 @@ export function LargeUploadOverlay({
               )}
             </div>
 
-            {/* Rotating message */}
+            {/* Phase-aware status message */}
             <AnimatePresence mode="wait">
               <motion.p
-                key={messageIndex}
+                key={phaseMessage || messageIndex}
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
                 transition={{ duration: 0.3 }}
                 className="text-gray-600 font-medium"
               >
-                {currentMessage}
+                {phaseMessage || currentMessage}
               </motion.p>
             </AnimatePresence>
 

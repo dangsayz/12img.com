@@ -633,34 +633,28 @@ function GalleryCard({
                 </div>
               )}
               
-              {/* Micro-writing corner details with gradient for readability */}
+              {/* Micro-writing corner details - text shadow for readability */}
               <div className="absolute inset-0 pointer-events-none">
-                {/* Subtle gradient overlays for text visibility */}
-                <div className="absolute top-0 left-0 w-16 h-8 bg-gradient-to-br from-black/30 to-transparent" />
-                <div className="absolute top-0 right-0 w-16 h-8 bg-gradient-to-bl from-black/30 to-transparent" />
-                <div className="absolute bottom-0 left-0 w-16 h-8 bg-gradient-to-tr from-black/30 to-transparent" />
-                <div className="absolute bottom-0 right-0 w-16 h-8 bg-gradient-to-tl from-black/30 to-transparent" />
-                
                 {/* Top-left: Image count */}
-                <span className="absolute top-2.5 left-3 text-[9px] font-medium tracking-[0.12em] text-white/90">
+                <span className="absolute top-2.5 left-3 text-[9px] font-medium tracking-[0.12em] text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]">
                   {String(gallery.imageCount).padStart(3, '0')}
                 </span>
                 
                 {/* Top-right: Category initial */}
                 {gallery.category && (
-                  <span className="absolute top-2.5 right-3 text-[9px] font-medium tracking-[0.12em] text-white/90 uppercase">
+                  <span className="absolute top-2.5 right-3 text-[9px] font-medium tracking-[0.12em] text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)] uppercase">
                     {gallery.category.slice(0, 3)}
                   </span>
                 )}
                 
                 {/* Bottom-left: Year */}
-                <span className="absolute bottom-2.5 left-3 text-[9px] font-medium tracking-[0.12em] text-white/90">
+                <span className="absolute bottom-2.5 left-3 text-[9px] font-medium tracking-[0.12em] text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]">
                   {new Date(gallery.createdAt).getFullYear()}
                 </span>
                 
                 {/* Bottom-right: Lock indicator */}
                 {gallery.hasPassword && (
-                  <Lock className="absolute bottom-2.5 right-3 w-3 h-3 text-white/90" />
+                  <Lock className="absolute bottom-2.5 right-3 w-3 h-3 text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]" />
                 )}
               </div>
             </div>
@@ -786,6 +780,21 @@ function GalleryCard({
             
             <div className="border-t border-stone-100 my-1" />
             
+            <button
+              onClick={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+                e.nativeEvent.stopImmediatePropagation()
+                setShowMenu(false)
+                setShowDeleteModal(true)
+              }}
+              className="w-full px-4 py-2.5 text-left text-sm text-red-500 hover:bg-red-50 transition-colors"
+            >
+              Delete Gallery
+            </button>
+            
+            <div className="border-t border-stone-100 my-1" />
+            
             <Link
               href={`/contest/submit?gallery=${gallery.id}`}
               className="block px-4 py-2.5 text-sm text-stone-900 hover:bg-stone-50 transition-colors"
@@ -801,21 +810,6 @@ function GalleryCard({
               className="w-full px-4 py-2.5 text-left text-sm text-stone-900 hover:bg-stone-50 transition-colors"
             >
               Archive
-            </button>
-            
-            <div className="border-t border-stone-100 my-1" />
-            
-            <button
-              onClick={(e) => {
-                e.preventDefault()
-                e.stopPropagation()
-                e.nativeEvent.stopImmediatePropagation()
-                setShowMenu(false)
-                setShowDeleteModal(true)
-              }}
-              className="w-full px-4 py-2.5 text-left text-sm text-red-500 hover:bg-red-50 transition-colors pointer-events-auto"
-            >
-              Delete
             </button>
               </div>
             </>

@@ -666,7 +666,7 @@ export async function getPublicProfileBySlug(slug: string, viewerUserId?: string
     // Get user settings for contact info and business name fallback
     const { data: settings } = await supabaseAdmin
       .from('user_settings')
-      .select('business_name, contact_email, website_url, country, social_sharing_enabled')
+      .select('business_name, contact_email, website_url, instagram_url, country, social_sharing_enabled')
       .eq('user_id', profile.id)
       .single()
 
@@ -808,6 +808,7 @@ export async function getPublicProfileBySlug(slug: string, viewerUserId?: string
       display_name: profile.display_name || settings?.business_name || null,
       contactEmail: settings?.contact_email || null,
       websiteUrl: settings?.website_url || null,
+      instagramUrl: settings?.instagram_url || null,
       country: settings?.country || null,
       socialSharingEnabled: settings?.social_sharing_enabled ?? false,
       galleries: galleriesWithCounts,
@@ -1135,7 +1136,7 @@ export async function reorderPortfolioImages(imageIds: string[]): Promise<{ succ
  * Get user's galleries for the portfolio picker
  */
 export async function getGalleriesForPortfolioPicker(): Promise<{
-  data?: Array<{ id: string, title: string, imageCount: number }>,
+  data?: Array<{ id: string, title: string, imageCount: number, coverUrl?: string }>,
   error?: string
 }> {
   const { userId: clerkId } = await auth()
@@ -1147,7 +1148,7 @@ export async function getGalleriesForPortfolioPicker(): Promise<{
   try {
     const { data: galleries, error } = await supabaseAdmin
       .from('galleries')
-      .select('id, title')
+      .select('id, title, cover_image_id')
       .eq('user_id', user.id)
       .order('created_at', { ascending: false })
 
@@ -1155,27 +1156,226 @@ export async function getGalleriesForPortfolioPicker(): Promise<{
       return { error: 'Failed to fetch galleries' }
     }
 
-    // Get image counts
+    // Get image counts and first image for each gallery
     const galleryIds = galleries?.map(g => g.id) || []
-    const { data: imageCounts } = await supabaseAdmin
+    const { data: images } = await supabaseAdmin
       .from('images')
-      .select('gallery_id')
+      .select('id, gallery_id, storage_path, position')
       .in('gallery_id', galleryIds)
+      .order('position', { ascending: true })
 
     const countMap = new Map<string, number>()
-    imageCounts?.forEach(i => {
+    const firstImageMap = new Map<string, string>()
+    images?.forEach(i => {
       countMap.set(i.gallery_id, (countMap.get(i.gallery_id) || 0) + 1)
+      if (!firstImageMap.has(i.gallery_id)) {
+        firstImageMap.set(i.gallery_id, i.storage_path)
+      }
     })
 
-    const galleriesWithCounts = (galleries || []).map(g => ({
-      id: g.id,
-      title: g.title,
-      imageCount: countMap.get(g.id) || 0,
-    }))
+    // Get cover image paths
+    const coverImageIds = galleries?.filter(g => g.cover_image_id).map(g => g.cover_image_id!) || []
+    let coverImageMap = new Map<string, string>()
+    if (coverImageIds.length > 0) {
+      const { data: coverImages } = await supabaseAdmin
+        .from('images')
+        .select('id, storage_path')
+        .in('id', coverImageIds)
+      coverImages?.forEach(ci => coverImageMap.set(ci.id, ci.storage_path))
+    }
+
+    // Get signed URLs for covers
+    const allCoverPaths = new Set<string>()
+    galleries?.forEach(g => {
+      if (g.cover_image_id && coverImageMap.has(g.cover_image_id)) {
+        allCoverPaths.add(coverImageMap.get(g.cover_image_id)!)
+      } else if (firstImageMap.has(g.id)) {
+        allCoverPaths.add(firstImageMap.get(g.id)!)
+      }
+    })
+    
+    const signedUrls = allCoverPaths.size > 0 
+      ? await getSignedUrlsBatch(Array.from(allCoverPaths), undefined, 'THUMBNAIL')
+      : new Map()
+
+    const galleriesWithCounts = (galleries || []).map(g => {
+      let coverPath = g.cover_image_id && coverImageMap.has(g.cover_image_id)
+        ? coverImageMap.get(g.cover_image_id)
+        : firstImageMap.get(g.id)
+      
+      return {
+        id: g.id,
+        title: g.title,
+        imageCount: countMap.get(g.id) || 0,
+        coverUrl: coverPath ? signedUrls.get(coverPath) : undefined,
+      }
+    })
 
     return { data: galleriesWithCounts }
   } catch (e) {
     console.error('Get galleries for picker exception:', e)
+    return { error: 'An unexpected error occurred' }
+  }
+}
+
+/**
+ * Get images from a specific gallery for portfolio selection
+ * Optimized: parallel queries, limited to 100 most recent images
+ */
+export async function getGalleryImagesForPortfolioPicker(galleryId: string): Promise<{
+  data?: Array<{ id: string, storage_path: string, imageUrl: string, isInPortfolio: boolean }>,
+  error?: string
+}> {
+  const { userId: clerkId } = await auth()
+  if (!clerkId) return { error: 'Unauthorized' }
+
+  const user = await getOrCreateUserByClerkId(clerkId)
+  if (!user) return { error: 'User not found' }
+
+  try {
+    // Run all queries in parallel for speed
+    const [galleryResult, imagesResult, portfolioResult] = await Promise.all([
+      // Verify user owns this gallery
+      supabaseAdmin
+        .from('galleries')
+        .select('id, user_id')
+        .eq('id', galleryId)
+        .single(),
+      // Get images from the gallery (limit to 100 for performance)
+      supabaseAdmin
+        .from('images')
+        .select('id, storage_path, thumbnail_path')
+        .eq('gallery_id', galleryId)
+        .order('position', { ascending: true })
+        .limit(100),
+      // Get current portfolio image IDs
+      supabaseAdmin
+        .from('portfolio_images')
+        .select('image_id')
+        .eq('user_id', user.id)
+    ])
+
+    const { data: gallery, error: galleryError } = galleryResult
+    if (galleryError || !gallery || gallery.user_id !== user.id) {
+      return { error: 'Gallery not found or access denied' }
+    }
+
+    const { data: images, error: imagesError } = imagesResult
+    if (imagesError) {
+      return { error: 'Failed to fetch images' }
+    }
+
+    if (!images || images.length === 0) {
+      return { data: [] }
+    }
+
+    const portfolioImageIds = new Set(portfolioResult.data?.map(p => p.image_id) || [])
+
+    // Use thumbnail_path if available (faster), fallback to signed URLs
+    const imagesNeedingUrls = images.filter(i => !i.thumbnail_path)
+    let signedUrls = new Map<string, string>()
+    
+    if (imagesNeedingUrls.length > 0) {
+      const storagePaths = imagesNeedingUrls.map(i => i.storage_path)
+      signedUrls = await getSignedUrlsBatch(storagePaths, undefined, 'THUMBNAIL')
+    }
+
+    const imagesWithUrls = images.map(img => ({
+      id: img.id,
+      storage_path: img.storage_path,
+      imageUrl: img.thumbnail_path || signedUrls.get(img.storage_path) || '',
+      isInPortfolio: portfolioImageIds.has(img.id),
+    }))
+
+    return { data: imagesWithUrls }
+  } catch (e) {
+    console.error('Get gallery images for picker exception:', e)
+    return { error: 'An unexpected error occurred' }
+  }
+}
+
+/**
+ * Add multiple images to portfolio at once
+ */
+export async function addMultipleToPortfolio(imageIds: string[]): Promise<{ 
+  success?: boolean, 
+  addedCount?: number,
+  error?: string 
+}> {
+  const { userId: clerkId } = await auth()
+  if (!clerkId) return { error: 'Unauthorized' }
+
+  const user = await getOrCreateUserByClerkId(clerkId)
+  if (!user) return { error: 'User not found' }
+
+  try {
+    // Check current count
+    const { count } = await supabaseAdmin
+      .from('portfolio_images')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', user.id)
+
+    const currentCount = count || 0
+    const availableSlots = MAX_PORTFOLIO_IMAGES - currentCount
+    
+    if (availableSlots <= 0) {
+      return { error: `Portfolio is full (${MAX_PORTFOLIO_IMAGES} images max)` }
+    }
+
+    // Limit to available slots
+    const imagesToAdd = imageIds.slice(0, availableSlots)
+
+    // Verify user owns all these images
+    const { data: verifiedImages, error: verifyError } = await supabaseAdmin
+      .from('images')
+      .select('id, galleries!inner(user_id)')
+      .in('id', imagesToAdd)
+
+    if (verifyError) {
+      return { error: 'Failed to verify image ownership' }
+    }
+
+    const validImageIds = verifiedImages
+      ?.filter((img: any) => img.galleries.user_id === user.id)
+      .map((img: any) => img.id) || []
+
+    if (validImageIds.length === 0) {
+      return { error: 'No valid images to add' }
+    }
+
+    // Get current max position
+    const { data: maxPos } = await supabaseAdmin
+      .from('portfolio_images')
+      .select('position')
+      .eq('user_id', user.id)
+      .order('position', { ascending: false })
+      .limit(1)
+      .single()
+
+    let nextPosition = (maxPos?.position ?? -1) + 1
+
+    // Insert all images (skip duplicates with ON CONFLICT DO NOTHING)
+    const inserts = validImageIds.map((imageId, index) => ({
+      user_id: user.id,
+      image_id: imageId,
+      position: nextPosition + index,
+    }))
+
+    const { error: insertError } = await supabaseAdmin
+      .from('portfolio_images')
+      .upsert(inserts, { onConflict: 'user_id,image_id', ignoreDuplicates: true })
+
+    if (insertError) {
+      console.error('Add multiple to portfolio error:', insertError)
+      return { error: 'Failed to add images to portfolio' }
+    }
+
+    revalidatePath('/settings')
+    revalidatePath(`/profile/${user.profile_slug}`)
+
+    return { success: true, addedCount: validImageIds.length }
+  } catch (e) {
+    console.error('Add multiple to portfolio exception:', e)
     return { error: 'An unexpected error occurred' }
   }
 }

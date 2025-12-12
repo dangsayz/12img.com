@@ -10,6 +10,8 @@ interface OnboardingData {
   country: string
   state: string
   referralCode: string
+  websiteUrl: string
+  instagramUrl: string
 }
 
 export async function completeOnboarding(data: OnboardingData): Promise<{ success: boolean; error?: string; profileSlug?: string }> {
@@ -72,6 +74,14 @@ export async function completeOnboarding(data: OnboardingData): Promise<{ succes
       })
       .eq('id', user.id)
 
+    // Normalize Instagram URL
+    let instagramUrl = data.instagramUrl?.trim() || null
+    if (instagramUrl && !instagramUrl.startsWith('http')) {
+      // Convert @username to full URL
+      const username = instagramUrl.replace(/^@/, '')
+      instagramUrl = `https://instagram.com/${username}`
+    }
+
     // Update user settings with onboarding data
     const { error } = await supabaseAdmin
       .from('user_settings')
@@ -82,6 +92,8 @@ export async function completeOnboarding(data: OnboardingData): Promise<{ succes
         country: data.country || null,
         state: data.state || null,
         referral_code: data.referralCode.trim() || null,
+        website_url: data.websiteUrl?.trim() || null,
+        instagram_url: instagramUrl,
         onboarding_completed: true,
       }, {
         onConflict: 'user_id',

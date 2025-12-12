@@ -28,7 +28,9 @@ import { generateSignedUploadUrls, confirmUploads } from '@/server/actions/uploa
 // ============================================================================
 
 // Preflight (signed URL generation)
-const PREFLIGHT_BATCH_SIZE = 75 // Larger batches = fewer round trips
+const PREFLIGHT_QUICK_START_SIZE = 15 // Small first batch for instant startup
+const PREFLIGHT_BATCH_SIZE = 50 // Smaller batches for faster response
+const PREFLIGHT_PARALLEL_BATCHES = 3 // Run 3 preflight batches in parallel
 const PREFLIGHT_RETRY_ATTEMPTS = 5
 const PREFLIGHT_TIMEOUT_MS = 45000
 const PREFLIGHT_WAIT_TIMEOUT_MS = 60000
@@ -70,6 +72,8 @@ export interface TurboFile {
   token?: string
 }
 
+export type UploadPhase = 'preparing' | 'compressing' | 'uploading' | 'confirming' | 'complete'
+
 export interface TurboUploadStats {
   totalFiles: number
   queued: number
@@ -84,6 +88,8 @@ export interface TurboUploadStats {
   avgSpeedMBps: number
   estimatedSecondsRemaining: number
   currentConcurrency: number
+  phase: UploadPhase
+  phaseMessage: string
 }
 
 export interface TurboUploadOptions {
@@ -182,11 +188,32 @@ export class TurboUploadEngine {
       progress: 0
     }))
     
-    // Add to tracking
+    // Add to tracking with FAST LANE for small files
+    // Small files skip compression entirely and go straight to upload queue
     turboFiles.forEach(f => {
       this.files.set(f.id, f)
-      this.compressionQueue.push(f.id)
       this.totalOriginalBytes += f.file.size
+      
+      // FAST LANE: Skip compression queue for small files
+      // This eliminates the startup delay - first uploads begin immediately
+      const skipCompression = !this.options.enableCompression || 
+                              f.file.size <= COMPRESSION_SKIP_THRESHOLD
+      
+      if (skipCompression) {
+        // Fast lane: go directly to upload queue
+        this.updateFile(f.id, {
+          compressedBlob: f.file,
+          compressedSize: f.file.size,
+          compressionRatio: 1,
+          width: 0,
+          height: 0
+        })
+        this.totalCompressedBytes += f.file.size
+        this.uploadQueue.push(f.id)
+      } else {
+        // Normal path: needs compression
+        this.compressionQueue.push(f.id)
+      }
     })
     
     // Start SPECULATIVE preflight - generate more URLs than immediately needed
@@ -220,18 +247,54 @@ export class TurboUploadEngine {
    * Pre-generate signed URLs for all files
    * This runs in parallel with compression
    * ROBUST: Handles failures gracefully and allows retry
+   * 
+   * QUICK START: First small batch processes immediately so uploads
+   * can begin while remaining batches process in background
    */
   private async startPreflight(files: TurboFile[]) {
-    // Process in batches with retry logic
+    if (files.length === 0) return
+    
+    // QUICK START: Process first small batch immediately for instant upload start
+    // This eliminates the "stuck at 0" feeling - uploads begin within ~200ms
+    const quickStartBatch = files.slice(0, PREFLIGHT_QUICK_START_SIZE)
+    await this.preflightBatch(quickStartBatch, 0)
+    
+    // Process remaining files in larger batches (runs in background)
+    const remainingFiles = files.slice(PREFLIGHT_QUICK_START_SIZE)
+    if (remainingFiles.length > 0) {
+      // Don't await - let this run in background while uploads start
+      this.preflightRemaining(remainingFiles)
+    }
+  }
+  
+  /**
+   * Process remaining preflight batches in background - PARALLEL execution
+   * Runs multiple batches concurrently so URLs are always ahead of uploads
+   */
+  private async preflightRemaining(files: TurboFile[]) {
+    // Split into batches
+    const batches: TurboFile[][] = []
     for (let i = 0; i < files.length; i += PREFLIGHT_BATCH_SIZE) {
-      if (!this.isRunning) break // Stop if cancelled
+      batches.push(files.slice(i, i + PREFLIGHT_BATCH_SIZE))
+    }
+    
+    // Process batches in parallel waves
+    // This ensures URLs are always far ahead of uploads
+    for (let wave = 0; wave < batches.length; wave += PREFLIGHT_PARALLEL_BATCHES) {
+      if (!this.isRunning) break
       
-      const batch = files.slice(i, i + PREFLIGHT_BATCH_SIZE)
-      await this.preflightBatch(batch, i)
+      const waveBatches = batches.slice(wave, wave + PREFLIGHT_PARALLEL_BATCHES)
       
-      // Small delay between batches to prevent overwhelming the server
-      if (i + PREFLIGHT_BATCH_SIZE < files.length) {
-        await this.sleep(150) // Slightly longer delay for stability
+      // Fire all batches in this wave in parallel
+      await Promise.all(
+        waveBatches.map((batch, idx) => 
+          this.preflightBatch(batch, (wave + idx) * PREFLIGHT_BATCH_SIZE + PREFLIGHT_QUICK_START_SIZE)
+        )
+      )
+      
+      // Tiny delay between waves to prevent overwhelming server
+      if (wave + PREFLIGHT_PARALLEL_BATCHES < batches.length) {
+        await this.sleep(50)
       }
     }
   }
@@ -841,20 +904,86 @@ export class TurboUploadEngine {
     const avgSpeed = elapsed > 0 ? this.uploadedBytes / elapsed : 0
     const remaining = this.totalCompressedBytes - this.uploadedBytes
     
+    const queued = files.filter(f => f.status === 'queued').length
+    const compressing = files.filter(f => f.status === 'compressing').length
+    const uploading = files.filter(f => f.status === 'uploading').length
+    const confirming = files.filter(f => f.status === 'confirming').length
+    const completed = files.filter(f => f.status === 'completed').length
+    const failed = files.filter(f => f.status === 'error').length
+    
+    // Determine current phase and human-friendly message
+    const { phase, phaseMessage } = this.getPhaseInfo(
+      queued, compressing, uploading, confirming, completed, files.length
+    )
+    
     return {
       totalFiles: files.length,
-      queued: files.filter(f => f.status === 'queued').length,
-      compressing: files.filter(f => f.status === 'compressing').length,
-      uploading: files.filter(f => f.status === 'uploading').length,
-      completed: files.filter(f => f.status === 'completed').length,
-      failed: files.filter(f => f.status === 'error').length,
+      queued,
+      compressing,
+      uploading,
+      completed,
+      failed,
       totalOriginalBytes: this.totalOriginalBytes,
       totalCompressedBytes: this.totalCompressedBytes,
       uploadedBytes: this.uploadedBytes,
       bandwidthSaved: this.totalOriginalBytes - this.totalCompressedBytes,
       avgSpeedMBps: avgSpeed / (1024 * 1024),
       estimatedSecondsRemaining: avgSpeed > 0 ? remaining / avgSpeed : 0,
-      currentConcurrency: this.currentConcurrency
+      currentConcurrency: this.currentConcurrency,
+      phase,
+      phaseMessage
+    }
+  }
+  
+  /**
+   * Get human-friendly phase info based on current state
+   */
+  private getPhaseInfo(
+    queued: number, 
+    compressing: number, 
+    uploading: number, 
+    confirming: number,
+    completed: number, 
+    total: number
+  ): { phase: UploadPhase; phaseMessage: string } {
+    // Complete
+    if (completed === total && total > 0) {
+      return { phase: 'complete', phaseMessage: 'All done! Your gallery is ready.' }
+    }
+    
+    // Just starting - preparing/preflight phase
+    if (completed === 0 && uploading === 0) {
+      if (compressing > 0) {
+        return { phase: 'compressing', phaseMessage: 'Optimizing your images for faster delivery...' }
+      }
+      return { phase: 'preparing', phaseMessage: 'Getting everything ready...' }
+    }
+    
+    // Early progress - still warming up
+    if (completed < 10 && completed > 0) {
+      return { phase: 'uploading', phaseMessage: 'Starting to upload your photos...' }
+    }
+    
+    // Mostly confirming at the end
+    if (confirming > uploading && uploading < 5 && completed > total * 0.8) {
+      return { phase: 'confirming', phaseMessage: 'Almost there! Saving your gallery...' }
+    }
+    
+    // Heavy compression phase
+    if (compressing > uploading) {
+      return { phase: 'compressing', phaseMessage: 'Optimizing images to save you bandwidth...' }
+    }
+    
+    // Active uploading - various encouraging messages based on progress
+    const progress = completed / total
+    if (progress < 0.25) {
+      return { phase: 'uploading', phaseMessage: 'Your photos are on their way...' }
+    } else if (progress < 0.5) {
+      return { phase: 'uploading', phaseMessage: 'Making great progress!' }
+    } else if (progress < 0.75) {
+      return { phase: 'uploading', phaseMessage: 'More than halfway there!' }
+    } else {
+      return { phase: 'uploading', phaseMessage: 'Almost finished uploading...' }
     }
   }
   

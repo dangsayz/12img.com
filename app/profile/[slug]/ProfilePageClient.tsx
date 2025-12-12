@@ -3,13 +3,16 @@
 import { useState, useCallback, useMemo, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, useScroll, useTransform, useSpring, AnimatePresence } from 'framer-motion'
-import { Camera, Lock, Image as ImageIcon, Mail, Globe, Star } from 'lucide-react'
+import { Camera, Lock, Image as ImageIcon, Mail, Globe, Star, Instagram, Plus, Settings } from 'lucide-react'
+import Link from 'next/link'
 import { CountryFlag, hasCustomFlag } from '@/components/ui/CountryFlag'
 import { VisibilityBadge, LockIndicator, PrivateOverlay } from '@/components/ui/VisibilityBadge'
 import { SocialShareButtons } from '@/components/ui/SocialShareButtons'
 import { LazyImage, HeroImage } from '@/components/ui/LazyImage'
 import { PublicHeader } from '@/components/profile/PublicHeader'
 import { PINEntryModal } from '@/components/profile/PINEntryModal'
+import { AddFavoritesModal } from '@/components/profile/AddFavoritesModal'
+import { ContactButton } from '@/components/profile/ContactForm'
 import { checkGalleryUnlocked } from '@/server/actions/profile.actions'
 import { toggleImageFavorite } from '@/server/actions/gallery.actions'
 
@@ -51,6 +54,7 @@ interface Profile {
   portfolioImages?: PortfolioImage[]
   contactEmail?: string | null
   websiteUrl?: string | null
+  instagramUrl?: string | null
   location?: string | null
   country?: string | null
   isOwner?: boolean
@@ -69,6 +73,7 @@ export function ProfilePageClient({ profile }: ProfilePageClientProps) {
   const [activeTab, setActiveTab] = useState<'portfolio' | 'galleries'>('portfolio')
   const [removedFavorites, setRemovedFavorites] = useState<Set<string>>(new Set())
   const [pendingUnstar, setPendingUnstar] = useState<string | null>(null)
+  const [addFavoritesModalOpen, setAddFavoritesModalOpen] = useState(false)
 
   // Filter out removed favorites for optimistic UI
   const visibleFavorites = useMemo(() => 
@@ -303,6 +308,17 @@ export function ProfilePageClient({ profile }: ProfilePageClientProps) {
     <div className="min-h-screen bg-[#faf9f7] overflow-x-hidden">
       <PublicHeader />
 
+      {/* Owner Floating Edit Button - bottom left */}
+      {profile.isOwner && (
+        <Link
+          href="/settings"
+          className="fixed bottom-6 left-6 z-50 flex items-center gap-2 px-4 py-2.5 bg-stone-900 text-white text-sm font-medium rounded-full shadow-lg hover:bg-stone-800 transition-all hover:scale-105"
+        >
+          <Settings className="w-4 h-4" />
+          Edit Profile
+        </Link>
+      )}
+
       {/* Editorial Hero - Ultra minimal, magazine-style */}
       <motion.section 
         className="relative min-h-screen flex flex-col"
@@ -335,34 +351,34 @@ export function ProfilePageClient({ profile }: ProfilePageClientProps) {
 
         {/* Hero Image - Editorial asymmetric layout with parallax */}
         <div className="flex-1 flex items-center justify-center px-6 sm:px-12 lg:px-24 pb-16">
-          <div className="grid grid-cols-12 gap-8 lg:gap-16 w-full max-w-7xl items-center">
-            {/* Image - Takes 7 columns on desktop */}
+          <div className="grid grid-cols-12 gap-6 lg:gap-12 w-full max-w-6xl items-center">
+            {/* Image - Smaller, more refined sizing */}
             <motion.div
               initial={{ opacity: 0, y: 60 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 1.2, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}
-              className="col-span-12 lg:col-span-7"
+              className="col-span-12 sm:col-span-8 sm:col-start-3 lg:col-span-5 lg:col-start-1"
               style={{ y: smoothHeroY }}
             >
               {heroImage ? (
                 <HeroImage
                   src={heroImage}
                   alt={profile.display_name || 'Portfolio'}
-                  className="aspect-[4/5] lg:aspect-[3/4]"
+                  className="aspect-[3/4] sm:aspect-[4/5] max-h-[60vh] lg:max-h-[70vh]"
                 />
               ) : (
-                <div className="aspect-[4/5] lg:aspect-[3/4] bg-stone-900 flex items-center justify-center">
+                <div className="aspect-[3/4] sm:aspect-[4/5] max-h-[60vh] lg:max-h-[70vh] bg-stone-900 flex items-center justify-center">
                   <Camera className="w-12 h-12 text-stone-700" />
                 </div>
               )}
             </motion.div>
 
-            {/* Text content - Takes 5 columns on desktop */}
+            {/* Text content - Takes 6 columns on desktop, better balance */}
             <motion.div
               initial={{ opacity: 0, y: 40 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 1.2, delay: 0.6, ease: [0.22, 1, 0.36, 1] }}
-              className="col-span-12 lg:col-span-5 lg:pl-8"
+              className="col-span-12 lg:col-span-6 lg:col-start-7"
             >
               {/* Vertical text accent - refined */}
               <div className="hidden lg:block mb-12 h-24 overflow-visible">
@@ -409,23 +425,18 @@ export function ProfilePageClient({ profile }: ProfilePageClientProps) {
                 </motion.p>
               )}
 
-              {/* Contact - minimal */}
+              {/* Contact - with inquiry form */}
               <motion.div 
-                className="mt-10 flex items-center gap-6"
+                className="mt-10 flex items-center gap-4"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ duration: 1, delay: 1.3 }}
               >
-                {profile.contactEmail && (
-                  <a
-                    href={`mailto:${profile.contactEmail}`}
-                    className="text-[10px] tracking-[0.2em] text-stone-400 hover:text-stone-700 transition-colors duration-500 uppercase"
-                  >
-                    Contact
-                  </a>
-                )}
-                {profile.contactEmail && profile.websiteUrl && (
-                  <span className="w-1 h-1 rounded-full bg-stone-300" />
+                {!profile.isOwner && (
+                  <ContactButton
+                    photographerId={profile.id}
+                    photographerName={profile.display_name || 'Photographer'}
+                  />
                 )}
                 {profile.websiteUrl && (
                   <a
@@ -510,9 +521,18 @@ export function ProfilePageClient({ profile }: ProfilePageClientProps) {
           visibleFavorites.length > 0 ? (
             <div className="max-w-7xl mx-auto px-6">
               {/* Section header */}
-              <div className="text-center mb-16">
+              <div className="text-center mb-16 relative">
                 <p className="text-[10px] tracking-[0.3em] text-stone-400 uppercase mb-4">Favorites</p>
                 <div className="w-12 h-px bg-stone-300 mx-auto" />
+                {profile.isOwner && visibleFavorites.length < 10 && (
+                  <button
+                    onClick={() => setAddFavoritesModalOpen(true)}
+                    className="absolute right-0 top-1/2 -translate-y-1/2 p-2 rounded-full border border-stone-200 hover:border-stone-400 hover:bg-stone-50 transition-all"
+                    title="Add favorites"
+                  >
+                    <Plus className="w-4 h-4 text-stone-500" />
+                  </button>
+                )}
               </div>
               
               {/* Masonry grid */}
@@ -575,7 +595,21 @@ export function ProfilePageClient({ profile }: ProfilePageClientProps) {
             <div className="text-center py-32">
               <Star className="w-12 h-12 text-stone-300 mx-auto mb-6" />
               <p className="font-serif text-xl text-stone-400">No favorites yet</p>
-              <p className="text-sm text-stone-400 mt-2">Star your best photos to showcase them here</p>
+              <p className="text-sm text-stone-400 mt-2">
+                {profile.isOwner 
+                  ? 'Add your best photos to showcase them here'
+                  : 'Star your best photos to showcase them here'
+                }
+              </p>
+              {profile.isOwner && (
+                <button
+                  onClick={() => setAddFavoritesModalOpen(true)}
+                  className="mt-6 inline-flex items-center gap-2 px-5 py-2.5 bg-stone-900 hover:bg-stone-800 text-white text-sm font-medium rounded-lg transition-colors"
+                >
+                  <Plus className="w-4 h-4" />
+                  Add Favorites
+                </button>
+              )}
             </div>
           )
         ) : (
@@ -703,16 +737,29 @@ export function ProfilePageClient({ profile }: ProfilePageClientProps) {
               />
             </div>
 
-            {/* Contact links - refined */}
-            <div className="flex items-center gap-8 mb-16">
-              {profile.contactEmail && (
+            {/* Contact - Primary CTA */}
+            {!profile.isOwner && (
+              <div className="mb-10">
+                <ContactButton
+                  photographerId={profile.id}
+                  photographerName={profile.display_name || 'Photographer'}
+                />
+              </div>
+            )}
+
+            {/* Links - refined */}
+            <div className="flex items-center gap-6 mb-16">
+              {profile.instagramUrl && (
                 <motion.a
-                  href={`mailto:${profile.contactEmail}`}
+                  href={profile.instagramUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="w-11 h-11 rounded-full border border-stone-200 hover:border-stone-400 hover:bg-stone-50 flex items-center justify-center transition-all duration-300"
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
+                  title="Instagram"
                 >
-                  <Mail className="w-4 h-4 text-stone-400" />
+                  <Instagram className="w-4 h-4 text-stone-400" />
                 </motion.a>
               )}
               {profile.websiteUrl && (
@@ -723,8 +770,20 @@ export function ProfilePageClient({ profile }: ProfilePageClientProps) {
                   className="w-11 h-11 rounded-full border border-stone-200 hover:border-stone-400 hover:bg-stone-50 flex items-center justify-center transition-all duration-300"
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
+                  title="Website"
                 >
                   <Globe className="w-4 h-4 text-stone-400" />
+                </motion.a>
+              )}
+              {profile.contactEmail && (
+                <motion.a
+                  href={`mailto:${profile.contactEmail}`}
+                  className="w-11 h-11 rounded-full border border-stone-200 hover:border-stone-400 hover:bg-stone-50 flex items-center justify-center transition-all duration-300"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  title="Email"
+                >
+                  <Mail className="w-4 h-4 text-stone-400" />
                 </motion.a>
               )}
             </div>
@@ -749,6 +808,16 @@ export function ProfilePageClient({ profile }: ProfilePageClientProps) {
           onSuccess={handlePinSuccess}
           galleryId={selectedGallery.id}
           galleryTitle={selectedGallery.title}
+        />
+      )}
+
+      {/* Add Favorites Modal */}
+      {profile.isOwner && (
+        <AddFavoritesModal
+          isOpen={addFavoritesModalOpen}
+          onClose={() => setAddFavoritesModalOpen(false)}
+          currentFavoritesCount={visibleFavorites.length}
+          maxFavorites={10}
         />
       )}
     </div>

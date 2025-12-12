@@ -80,6 +80,8 @@ interface FormData {
   country: string
   state: string
   referralCode: string
+  websiteUrl: string
+  instagramUrl: string
 }
 
 export function OnboardingForm() {
@@ -126,6 +128,8 @@ export function OnboardingForm() {
     country: '',
     state: '',
     referralCode: '',
+    websiteUrl: '',
+    instagramUrl: '',
   })
 
   const handleChange = (field: keyof FormData, value: string) => {
@@ -441,11 +445,44 @@ export function OnboardingForm() {
                 )}
               </AnimatePresence>
 
-              {/* Referral Code */}
+              {/* Website & Instagram */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.4 }}
+                className="space-y-4"
+              >
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                    Website <span className="text-slate-400 font-normal">(optional)</span>
+                  </label>
+                  <input
+                    type="url"
+                    value={formData.websiteUrl}
+                    onChange={(e) => handleChange('websiteUrl', e.target.value)}
+                    placeholder="https://yourwebsite.com"
+                    className="w-full px-4 py-3.5 bg-slate-100 border-0 rounded-2xl focus:outline-none focus:ring-2 focus:ring-slate-300 transition-all placeholder:text-slate-400"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                    Instagram <span className="text-slate-400 font-normal">(optional)</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.instagramUrl}
+                    onChange={(e) => handleChange('instagramUrl', e.target.value)}
+                    placeholder="@yourusername or full URL"
+                    className="w-full px-4 py-3.5 bg-slate-100 border-0 rounded-2xl focus:outline-none focus:ring-2 focus:ring-slate-300 transition-all placeholder:text-slate-400"
+                  />
+                </div>
+              </motion.div>
+
+              {/* Referral Code */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5 }}
               >
                 <label className="block text-sm font-medium text-slate-700 mb-2">
                   Referral Code <span className="text-slate-400 font-normal">(optional)</span>

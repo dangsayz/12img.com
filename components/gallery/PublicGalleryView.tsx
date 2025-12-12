@@ -637,22 +637,148 @@ export function PublicGalleryView({
       {/* ============================================
           GALLERY GRID
           ============================================ */}
-      <section className="py-12 md:py-20">
+      <section className="py-16 md:py-24">
         <div className="max-w-[1800px] mx-auto px-4 md:px-8">
-          {/* Section header */}
-          <div className="text-center mb-12">
-            <p className="text-xs uppercase tracking-[0.3em] text-neutral-400 mb-2">
-              The Collection
-            </p>
-            <h2 className="font-serif text-2xl md:text-3xl text-neutral-800 font-light">
-              {images.length} Moments Captured
-            </h2>
-            {/* Tagline/Subtitle from presentation */}
-            {presentation?.subtitle && (
-              <p className="text-sm md:text-base text-neutral-500 font-light italic mt-4">
-                {presentation.subtitle}
-              </p>
-            )}
+          {/* Modern Hero Section Header */}
+          <div className="relative mb-16 md:mb-24">
+            {/* Decorative background elements */}
+            <div className="absolute inset-0 overflow-hidden pointer-events-none">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 0.03, scale: 1 }}
+                transition={{ duration: 1 }}
+                className="absolute -top-20 -right-20 w-96 h-96 bg-gradient-to-br from-amber-400 to-orange-300 rounded-full blur-3xl"
+              />
+              <motion.div
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 0.02, scale: 1 }}
+                transition={{ duration: 1, delay: 0.2 }}
+                className="absolute -bottom-20 -left-20 w-80 h-80 bg-gradient-to-tr from-stone-400 to-stone-300 rounded-full blur-3xl"
+              />
+            </div>
+            
+            {/* Main content */}
+            <div className="relative text-center max-w-3xl mx-auto">
+              {/* Animated tagline */}
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+                className="inline-flex items-center gap-2 mb-6"
+              >
+                <span className="w-8 h-px bg-gradient-to-r from-transparent to-amber-400" />
+                <span className="text-xs uppercase tracking-[0.3em] text-stone-400 font-medium">
+                  The Collection
+                </span>
+                <span className="w-8 h-px bg-gradient-to-l from-transparent to-amber-400" />
+              </motion.div>
+              
+              {/* Main headline with mixed typography */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.1 }}
+              >
+                <h2 className="text-4xl md:text-5xl lg:text-6xl text-stone-800 mb-4">
+                  <span className="font-light">{images.length}</span>
+                  <span className="font-serif italic text-stone-600"> Moments</span>
+                  <br className="hidden sm:block" />
+                  <span className="font-light"> Captured</span>
+                </h2>
+              </motion.div>
+              
+              {/* Subtitle with animation */}
+              <motion.p
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.3 }}
+                className="text-stone-500 text-base md:text-lg font-light max-w-xl mx-auto mt-4"
+              >
+                {presentation?.subtitle || "Every frame tells a story. Scroll to explore."}
+              </motion.p>
+              
+              {/* Animated decorative dots */}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.5, delay: 0.5 }}
+                className="flex items-center justify-center gap-1.5 mt-8"
+              >
+                {[0, 1, 2].map((i) => (
+                  <motion.span
+                    key={i}
+                    className="w-1.5 h-1.5 rounded-full bg-stone-300"
+                    animate={{ 
+                      scale: [1, 1.2, 1],
+                      opacity: [0.5, 1, 0.5]
+                    }}
+                    transition={{ 
+                      duration: 1.5, 
+                      repeat: Infinity, 
+                      delay: i * 0.2 
+                    }}
+                  />
+                ))}
+              </motion.div>
+              
+              {/* Image preview strip - larger cards with staggered animations */}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.5, delay: 0.4 }}
+                className="mt-12 flex justify-center items-end gap-3 md:gap-4 px-4"
+              >
+                {images.slice(0, 5).map((img, idx) => {
+                  const isCenter = idx === 2
+                  const isEdge = idx === 0 || idx === 4
+                  return (
+                    <motion.div
+                      key={img.id}
+                      className="relative overflow-hidden rounded-xl shadow-xl cursor-pointer"
+                      style={{
+                        width: isCenter ? 180 : isEdge ? 120 : 150,
+                        height: isCenter ? 240 : isEdge ? 160 : 200,
+                      }}
+                      initial={{ 
+                        opacity: 0, 
+                        y: 60, 
+                        scale: 0.8,
+                        rotateY: isEdge ? (idx === 0 ? 15 : -15) : 0 
+                      }}
+                      animate={{ 
+                        opacity: 1, 
+                        y: 0, 
+                        scale: 1,
+                        rotateY: 0 
+                      }}
+                      transition={{ 
+                        duration: 0.6, 
+                        delay: 0.5 + idx * 0.1,
+                        type: 'spring',
+                        stiffness: 100
+                      }}
+                      whileHover={{ 
+                        scale: 1.08, 
+                        y: -12,
+                        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+                        zIndex: 10
+                      }}
+                    >
+                      <Image
+                        src={img.thumbnailUrl}
+                        alt=""
+                        fill
+                        className="object-cover transition-transform duration-500 hover:scale-110"
+                        sizes="(max-width: 768px) 120px, 180px"
+                        unoptimized
+                      />
+                      {/* Subtle gradient overlay */}
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 hover:opacity-100 transition-opacity duration-300" />
+                    </motion.div>
+                  )
+                })}
+              </motion.div>
+            </div>
           </div>
 
           {template === 'mosaic' ? (

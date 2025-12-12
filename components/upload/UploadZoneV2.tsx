@@ -16,6 +16,7 @@ import { useRouter } from 'next/navigation'
 import { Plus, Zap, ZapOff } from 'lucide-react'
 import { generateSignedUploadUrls, confirmUploads } from '@/server/actions/upload.actions'
 import { compressImage, getImageDimensions } from '@/lib/upload/image-compressor'
+import { sortFilesByExifDate } from '@/lib/upload/exif-date'
 import { getAdaptiveConcurrencyController } from '@/lib/upload/adaptive-concurrency'
 import { getCompressionWorkerPool } from '@/lib/upload/compression-worker'
 import { 
@@ -56,6 +57,7 @@ interface RejectedFile {
 /**
  * Natural sort comparator - handles numbers in filenames correctly
  * e.g., "img-2.jpg" comes before "img-10.jpg"
+ * Note: This is now only used as a fallback. Primary sorting is by EXIF date.
  */
 function naturalSort(a: File, b: File): number {
   return a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' })
@@ -203,11 +205,13 @@ export function UploadZoneV2({ galleryId, onUploadComplete }: UploadZoneProps) {
     return { valid: true }
   }
 
-  const handleFiles = useCallback((fileList: FileList | null) => {
+  const handleFiles = useCallback(async (fileList: FileList | null) => {
     if (!fileList) return
 
-    // Sort files naturally (so img-2 comes before img-10)
-    const files = Array.from(fileList).sort(naturalSort)
+    // Sort files by EXIF capture date (like Pixieset)
+    // This preserves chronological order from the event
+    const rawFiles = Array.from(fileList)
+    const files = await sortFilesByExifDate(rawFiles)
     
     // Separate valid and invalid files
     const validFiles: File[] = []

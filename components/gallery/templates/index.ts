@@ -2,9 +2,8 @@ export { CleanGrid } from './CleanGrid'
 export { MosaicLayout } from './MosaicLayout'
 export { MosaicView } from './MosaicView'
 export { CinematicLayout } from './CinematicLayout'
-export { AlbumView } from './AlbumView'
 
-export type GalleryTemplate = 'mosaic' | 'clean-grid' | 'cinematic' | 'editorial' | 'album'
+export type GalleryTemplate = 'mosaic' | 'clean-grid' | 'cinematic' | 'editorial'
 
 // Default template is 'editorial' - magazine-style story layout
 export const DEFAULT_TEMPLATE: GalleryTemplate = 'editorial'
@@ -34,11 +33,5 @@ export const GALLERY_TEMPLATES = [
     description: 'Magazine-style story layout (default)',
     preview: '/images/templates/editorial.jpg',
     isDefault: true,
-  },
-  {
-    id: 'album' as const,
-    name: 'Album',
-    description: 'Photo book with page-turn navigation',
-    preview: '/images/templates/album.jpg',
   },
 ]

@@ -9,6 +9,7 @@ import { checkOnboardingStatus, checkWelcomeSeen } from '@/server/actions/onboar
 import { PLAN_TIERS, type PlanTier } from '@/lib/config/pricing-v2'
 import { getUserProfile } from '@/server/actions/profile.actions'
 import { getActiveContest } from '@/server/actions/contest.actions'
+import { getUnreadNotificationCount, getAdminNotifications } from '@/server/admin/notifications'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -39,6 +40,11 @@ export default async function HomePage() {
       getActiveContest(),
     ])
     
+    // Fetch admin notifications if user is admin
+    const [adminUnreadCount, adminNotifications] = isAdmin 
+      ? await Promise.all([getUnreadNotificationCount(), getAdminNotifications(20)])
+      : [0, []]
+    
     const plan = (userData?.plan || 'free') as PlanTier
     const planConfig = PLAN_TIERS[plan] || PLAN_TIERS.free
     const storageLimit = planConfig.storageGB * 1024 * 1024 * 1024
@@ -50,6 +56,8 @@ export default async function HomePage() {
           storageUsed={userData?.usage.totalBytes || 0}
           storageLimit={storageLimit}
           isAdmin={isAdmin}
+          adminNotifications={adminNotifications}
+          adminUnreadCount={adminUnreadCount}
         />
         <CleanDashboard 
           galleries={galleries} 
