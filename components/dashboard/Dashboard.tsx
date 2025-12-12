@@ -297,6 +297,7 @@ function GalleryCardGrid({ gallery, index }: { gallery: Gallery; index: number }
   const [copied, setCopied] = useState(false)
   const [isPending, startTransition] = useTransition()
   const [isDeleted, setIsDeleted] = useState(false)
+  const [imageError, setImageError] = useState(false)
 
   // Build share URL on client only to avoid hydration mismatch
   const relativePath = `/view-reel/${gallery.slug}`
@@ -352,13 +353,14 @@ function GalleryCardGrid({ gallery, index }: { gallery: Gallery; index: number }
       >
         {/* Image Container with Title Overlay */}
         <div className="relative aspect-[3/4] overflow-hidden bg-neutral-100">
-          {gallery.coverImageUrl ? (
+          {gallery.coverImageUrl && !imageError ? (
             <motion.img
               src={gallery.coverImageUrl}
               alt=""
               className="w-full h-full object-cover"
               animate={{ scale: isHovered ? 1.05 : 1 }}
               transition={{ duration: 0.6, ease: [0.32, 0.72, 0, 1] }}
+              onError={() => setImageError(true)}
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-neutral-800 to-neutral-900">
@@ -529,6 +531,7 @@ function GalleryCardGrid({ gallery, index }: { gallery: Gallery; index: number }
 // Elegant List Card
 function GalleryCardList({ gallery, index }: { gallery: Gallery; index: number }) {
   const [copied, setCopied] = useState(false)
+  const [imageError, setImageError] = useState(false)
   
   // Build share URL on client only to avoid hydration mismatch
   const relativePath = `/view-reel/${gallery.slug}`
@@ -564,11 +567,12 @@ function GalleryCardList({ gallery, index }: { gallery: Gallery; index: number }
       >
         {/* Thumbnail */}
         <div className="w-20 h-20 bg-neutral-100 overflow-hidden flex-shrink-0">
-          {gallery.coverImageUrl ? (
+          {gallery.coverImageUrl && !imageError ? (
             <img 
               src={gallery.coverImageUrl} 
               alt="" 
-              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" 
+              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+              onError={() => setImageError(true)}
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center">

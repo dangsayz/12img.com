@@ -287,7 +287,7 @@ export async function updateGalleryTemplate(galleryId: string, template: string)
   const gallery = await getGalleryWithOwnershipCheck(galleryId, user.id)
   if (!gallery) return { error: 'Gallery not found' }
 
-  const validTemplates = ['mosaic', 'clean-grid', 'cinematic', 'editorial']
+  const validTemplates = ['mosaic', 'clean-grid', 'cinematic', 'editorial', 'album']
   if (!validTemplates.includes(template)) {
     return { error: 'Invalid template' }
   }

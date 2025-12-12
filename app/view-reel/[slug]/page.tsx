@@ -10,6 +10,7 @@ import { EditorialGallery } from '@/components/gallery/EditorialGallery'
 import { PublicGalleryView } from '@/components/gallery/PublicGalleryView'
 import { MosaicViewWrapper } from '@/components/gallery/templates/MosaicViewWrapper'
 import { CinematicGallery } from '@/components/gallery/CinematicGallery'
+import { AlbumView } from '@/components/gallery/templates/AlbumView'
 import { PasswordGate } from '@/components/gallery/PasswordGate'
 import { type PresentationData } from '@/lib/types/presentation'
 import { type GalleryTemplate } from '@/components/gallery/templates'
@@ -502,6 +503,37 @@ export default async function PublicViewPage({ params }: Props) {
           totalImages={images.length}
           isOwner={isOwner}
           coverImageId={gallery.cover_image_id}
+          presentation={presentation}
+        />
+      </>
+    )
+  }
+
+  // Album template - Photo book with page navigation
+  if (template === 'album') {
+    return (
+      <>
+        <ImageGalleryJsonLd
+          name={gallery.title}
+          description={`${gallery.title} - a stunning photo gallery by ${photographerName}. Delivered with 12img.`}
+          url={galleryUrl}
+          images={structuredDataImages}
+          author={{ name: photographerName }}
+        />
+        <BreadcrumbJsonLd
+          items={[
+            { name: 'Home', url: baseUrl },
+            { name: 'Galleries', url: `${baseUrl}/profiles` },
+            { name: gallery.title, url: galleryUrl },
+          ]}
+        />
+        <AlbumView
+          title={gallery.title}
+          images={galleryImages}
+          downloadEnabled={gallery.download_enabled}
+          photographerName={photographerName}
+          galleryId={gallery.id}
+          gallerySlug={gallery.slug}
           presentation={presentation}
         />
       </>

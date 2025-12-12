@@ -88,31 +88,55 @@ export async function generateSignedUploadUrls(request: {
     }
   }
 
-  // Generate signed URLs in controlled chunks to prevent Supabase rate limiting
-  const CHUNK_SIZE = 20 // Process 20 at a time to avoid overwhelming Supabase
+  // Generate signed URLs in controlled chunks with retry logic
+  const CHUNK_SIZE = 15 // Smaller chunks for better reliability
+  const MAX_RETRIES = 3
   const responses: UploadUrlResponse[] = []
   
   for (let i = 0; i < request.files.length; i += CHUNK_SIZE) {
     const chunk = request.files.slice(i, i + CHUNK_SIZE)
     
+    // Process each file in the chunk with individual retry logic
     const chunkResponses = await Promise.all(
       chunk.map(async (file) => {
-        const imageId = uuidv4()
-        const ext = MIME_TO_EXT[file.mimeType]
-        const storagePath = `${request.galleryId}/${imageId}.${ext}`
+        let lastError: Error | null = null
+        
+        for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+          try {
+            const imageId = uuidv4()
+            const ext = MIME_TO_EXT[file.mimeType]
+            const storagePath = `${request.galleryId}/${imageId}.${ext}`
 
-        const { signedUrl, token } = await getSignedUploadUrl(storagePath)
+            const { signedUrl, token } = await getSignedUploadUrl(storagePath)
 
-        return {
-          localId: file.localId,
-          storagePath,
-          signedUrl,
-          token,
+            return {
+              localId: file.localId,
+              storagePath,
+              signedUrl,
+              token,
+            }
+          } catch (error) {
+            lastError = error as Error
+            console.error(`[Upload] Signed URL generation failed for ${file.originalFilename} (attempt ${attempt + 1}/${MAX_RETRIES}):`, error)
+            
+            if (attempt < MAX_RETRIES - 1) {
+              // Exponential backoff: 500ms, 1000ms, 2000ms
+              await new Promise(r => setTimeout(r, 500 * Math.pow(2, attempt)))
+            }
+          }
         }
+        
+        // All retries failed
+        throw new Error(`Failed to generate upload URL for ${file.originalFilename}: ${lastError?.message}`)
       })
     )
     
     responses.push(...chunkResponses)
+    
+    // Small delay between chunks to prevent rate limiting
+    if (i + CHUNK_SIZE < request.files.length) {
+      await new Promise(r => setTimeout(r, 50))
+    }
   }
 
   return responses

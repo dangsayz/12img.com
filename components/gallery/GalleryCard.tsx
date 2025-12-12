@@ -30,6 +30,7 @@ export function GalleryCard({ gallery }: GalleryCardProps) {
   const [isDeleted, setIsDeleted] = useState(false)
   const [showConfirm, setShowConfirm] = useState(false)
   const [copied, setCopied] = useState(false)
+  const [imageError, setImageError] = useState(false)
 
   const shareUrl = typeof window !== 'undefined' 
     ? `${window.location.origin}/view-reel/${gallery.slug}`
@@ -81,11 +82,12 @@ export function GalleryCard({ gallery }: GalleryCardProps) {
         className={`group block ${isPending ? 'opacity-50 pointer-events-none' : ''}`}
       >
         <div className="relative aspect-[4/5] overflow-hidden bg-gray-100">
-          {gallery.coverImageUrl ? (
+          {gallery.coverImageUrl && !imageError ? (
             <img
               src={gallery.coverImageUrl}
               alt=""
               className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+              onError={() => setImageError(true)}
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-800 to-gray-900">
