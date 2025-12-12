@@ -295,14 +295,14 @@ function CampaignCard({
       
       {/* Links */}
       <div className="p-4 bg-[#FAFAFA]">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2 text-sm text-[#525252]">
-            <LinkIcon className="w-4 h-4" />
-            <code className="bg-white px-2 py-1 border border-[#E5E5E5] text-xs font-mono">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-2 text-sm text-[#525252] min-w-0">
+            <LinkIcon className="w-4 h-4 flex-shrink-0" />
+            <code className="bg-white px-2 py-1 border border-[#E5E5E5] text-xs font-mono truncate">
               {promoUrl}
             </code>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-shrink-0">
             <CopyButton text={promoUrl} label="Copy Link" />
             <a
               href={promoUrl}
@@ -311,7 +311,7 @@ function CampaignCard({
               className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium border border-[#E5E5E5] hover:border-[#141414] transition-colors"
             >
               <ExternalLink className="w-3 h-3" />
-              Preview
+              <span className="hidden sm:inline">Preview</span>
             </a>
           </div>
         </div>

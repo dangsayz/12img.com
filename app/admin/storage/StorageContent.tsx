@@ -263,25 +263,26 @@ export function StorageContent({
       )}
       
       {/* Tabs */}
-      <div className="border-b border-[#E5E5E5]">
-        <div className="flex gap-0">
+      <div className="border-b border-[#E5E5E5] overflow-x-auto">
+        <div className="flex gap-0 min-w-max">
           {[
-            { key: 'leaderboard', label: 'Storage Leaderboard', count: topUsers.length },
-            { key: 'conversion', label: 'Conversion Targets', count: totalHotLeads },
-            { key: 'buckets', label: 'Bucket Analytics', count: buckets.length },
+            { key: 'leaderboard', label: 'Leaderboard', mobileLabel: 'Leaders', count: topUsers.length },
+            { key: 'conversion', label: 'Conversion Targets', mobileLabel: 'Targets', count: totalHotLeads },
+            { key: 'buckets', label: 'Bucket Analytics', mobileLabel: 'Buckets', count: buckets.length },
           ].map((tab) => (
             <button
               key={tab.key}
               onClick={() => setActiveTab(tab.key as any)}
-              className={`px-4 py-3 text-sm font-medium transition-colors relative ${
+              className={`px-3 sm:px-4 py-3 text-xs sm:text-sm font-medium transition-colors relative whitespace-nowrap ${
                 activeTab === tab.key
                   ? 'text-[#141414]'
                   : 'text-[#737373] hover:text-[#525252]'
               }`}
             >
-              {tab.label}
+              <span className="sm:hidden">{tab.mobileLabel}</span>
+              <span className="hidden sm:inline">{tab.label}</span>
               {tab.count > 0 && (
-                <span className={`ml-2 px-1.5 py-0.5 text-xs ${
+                <span className={`ml-1 sm:ml-2 px-1 sm:px-1.5 py-0.5 text-[10px] sm:text-xs ${
                   activeTab === tab.key ? 'bg-[#141414] text-white' : 'bg-[#E5E5E5] text-[#525252]'
                 }`}>
                   {tab.count}
@@ -308,7 +309,74 @@ export function StorageContent({
             exit={{ opacity: 0, y: -10 }}
             className="bg-white border border-[#E5E5E5]"
           >
-            <div className="overflow-x-auto">
+            {/* Mobile: stacked cards */}
+            <div className="divide-y divide-[#E5E5E5] md:hidden">
+              {displayedUsers.map((user, index) => (
+                <div 
+                  key={user.userId} 
+                  className={`p-4 space-y-3 ${
+                    user.isAtRisk ? 'bg-red-50/30' : 
+                    user.upgradePotential === 'HOT' ? 'bg-emerald-50/30' : ''
+                  }`}
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-[#737373]">#{index + 1}</span>
+                        <p className="font-medium text-[#141414] truncate text-sm">
+                          {user.businessName || user.email}
+                        </p>
+                      </div>
+                      {user.businessName && (
+                        <p className="text-[10px] text-[#737373] truncate mt-0.5">{user.email}</p>
+                      )}
+                    </div>
+                    <Link
+                      href={`/admin/users?search=${encodeURIComponent(user.email)}`}
+                      className="p-2 border border-[#E5E5E5] hover:border-[#141414] transition-colors flex-shrink-0"
+                    >
+                      <ExternalLink className="w-4 h-4 text-[#525252]" />
+                    </Link>
+                  </div>
+                  <div className="flex flex-wrap gap-2 text-[11px]">
+                    <span className="px-2 py-0.5 border border-[#E5E5E5] text-[#525252] uppercase text-[10px]">
+                      {user.plan}
+                    </span>
+                    <span className="px-2 py-0.5 border border-[#E5E5E5] bg-[#FAFAFA] text-[#525252]">
+                      {user.galleryCount} galleries
+                    </span>
+                    <span className="px-2 py-0.5 border border-[#E5E5E5] bg-[#FAFAFA] text-[#525252]">
+                      {user.totalImages.toLocaleString()} images
+                    </span>
+                    {user.upgradePotential !== 'NONE' ? (
+                      <span className={`px-2 py-0.5 text-[10px] font-medium uppercase ${
+                        user.upgradePotential === 'HOT' 
+                          ? 'bg-emerald-100 text-emerald-700'
+                          : user.upgradePotential === 'WARM'
+                          ? 'bg-amber-100 text-amber-700'
+                          : 'bg-[#F5F5F7] text-[#525252]'
+                      }`}>
+                        {user.upgradePotential.replace('_', ' ')}
+                      </span>
+                    ) : user.isAtRisk ? (
+                      <span className="px-2 py-0.5 text-[10px] font-medium uppercase bg-red-100 text-red-700">
+                        AT RISK
+                      </span>
+                    ) : null}
+                  </div>
+                  <div>
+                    <div className="flex justify-between text-xs mb-1">
+                      <span className="text-[#525252]">{user.storageMB} MB / {user.storageLimitMB} MB</span>
+                      <span className="text-[#737373]">{user.storagePercent.toFixed(1)}%</span>
+                    </div>
+                    <ProgressBar percent={user.storagePercent} size="sm" showLabel={false} />
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Desktop: full table */}
+            <div className="hidden md:block overflow-x-auto">
               <table className="w-full text-sm">
                 <thead className="bg-[#FAFAFA] border-b border-[#E5E5E5]">
                   <tr>

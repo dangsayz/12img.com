@@ -241,18 +241,61 @@ export default async function BillingDashboardPage() {
       
       {/* Recent Payments */}
       <div className="bg-white border border-[#E5E5E5]">
-        <div className="flex items-center justify-between p-6 border-b border-[#E5E5E5]">
-          <h2 className="font-serif text-2xl text-[#141414]">Recent Payments</h2>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 sm:p-6 border-b border-[#E5E5E5]">
+          <h2 className="font-serif text-xl sm:text-2xl text-[#141414]">Recent Payments</h2>
           <a
             href={`${stripeDashboardUrl}/payments`}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-sm text-[#141414] font-medium border-b border-[#141414] pb-0.5 hover:text-[#525252] hover:border-[#525252] transition-colors"
+            className="text-sm text-[#141414] font-medium border-b border-[#141414] pb-0.5 hover:text-[#525252] hover:border-[#525252] transition-colors self-start sm:self-auto"
           >
             View all in Stripe →
           </a>
         </div>
-        <div className="overflow-x-auto">
+        
+        {/* Mobile: stacked cards */}
+        <div className="divide-y divide-[#E5E5E5] md:hidden">
+          {recentPayments.length === 0 ? (
+            <div className="px-4 py-8 text-center text-[#525252]">
+              No payments yet
+            </div>
+          ) : (
+            recentPayments.map(payment => (
+              <div key={payment.id} className="p-4 space-y-3">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="font-medium text-[#141414] truncate">
+                      {payment.customerName || payment.customerEmail || 'Unknown'}
+                    </p>
+                    {payment.customerName && payment.customerEmail && (
+                      <p className="text-xs text-[#525252] truncate mt-0.5">{payment.customerEmail}</p>
+                    )}
+                  </div>
+                  <span className={`inline-flex px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider flex-shrink-0 ${
+                    payment.status === 'succeeded' 
+                      ? 'border border-emerald-200 bg-emerald-50 text-emerald-700'
+                      : payment.status === 'pending'
+                      ? 'border border-amber-200 bg-amber-50 text-amber-700'
+                      : 'border border-red-200 bg-red-50 text-red-700'
+                  }`}>
+                    {payment.status}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="font-serif text-lg text-[#141414]">
+                    {formatCurrencyDetailed(payment.amount, payment.currency)}
+                  </span>
+                  <span className="text-xs text-[#525252]">
+                    {formatDate(payment.created)}
+                  </span>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+
+        {/* Desktop: full table */}
+        <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="bg-[#F5F5F7] border-b border-[#E5E5E5]">
               <tr>

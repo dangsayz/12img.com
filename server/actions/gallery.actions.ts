@@ -59,15 +59,35 @@ export async function createGallery(formData: FormData) {
       : null
 
     const template = formData.get('template') as string || 'mosaic'
+    
+    // Handle expiry days - calculate expires_at from days
+    const expiryDaysStr = formData.get('expiryDays')
+    const expiryDays = expiryDaysStr ? parseInt(expiryDaysStr as string, 10) : null
+    let expiresAt: string | null = null
+    if (expiryDays && expiryDays > 0) {
+      const expiryDate = new Date()
+      expiryDate.setDate(expiryDate.getDate() + expiryDays)
+      expiresAt = expiryDate.toISOString()
+    }
+    
+    // Handle watermark setting
+    const watermarkEnabled = formData.get('watermarkEnabled') === 'true'
 
-    const insertData = {
+    const insertData: Record<string, unknown> = {
       user_id: user.id,
       title: validated.title,
       slug,
       password_hash: passwordHash,
       download_enabled: validated.downloadEnabled,
       template,
+      watermark_enabled: watermarkEnabled,
     }
+    
+    // Only set expires_at if we have a value (avoid setting null explicitly)
+    if (expiresAt) {
+      insertData.expires_at = expiresAt
+    }
+    
     console.log('createGallery - inserting:', insertData)
 
     const { data, error } = await supabaseAdmin

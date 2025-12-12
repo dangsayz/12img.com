@@ -138,10 +138,10 @@ export function PromoModal() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 10, scale: 0.98 }}
             transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-            className="fixed left-4 right-4 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 z-50 sm:w-[90vw] sm:max-w-md"
+            className="fixed left-4 right-4 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 z-50 sm:w-[90vw] sm:max-w-md max-h-[80vh] flex"
             style={{ bottom: 'max(1rem, env(safe-area-inset-bottom, 1rem))' }}
           >
-            <div className="bg-white rounded-2xl shadow-2xl shadow-stone-900/10 border border-stone-100 overflow-hidden">
+            <div className="bg-white rounded-2xl shadow-2xl shadow-stone-900/10 border border-stone-100 overflow-hidden flex flex-col w-full max-h-[80vh]">
               {/* Close button - top right, minimal */}
               <button
                 onClick={dismiss}
@@ -153,8 +153,8 @@ export function PromoModal() {
                 </svg>
               </button>
               
-              {/* Content */}
-              <div className="p-6 pt-5">
+              {/* Content - scrollable on very small screens */}
+              <div className="p-6 pt-5 overflow-y-auto">
                 {/* Badge */}
                 <div className="flex items-center gap-2 mb-3">
                   <span className="relative flex h-1.5 w-1.5">

@@ -32,13 +32,28 @@ interface DraftData {
   savedAt: number
 }
 
-export function SimpleWizard() {
+interface GalleryDefaultSettings {
+  passwordEnabled: boolean
+  downloadEnabled: boolean
+  expiryDays: number | null
+  watermarkEnabled: boolean
+}
+
+interface SimpleWizardProps {
+  defaultSettings?: GalleryDefaultSettings
+}
+
+export function SimpleWizard({ defaultSettings }: SimpleWizardProps) {
   const router = useRouter()
   const [currentStep, setCurrentStep] = useState(0)
   const [galleryName, setGalleryName] = useState('')
   const [password, setPassword] = useState('')
-  const [downloadEnabled, setDownloadEnabled] = useState(true)
+  // Use user's default settings, fallback to sensible defaults
+  const [downloadEnabled, setDownloadEnabled] = useState(defaultSettings?.downloadEnabled ?? true)
   const [template, setTemplate] = useState<GalleryTemplate>(DEFAULT_TEMPLATE)
+  // Track expiry and watermark settings from user defaults
+  const [expiryDays] = useState(defaultSettings?.expiryDays ?? null)
+  const [watermarkEnabled] = useState(defaultSettings?.watermarkEnabled ?? false)
   const [showOptions, setShowOptions] = useState(false)
   const [isCreating, setIsCreating] = useState(false)
   const [galleryId, setGalleryId] = useState<string | null>(null)
@@ -123,6 +138,9 @@ export function SimpleWizard() {
       if (password) form.append('password', password)
       form.append('downloadEnabled', String(downloadEnabled))
       form.append('template', template)
+      // Pass expiry and watermark settings from user defaults
+      if (expiryDays !== null) form.append('expiryDays', String(expiryDays))
+      form.append('watermarkEnabled', String(watermarkEnabled))
 
       const result = await createGallery(form)
 

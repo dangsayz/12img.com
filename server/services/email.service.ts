@@ -638,16 +638,30 @@ export async function sendArchiveNotificationsToClients(
     recipients.push(...clients.map(c => ({ email: c.email, name: c.name ?? undefined })))
   }
 
-  // Add owner if requested
+  // Add owner if requested AND they have archive notifications enabled
   if (notifyOwner) {
-    const { data: owner } = await supabaseAdmin
-      .from('users')
-      .select('email')
-      .eq('id', gallery.user_id)
+    // Check owner's notification preferences
+    const { data: ownerSettings } = await supabaseAdmin
+      .from('user_settings')
+      .select('notify_archive_ready')
+      .eq('user_id', gallery.user_id)
       .single()
     
-    if (owner && !recipients.find(r => r.email === owner.email)) {
-      recipients.push({ email: owner.email })
+    // Only notify owner if they haven't disabled archive notifications (default true)
+    const shouldNotifyOwner = ownerSettings?.notify_archive_ready !== false
+    
+    if (shouldNotifyOwner) {
+      const { data: owner } = await supabaseAdmin
+        .from('users')
+        .select('email')
+        .eq('id', gallery.user_id)
+        .single()
+      
+      if (owner && !recipients.find(r => r.email === owner.email)) {
+        recipients.push({ email: owner.email })
+      }
+    } else {
+      log.info('Owner has archive notifications disabled', { userId: gallery.user_id })
     }
   }
 

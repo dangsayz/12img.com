@@ -15,7 +15,6 @@ import {
   ChevronUp,
   Copy,
   Check,
-  ExternalLink,
   Download,
   Lock,
   Unlock,
@@ -328,7 +327,7 @@ function MasonryImageItem({
                 const { addToPortfolio } = await import('@/server/actions/profile.actions')
                 const result = await addToPortfolio(image.id)
                 if (result?.error) {
-                  alert(result.error)
+                  console.log('Portfolio:', result.error)
                 }
               } catch (err) {
                 console.error('Failed to add to portfolio', err)
@@ -362,13 +361,6 @@ function MasonryImageItem({
             whileTap={{ scale: 0.95 }}
           >
             <ArrowDown className="w-3.5 h-3.5 text-emerald-600" />
-          </motion.button>
-          <motion.button 
-            className="w-7 h-7 bg-white/95 backdrop-blur-sm flex items-center justify-center hover:bg-white transition-colors shadow-sm"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            <ExternalLink className="w-3.5 h-3.5 text-stone-600" />
           </motion.button>
           <motion.button 
             className="w-7 h-7 bg-white/95 backdrop-blur-sm flex items-center justify-center hover:bg-red-50 transition-colors shadow-sm"

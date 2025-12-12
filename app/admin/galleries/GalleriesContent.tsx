@@ -411,7 +411,79 @@ export function GalleriesContent({
       
       {/* Galleries Table */}
       <div className="bg-white border border-[#E5E5E5] overflow-hidden">
-        <div className="overflow-x-auto">
+        {/* Mobile: stacked cards */}
+        <div className="divide-y divide-[#E5E5E5] md:hidden">
+          {galleries.data.length === 0 ? (
+            <div className="px-4 py-12 text-center text-[#525252]">
+              No galleries found matching your criteria
+            </div>
+          ) : (
+            galleries.data.map((gallery) => (
+              <div 
+                key={gallery.id} 
+                className={`p-4 space-y-3 ${gallery.upgradeCandidate ? 'bg-emerald-50/30' : ''}`}
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="w-10 h-10 bg-[#F5F5F7] border border-[#E5E5E5] flex items-center justify-center flex-shrink-0">
+                      <ImageIcon className="w-4 h-4 text-[#525252]" />
+                    </div>
+                    <div className="min-w-0">
+                      <Link
+                        href={`/admin/galleries/${gallery.id}`}
+                        className="font-medium text-[#141414] hover:underline truncate block text-sm"
+                      >
+                        {gallery.title || 'Untitled'}
+                      </Link>
+                      <p className="text-[10px] text-[#737373] truncate">/{gallery.slug}</p>
+                    </div>
+                  </div>
+                  <a
+                    href={`/view-reel/${gallery.slug}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="p-2 border border-[#E5E5E5] hover:border-[#141414] transition-colors flex-shrink-0"
+                  >
+                    <ExternalLink className="w-4 h-4 text-[#525252]" />
+                  </a>
+                </div>
+                <div className="flex flex-wrap gap-2 text-[11px]">
+                  <span className="px-2 py-0.5 border border-[#E5E5E5] bg-[#FAFAFA] text-[#525252]">
+                    {gallery.imageCount} images
+                  </span>
+                  <span className="px-2 py-0.5 border border-[#E5E5E5] bg-[#FAFAFA] text-[#525252]">
+                    {gallery.storageMB} MB
+                  </span>
+                  <span className={`px-2 py-0.5 text-[10px] font-medium ${
+                    gallery.conversionScore >= 70 
+                      ? 'bg-emerald-100 text-emerald-700' 
+                      : gallery.conversionScore >= 50
+                      ? 'bg-amber-100 text-amber-700'
+                      : 'bg-[#F5F5F7] text-[#525252]'
+                  }`}>
+                    Score: {gallery.conversionScore}
+                  </span>
+                  {gallery.isPublic ? (
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-emerald-50 text-emerald-600 text-[10px]">
+                      <Globe className="w-3 h-3" /> Public
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-[#F5F5F7] text-[#525252] text-[10px]">
+                      <Lock className="w-3 h-3" /> Private
+                    </span>
+                  )}
+                </div>
+                <div className="flex items-center justify-between text-xs text-[#737373]">
+                  <span className="truncate">{gallery.userBusinessName || gallery.userEmail} · {gallery.userPlan}</span>
+                  <span>{formatDate(gallery.createdAt)}</span>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+
+        {/* Desktop: full table */}
+        <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="bg-[#FAFAFA] border-b border-[#E5E5E5]">
               <tr>
@@ -553,25 +625,25 @@ export function GalleriesContent({
         
         {/* Pagination */}
         {galleries.totalPages > 1 && (
-          <div className="flex items-center justify-between px-4 py-3 border-t border-[#E5E5E5] bg-[#FAFAFA]">
-            <div className="text-sm text-[#525252]">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between px-4 py-3 border-t border-[#E5E5E5] bg-[#FAFAFA]">
+            <div className="text-xs sm:text-sm text-[#525252]">
               Page {galleries.page} of {galleries.totalPages}
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 self-end sm:self-auto">
               <button
                 onClick={() => updateFilters({ page: currentPage - 1 })}
                 disabled={currentPage <= 1}
                 className="inline-flex items-center gap-1 px-3 py-1.5 text-sm text-[#525252] hover:text-[#141414] bg-white border border-[#E5E5E5] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 <ChevronLeft className="w-4 h-4" />
-                Previous
+                <span className="hidden sm:inline">Previous</span>
               </button>
               <button
                 onClick={() => updateFilters({ page: currentPage + 1 })}
                 disabled={currentPage >= galleries.totalPages}
                 className="inline-flex items-center gap-1 px-3 py-1.5 text-sm text-[#525252] hover:text-[#141414] bg-white border border-[#E5E5E5] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
-                Next
+                <span className="hidden sm:inline">Next</span>
                 <ChevronRight className="w-4 h-4" />
               </button>
             </div>

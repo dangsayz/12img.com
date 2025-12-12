@@ -261,7 +261,7 @@ export function EmailDashboard({
   return (
     <div className="space-y-6">
       {/* Tabs */}
-      <div className="flex items-center gap-1 border-b border-[#E5E5E5]">
+      <div className="flex items-center gap-1 border-b border-[#E5E5E5] overflow-x-auto">
         {tabs.map(tab => {
           const Icon = tab.icon
           const isActive = currentTab === tab.id
@@ -269,14 +269,15 @@ export function EmailDashboard({
             <button
               key={tab.id}
               onClick={() => updateParams({ tab: tab.id, page: '1' })}
-              className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+              className={`flex items-center gap-2 px-3 sm:px-4 py-3 text-xs sm:text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
                 isActive 
                   ? 'border-[#141414] text-[#141414]' 
                   : 'border-transparent text-[#525252] hover:text-[#141414]'
               }`}
             >
               <Icon className="w-4 h-4" />
-              {tab.label}
+              <span className="hidden sm:inline">{tab.label}</span>
+              <span className="sm:hidden">{tab.id === 'overview' ? 'Stats' : tab.label}</span>
             </button>
           )
         })}
@@ -406,7 +407,7 @@ export function EmailDashboard({
           className="space-y-4"
         >
           {/* Search & Filters */}
-          <div className="flex items-center gap-3">
+          <div className="flex flex-col sm:flex-row gap-3">
             <form onSubmit={handleSearch} className="flex-1 relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#8A8A8A]" />
               <input
@@ -418,25 +419,27 @@ export function EmailDashboard({
               />
             </form>
             
-            <button
-              onClick={() => setShowFilters(!showFilters)}
-              className={`flex items-center gap-2 px-4 py-2.5 border rounded-lg text-sm font-medium transition-colors ${
-                showFilters || statusFilter || tagsFilter
-                  ? 'bg-stone-900 text-white border-stone-900'
-                  : 'bg-white text-[#525252] border-[#E5E5E5] hover:border-stone-300'
-              }`}
-            >
-              <Filter className="w-4 h-4" />
-              Filters
-            </button>
-            
-            <button
-              onClick={handleExport}
-              className="flex items-center gap-2 px-4 py-2.5 bg-white border border-[#E5E5E5] rounded-lg text-sm font-medium text-[#525252] hover:border-stone-300 transition-colors"
-            >
-              <Download className="w-4 h-4" />
-              Export
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setShowFilters(!showFilters)}
+                className={`flex items-center gap-2 px-3 sm:px-4 py-2.5 border rounded-lg text-sm font-medium transition-colors ${
+                  showFilters || statusFilter || tagsFilter
+                    ? 'bg-stone-900 text-white border-stone-900'
+                    : 'bg-white text-[#525252] border-[#E5E5E5] hover:border-stone-300'
+                }`}
+              >
+                <Filter className="w-4 h-4" />
+                <span className="hidden sm:inline">Filters</span>
+              </button>
+              
+              <button
+                onClick={handleExport}
+                className="flex items-center gap-2 px-3 sm:px-4 py-2.5 bg-white border border-[#E5E5E5] rounded-lg text-sm font-medium text-[#525252] hover:border-stone-300 transition-colors"
+              >
+                <Download className="w-4 h-4" />
+                <span className="hidden sm:inline">Export</span>
+              </button>
+            </div>
           </div>
           
           {/* Filters Panel */}
@@ -498,7 +501,74 @@ export function EmailDashboard({
           
           {/* Subscribers Table */}
           <div className="bg-white border border-[#E5E5E5] rounded-lg overflow-hidden">
-            <div className="overflow-x-auto">
+            {/* Mobile: stacked cards */}
+            <div className="divide-y divide-[#E5E5E5] md:hidden">
+              {subscribers.data.length > 0 ? (
+                subscribers.data.map((subscriber: EmailSubscriber) => {
+                  const openRate = subscriber.emails_received > 0 
+                    ? ((subscriber.emails_opened / subscriber.emails_received) * 100).toFixed(0)
+                    : '0'
+                  const statusColors = {
+                    active: 'bg-emerald-100 text-emerald-700',
+                    unsubscribed: 'bg-stone-100 text-stone-600',
+                    bounced: 'bg-rose-100 text-rose-700',
+                    complained: 'bg-amber-100 text-amber-700',
+                  }
+                  return (
+                    <div key={subscriber.id} className="p-4 space-y-3">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <p className="font-medium text-[#141414] truncate">{subscriber.email}</p>
+                          {subscriber.name && (
+                            <p className="text-xs text-[#525252] truncate">{subscriber.name}</p>
+                          )}
+                        </div>
+                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium flex-shrink-0 ${statusColors[subscriber.status]}`}>
+                          {subscriber.status}
+                        </span>
+                      </div>
+                      <div className="flex flex-wrap gap-2 text-[11px]">
+                        <span className="px-2 py-0.5 bg-stone-100 text-stone-600 rounded">
+                          {subscriber.source}
+                        </span>
+                        <span className="px-2 py-0.5 bg-stone-100 text-stone-600 rounded">
+                          {subscriber.emails_received} emails
+                        </span>
+                        <span className="px-2 py-0.5 bg-stone-100 text-stone-600 rounded">
+                          {openRate}% open
+                        </span>
+                      </div>
+                      {subscriber.tags.length > 0 && (
+                        <div className="flex flex-wrap gap-1">
+                          {subscriber.tags.slice(0, 3).map(tag => (
+                            <span key={tag} className="inline-flex items-center px-2 py-0.5 rounded bg-stone-50 text-[10px] text-stone-500">
+                              {tag}
+                            </span>
+                          ))}
+                          {subscriber.tags.length > 3 && (
+                            <span className="text-[10px] text-[#8A8A8A]">+{subscriber.tags.length - 3}</span>
+                          )}
+                        </div>
+                      )}
+                      <p className="text-[10px] text-[#8A8A8A]">
+                        Joined {new Date(subscriber.created_at).toLocaleDateString()}
+                      </p>
+                    </div>
+                  )
+                })
+              ) : (
+                <div className="py-12 text-center">
+                  <div className="w-12 h-12 rounded-full bg-stone-100 flex items-center justify-center mx-auto mb-3">
+                    <Users className="w-6 h-6 text-stone-400" />
+                  </div>
+                  <p className="text-[#525252]">No subscribers found</p>
+                  <p className="text-sm text-[#8A8A8A] mt-1">Try adjusting your filters</p>
+                </div>
+              )}
+            </div>
+
+            {/* Desktop: full table */}
+            <div className="hidden md:block overflow-x-auto">
               <table className="w-full">
                 <thead>
                   <tr className="bg-stone-50 border-b border-[#E5E5E5]">
@@ -547,11 +617,11 @@ export function EmailDashboard({
             
             {/* Pagination */}
             {subscribers.totalPages > 1 && (
-              <div className="flex items-center justify-between px-4 py-3 border-t border-[#E5E5E5]">
-                <p className="text-sm text-[#525252]">
-                  Showing {((currentPage - 1) * 50) + 1} to {Math.min(currentPage * 50, subscribers.total)} of {subscribers.total.toLocaleString()}
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between px-4 py-3 border-t border-[#E5E5E5]">
+                <p className="text-xs sm:text-sm text-[#525252]">
+                  Page {currentPage} of {subscribers.totalPages} ({subscribers.total.toLocaleString()} total)
                 </p>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 self-end sm:self-auto">
                   <button
                     onClick={() => updateParams({ page: String(currentPage - 1) })}
                     disabled={currentPage <= 1}
@@ -559,9 +629,6 @@ export function EmailDashboard({
                   >
                     <ChevronLeft className="w-4 h-4" />
                   </button>
-                  <span className="text-sm text-[#525252]">
-                    Page {currentPage} of {subscribers.totalPages}
-                  </span>
                   <button
                     onClick={() => updateParams({ page: String(currentPage + 1) })}
                     disabled={currentPage >= subscribers.totalPages}
