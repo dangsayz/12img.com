@@ -422,7 +422,7 @@ export async function deleteGallery(galleryId: string) {
 /**
  * Gallery template type for URL routing
  */
-type GalleryTemplate = 'mosaic' | 'clean-grid' | 'cinematic' | 'editorial'
+type GalleryTemplate = 'mosaic' | 'clean-grid' | 'cinematic' | 'editorial' | 'album'
 
 /**
  * Map template to the correct view URL path (using slug for clean URLs)
@@ -433,6 +433,8 @@ function getTemplateUrl(gallerySlug: string, template: GalleryTemplate): string 
       return `/view-reel/${gallerySlug}`
     case 'editorial':
       return `/view-live/${gallerySlug}`
+    case 'album':
+      return `/view-album/${gallerySlug}`
     case 'mosaic':
     case 'clean-grid':
     default:

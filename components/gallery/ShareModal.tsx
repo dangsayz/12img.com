@@ -13,7 +13,8 @@ import {
   Layers,
   LayoutGrid,
   Film,
-  BookOpen
+  BookOpen,
+  ImageIcon
 } from 'lucide-react'
 import { sendGalleryToClient } from '@/server/actions/gallery.actions'
 import { type GalleryTemplate, GALLERY_TEMPLATES } from './templates'
@@ -35,6 +36,8 @@ function getTemplateUrl(gallerySlug: string, template: GalleryTemplate): string 
       return `/view-reel/${gallerySlug}`
     case 'editorial':
       return `/view-live/${gallerySlug}`
+    case 'album':
+      return `/view-album/${gallerySlug}`
     case 'mosaic':
     case 'clean-grid':
     default:
@@ -47,6 +50,7 @@ const templateIcons: Record<GalleryTemplate, React.ReactNode> = {
   'clean-grid': <LayoutGrid className="w-4 h-4" />,
   'cinematic': <Film className="w-4 h-4" />,
   'editorial': <BookOpen className="w-4 h-4" />,
+  'album': <ImageIcon className="w-4 h-4" />,
 }
 
 interface SavedContact {
