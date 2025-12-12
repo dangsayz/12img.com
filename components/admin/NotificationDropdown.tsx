@@ -89,13 +89,17 @@ export function NotificationDropdown({ notifications: initialNotifications, unre
 
   // Close dropdown when clicking outside
   useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
+    function handleClickOutside(event: MouseEvent | TouchEvent) {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setIsOpen(false)
       }
     }
     document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
+    document.addEventListener('touchstart', handleClickOutside)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+      document.removeEventListener('touchstart', handleClickOutside)
+    }
   }, [])
 
   // Close on escape
@@ -162,12 +166,18 @@ export function NotificationDropdown({ notifications: initialNotifications, unre
   return (
     <div className="relative" ref={dropdownRef}>
       {/* Bell Button - Elegant minimal design */}
-      <motion.button
-        onClick={() => setIsOpen(!isOpen)}
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
+      <button
+        onClick={(e) => {
+          e.stopPropagation()
+          setIsOpen(!isOpen)
+        }}
+        onTouchEnd={(e) => {
+          e.preventDefault()
+          e.stopPropagation()
+          setIsOpen(!isOpen)
+        }}
         className={cn(
-          "relative p-2 md:p-2.5 transition-all duration-300",
+          "relative p-2 md:p-2.5 transition-all duration-300 touch-manipulation",
           isOpen 
             ? "text-stone-900" 
             : "text-stone-400 hover:text-stone-900"
@@ -184,13 +194,13 @@ export function NotificationDropdown({ notifications: initialNotifications, unre
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0, opacity: 0 }}
               style={{ scale: badgeScale }}
-              className="absolute -top-0.5 -right-0.5 min-w-[16px] h-[16px] flex items-center justify-center text-[9px] font-medium bg-stone-900 text-white rounded-full"
+              className="absolute -top-0.5 -right-0.5 min-w-[16px] h-[16px] flex items-center justify-center text-[9px] font-medium bg-stone-900 text-white rounded-full pointer-events-none"
             >
               {unreadCount > 9 ? '9+' : unreadCount}
             </motion.span>
           )}
         </AnimatePresence>
-      </motion.button>
+      </button>
 
       {/* Dropdown - Full screen on mobile, elegant panel on desktop */}
       <AnimatePresence>
@@ -352,17 +362,18 @@ export function NotificationDropdown({ notifications: initialNotifications, unre
                 )}
               </div>
 
-              {/* Elegant footer */}
-              <motion.div 
+              {/* Elegant footer - tappable to dismiss */}
+              <motion.button 
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.2 }}
-                className="border-t border-stone-100 px-5 py-3 bg-stone-50/50"
+                onClick={() => setIsOpen(false)}
+                className="w-full border-t border-stone-100 px-5 py-4 bg-stone-50/50 hover:bg-stone-100 transition-colors touch-manipulation"
               >
-                <p className="text-[10px] text-stone-400 text-center tracking-wide">
+                <p className="text-[11px] text-stone-500 text-center tracking-wide font-medium">
                   Tap to dismiss
                 </p>
-              </motion.div>
+              </motion.button>
             </motion.div>
           </>
         )}
